@@ -1,0 +1,132 @@
+//
+//  lua_helpers.cpp
+//  xlua
+//
+//  Created by Benjamin Supnik on 4/13/16.
+//
+//	Copyright 2016, Laminar Research
+//	This source code is licensed under the MIT open source license.
+//	See LICENSE.txt for the full terms of the license.
+
+#include "lua_helpers.h"
+#include <string.h>
+#include <stdarg.h>
+#include <XPLMDataAccess.h>
+
+extern XPLMDataRef				g_replay_mode;
+extern XPLMDataRef				g_sim_period;
+
+#if 0
+int validate_args(lua_State * L, const char * fmt)
+{
+	if(strlen(fmt) != lua_gettop(L))
+	{
+		printf("Wrong numer of args: expected %d, got %d\n", (int) strlen(fmt), lua_gettop(L));
+		return 0;
+	}
+	
+	int i = 1;
+	while(*fmt)
+	{
+		switch(*fmt) {
+		case 's':
+			if (!lua_isstring(L, i))
+			{
+				printf("Argument %d should be a string.\n", i);
+				return 0;
+			}
+			break;
+		case 'n':
+			if (!lua_isnumber(L, i))
+			{
+				printf("Argument %d should be a number.\n", i);
+				return 0;
+			}
+			break;
+		case 't':
+			if (!lua_istable(L, i))
+			{
+				printf("Argument %d should be a table.\n", i);
+				return 0;
+			}
+			break;
+		case 'p':
+			if (!lua_islightuserdata(L, i))
+			{
+				printf("Argument %d should be a command or dataref.\n", i);
+				return 0;
+			}
+			break;
+		case 'f':
+			if (!lua_isfunction(L, i) && !lua_isnil(L, i))
+			{
+				printf("Argument %d should be a command or dataref.\n", i);
+				return 0;
+			}
+			break;		
+		}
+		++fmt;
+		++i;
+	}
+	
+	return 1;
+}
+#endif
+
+static void setup_std_vars(lua_State * L)
+{
+	 lua_getfield(L, LUA_GLOBALSINDEX, "setup_callback_var");
+	 fmt_pcall(L,"sf","SIM_PERIOD",XPLMGetDataf(g_sim_period));
+
+	 lua_getfield(L, LUA_GLOBALSINDEX, "setup_callback_var");
+	 fmt_pcall(L,"si","IN_REPLAY",XPLMGetDatai(g_replay_mode) != 0 ?  1 : 0);
+}	
+
+int fmt_pcall(lua_State * L, const char * fmt, ...)
+{
+	va_list va;
+	va_start(va, fmt);
+	int r = vfmt_pcall(L, fmt, va);
+	va_end(va);
+	return r;
+}
+
+int vfmt_pcall(lua_State * L, const char * fmt, va_list va)
+{	
+	const char * f = fmt;
+	int count = 0;
+	while(*f)
+	{
+		switch(*f) {
+		case 'f':
+		case 'd':
+			lua_pushnumber(L, va_arg(va, double));
+			break;		
+		case 'i':
+			lua_pushinteger(L, va_arg(va, int));
+			break;
+		case 's':
+			lua_pushstring(L, va_arg(va, const char *));
+			break;
+		}
+		++f;
+		++count;
+	}
+	int e = lua_pcall(L, count, 0, 0);
+	if(e != 0)
+	{
+		printf("%s\n", lua_tostring(L, -1));
+		lua_pop(L,-1);
+	}
+	return e;
+}
+
+int fmt_pcall_stdvars(lua_State * L, const char * fmt, ...)
+{
+	setup_std_vars(L);
+	va_list va;
+	va_start(va, fmt);
+	int r = vfmt_pcall(L, fmt, va);
+	va_end(va);
+	return r;
+}

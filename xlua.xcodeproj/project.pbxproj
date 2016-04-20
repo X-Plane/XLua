@@ -1,0 +1,330 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D60205641CC7CC8C00933688 /* lua_helpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D60205571CC7CC8C00933688 /* lua_helpers.cpp */; };
+		D60205651CC7CC8C00933688 /* module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D60205591CC7CC8C00933688 /* module.cpp */; };
+		D60205661CC7CC8C00933688 /* xlua.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D602055B1CC7CC8C00933688 /* xlua.cpp */; };
+		D60205671CC7CC8C00933688 /* xpcommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D602055C1CC7CC8C00933688 /* xpcommands.cpp */; };
+		D60205681CC7CC8C00933688 /* xpdatarefs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D602055E1CC7CC8C00933688 /* xpdatarefs.cpp */; };
+		D60205691CC7CC8C00933688 /* xpfuncs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D60205601CC7CC8C00933688 /* xpfuncs.cpp */; };
+		D602056A1CC7CC8C00933688 /* xptimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D60205621CC7CC8C00933688 /* xptimers.cpp */; };
+		D6A7BDAA16A1DEA200D1426A /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6A7BDA916A1DEA200D1426A /* OpenGL.framework */; };
+		D6A7BDC116A1DEC000D1426A /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6A7BDC016A1DEC000D1426A /* CoreFoundation.framework */; };
+		D6A7BDF116A1DED200D1426A /* XPLM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6A7BDF016A1DED200D1426A /* XPLM.framework */; };
+		D6A7BDF316A1DED200D1426A /* XPWidgets.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6A7BDF216A1DED200D1426A /* XPWidgets.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		D60205571CC7CC8C00933688 /* lua_helpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lua_helpers.cpp; sourceTree = "<group>"; };
+		D60205581CC7CC8C00933688 /* lua_helpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lua_helpers.h; sourceTree = "<group>"; };
+		D60205591CC7CC8C00933688 /* module.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = module.cpp; sourceTree = "<group>"; };
+		D602055A1CC7CC8C00933688 /* module.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = module.h; sourceTree = "<group>"; };
+		D602055B1CC7CC8C00933688 /* xlua.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xlua.cpp; sourceTree = "<group>"; };
+		D602055C1CC7CC8C00933688 /* xpcommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xpcommands.cpp; sourceTree = "<group>"; };
+		D602055D1CC7CC8C00933688 /* xpcommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xpcommands.h; sourceTree = "<group>"; };
+		D602055E1CC7CC8C00933688 /* xpdatarefs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xpdatarefs.cpp; sourceTree = "<group>"; };
+		D602055F1CC7CC8C00933688 /* xpdatarefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xpdatarefs.h; sourceTree = "<group>"; };
+		D60205601CC7CC8C00933688 /* xpfuncs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xpfuncs.cpp; sourceTree = "<group>"; };
+		D60205611CC7CC8C00933688 /* xpfuncs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xpfuncs.h; sourceTree = "<group>"; };
+		D60205621CC7CC8C00933688 /* xptimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xptimers.cpp; sourceTree = "<group>"; };
+		D60205631CC7CC8C00933688 /* xptimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xptimers.h; sourceTree = "<group>"; };
+		D607B19909A556E400699BC3 /* mac.xpl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = mac.xpl; sourceTree = BUILT_PRODUCTS_DIR; };
+		D6A7BDA916A1DEA200D1426A /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		D6A7BDC016A1DEC000D1426A /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		D6A7BDF016A1DED200D1426A /* XPLM.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XPLM.framework; path = SDK/Libraries/Mac/XPLM.framework; sourceTree = "<group>"; };
+		D6A7BDF216A1DED200D1426A /* XPWidgets.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XPWidgets.framework; path = SDK/Libraries/Mac/XPWidgets.framework; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D607B19709A556E400699BC3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D6A7BDAA16A1DEA200D1426A /* OpenGL.framework in Frameworks */,
+				D6A7BDC116A1DEC000D1426A /* CoreFoundation.framework in Frameworks */,
+				D6A7BDF116A1DED200D1426A /* XPLM.framework in Frameworks */,
+				D6A7BDF316A1DED200D1426A /* XPWidgets.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AC4E46B809C2E0B3006B7E1B /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				D60205561CC7CC8C00933688 /* src */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		D60205561CC7CC8C00933688 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				D60205571CC7CC8C00933688 /* lua_helpers.cpp */,
+				D60205581CC7CC8C00933688 /* lua_helpers.h */,
+				D60205591CC7CC8C00933688 /* module.cpp */,
+				D602055A1CC7CC8C00933688 /* module.h */,
+				D602055B1CC7CC8C00933688 /* xlua.cpp */,
+				D602055C1CC7CC8C00933688 /* xpcommands.cpp */,
+				D602055D1CC7CC8C00933688 /* xpcommands.h */,
+				D602055E1CC7CC8C00933688 /* xpdatarefs.cpp */,
+				D602055F1CC7CC8C00933688 /* xpdatarefs.h */,
+				D60205601CC7CC8C00933688 /* xpfuncs.cpp */,
+				D60205611CC7CC8C00933688 /* xpfuncs.h */,
+				D60205621CC7CC8C00933688 /* xptimers.cpp */,
+				D60205631CC7CC8C00933688 /* xptimers.h */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		D607B15F09A5563000699BC3 = {
+			isa = PBXGroup;
+			children = (
+				D6A7BDAD16A1DEA700D1426A /* Frameworks */,
+				AC4E46B809C2E0B3006B7E1B /* Source */,
+				D607B19A09A556E400699BC3 /* Products */,
+				D6CD16531C9E153000684062 /* libs */,
+			);
+			sourceTree = "<group>";
+		};
+		D607B19A09A556E400699BC3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D607B19909A556E400699BC3 /* mac.xpl */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D6A7BDAD16A1DEA700D1426A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D6A7BDC016A1DEC000D1426A /* CoreFoundation.framework */,
+				D6A7BDA916A1DEA200D1426A /* OpenGL.framework */,
+				D6A7BDF016A1DED200D1426A /* XPLM.framework */,
+				D6A7BDF216A1DED200D1426A /* XPWidgets.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D6CD16531C9E153000684062 /* libs */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = libs;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D607B19809A556E400699BC3 /* xlua */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D607B19B09A556E400699BC3 /* Build configuration list for PBXNativeTarget "xlua" */;
+			buildPhases = (
+				D607B19609A556E400699BC3 /* Sources */,
+				D607B19709A556E400699BC3 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = xlua;
+			productName = StarterPlugin;
+			productReference = D607B19909A556E400699BC3 /* mac.xpl */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D607B16109A5563100699BC3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+			};
+			buildConfigurationList = D607B16209A5563100699BC3 /* Build configuration list for PBXProject "xlua" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
+			mainGroup = D607B15F09A5563000699BC3;
+			productRefGroup = D607B19A09A556E400699BC3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D607B19809A556E400699BC3 /* xlua */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D607B19609A556E400699BC3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D60205651CC7CC8C00933688 /* module.cpp in Sources */,
+				D60205681CC7CC8C00933688 /* xpdatarefs.cpp in Sources */,
+				D60205691CC7CC8C00933688 /* xpfuncs.cpp in Sources */,
+				D60205661CC7CC8C00933688 /* xlua.cpp in Sources */,
+				D60205641CC7CC8C00933688 /* lua_helpers.cpp in Sources */,
+				D60205671CC7CC8C00933688 /* xpcommands.cpp in Sources */,
+				D602056A1CC7CC8C00933688 /* xptimers.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D607B16309A5563100699BC3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				DEPLOYMENT_LOCATION = NO;
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_EXTENSION = xpl;
+				FRAMEWORK_SEARCH_PATHS = "$(XPSDK_ROOT)/Libraries/Mac";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APL=1",
+					"IBM=0",
+					"LIN=0",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_VERSION = "";
+				HEADER_SEARCH_PATHS = (
+					"$(XPSDK_ROOT)/CHeaders/Widgets",
+					"$(XPSDK_ROOT)/CHeaders/XPLM",
+					lua_sdk,
+					"$(HEADER_SEARCH_PATHS)",
+				);
+				MACH_O_TYPE = mh_bundle;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"$(OTHER_LDFLAGS)",
+					"-Wl,-exported_symbol",
+					"-Wl,_XPluginStart",
+					"-Wl,-exported_symbol",
+					"-Wl,_XPluginEnable",
+					"-Wl,-exported_symbol",
+					"-Wl,_XPluginReceiveMessage",
+					"-Wl,-exported_symbol",
+					"-Wl,_XPluginDisable",
+					"-Wl,-exported_symbol",
+					"-Wl,_XPluginStop",
+					lua_sdk/libluajit_mac.a,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = mac;
+				SDKROOT = macosx;
+				XPSDK_ROOT = SDK;
+			};
+			name = Debug;
+		};
+		D607B16409A5563100699BC3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				DEPLOYMENT_LOCATION = NO;
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_EXTENSION = xpl;
+				FRAMEWORK_SEARCH_PATHS = "$(XPSDK_ROOT)/Libraries/Mac";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APL=1",
+					"IBM=0",
+					"LIN=0",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_VERSION = "";
+				HEADER_SEARCH_PATHS = (
+					"$(XPSDK_ROOT)/CHeaders/Widgets",
+					"$(XPSDK_ROOT)/CHeaders/XPLM",
+					lua_sdk,
+					"$(HEADER_SEARCH_PATHS)",
+				);
+				MACH_O_TYPE = mh_bundle;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"$(OTHER_LDFLAGS)",
+					"-Wl,-exported_symbol",
+					"-Wl,_XPluginStart",
+					"-Wl,-exported_symbol",
+					"-Wl,_XPluginEnable",
+					"-Wl,-exported_symbol",
+					"-Wl,_XPluginReceiveMessage",
+					"-Wl,-exported_symbol",
+					"-Wl,_XPluginDisable",
+					"-Wl,-exported_symbol",
+					"-Wl,_XPluginStop",
+					lua_sdk/libluajit_mac.a,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = mac;
+				SDKROOT = macosx;
+				XPSDK_ROOT = SDK;
+			};
+			name = Release;
+		};
+		D607B19C09A556E400699BC3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = /code/design/Resources/plugins/;
+				INSTALL_PATH = /xlua/64/;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+			};
+			name = Debug;
+		};
+		D607B19D09A556E400699BC3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = /code/design/Resources/plugins/;
+				INSTALL_PATH = /xlua/64/;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D607B16209A5563100699BC3 /* Build configuration list for PBXProject "xlua" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D607B16309A5563100699BC3 /* Debug */,
+				D607B16409A5563100699BC3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D607B19B09A556E400699BC3 /* Build configuration list for PBXNativeTarget "xlua" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D607B19C09A556E400699BC3 /* Debug */,
+				D607B19D09A556E400699BC3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D607B16109A5563100699BC3 /* Project object */;
+}
