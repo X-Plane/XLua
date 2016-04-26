@@ -78,12 +78,14 @@ if(errcode != 0) { \
 	return; }
 
 module::module(
+							const char *		in_module_path,
 							const char *		in_init_script,
 							const char *		in_module_script,
 							void *				(* in_alloc_func)(void *msp, void *ptr, size_t osize, size_t nsize),
 							void *				in_alloc_ref) :
 	m_interp(NULL),
-	m_memory(NULL)
+	m_memory(NULL),
+	m_path(in_module_path)
 {
 	printf("Running %s/%s\n", in_init_script, in_module_script);
 	

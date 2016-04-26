@@ -210,12 +210,14 @@ PLUGIN_API int XPluginStart(
 			mod_path += "/";
 			mod_path += fptr;
 			mod_path += "/";
-			mod_path += fptr;
-			mod_path += ".lua";
+			string script_path(mod_path);
+			script_path += fptr;
+			script_path += ".lua";
 
 			g_modules.push_back(new module(
-							init_script_path.c_str(),
 							mod_path.c_str(),
+							init_script_path.c_str(),
+							script_path.c_str(),
 							lj_alloc_f,
 							g_alloc));
 		}

@@ -59,78 +59,78 @@ test()
 
 
 
-fhandle = XPLMFindDataRef("sim/cockpit2/controls/flap_handle_deploy_ratio")
-engn_n1 = XPLMFindDataRef("sim/cockpit2/engine/indicators/N1_percent")
-engn_n1_l = XPLMFindDataRef("sim/cockpit2/engine/indicators/N1_percent[0]")
+fhandle = XLuaFindDataRef("sim/cockpit2/controls/flap_handle_deploy_ratio")
+engn_n1 = XLuaFindDataRef("sim/cockpit2/engine/indicators/N1_percent")
+engn_n1_l = XLuaFindDataRef("sim/cockpit2/engine/indicators/N1_percent[0]")
 print("Finding datarefs")
 print(fhandle)
 print(engn_n1)
 print(engn_n1_l)
 print("Dataref types")
-print(XPLMGetDataRefType(fhandle));
-print(XPLMGetDataRefType(engn_n1));
-print(XPLMGetDataRefType(engn_n1_l));
+print(XLuaGetDataRefType(fhandle));
+print(XLuaGetDataRefType(engn_n1));
+print(XLuaGetDataRefType(engn_n1_l));
 print("Dataref values")
-print(XPLMGetNumber(engn_n1_l));
-print(XPLMGetArray(engn_n1,0));
-print(XPLMGetNumber(fhandle));
+print(XLuaGetNumber(engn_n1_l));
+print(XLuaGetArray(engn_n1,0));
+print(XLuaGetNumber(fhandle));
 print("-----")
-ign = XPLMFindDataRef("sim/cockpit2/engine/actuators/igniter_on")
-ign1 = XPLMFindDataRef("sim/cockpit2/engine/actuators/igniter_on[1]")
-print(XPLMGetArray(ign,1))
-print(XPLMGetNumber(ign1))
-XPLMSetArray(ign1,1,1)
-print(XPLMGetNumber(ign1))
-XPLMSetNumber(ign1,2)
-print(XPLMGetArray(ign,1))
+ign = XLuaFindDataRef("sim/cockpit2/engine/actuators/igniter_on")
+ign1 = XLuaFindDataRef("sim/cockpit2/engine/actuators/igniter_on[1]")
+print(XLuaGetArray(ign,1))
+print(XLuaGetNumber(ign1))
+XLuaSetArray(ign1,1,1)
+print(XLuaGetNumber(ign1))
+XLuaSetNumber(ign1,2)
+print(XLuaGetArray(ign,1))
 print("-----")
 f = function()
 	print("callback")
-	print(XPLMGetNumber(my_dref))
+	print(XLuaGetNumber(my_dref))
 end
-my_dref = XPLMCreateDataRef("sim/test/dref","number","yes",f)
-my_dref2 = XPLMCreateDataRef("sim/test/dref2","number","no",nil)
-my_dref3 = XPLMCreateDataRef("sim/test/dref3","number","yes",nil)
-print(XPLMGetNumber(my_dref))
-XPLMSetNumber(my_dref,10)
-print(XPLMGetNumber(my_dref))
-XPLMSetNumber(my_dref3,3)
-XPLMSetNumber(my_dref2,2)
+my_dref = XLuaCreateDataRef("sim/test/dref","number","yes",f)
+my_dref2 = XLuaCreateDataRef("sim/test/dref2","number","no",nil)
+my_dref3 = XLuaCreateDataRef("sim/test/dref3","number","yes",nil)
+print(XLuaGetNumber(my_dref))
+XLuaSetNumber(my_dref,10)
+print(XLuaGetNumber(my_dref))
+XLuaSetNumber(my_dref3,3)
+XLuaSetNumber(my_dref2,2)
 print("-----")
-my_aref = XPLMCreateDataRef("sim/test/aref","array[4]","yes",f)
-my_aref2 = XPLMCreateDataRef("sim/test/aref2","array[4]","no",nil)
-my_aref3 = XPLMCreateDataRef("sim/test/aref3","array[4]","yes",nil)
-XPLMSetArray(my_aref,0,0)
-XPLMSetArray(my_aref,1,1)
-XPLMSetArray(my_aref,2,2)
+my_aref = XLuaCreateDataRef("sim/test/aref","array[4]","yes",f)
+my_aref2 = XLuaCreateDataRef("sim/test/aref2","array[4]","no",nil)
+my_aref3 = XLuaCreateDataRef("sim/test/aref3","array[4]","yes",nil)
+XLuaSetArray(my_aref,0,0)
+XLuaSetArray(my_aref,1,1)
+XLuaSetArray(my_aref,2,2)
 
-XPLMSetArray(my_aref2,0,0)
-XPLMSetArray(my_aref2,1,1)
-XPLMSetArray(my_aref2,2,2)
+XLuaSetArray(my_aref2,0,0)
+XLuaSetArray(my_aref2,1,1)
+XLuaSetArray(my_aref2,2,2)
 
-XPLMSetArray(my_aref3,0,0)
-XPLMSetArray(my_aref3,1,1)
-XPLMSetArray(my_aref3,2,2)
+XLuaSetArray(my_aref3,0,0)
+XLuaSetArray(my_aref3,1,1)
+XLuaSetArray(my_aref3,2,2)
 
-print(XPLMGetArray(my_aref,1))
-print(XPLMGetArray(my_aref2,1))
-print(XPLMGetArray(my_aref3,1))
+print(XLuaGetArray(my_aref,1))
+print(XLuaGetArray(my_aref2,1))
+print(XLuaGetArray(my_aref3,1))
 print("-----")
-my_sref = XPLMCreateDataRef("sim/test/sref","string","yes",function()
-   print(XPLMGetString(my_sref))
+my_sref = XLuaCreateDataRef("sim/test/sref","string","yes",function()
+   print(XLuaGetString(my_sref))
 end
 )
-XPLMSetString(my_sref,"hello")
+XLuaSetString(my_sref,"hello")
 
 print("--number wrapper----")
 nprop = find_dataref("sim/cockpit2/engine/actuators/igniter_on[1]")
 print(nprop)
 nprop = 3
-print(XPLMGetNumber(ign1))
+print(XLuaGetNumber(ign1))
 sprop = find_dataref("sim/test/sref")
 print(sprop)
 sprop = "There"
-print(XPLMGetString(my_sref))
+print(XLuaGetString(my_sref))
 print("------")
 aprop = find_dataref("sim/cockpit2/engine/actuators/igniter_on")
 print(aprop[0])
@@ -138,7 +138,7 @@ print(aprop[1])
 print(aprop.len)
 aprop[1]=0
 aprop[0]=3
-print(XPLMGetArray(ign,0))
+print(XLuaGetArray(ign,0))
 print(nprop)
 
 print("--created properties----")
@@ -201,9 +201,14 @@ c2 = create_command("lua/my_pause","pause from lua",function(phase)
 	end
 end)
 
+test1_var="bar"
 
-
+print("---run subfile---")
+dofile("test2.lua")
+print("---done subfile---")
+print(test2_var)
 
 
 
 print("hello world done")
+

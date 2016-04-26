@@ -22,10 +22,10 @@ end
 function wrap_dref_number(in_dref)
 	return {
 		get = function(self)
-			return XPLMGetNumber(self.dref)
+			return XLuaGetNumber(self.dref)
 		end,
 		set = function(self,v)
-			XPLMSetNumber(self.dref,v)
+			XLuaSetNumber(self.dref,v)
 		end,
 		dref = in_dref
 	}
@@ -34,10 +34,10 @@ end
 function wrap_dref_string(in_dref)
 	return {
 		get = function(self)
-			return XPLMGetString(self.dref)
+			return XLuaGetString(self.dref)
 		end,
 		set = function(self,v)
-			XPLMSetString(self.dref,v)
+			XLuaSetString(self.dref,v)
 		end,
 		dref = in_dref
 	}
@@ -48,7 +48,7 @@ function dref_array_read(table,key)
 	if idx == nil then
 		return nil
 	end
-	return XPLMGetArray(table.dref,idx)
+	return XLuaGetArray(table.dref,idx)
 end
 
 function dref_array_write(table,key,value)
@@ -56,7 +56,7 @@ function dref_array_write(table,key,value)
 	if idx == nil then
 		return
 	end
-	XPLMSetArray(table.dref,idx,value)
+	XLuaSetArray(table.dref,idx,value)
 end
 
 function wrap_dref_array(in_dref, dim)
@@ -88,16 +88,16 @@ function wrap_dref_any(dref,t)
 end
 
 function find_dataref(name)
-	dref = XPLMFindDataRef(name)
-	t = XPLMGetDataRefType(dref)
+	dref = XLuaFindDataRef(name)
+	t = XLuaGetDataRefType(dref)
 	return wrap_dref_any(dref,t)
 end
 
 function create_dataref(name,type,notifier)
 	if notifier == nil then
-		dref = XPLMCreateDataRef(name,type,"no",nil)
+		dref = XLuaCreateDataRef(name,type,"no",nil)
 	else
-		dref = XPLMCreateDataRef(name,type,"yes",notifier)
+		dref = XLuaCreateDataRef(name,type,"yes",notifier)
 	end
 	return wrap_dref_any(dref,type)
 end
@@ -109,38 +109,38 @@ end
 function make_command_obj(in_cmd)
 	return { 
 		start = function(self)
-			XPLMCommandStart(self.cmd)
+			XLuaCommandStart(self.cmd)
 		end,
 		stop = function(self)
-			XPLMCommandStop(self.cmd)
+			XLuaCommandStop(self.cmd)
 		end,
 		once = function(self)
-			XPLMCommandOnce(self.cmd)
+			XLuaCommandOnce(self.cmd)
 		end,
 		cmd = in_cmd
 	}
 end
 
 function find_command(name)
-	c = XPLMFindCommand(name)
+	c = XLuaFindCommand(name)
 	return make_command_obj(c)
 end
 
 function create_command(name,desc,handler)
-	c = XPLMCreateCommand(name,desc)
-	XPLMReplaceCommand(c,handler)
+	c = XLuaCreateCommand(name,desc)
+	XLuaReplaceCommand(c,handler)
 	return make_command_obj(c)
 end
 
 function replace_command(name, func)
-	c = XPLMFindCommand(name)
-	XPLMReplaceCommand(c,func)
+	c = XLuaFindCommand(name)
+	XLuaReplaceCommand(c,func)
 	return make_command_obj(c)
 end	
 
 function wrap_command(name, before, after)
-	c = XPLMFindCommand(name)
-	XPLMWrapCommand(c,before,after)
+	c = XLuaFindCommand(name)
+	XLuaWrapCommand(c,before,after)
 	return make_command_obj(c)
 end
 
@@ -151,16 +151,16 @@ end
 function run_timer(func,delay,rep)
 	tobj = all_timers[func]
 	if tobj == nil then
-		tobj = XPLMCreateTimer(func)
+		tobj = XLuaCreateTimer(func)
 		all_timers[func] = tobj
 	end
-	XPLMRunTimer(tobj,delay,rep)
+	XLuaRunTimer(tobj,delay,rep)
 end
 
 function stop_timer(func)
 	tobj = all_timers[func]
 	if tobj ~= nil then
-		XPLMRunTimer(tobj, -1.0, -1.0)
+		XLuaRunTimer(tobj, -1.0, -1.0)
 	end
 end
 
@@ -169,7 +169,7 @@ function is_timer_scheduled(func)
 	if tobj == nil then
 		return false
 	end
-	return XPLMIsTimerScheduled(tobj)
+	return XLuaIsTimerScheduled(tobj)
 end
 
 function run_at_interval(func, interval)
@@ -238,6 +238,17 @@ function create_namespace()
 	return ret
 end
 
+-- Build a custom-built closure replacement for dofile that uses get-path to
+-- find same-dir scripts and does a setfenv to our NS
+function get_run_file_in_namespace(ns)
+	return function(fname)
+		full_path = XLuaGetPath()..fname
+		chunk = loadfile(full_path)
+		setfenv(chunk,ns)
+		chunk()
+	end
+end
+
 --------------------------------------------------------------------------------
 
 function run_module_in_namespace(fn)
@@ -261,6 +272,7 @@ function run_module_in_namespace(fn)
 	n.is_timer_scheduled = is_timer_scheduled
 	n.run_after_time = run_after_time
 	n.run_at_interval = run_at_interval
+	n.dofile = get_run_file_in_namespace(n)
 	
 	setfenv(fn,n)
 	fn()

@@ -103,11 +103,23 @@ T * luaL_checkuserdata(lua_State * L, int narg, const char * msg)
 }
 
 //----------------------------------------------------------------
+// MISC
+//----------------------------------------------------------------
+
+static int XLuaGetPath(lua_State * L)
+{
+	module * me = module::module_from_interp(L);
+	assert(me);
+	lua_pushstring(L, me->get_module_path().c_str());
+	return 1;
+}
+
+//----------------------------------------------------------------
 // DATAREFS
 //----------------------------------------------------------------
 
 // XPLMFindDataRef "foo" -> dref
-static int xlua_XPLMFindDataRef(lua_State * L)
+static int XLuaFindDataRef(lua_State * L)
 {
 	const char * name = luaL_checkstring(L, -1);
 
@@ -128,7 +140,7 @@ static void xlua_notify_helper(xlua_dref * who, void * ref)
 }
 
 // XPLMCreateDataRef name "array[4]" "yes" func -> dref
-static int xlua_XPLMCreateDataRef(lua_State * L)
+static int XLuaCreateDataRef(lua_State * L)
 {
 	const char * name = luaL_checkstring(L, 1);
 	const char * typestr = luaL_checkstring(L,2);
@@ -181,7 +193,7 @@ static int xlua_XPLMCreateDataRef(lua_State * L)
 }
 
 // dref -> "array[4]"
-static int xlua_XPLMGetDataRefType(lua_State * L)
+static int XLuaGetDataRefType(lua_State * L)
 {
 	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
 
@@ -209,7 +221,7 @@ static int xlua_XPLMGetDataRefType(lua_State * L)
 }
 
 // XPLMGetNumber dref -> value
-static int xlua_XPLMGetNumber(lua_State * L)
+static int XLuaGetNumber(lua_State * L)
 {
 	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
 	
@@ -218,7 +230,7 @@ static int xlua_XPLMGetNumber(lua_State * L)
 }
 
 // XPLMSetNumber dref value
-static int xlua_XPLMSetNumber(lua_State * L)
+static int XLuaSetNumber(lua_State * L)
 {
 	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
 	double v = luaL_checknumber(L, 2);
@@ -228,7 +240,7 @@ static int xlua_XPLMSetNumber(lua_State * L)
 }
 
 // XPLMGetArray dref idx -> value
-static int xlua_XPLMGetArray(lua_State * L)
+static int XLuaGetArray(lua_State * L)
 {
 	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
 	double idx = luaL_checknumber(L, 2);	
@@ -238,7 +250,7 @@ static int xlua_XPLMGetArray(lua_State * L)
 }
 
 // XPLMSetArray dref dix value
-static int xlua_XPLMSetArray(lua_State * L)
+static int XLuaSetArray(lua_State * L)
 {
 	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
 	double idx = luaL_checknumber(L, 2);
@@ -249,7 +261,7 @@ static int xlua_XPLMSetArray(lua_State * L)
 }
 
 // XPLMGetString dref -> value
-static int xlua_XPLMGetString(lua_State * L)
+static int XLuaGetString(lua_State * L)
 {
 	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
 	
@@ -258,7 +270,7 @@ static int xlua_XPLMGetString(lua_State * L)
 }
 
 // XPLMSetString dref value
-static int xlua_XPLMSetString(lua_State * L)
+static int XLuaSetString(lua_State * L)
 {
 	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
 	const char * s = luaL_checkstring(L, 2);
@@ -271,7 +283,7 @@ static int xlua_XPLMSetString(lua_State * L)
 //----------------------------------------------------------------
 
 // XPLMFindCommand name
-static int xlua_XPLMFindCommand(lua_State * L)
+static int XLuaFindCommand(lua_State * L)
 {
 	const char * name = luaL_checkstring(L, 1);
 	xlua_cmd * r = xlua_find_cmd(name);
@@ -282,7 +294,7 @@ static int xlua_XPLMFindCommand(lua_State * L)
 }
 
 // XPLMCreateCommand name desc
-static int xlua_XPLMCreateCommand(lua_State * L)
+static int XLuaCreateCommand(lua_State * L)
 {
 	const char * name = luaL_checkstring(L, 1);
 	const char * desc = luaL_checkstring(L, 2);
@@ -304,7 +316,7 @@ static void cmd_cb_helper(xlua_cmd * cmd, int phase, float elapsed, void * ref)
 }
 
 // XPLMReplaceCommand cmd handler
-static int xlua_XPLMReplaceCommand(lua_State * L)
+static int XLuaReplaceCommand(lua_State * L)
 {
 	xlua_cmd * d = luaL_checkuserdata<xlua_cmd>(L,1,"expected command");
 	notify_cb_t * cb = wrap_lua_func(L, 2);
@@ -314,7 +326,7 @@ static int xlua_XPLMReplaceCommand(lua_State * L)
 }
 
 // XPLMWrapCommand cmd handler1 handler2
-static int xlua_XPLMWrapCommand(lua_State * L)
+static int XLuaWrapCommand(lua_State * L)
 {
 	xlua_cmd * d = luaL_checkuserdata<xlua_cmd>(L,1,"expected command");
 	notify_cb_t * cb1 = wrap_lua_func(L, 2);
@@ -326,21 +338,21 @@ static int xlua_XPLMWrapCommand(lua_State * L)
 }
 
 // XPLMCommandStart cmd
-static int xlua_XPLMCommandStart(lua_State * L)
+static int XLuaCommandStart(lua_State * L)
 {
 	xlua_cmd * d = luaL_checkuserdata<xlua_cmd>(L,1,"expected command");
 	xlua_cmd_start(d);
 }
 
 // XPLMCommandStop cmd
-static int xlua_XPLMCommandStop(lua_State * L)
+static int XLuaCommandStop(lua_State * L)
 {
 	xlua_cmd * d = luaL_checkuserdata<xlua_cmd>(L,1,"expected command");
 	xlua_cmd_stop(d);
 }
 
 // XPLMCommandOnce cmd
-static int xlua_XPLMCommandOnce(lua_State * L)
+static int XLuaCommandOnce(lua_State * L)
 {
 	xlua_cmd * d = luaL_checkuserdata<xlua_cmd>(L,1,"expected command");
 	xlua_cmd_once(d);
@@ -360,7 +372,7 @@ static void timer_cb(void * ref)
 }
 
 // XPLMCreateTimer func -> ptr
-static int xlua_XPLMCreateTimer(lua_State * L)
+static int XLuaCreateTimer(lua_State * L)
 {
 	notify_cb_t * helper = wrap_lua_func(L, -1);
 	if(helper == NULL)
@@ -374,7 +386,7 @@ static int xlua_XPLMCreateTimer(lua_State * L)
 }
 
 // XPLMRunTimer timer delay repeat
-static int xlua_XPLMRunTimer(lua_State * L)
+static int XLuaRunTimer(lua_State * L)
 {
 	xlua_timer * t = luaL_checkuserdata<xlua_timer>(L,1,"expected timer");
 	if(!t)
@@ -385,7 +397,7 @@ static int xlua_XPLMRunTimer(lua_State * L)
 }
 
 // XPLMIsTimerScheduled ptr -> int
-static int xlua_XPLMIsTimerScheduled(lua_State * L)
+static int XLuaIsTimerScheduled(lua_State * L)
 {
 	xlua_timer * t = luaL_checkuserdata<xlua_timer>(L,1,"expected timer");
 	int sched = xlua_is_timer_scheduled(t);
@@ -396,31 +408,32 @@ static int xlua_XPLMIsTimerScheduled(lua_State * L)
 
 
 #define FUNC_LIST \
-	FUNC(XPLMFindDataRef) \
-	FUNC(XPLMCreateDataRef) \
-	FUNC(XPLMGetDataRefType) \
-	FUNC(XPLMGetNumber) \
-	FUNC(XPLMSetNumber) \
-	FUNC(XPLMGetArray) \
-	FUNC(XPLMSetArray) \
-	FUNC(XPLMGetString) \
-	FUNC(XPLMSetString) \
-	FUNC(XPLMFindCommand) \
-	FUNC(XPLMCreateCommand) \
-	FUNC(XPLMReplaceCommand) \
-	FUNC(XPLMWrapCommand) \
-	FUNC(XPLMCommandStart) \
-	FUNC(XPLMCommandStop) \
-	FUNC(XPLMCommandOnce) \
-	FUNC(XPLMCreateTimer) \
-	FUNC(XPLMRunTimer) \
-	FUNC(XPLMIsTimerScheduled)
+	FUNC(XLuaGetPath) \
+	FUNC(XLuaFindDataRef) \
+	FUNC(XLuaCreateDataRef) \
+	FUNC(XLuaGetDataRefType) \
+	FUNC(XLuaGetNumber) \
+	FUNC(XLuaSetNumber) \
+	FUNC(XLuaGetArray) \
+	FUNC(XLuaSetArray) \
+	FUNC(XLuaGetString) \
+	FUNC(XLuaSetString) \
+	FUNC(XLuaFindCommand) \
+	FUNC(XLuaCreateCommand) \
+	FUNC(XLuaReplaceCommand) \
+	FUNC(XLuaWrapCommand) \
+	FUNC(XLuaCommandStart) \
+	FUNC(XLuaCommandStop) \
+	FUNC(XLuaCommandOnce) \
+	FUNC(XLuaCreateTimer) \
+	FUNC(XLuaRunTimer) \
+	FUNC(XLuaIsTimerScheduled)
 
 
 void	add_xpfuncs_to_interp(lua_State * L)
 {
 	#define FUNC(x) \
-		lua_register(L,#x,xlua_##x);
+		lua_register(L,#x,x);
 		
 	FUNC_LIST
 	

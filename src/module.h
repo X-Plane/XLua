@@ -17,12 +17,17 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#include <string>
+
+using std::string;
+
 struct module_alloc_block;
 
 class module {
 public:
 
 						 module(
+							const char *		in_module_path,
 							const char *		in_init_script,
 							const char *		in_module_script,
 							void *				(* in_alloc_func)(void *msp, void *ptr, size_t osize, size_t nsize),
@@ -32,6 +37,7 @@ public:
 	static module *		module_from_interp(lua_State * interp);
 
 			void *		module_alloc_tracked(size_t amount);
+			string		get_module_path() const { return m_path; }
 			
 			void		acf_load();
 			void		acf_unload();
@@ -48,6 +54,7 @@ private:
 
 	lua_State *			m_interp;
 	module_alloc_block *	m_memory;
+	string				m_path;
 
 	module();
 	module(const module& rhs);
