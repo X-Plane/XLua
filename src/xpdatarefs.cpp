@@ -286,12 +286,16 @@ xlua_dref *		xlua_create_dref(const char * name, xlua_dref_type type, int dim, i
 	assert(writable || func == NULL);
 	
 	string n(name);
-
-	for(xlua_dref * f = s_drefs; f; f = f->m_next)
+	xlua_dref * f;
+	for(f = s_drefs; f; f = f->m_next)
 	if(f->m_name == n)
 	{
-		printf("ERROR: %s is already a dataref.\n",name);
-		return NULL;
+		if(f->m_ours || f->m_dref)
+		{
+			printf("ERROR: %s is already a dataref.\n",name);
+			return NULL;
+		}
+		break;
 	}
 	
 	if(n.find('[') != n.npos)
@@ -307,9 +311,13 @@ xlua_dref *		xlua_create_dref(const char * name, xlua_dref_type type, int dim, i
 		return NULL;
 	}
 	
-	xlua_dref * d = new xlua_dref;
-	d->m_next = s_drefs;
-	s_drefs = d;
+	xlua_dref * d = f;
+	if(!d)
+	{
+		d = new xlua_dref;
+		d->m_next = s_drefs;
+		s_drefs = d;
+	}
 	d->m_name = name;
 	d->m_index = -1;
 	d->m_ours = 1;

@@ -21,10 +21,10 @@ end
 
 function wrap_dref_number(in_dref)
 	return {
-		get = function(self)
+		__get = function(self)
 			return XLuaGetNumber(self.dref)
 		end,
-		set = function(self,v)
+		__set = function(self,v)
 			XLuaSetNumber(self.dref,v)
 		end,
 		dref = in_dref
@@ -33,15 +33,43 @@ end
 
 function wrap_dref_string(in_dref)
 	return {
-		get = function(self)
+		__get = function(self)
 			return XLuaGetString(self.dref)
 		end,
-		set = function(self,v)
+		__set = function(self,v)
 			XLuaSetString(self.dref,v)
 		end,
 		dref = in_dref
 	}
 end
+
+function wrap_dref_any_value(in_dref)
+	return {
+		__get = function(self)
+			t = XLuaGetDataRefType(dref)
+			if t == "string" then
+				return XLuaGetString(self.dref)
+			elseif t == "number" then
+				return XLuaGetNumber(self.dref)
+			else
+				return 0.0
+			end			
+		end,
+		__set = function(self,v)
+			t = XLuaGetDataRefType(dref)
+			if t == "string" then
+				return XLuaSetString(self.dref,v)
+			elseif t == "number" then
+				return XLuaSetNumber(self.dref,v)
+			else
+				error("Previously unresolved dataref is being written to but is an array or is still undefined.")
+			end			
+		end,	
+		dref = in_dref
+	}	
+end
+
+
 
 function dref_array_read(table,key)
 	idx = tonumber(key)
@@ -84,7 +112,7 @@ function wrap_dref_any(dref,t)
 	if t == "number" then
 		return wrap_dref_number(dref)
 	end
-	return nil
+	return wrap_dref_any_value(dref)
 end
 
 function find_dataref(name)
@@ -190,38 +218,120 @@ function seems_like_prop(p)
 	if type(p) ~= "table" then
 		return false
 	end
-	if p.get == nil then
+	gfunc = rawget(p,"__get")
+	sfunc = rawget(p,"__set")
+	if type(gfunc) ~= "function" then
 		return false
 	end
-	if p.set == nil then
+	if type(sfunc) ~= "function" then
 		return false
 	end
 	return true
 end
 
+function namespace_ipairs(table, i)
+	local function namespace_iter(table, i)
+		i = i + 1
+		ftable = rawget(table,'functions')
+		vtable = rawget(table,'values')
+		local fv = ftable[i]
+		if fv ~= nil then
+			return i,fv.__get(fv)
+		else
+			local vv = vtable[i]
+			if vv ~= nil then
+				return i,vv
+			end
+		end
+	end
+	return namespace_iter, table, 0
+end
+
+function namespace_len(table)
+	local count = 0
+	for _ in namespace_ipairs(table) do count = count + 1 end
+	return count
+end
+  
+
+function namespace_pairs(table, key, value)
+	local function namespace_next(table, index)
+		ftable = rawget(table,'functions')
+		vtable = rawget(table,'values')
+		if index == nil then
+			idx_f,key_f = next(ftable, nil)
+			if idx_f == nil then
+				idx_v,key_v = next(vtable, nil)
+				return idx_v,key_v
+			else
+				return idx_f,key_f.__get(key_f)
+			end
+		else
+			if ftable[index] ~= nil then
+				idx_f,key_f = next(ftable,index)
+				if idx_f == nil then
+					return next(vtable, nil)
+				else
+					return idx_f,key_f.__get(key_f)
+				end
+			else
+				return next(vtable, index)
+			end
+		end
+	end
+
+	return namespace_next, table, nil
+end
+
 function namespace_write(table, key, value)
-	func = table.functions[key]
+	ftable = rawget(table,'functions')
+	vtable = rawget(table,'values')
+
+	func = ftable[key]
 	if func ~= nil then
-		func.set(func,value)
+		func.__set(func,value)
 	else
 		if seems_like_prop(value) then
-			table.functions[key] = value
+			ftable[key] = value
 		else
-			table.values[key] = value
+			if type(value) == "table" and getmetatable(value) == nil then
+				
+				v = {
+					functions = {},
+					values = {},
+					parent = nil
+				}
+				for k,vv in pairs(value) do
+					if seems_like_prop(vv) then
+						v.functions[k] = vv						
+					else
+						v.values[k] = vv
+					end
+				end
+				setmetatable(v,getmetatable(table))
+				vtable[key] = v
+			else
+				vtable[key] = value
+			end
 		end
 	end
 end
 
 function namespace_read(table,key)
-	func = table.functions[key]
+	ftable = rawget(table,'functions')
+	vtable = rawget(table,'values')
+	func = ftable[key]
 	if func ~= nil then
-		return func.get(func)
+		return func.__get(func)
 	end
-	var = table.values[key]
+	var = vtable[key]
 	if var ~= nil then
 		return var
 	end
-	return table.parent[key]
+	if table.parent ~= nil then
+		return table.parent[key]
+	end
+	return nil
 end
 
 function create_namespace()
@@ -233,7 +343,9 @@ function create_namespace()
 		end,
 		parent = _G
 	}
-	mt = { __index = namespace_read, __newindex = namespace_write }
+	-- TODO: use __len operator to restore # for Jim
+	-- TODO: look at __pairs, __ipairs support
+	mt = { __index = namespace_read, __newindex = namespace_write, __pairs = namespace_pairs, __ipairs = namespace_ipairs, __len = namespace_len }
 	setmetatable(ret,mt)
 	return ret
 end
@@ -288,7 +400,3 @@ function do_callout(fname)
 		func()
 	end
 end
-
-print("init script complete")
-
-
