@@ -25,6 +25,8 @@ using std::vector;
 #define MSG_ADD_DATAREF 0x01000000
 #define STAT_PLUGIN_SIG "xplanesdk.examples.DataRefEditor"
 
+//#define TRACE_DATAREFS printf
+#define TRACE_DATAREFS(...)
 
 
 struct	xlua_dref {
@@ -258,8 +260,10 @@ xlua_dref *		xlua_find_dref(const char * name)
 {
 	for(xlua_dref * f = s_drefs; f; f = f->m_next)
 	if(f->m_name == name)
+	{
+		TRACE_DATAREFS("Found %s as %p\n", name,f);
 		return f;
-	
+	}
 	// We have never tried to find this dref before - make a new record
 	xlua_dref * d = new xlua_dref;
 	d->m_next = s_drefs;
@@ -274,6 +278,8 @@ xlua_dref *		xlua_find_dref(const char * name)
 	d->m_number_storage = 0;
 	
 	resolve_dref(d);
+
+	TRACE_DATAREFS("Speculating %s as %p\n", name,d);
 
 	return d;
 }
@@ -295,6 +301,7 @@ xlua_dref *		xlua_create_dref(const char * name, xlua_dref_type type, int dim, i
 			printf("ERROR: %s is already a dataref.\n",name);
 			return NULL;
 		}
+		TRACE_DATAREFS("Reusing %s as %p\n", name,f);		
 		break;
 	}
 	
@@ -317,6 +324,7 @@ xlua_dref *		xlua_create_dref(const char * name, xlua_dref_type type, int dim, i
 		d = new xlua_dref;
 		d->m_next = s_drefs;
 		s_drefs = d;
+		TRACE_DATAREFS("Creating %s as %p\n", name,d);		
 	}
 	d->m_name = name;
 	d->m_index = -1;

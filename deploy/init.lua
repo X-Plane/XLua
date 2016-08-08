@@ -19,57 +19,6 @@ end
 -- This code creates property objects (or MT-enhanced tables) for arrays that
 -- let authors work with 
 
-function wrap_dref_number(in_dref)
-	return {
-		__get = function(self)
-			return XLuaGetNumber(self.dref)
-		end,
-		__set = function(self,v)
-			XLuaSetNumber(self.dref,v)
-		end,
-		dref = in_dref
-	}
-end
-
-function wrap_dref_string(in_dref)
-	return {
-		__get = function(self)
-			return XLuaGetString(self.dref)
-		end,
-		__set = function(self,v)
-			XLuaSetString(self.dref,v)
-		end,
-		dref = in_dref
-	}
-end
-
-function wrap_dref_any_value(in_dref)
-	return {
-		__get = function(self)
-			t = XLuaGetDataRefType(dref)
-			if t == "string" then
-				return XLuaGetString(self.dref)
-			elseif t == "number" then
-				return XLuaGetNumber(self.dref)
-			else
-				return 0.0
-			end			
-		end,
-		__set = function(self,v)
-			t = XLuaGetDataRefType(dref)
-			if t == "string" then
-				return XLuaSetString(self.dref,v)
-			elseif t == "number" then
-				return XLuaSetNumber(self.dref,v)
-			else
-				error("Previously unresolved dataref is being written to but is an array or is still undefined.")
-			end			
-		end,	
-		dref = in_dref
-	}	
-end
-
-
 
 function dref_array_read(table,key)
 	idx = tonumber(key)
@@ -96,6 +45,93 @@ function wrap_dref_array(in_dref, dim)
 	setmetatable(dr,mt)
 	return dr
 end
+
+
+
+function wrap_dref_number(in_dref)
+	return {
+		__get = function(self)
+			return XLuaGetNumber(self.dref)
+		end,
+		__set = function(self,v)
+			XLuaSetNumber(self.dref,v)
+		end,
+		dref = in_dref
+	}
+end
+
+function wrap_dref_string(in_dref)
+	return {
+		__get = function(self)
+			return XLuaGetString(self.dref)
+		end,
+		__set = function(self,v)
+			XLuaSetString(self.dref,v)
+		end,
+		dref = in_dref
+	}
+end
+
+
+
+function wrap_dref_any_deferred(in_dref)
+	--[[
+		This function builds a property object for a dataref where we do not
+		know the type of dataref at wrapping time.  The callbacks inspect the 
+		dataref on the fly and call the right callbacks basde on what they find.
+		
+		One special case: if we have an array we need to return a table so the client
+		can then run the [] operator on the table.  We cache our table object after
+		the first time we find it in "arr" and if askesd again we can just return it
+		immediately and not leak out a huge number of tables to be GCed later.
+		
+		Right now I only expose the table in the read function, because in theory
+		dr[4] = 5
+		shows up as a "read" of DR in the global namespace - the write happens when the [4] = 5
+		is applied to the subtable.  If we wake up one day and blow up in the write CB, 
+		maybe I have reasoned wrong, but in the test code we write into the anonymous 
+		dataref and it works.
+	--]]
+	return {
+		__get = function(self)
+			if self.arr ~= nil then
+				return self.arr
+			end
+			t = XLuaGetDataRefType(self.dref)
+			b = string.find(t,"%[")
+			if b ~= nil then
+				dim = tonumber(string.sub(t,b+1,-2))
+				if dim == nil then
+					return nil
+				end
+				self.arr = wrap_dref_array(self.dref,dim)
+				return self.arr
+			end
+			if t == "string" then
+				return XLuaGetString(self.dref)
+			elseif t == "number" then
+				return XLuaGetNumber(self.dref)
+			else
+				return 0.0
+			end			
+		end,
+		__set = function(self,v)
+			if self.arr ~= nil then
+				return self.arr
+			end
+			t = XLuaGetDataRefType(self.dref)
+			if t == "string" then
+				return XLuaSetString(self.dref,v)
+			elseif t == "number" then
+				return XLuaSetNumber(self.dref,v)
+			else
+				error("Previously unresolved dataref is being written to but is an array or is still undefined.")
+			end			
+		end,	
+		dref = in_dref,
+		arr = nil,
+	}	
+end
 	
 function wrap_dref_any(dref,t)	
 	b = string.find(t,"%[")
@@ -112,10 +148,10 @@ function wrap_dref_any(dref,t)
 	if t == "number" then
 		return wrap_dref_number(dref)
 	end
-	return wrap_dref_any_value(dref)
+	return wrap_dref_any_deferred(dref)
 end
 
-function find_dataref(name)
+function find_dataref(name)	
 	dref = XLuaFindDataRef(name)
 	t = XLuaGetDataRefType(dref)
 	return wrap_dref_any(dref,t)
