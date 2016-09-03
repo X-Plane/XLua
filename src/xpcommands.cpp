@@ -75,11 +75,14 @@ xlua_cmd * xlua_find_cmd(const char * name)
 	if(i->m_name == name)
 		return i;
 		
+	XPLMCommandRef c = XPLMFindCommand(name);	
+	if(c == NULL) return NULL;	
+		
 	xlua_cmd * nc = new xlua_cmd;
 	nc->m_next = s_cmds;
 	s_cmds = nc;
 	nc->m_name = name;
-	nc->m_cmd = XPLMFindCommand(name);
+	nc->m_cmd = c;
 	return nc;
 }
 

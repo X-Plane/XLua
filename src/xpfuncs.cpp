@@ -287,6 +287,11 @@ static int XLuaFindCommand(lua_State * L)
 {
 	const char * name = luaL_checkstring(L, 1);
 	xlua_cmd * r = xlua_find_cmd(name);
+	if(!r)
+	{
+		lua_pushnil(L);
+		return 1;
+	}
 	assert(r);
 	
 	lua_pushlightuserdata(L, r);

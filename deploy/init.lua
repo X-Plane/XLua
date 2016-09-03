@@ -170,24 +170,43 @@ end
 -- COMMAND LUA GLUE
 --------------------------------------------------------------------------------
 
-function make_command_obj(in_cmd)
+function make_command_obj(in_cmd, in_name)
 	return { 
 		start = function(self)
+			if self.cmd == nil then
+				self.cmd = XLuaFindCommand(self.name)
+				if self.cmd == nil then
+					error("Unable to find command:"..name)
+				end
+			end
 			XLuaCommandStart(self.cmd)
 		end,
 		stop = function(self)
+			if self.cmd == nil then
+				self.cmd = XLuaFindCommand(self.name)
+				if self.cmd == nil then
+					error("Unable to find command:"..name)
+				end
+			end
 			XLuaCommandStop(self.cmd)
 		end,
 		once = function(self)
+			if self.cmd == nil then
+				self.cmd = XLuaFindCommand(self.name)
+				if self.cmd == nil then
+					error("Unable to find command:"..name)
+				end
+			end
 			XLuaCommandOnce(self.cmd)
 		end,
-		cmd = in_cmd
+		cmd = in_cmd,
+		name = in_name
 	}
 end
 
 function find_command(name)
 	c = XLuaFindCommand(name)
-	return make_command_obj(c)
+	return make_command_obj(c,name)
 end
 
 function create_command(name,desc,handler)
@@ -265,6 +284,21 @@ function seems_like_prop(p)
 	return true
 end
 
+function seems_like_object(p)
+	if type(p) ~= "table" then
+		return false
+	end
+	if getmetatable(p) ~= nil	 then
+		return true
+	end
+	for k,vv in pairs(p) do
+		if type(vv) == "function" then
+			return true
+		end
+	end
+end
+
+
 function namespace_ipairs(table, i)
 	local function namespace_iter(table, i)
 		i = i + 1
@@ -320,6 +354,7 @@ function namespace_pairs(table, key, value)
 end
 
 function namespace_write(table, key, value)
+	--print("Namespace write of "..key)
 	ftable = rawget(table,'functions')
 	vtable = rawget(table,'values')
 
@@ -330,8 +365,8 @@ function namespace_write(table, key, value)
 		if seems_like_prop(value) then
 			ftable[key] = value
 		else
-			if type(value) == "table" and getmetatable(value) == nil then
-				
+			if not seems_like_object(value) and type(value) == "table" and getmetatable(value) == nil then
+				--print("Bare table wrap for "..key)
 				v = {
 					functions = {},
 					values = {},
@@ -347,6 +382,7 @@ function namespace_write(table, key, value)
 				setmetatable(v,getmetatable(table))
 				vtable[key] = v
 			else
+				--print("copy for "..key)			
 				vtable[key] = value
 			end
 		end
