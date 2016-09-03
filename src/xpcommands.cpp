@@ -119,7 +119,7 @@ void xlua_cmd_install_handler(xlua_cmd * cmd, xlua_cmd_handler_f handler, void *
 {
 	if(cmd->m_main_handler != NULL)
 	{
-		printf("ERROR: there is already a main handler installed.\n");
+		printf("ERROR: there is already a main handler installed: %s.\n", cmd->m_name.c_str());
 		return;
 	}
 	cmd->m_main_handler = handler;
@@ -132,7 +132,7 @@ void xlua_cmd_install_pre_wrapper(xlua_cmd * cmd, xlua_cmd_handler_f handler, vo
 {
 	if(cmd->m_pre_handler != NULL)
 	{
-		printf("ERROR: there is already a pre handler installed.\n");
+		printf("ERROR: there is already a pre handler installed: %s.\n", cmd->m_name.c_str());
 		return;
 	}
 	cmd->m_pre_handler = handler;
@@ -144,8 +144,8 @@ void xlua_cmd_install_post_wrapper(xlua_cmd * cmd, xlua_cmd_handler_f handler, v
 {
 	if(cmd->m_post_handler != NULL)
 	{
-		printf("ERROR: there is already a post handler installed.\n");
-		return;
+		printf("ERROR: there is already a post handler installed: %s.\n", cmd->m_name.c_str());
+		return;	
 	}
 	cmd->m_post_handler = handler;
 	cmd->m_post_ref = ref;
