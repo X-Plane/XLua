@@ -91,8 +91,13 @@ xlua_cmd * xlua_create_cmd(const char * name, const char * desc)
 	for(xlua_cmd * i = s_cmds; i; i = i->m_next)
 	if(i->m_name == name)
 	{
-		printf("ERROR: command already exists: %s\n", name);
-		return NULL;
+		if(i->m_ours)
+		{
+			printf("ERROR: command already exists: %s\n", name);
+			return NULL;
+		}
+		i->m_ours = 1;
+		return i;
 	}
 
 	// Ben says: we used to try to barf on commands taken over from other plugins but
