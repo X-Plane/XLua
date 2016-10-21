@@ -129,7 +129,7 @@ static void xlua_setvi(void * ref, int * values, int offset, int max)
 	xlua_dref * r = (xlua_dref *) ref;
 	assert(r->m_ours);
 	if(offset >= r->m_array_storage.size())
-		return 0;
+		return;
 	int count = min(max, (int) r->m_array_storage.size() - offset);
 	int changed = 0;
 	for(int i = 0; i < count; ++i)
@@ -165,7 +165,7 @@ static void xlua_setvf(void * ref, float * values, int offset, int max)
 	xlua_dref * r = (xlua_dref *) ref;
 	assert(r->m_ours);
 	if(offset >= r->m_array_storage.size())
-		return 0;
+		return;
 	int changed = 0;
 	int count = min(max, (int) r->m_array_storage.size() - offset);
 	for(int i = 0; i < count; ++i)

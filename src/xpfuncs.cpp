@@ -347,6 +347,7 @@ static int XLuaCommandStart(lua_State * L)
 {
 	xlua_cmd * d = luaL_checkuserdata<xlua_cmd>(L,1,"expected command");
 	xlua_cmd_start(d);
+	return 0;
 }
 
 // XPLMCommandStop cmd
@@ -354,6 +355,7 @@ static int XLuaCommandStop(lua_State * L)
 {
 	xlua_cmd * d = luaL_checkuserdata<xlua_cmd>(L,1,"expected command");
 	xlua_cmd_stop(d);
+	return 0;
 }
 
 // XPLMCommandOnce cmd
@@ -361,6 +363,7 @@ static int XLuaCommandOnce(lua_State * L)
 {
 	xlua_cmd * d = luaL_checkuserdata<xlua_cmd>(L,1,"expected command");
 	xlua_cmd_once(d);
+	return 0;
 }
 
 //----------------------------------------------------------------
