@@ -8,6 +8,7 @@
 //	This source code is licensed under the MIT open source license.
 //	See LICENSE.txt for the full terms of the license.
 
+#include <cstdio>
 #include "xpfuncs.h"
 #include "lua_helpers.h"
 #include "xpdatarefs.h"
