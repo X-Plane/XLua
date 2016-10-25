@@ -9,6 +9,7 @@
 //	See LICENSE.txt for the full terms of the license.
 
 
+#include <cstdio>
 #include "xpcommands.h"
 #define XPLM200 1
 #include <XPLMUtilities.h>
