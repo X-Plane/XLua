@@ -8,7 +8,7 @@
 //	This source code is licensed under the MIT open source license.
 //	See LICENSE.txt for the full terms of the license.
 
-
+#include <cstdio>
 #include "xpdatarefs.h"
 
 #include <XPLMDataAccess.h>
