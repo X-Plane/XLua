@@ -3,11 +3,18 @@ SRC_BASE	:=	.
 TARGET		:= xlua
 
 SOURCES = \
-	xlua.cpp
+	src/xlua.cpp \
+	src/lua_helpers.cpp \
+	src/module.cpp \
+	src/xpcommands.cpp \
+	src/xpdatarefs.cpp \
+	src/xpfuncs.cpp \
+	src/xptimers.cpp
 
-LIBS = 
+LIBS = -lluajit
 
 INCLUDES = \
+	-I$(SRC_BASE)/lua_sdk \
 	-I$(SRC_BASE)/SDK/CHeaders/XPLM \
 	-I$(SRC_BASE)/SDK/CHeaders/Widgets
 
@@ -20,13 +27,6 @@ VPATH = $(SRC_BASE)
 	
 CSOURCES	:= $(filter %.c, $(SOURCES))
 CXXSOURCES	:= $(filter %.cpp, $(SOURCES))
-
-CDEPS		:= $(patsubst %.c, $(BUILDDIR)/obj32/%.cdep, $(CSOURCES))
-CXXDEPS		:= $(patsubst %.cpp, $(BUILDDIR)/obj32/%.cppdep, $(CXXSOURCES))
-COBJECTS	:= $(patsubst %.c, $(BUILDDIR)/obj32/%.o, $(CSOURCES))
-CXXOBJECTS	:= $(patsubst %.cpp, $(BUILDDIR)/obj32/%.o, $(CXXSOURCES))
-ALL_DEPS	:= $(sort $(CDEPS) $(CXXDEPS))
-ALL_OBJECTS	:= $(sort $(COBJECTS) $(CXXOBJECTS))
 
 CDEPS64			:= $(patsubst %.c, $(BUILDDIR)/obj64/%.cdep, $(CSOURCES))
 CXXDEPS64		:= $(patsubst %.cpp, $(BUILDDIR)/obj64/%.cppdep, $(CXXSOURCES))
@@ -42,24 +42,20 @@ CFLAGS := $(DEFINES) $(INCLUDES) -fPIC -fvisibility=hidden
 .PHONY: all clean $(TARGET)
 # Secondary tells make that the .o files are to be kept - they are secondary derivatives, not just
 # temporary build products.
-.SECONDARY: $(ALL_OBJECTS) $(ALL_OBJECTS64) $(ALL_DEPS)
+.SECONDARY: $(ALL_OBJECTS64) $(ALL_DEPS)
 
 
 
 # Target rules - these just induce the right .xpl files.
 
-$(TARGET): $(BUILDDIR)/$(TARGET)/32/lin.xpl $(BUILDDIR)/$(TARGET)/64/lin.xpl
+$(TARGET): $(BUILDDIR)/$(TARGET)/64/lin.xpl
 	
 
 $(BUILDDIR)/$(TARGET)/64/lin.xpl: $(ALL_OBJECTS64)
 	@echo Linking $@
 	mkdir -p $(dir $@)
-	gcc -m64 -static-libgcc -shared -Wl,--version-script=exports.txt -o $@ $(ALL_OBJECTS64) $(LIBS)
+	gcc -Llua_sdk -m64 -static-libgcc -shared -Wl,--version-script=exports.txt -o $@ $(ALL_OBJECTS64) $(LIBS)
 
-$(BUILDDIR)/$(TARGET)/32/lin.xpl: $(ALL_OBJECTS)
-	@echo Linking $@
-	mkdir -p $(dir $@)
-	gcc -m32 -static-libgcc -shared -Wl,--version-script=exports.txt -o $@ $(ALL_OBJECTS) $(LIBS)
 
 # Compiler rules
 
@@ -68,16 +64,6 @@ $(BUILDDIR)/$(TARGET)/32/lin.xpl: $(ALL_OBJECTS)
 # goes in the cdep.  Thus:
 # - if the .c itself is touched, we remake the .o and the cdep, as expected.
 # - If any header file listed in the cdep turd is changed, rebuild the .o.
-
-$(BUILDDIR)/obj32/%.o : %.c
-	mkdir -p $(dir $@)
-	g++ $(CFLAGS) -m32 -c $< -o $@
-	g++ $(CFLAGS) -MM -MT $@ -o $(@:.o=.cdep) $<
-
-$(BUILDDIR)/obj32/%.o : %.cpp
-	mkdir -p $(dir $@)
-	g++ $(CFLAGS) -m32 -c $< -o $@
-	g++ $(CFLAGS) -MM -MT $@ -o $(@:.o=.cppdep) $<
 
 $(BUILDDIR)/obj64/%.o : %.c
 	mkdir -p $(dir $@)
@@ -102,7 +88,6 @@ clean:
 # needs a rebuild because EVERY header is included.  And if the secondary
 # header is changed, the primary header had it before (and is unchanged)
 # so that is in the dependency file too.
--include $(ALL_DEPS)
 -include $(ALL_DEPS64)
 
 
