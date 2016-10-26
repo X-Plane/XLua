@@ -2,6 +2,8 @@
 //	This source code is licensed under the MIT open source license.
 //	See LICENSE.txt for the full terms of the license.
 
+#define VERSION "1.0.0b1"
+
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -139,9 +141,9 @@ PLUGIN_API int XPluginStart(
 						char *		outDesc)
 {
 
-	strcpy(outName, "HelloWorld");
-	strcpy(outSig, "xplanesdk.examples.helloworld");
-	strcpy(outDesc, "A plugin that makes a window.");
+    strcpy(outName, "XLua " VERSION);
+    strcpy(outSig, "com.x-plane.xlua." VERSION);
+    strcpy(outDesc, "A minimal scripting environment for aircraft authors.");
 
 	g_replay_mode = XPLMFindDataRef("sim/operation/prefs/replay_mode");
 	g_sim_period = XPLMFindDataRef("sim/operation/misc/frame_rate_period");
