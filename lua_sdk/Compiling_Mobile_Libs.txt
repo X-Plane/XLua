@@ -1,0 +1,35 @@
+FOR ARMV7
+--------------------------------
+ISDKP=$(xcrun --sdk iphoneos --show-sdk-path)
+ICC=$(xcrun --sdk iphoneos --find clang)
+ISDKF="-arch armv7 -isysroot $ISDKP -miphoneos-version-min=8.0 -fembed-bitcode"
+make HOST_CC="clang -m32 -arch i386" CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS
+
+FOR ARMV7S
+--------------------------------
+ISDKP=$(xcrun --sdk iphoneos --show-sdk-path)
+ICC=$(xcrun --sdk iphoneos --find clang)
+ISDKF="-arch armv7s -isysroot $ISDKP -miphoneos-version-min=8.0 -fembed-bitcode"
+make HOST_CC="clang -m32 -arch i386" CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS
+
+FOR ARM64
+--------------------------------
+ISDKP=$(xcrun --sdk iphoneos --show-sdk-path)
+ICC=$(xcrun --sdk iphoneos --find clang)
+ISDKF="-arch arm64 -isysroot $ISDKP -miphoneos-version-min=8.0 -fembed-bitcode"
+make HOST_CC="clang -m64 -arch x86_64" CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS
+
+FOR SIMULATOR
+--------------------------------
+ISDKP=$(xcrun --sdk iphonesimulator --show-sdk-path)
+ICC=$(xcrun --sdk iphonesimulator --find clang)
+ISDKF="-arch x86_64 -isysroot $ISDKP -miphoneos-version-min=8.0 -fembed-bitcode"
+make HOST_CC="clang -m64 -arch x86_64" CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS
+
+TO COMBINE THEM INTO ONE STATIC LIB
+-----------------------------------
+xcrun -sdk iphoneos lipo -create -arch armv7 libluajit_armv7.a -arch armv7s libluajit_armv7s.a -arch arm64 libluajit_arm64.a -arch x86_64 libluajit_x86_64.a -output libluajit_iOS.a
+
+TO TEST
+-----------------------------------
+xcrun -sdk iphoneos lipo -info libluajit_iOS.a

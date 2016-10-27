@@ -9,8 +9,14 @@
 #include <assert.h>
 #include <vector>
 
+#ifndef XPLM200
 #define XPLM200
+#endif
+
+#ifndef XPLM210
 #define XPLM210
+#endif
+
 #include <XPLMPlugin.h>
 #include <XPLMDataAccess.h>
 #include <XPLMUtilities.h>
