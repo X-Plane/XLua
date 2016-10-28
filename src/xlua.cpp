@@ -47,7 +47,9 @@ extern "C" {
 #include "lauxlib.h"
 }
 
+#if !MOBILE
 static void *			g_alloc = NULL;
+#endif
 static vector<module *>g_modules;
 static XPLMFlightLoopID	g_pre_loop = NULL;
 static XPLMFlightLoopID	g_post_loop = NULL;
@@ -154,6 +156,7 @@ PLUGIN_API int XPluginStart(
 	g_replay_mode = XPLMFindDataRef("sim/operation/prefs/replay_mode");
 	g_sim_period = XPLMFindDataRef("sim/operation/misc/frame_rate_period");
 
+#if !MOBILE
 	g_alloc = lj_alloc_create();
 	if (g_alloc == NULL)
 	{
@@ -161,6 +164,7 @@ PLUGIN_API int XPluginStart(
 		printf("No allocator\n");
 		return 0;
 	}
+#endif
 	
 	XPLMCreateFlightLoop_t pre = { 0 };
 	XPLMCreateFlightLoop_t post = { 0 };
@@ -222,12 +226,21 @@ PLUGIN_API int XPluginStart(
 			script_path += fptr;
 			script_path += ".lua";
 
+#if !MOBILE
 			g_modules.push_back(new module(
 							mod_path.c_str(),
 							init_script_path.c_str(),
 							script_path.c_str(),
 							lj_alloc_f,
 							g_alloc));
+#else
+			g_modules.push_back(new module(
+				mod_path.c_str(),
+				init_script_path.c_str(),
+				script_path.c_str(),
+				lj_alloc_f,
+				NULL));
+#endif
 		}
 			
 		++offset;
@@ -252,11 +265,13 @@ PLUGIN_API void	XPluginStop(void)
 		delete (*m);
 	g_modules.clear();
 
+#if !MOBILE
 	if(g_alloc)
 	{
 		lj_alloc_destroy(g_alloc);
 		g_alloc = NULL;
 	}
+#endif
 	
 	xlua_dref_cleanup();
 	xlua_cmd_cleanup();

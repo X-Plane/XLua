@@ -89,9 +89,11 @@ module::module(
 {
 	printf("Running %s/%s\n", in_init_script, in_module_script);
 	
+#if MOBILE
+	m_interp = luaL_newstate();
+#else
 	m_interp = lua_newstate(in_alloc_func, in_alloc_ref);
-
-	
+#endif
 
 	if(m_interp == NULL)
 	{
