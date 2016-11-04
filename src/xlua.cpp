@@ -54,7 +54,7 @@ static vector<module *>g_modules;
 static XPLMFlightLoopID	g_pre_loop = NULL;
 static XPLMFlightLoopID	g_post_loop = NULL;
 static int				g_is_acf_inited = 0;
-XPLMDataRef				g_replay_mode = NULL;
+XPLMDataRef				g_replay_active = NULL;
 XPLMDataRef				g_sim_period = NULL;
 
 struct lua_alloc_request_t {
@@ -117,7 +117,7 @@ static float xlua_pre_timer_master_cb(
 {
 	xlua_do_timers_for_time(XPLMGetElapsedTime());
 	
-	if(XPLMGetDatai(g_replay_mode) == 0)
+	if(XPLMGetDatai(g_replay_active) == 0)
 	if(XPLMGetDataf(g_sim_period) > 0.0f)	
 	for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)	
 		(*m)->pre_physics();
@@ -130,7 +130,7 @@ static float xlua_post_timer_master_cb(
                                    int                  inCounter,    
                                    void *               inRefcon)
 {
-	if(XPLMGetDatai(g_replay_mode) == 0)
+	if(XPLMGetDatai(g_replay_active) == 0)
 	{
 		if(XPLMGetDataf(g_sim_period) > 0.0f)
 		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)		
@@ -153,7 +153,7 @@ PLUGIN_API int XPluginStart(
     strcpy(outSig, "com.x-plane.xlua." VERSION);
     strcpy(outDesc, "A minimal scripting environment for aircraft authors.");
 
-	g_replay_mode = XPLMFindDataRef("sim/operation/prefs/replay_mode");
+	g_replay_active = XPLMFindDataRef("sim/time/is_in_replay");
 	g_sim_period = XPLMFindDataRef("sim/operation/misc/frame_rate_period");
 
 #if !MOBILE
