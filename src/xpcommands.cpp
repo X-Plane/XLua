@@ -182,7 +182,7 @@ void xlua_cmd_cleanup()
 		if(k->m_main_handler)
 			XPLMUnregisterCommandHandler(k->m_cmd, xlua_std_main_handler, 1, k);
 		if(k->m_post_handler)
-			XPLMUnregisterCommandHandler(k->m_cmd, xlua_std_post_handler, 1, k);
+			XPLMUnregisterCommandHandler(k->m_cmd, xlua_std_post_handler, 0, k);
 		s_cmds = s_cmds->m_next;
 		delete k;
 	}
