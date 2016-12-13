@@ -257,6 +257,13 @@ static void resolve_dref(xlua_dref * d)
 	}
 }
 
+void			xlua_validate_drefs()
+{
+	for(xlua_dref * f = s_drefs; f; f = f->m_next)
+	{
+		assert(f->m_dref != NULL);
+	}
+}
 
 xlua_dref *		xlua_find_dref(const char * name)
 {

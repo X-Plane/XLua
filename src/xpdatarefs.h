@@ -52,4 +52,7 @@ void			xlua_relink_all_drefs();
 // This deletes EVERY dataref, reclaiming all memory - used once at cleanup.
 void			xlua_dref_cleanup();
 
+// Iterates every dataref that Lua knows about and makes sure that they're all valid.
+void			xlua_validate_drefs();
+
 #endif /* xpdatarefs_h */

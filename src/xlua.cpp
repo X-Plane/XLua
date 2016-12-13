@@ -316,6 +316,10 @@ PLUGIN_API void XPluginReceiveMessage(
 	case XPLM_MSG_AIRPORT_LOADED:
 		if(!g_is_acf_inited)
 		{
+			// Pick up any last stragglers from out-of-order load and then validate our datarefs!
+			xlua_relink_all_drefs();
+			xlua_validate_drefs();
+			
 			for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
 				(*m)->acf_load();
 			g_is_acf_inited = 1;							
