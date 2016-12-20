@@ -107,15 +107,33 @@ module::module(
 		
 	add_xpfuncs_to_interp(m_interp);
 	
+#if !MOBILE
 	int load_result = luaL_loadfile(m_interp, in_init_script);
+#else
+	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
+	// we need to load the Lua script from an already allocated memory buffer.
+	xmap_class linit(in_init_script);
+	if(!linit.exists())
+		CTOR_FAIL(-1, "load init script");
+	int load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), in_init_script);
+#endif
 	CTOR_FAIL(load_result, "load init script")
 
 	int init_script_result = lua_pcall(m_interp, 0, 0, 0);
 	CTOR_FAIL(init_script_result, "run init script");
 	
 	lua_getfield(m_interp, LUA_GLOBALSINDEX, "run_module_in_namespace");
-	
+
+#if !MOBILE
 	int module_load_result = luaL_loadfile(m_interp, in_module_script);
+#else
+	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
+	// we need to load the Lua script from an already allocated memory buffer.
+	xmap_class lmod(in_module_script);
+	if(!lmod.exists())
+		CTOR_FAIL(-1, "load module");
+	int module_load_result = luaL_loadbuffer(m_interp, (const char*)lmod.begin(), lmod.size(), in_module_script);
+#endif
 	CTOR_FAIL(module_load_result,"load module");
 	
 	int module_run_result = lua_pcall(m_interp, 1, 0, 0);
