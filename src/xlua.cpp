@@ -9,8 +9,14 @@
 #include <assert.h>
 #include <vector>
 
+#ifndef XPLM200
 #define XPLM200
+#endif
+
+#ifndef XPLM210
 #define XPLM210
+#endif
+
 #include <XPLMPlugin.h>
 #include <XPLMDataAccess.h>
 #include <XPLMUtilities.h>
@@ -41,12 +47,14 @@ extern "C" {
 #include "lauxlib.h"
 }
 
+#if !MOBILE
 static void *			g_alloc = NULL;
+#endif
 static vector<module *>g_modules;
 static XPLMFlightLoopID	g_pre_loop = NULL;
 static XPLMFlightLoopID	g_post_loop = NULL;
 static int				g_is_acf_inited = 0;
-XPLMDataRef				g_replay_mode = NULL;
+XPLMDataRef				g_replay_active = NULL;
 XPLMDataRef				g_sim_period = NULL;
 
 struct lua_alloc_request_t {
@@ -109,7 +117,7 @@ static float xlua_pre_timer_master_cb(
 {
 	xlua_do_timers_for_time(XPLMGetElapsedTime());
 	
-	if(XPLMGetDatai(g_replay_mode) == 0)
+	if(XPLMGetDatai(g_replay_active) == 0)
 	if(XPLMGetDataf(g_sim_period) > 0.0f)	
 	for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)	
 		(*m)->pre_physics();
@@ -122,7 +130,7 @@ static float xlua_post_timer_master_cb(
                                    int                  inCounter,    
                                    void *               inRefcon)
 {
-	if(XPLMGetDatai(g_replay_mode) == 0)
+	if(XPLMGetDatai(g_replay_active) == 0)
 	{
 		if(XPLMGetDataf(g_sim_period) > 0.0f)
 		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)		
@@ -145,9 +153,10 @@ PLUGIN_API int XPluginStart(
     strcpy(outSig, "com.x-plane.xlua." VERSION);
     strcpy(outDesc, "A minimal scripting environment for aircraft authors.");
 
-	g_replay_mode = XPLMFindDataRef("sim/operation/prefs/replay_mode");
+	g_replay_active = XPLMFindDataRef("sim/time/is_in_replay");
 	g_sim_period = XPLMFindDataRef("sim/operation/misc/frame_rate_period");
 
+#if !MOBILE
 	g_alloc = lj_alloc_create();
 	if (g_alloc == NULL)
 	{
@@ -155,6 +164,7 @@ PLUGIN_API int XPluginStart(
 		printf("No allocator\n");
 		return 0;
 	}
+#endif
 	
 	XPLMCreateFlightLoop_t pre = { 0 };
 	XPLMCreateFlightLoop_t post = { 0 };
@@ -216,12 +226,21 @@ PLUGIN_API int XPluginStart(
 			script_path += fptr;
 			script_path += ".lua";
 
+#if !MOBILE
 			g_modules.push_back(new module(
 							mod_path.c_str(),
 							init_script_path.c_str(),
 							script_path.c_str(),
 							lj_alloc_f,
 							g_alloc));
+#else
+			g_modules.push_back(new module(
+				mod_path.c_str(),
+				init_script_path.c_str(),
+				script_path.c_str(),
+				lj_alloc_f,
+				NULL));
+#endif
 		}
 			
 		++offset;
@@ -246,11 +265,13 @@ PLUGIN_API void	XPluginStop(void)
 		delete (*m);
 	g_modules.clear();
 
+#if !MOBILE
 	if(g_alloc)
 	{
 		lj_alloc_destroy(g_alloc);
 		g_alloc = NULL;
 	}
+#endif
 	
 	xlua_dref_cleanup();
 	xlua_cmd_cleanup();
@@ -295,6 +316,10 @@ PLUGIN_API void XPluginReceiveMessage(
 	case XPLM_MSG_AIRPORT_LOADED:
 		if(!g_is_acf_inited)
 		{
+			// Pick up any last stragglers from out-of-order load and then validate our datarefs!
+			xlua_relink_all_drefs();
+			xlua_validate_drefs();
+			
 			for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
 				(*m)->acf_load();
 			g_is_acf_inited = 1;							

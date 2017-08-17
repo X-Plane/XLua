@@ -23,7 +23,9 @@ using std::max;
 using std::vector;
 
 #define MSG_ADD_DATAREF 0x01000000
+#if !MOBILE
 #define STAT_PLUGIN_SIG "xplanesdk.examples.DataRefEditor"
+#endif
 
 //#define TRACE_DATAREFS printf
 #define TRACE_DATAREFS(...)
@@ -255,6 +257,13 @@ static void resolve_dref(xlua_dref * d)
 	}
 }
 
+void			xlua_validate_drefs()
+{
+	for(xlua_dref * f = s_drefs; f; f = f->m_next)
+	{
+		assert(f->m_dref != NULL);
+	}
+}
 
 xlua_dref *		xlua_find_dref(const char * name)
 {
@@ -573,6 +582,7 @@ void			xlua_dref_set_string(xlua_dref * d, const string& value)
 // our dref early and then ANOTHER add-on is loaded that defines it.
 void			xlua_relink_all_drefs()
 {
+#if !MOBILE
 	XPLMPluginID dre = XPLMFindPluginBySignature(STAT_PLUGIN_SIG);
 	if(dre != XPLM_NO_PLUGIN_ID)
 	if(!XPLMIsPluginEnabled(dre))
@@ -580,6 +590,7 @@ void			xlua_relink_all_drefs()
 		printf("WARNING: can't register drefs - DRE is not enabled.\n");
 		dre = XPLM_NO_PLUGIN_ID;
 	}
+#endif
 	for(xlua_dref * d = s_drefs; d; d = d->m_next)
 	{
 		if(d->m_dref == NULL)
@@ -587,12 +598,14 @@ void			xlua_relink_all_drefs()
 			assert(!d->m_ours);
 			resolve_dref(d);
 		}
+#if !MOBILE
 		if(d->m_ours)
 		if(dre != XPLM_NO_PLUGIN_ID)
 		{
 			printf("registered: %s\n", d->m_name.c_str());
 			XPLMSendMessageToPlugin(dre, MSG_ADD_DATAREF, (void *)d->m_name.c_str());		
 		}		
+#endif
 	}
 }
 
