@@ -116,6 +116,25 @@ static int XLuaGetPath(lua_State * L)
 	return 1;
 }
 
+static int XLuaGetCode(lua_State * L)
+{
+	module * me = module::module_from_interp(L);
+	assert(me);
+	
+	const char * name = luaL_checkstring(L, 1);
+	
+	int result = me->load_module_relative_path(name);
+	
+	if(result)
+	{
+		const char * err_msg = luaL_checkstring(L,1);
+		printf("%s: %s", name, err_msg);
+	}
+	
+	return 1;
+}
+
+
 //----------------------------------------------------------------
 // DATAREFS
 //----------------------------------------------------------------
@@ -418,6 +437,7 @@ static int XLuaIsTimerScheduled(lua_State * L)
 
 
 #define FUNC_LIST \
+	FUNC(XLuaGetCode) \
 	FUNC(XLuaGetPath) \
 	FUNC(XLuaFindDataRef) \
 	FUNC(XLuaCreateDataRef) \

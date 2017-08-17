@@ -38,7 +38,10 @@ public:
 
 			void *		module_alloc_tracked(size_t amount);
 			string		get_module_path() const { return m_path; }
-			
+
+			// Pushes error string or chunk onto interp stack, returns error code or 0.  
+			int			load_module_relative_path(const string& path);
+	
 			void		acf_load();
 			void		acf_unload();
 			void		flight_init();

@@ -140,6 +140,29 @@ module::module(
 	CTOR_FAIL(module_run_result,"run module");
 }
 
+int module::load_module_relative_path(const string& path)
+{
+	#if !MOBILE
+		#error code for desktop?
+	#else
+	
+		string rel_path(m_path);
+		string script_path = rel_path + path;
+		
+		xmap_class	script_text(script_path);
+		
+		if(!script_text.exists())
+		{
+			lua_pushstring(m_interp, (string("Unable to load script file: ") + path).c_str());
+			return LUA_ERRERR;
+		}
+		
+		int load_result = luaL_loadbuffer(m_interp, (const char*)script_text.begin(), script_text.size(), path.c_str());
+		
+		return load_result;
+	#endif
+}
+
 module * module::module_from_interp(lua_State * interp)
 {
 	lua_getglobal(interp,"__module_ptr");
