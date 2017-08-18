@@ -37,8 +37,7 @@ public:
 	static module *		module_from_interp(lua_State * interp);
 
 			void *		module_alloc_tracked(size_t amount);
-			string		get_module_path() const { return m_path; }
-
+			
 			// Pushes error string or chunk onto interp stack, returns error code or 0.  
 			int			load_module_relative_path(const string& path);
 	

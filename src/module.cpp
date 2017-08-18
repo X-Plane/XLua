@@ -15,6 +15,22 @@
 #include <assert.h>
 #include "lua_helpers.h"
 
+#if !MOBILE
+
+class	xmap_class {
+public:
+	xmap_class(const string& in_file_name);
+	~xmap_class() { free(m_buffer); }
+	bool exists() const { return m_buffer != NULL; }
+	const char * begin() const { return m_buffer; }
+	size_t size() const { return m_size; }
+private:
+	char *		 m_buffer;
+	size_t		 m_size;
+};
+
+#endif
+
 #define MALLOC_CHUNK_SIZE 4096
 
 struct module_alloc_block {
@@ -107,33 +123,25 @@ module::module(
 		
 	add_xpfuncs_to_interp(m_interp);
 	
-#if !MOBILE
-	int load_result = luaL_loadfile(m_interp, in_init_script);
-#else
 	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
 	// we need to load the Lua script from an already allocated memory buffer.
 	xmap_class linit(in_init_script);
 	if(!linit.exists())
 		CTOR_FAIL(-1, "load init script");
 	int load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), in_init_script);
-#endif
 	CTOR_FAIL(load_result, "load init script")
 
 	int init_script_result = lua_pcall(m_interp, 0, 0, 0);
 	CTOR_FAIL(init_script_result, "run init script");
 	
 	lua_getfield(m_interp, LUA_GLOBALSINDEX, "run_module_in_namespace");
-
-#if !MOBILE
-	int module_load_result = luaL_loadfile(m_interp, in_module_script);
-#else
+	
 	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
 	// we need to load the Lua script from an already allocated memory buffer.
 	xmap_class lmod(in_module_script);
 	if(!lmod.exists())
 		CTOR_FAIL(-1, "load module");
 	int module_load_result = luaL_loadbuffer(m_interp, (const char*)lmod.begin(), lmod.size(), in_module_script);
-#endif
 	CTOR_FAIL(module_load_result,"load module");
 	
 	int module_run_result = lua_pcall(m_interp, 1, 0, 0);
@@ -142,25 +150,20 @@ module::module(
 
 int module::load_module_relative_path(const string& path)
 {
-	#if !MOBILE
-		#error code for desktop?
-	#else
+	string rel_path(m_path);
+	string script_path = rel_path + path;
 	
-		string rel_path(m_path);
-		string script_path = rel_path + path;
-		
-		xmap_class	script_text(script_path);
-		
-		if(!script_text.exists())
-		{
-			lua_pushstring(m_interp, (string("Unable to load script file: ") + path).c_str());
-			return LUA_ERRERR;
-		}
-		
-		int load_result = luaL_loadbuffer(m_interp, (const char*)script_text.begin(), script_text.size(), path.c_str());
-		
-		return load_result;
-	#endif
+	xmap_class	script_text(script_path);
+	
+	if(!script_text.exists())
+	{
+		lua_pushstring(m_interp, (string("Unable to load script file: ") + path).c_str());
+		return LUA_ERRERR;
+	}
+	
+	int load_result = luaL_loadbuffer(m_interp, (const char*)script_text.begin(), script_text.size(), path.c_str());
+	
+	return load_result;
 }
 
 module * module::module_from_interp(lua_State * interp)
@@ -243,3 +246,48 @@ module::~module()
 	destroy_alloc_block(m_memory);
 		
 }
+
+#if !MOBILE
+
+#if IBM
+
+//-----
+//https://stackoverflow.com/questions/215963/how-do-you-properly-use-widechartomultibyte
+
+// Convert a wide Unicode string to an UTF8 string
+// Convert an UTF8 string to a wide Unicode String
+std::wstring utf8_decode(const std::string &str)
+{
+	if (str.empty()) return std::wstring();
+	int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
+	std::wstring wstrTo(size_needed, 0);
+	MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstrTo[0], size_needed);
+	return wstrTo;
+}
+
+//-----
+
+#endif
+
+xmap_class::xmap_class(const string& in_file_name) :
+	m_buffer(NULL), m_size(0)
+{
+#if IBM
+	FILE * fi = _wfopen(utf8_decode(in_file_name).c_str(), L"rb");
+#else
+	FILE * fi = fopen(in_file_name.c_str(), "rb");
+#endif
+	if(fi)
+	{
+		fseek(fi,0,SEEK_END);
+		m_size = ftell(fi);
+		fseek(fi,0,SEEK_SET);
+		m_buffer = (char *) malloc(m_size);
+		size_t bytes = fread(m_buffer,1,m_size,fi);
+		fclose(fi);
+		printf("Read %zd bytes from %s\n", bytes, in_file_name.c_str());
+	}
+}
+
+
+#endif

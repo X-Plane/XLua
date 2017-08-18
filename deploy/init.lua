@@ -426,8 +426,7 @@ end
 -- find same-dir scripts and does a setfenv to our NS
 function get_run_file_in_namespace(ns)
 	return function(fname)
-		full_path = XLuaGetPath()..fname
-		chunk = loadfile(full_path)
+		chunk = XLuaGetCode(fname)
 		setfenv(chunk,ns)
 		chunk()
 	end

@@ -108,14 +108,6 @@ T * luaL_checkuserdata(lua_State * L, int narg, const char * msg)
 // MISC
 //----------------------------------------------------------------
 
-static int XLuaGetPath(lua_State * L)
-{
-	module * me = module::module_from_interp(L);
-	assert(me);
-	lua_pushstring(L, me->get_module_path().c_str());
-	return 1;
-}
-
 static int XLuaGetCode(lua_State * L)
 {
 	module * me = module::module_from_interp(L);
@@ -438,7 +430,6 @@ static int XLuaIsTimerScheduled(lua_State * L)
 
 #define FUNC_LIST \
 	FUNC(XLuaGetCode) \
-	FUNC(XLuaGetPath) \
 	FUNC(XLuaFindDataRef) \
 	FUNC(XLuaCreateDataRef) \
 	FUNC(XLuaGetDataRefType) \

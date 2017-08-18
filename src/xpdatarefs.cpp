@@ -604,7 +604,7 @@ void			xlua_relink_all_drefs()
 		{
 			printf("registered: %s\n", d->m_name.c_str());
 			XPLMSendMessageToPlugin(dre, MSG_ADD_DATAREF, (void *)d->m_name.c_str());		
-		}
+		}		
 #endif
 	}
 }
