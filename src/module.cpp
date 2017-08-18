@@ -249,10 +249,34 @@ module::~module()
 
 #if !MOBILE
 
+#if IBM
+
+//-----
+//https://stackoverflow.com/questions/215963/how-do-you-properly-use-widechartomultibyte
+
+// Convert a wide Unicode string to an UTF8 string
+// Convert an UTF8 string to a wide Unicode String
+std::wstring utf8_decode(const std::string &str)
+{
+	if (str.empty()) return std::wstring();
+	int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
+	std::wstring wstrTo(size_needed, 0);
+	MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstrTo[0], size_needed);
+	return wstrTo;
+}
+
+//-----
+
+#endif
+
 xmap_class::xmap_class(const string& in_file_name) :
 	m_buffer(NULL), m_size(0)
 {
+#if IBM
+	FILE * fi = _wfopen(utf8_decode(in_file_name).c_str(), L"rb");
+#else
 	FILE * fi = fopen(in_file_name.c_str(), "rb");
+#endif
 	if(fi)
 	{
 		fseek(fi,0,SEEK_END);
