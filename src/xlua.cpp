@@ -115,7 +115,7 @@ static float xlua_pre_timer_master_cb(
                                    int                  inCounter,    
                                    void *               inRefcon)
 {
-	xlua_do_timers_for_time(XPLMGetElapsedTime());
+	xlua_do_timers_for_time(xlua_get_simulated_time());
 	
 	if(XPLMGetDatai(g_replay_active) == 0)
 	if(XPLMGetDataf(g_sim_period) > 0.0f)	

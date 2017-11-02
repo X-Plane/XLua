@@ -23,4 +23,7 @@ void xlua_timer_cleanup();
 
 
 
+double xlua_get_simulated_time();
+
+
 #endif /* xptimers_h */
