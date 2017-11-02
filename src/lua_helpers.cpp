@@ -73,26 +73,50 @@ int validate_args(lua_State * L, const char * fmt)
 }
 #endif
 
-static void setup_std_vars(lua_State * L)
+static int traceback(lua_State * L)
+{
+	luaL_traceback(L, L, lua_tostring(L, -1), 2);
+	lua_getfield(L, LUA_GLOBALSINDEX, "debug");
+	lua_getfield(L, -1, "traceback");
+	lua_pushvalue(L, 1);
+	lua_pushinteger(L, 1);
+	lua_call(L,2,1);
+
+//	lua_getfield(L, LUA_GLOBALSINDEX, "STP");
+//	lua_getfield(L, -1, "stacktrace");
+//	lua_pushvalue(L, 1);
+//	lua_pushinteger(L, 2);
+//	lua_call(L,2,1);
+//
+	return 1;
+}
+
+int lua_pushtraceback(lua_State * L)
+{
+	lua_pushcfunction(L, traceback);
+	return lua_gettop(L);
+}
+
+static void setup_std_vars(lua_State * L, int dbg)
 {
 	 lua_getfield(L, LUA_GLOBALSINDEX, "setup_callback_var");
-	 fmt_pcall(L,"sf","SIM_PERIOD",XPLMGetDataf(g_sim_period));
+	 fmt_pcall(L,dbg,"sf","SIM_PERIOD",XPLMGetDataf(g_sim_period));
 
 	 lua_getfield(L, LUA_GLOBALSINDEX, "setup_callback_var");
-	 fmt_pcall(L,"si","IN_REPLAY",XPLMGetDatai(g_replay_active) != 0 ?  1 : 0);
+	 fmt_pcall(L,dbg,"si","IN_REPLAY",XPLMGetDatai(g_replay_active) != 0 ?  1 : 0);
 }	
 
-int fmt_pcall(lua_State * L, const char * fmt, ...)
+int fmt_pcall(lua_State * L, int dbg, const char * fmt, ...)
 {
 	va_list va;
 	va_start(va, fmt);
-	int r = vfmt_pcall(L, fmt, va);
+	int r = vfmt_pcall(L, dbg, fmt, va);
 	va_end(va);
 	return r;
 }
 
-int vfmt_pcall(lua_State * L, const char * fmt, va_list va)
-{	
+int vfmt_pcall(lua_State * L, int dbg, const char * fmt, va_list va)
+{
 	const char * f = fmt;
 	int count = 0;
 	while(*f)
@@ -112,7 +136,7 @@ int vfmt_pcall(lua_State * L, const char * fmt, va_list va)
 		++f;
 		++count;
 	}
-	int e = lua_pcall(L, count, 0, 0);
+	int e = lua_pcall(L, count, 0, dbg);
 	if(e != 0)
 	{
 		printf("%s\n", lua_tostring(L, -1));
@@ -121,12 +145,12 @@ int vfmt_pcall(lua_State * L, const char * fmt, va_list va)
 	return e;
 }
 
-int fmt_pcall_stdvars(lua_State * L, const char * fmt, ...)
+int fmt_pcall_stdvars(lua_State * L, int dbg, const char * fmt, ...)
 {
-	setup_std_vars(L);
+	setup_std_vars(L, dbg);
 	va_list va;
 	va_start(va, fmt);
-	int r = vfmt_pcall(L, fmt, va);
+	int r = vfmt_pcall(L, dbg, fmt, va);
 	va_end(va);
 	return r;
 }

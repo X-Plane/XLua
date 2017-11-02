@@ -148,7 +148,7 @@ static void xlua_notify_helper(xlua_dref * who, void * ref)
 	lua_State * L = setup_lua_callback(ref);
 	if(L)
 	{
-		fmt_pcall_stdvars(L,"");
+		fmt_pcall_stdvars(L,module::debug_proc_from_interp(L),"");
 	}
 }
 
@@ -329,7 +329,7 @@ static void cmd_cb_helper(xlua_cmd * cmd, int phase, float elapsed, void * ref)
 	lua_State * L = setup_lua_callback(ref);
 	if(L)
 	{
-		fmt_pcall_stdvars(L,"if",phase, elapsed);
+		fmt_pcall_stdvars(L,module::debug_proc_from_interp(L),"if",phase, elapsed);
 	}
 }
 
@@ -388,7 +388,7 @@ static void timer_cb(void * ref)
 	lua_State * L = setup_lua_callback(ref);
 	if(L)
 	{
-		fmt_pcall_stdvars(L,"");
+		fmt_pcall_stdvars(L,module::debug_proc_from_interp(L),"");
 	}	
 }
 

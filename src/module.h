@@ -35,6 +35,7 @@ public:
 						~module();
 
 	static module *		module_from_interp(lua_State * interp);
+	static int			debug_proc_from_interp(lua_State * interp);
 
 			void *		module_alloc_tracked(size_t amount);
 			
@@ -54,9 +55,10 @@ private:
 
 		void			do_callout(const char * call_name);
 
-	lua_State *			m_interp;
+	lua_State *				m_interp;
 	module_alloc_block *	m_memory;
-	string				m_path;
+	string					m_path;
+	int						m_debug_proc;
 
 	module();
 	module(const module& rhs);

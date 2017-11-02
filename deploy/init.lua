@@ -1,4 +1,18 @@
-print("Running init script")
+-- Wanna use STP with XLua?  Copy StackTracePlus.lua to be next to init.lua in the same folder
+-- https://github.com/ignacio/StackTracePlus
+
+-- Grab STP conditionally, do not squawk if it is missing.
+if pcall(
+	function()
+		local STP_chunk = XLuaGetCode("../../StackTracePlus.lua")
+		local STP = STP_chunk()
+		debug.traceback = STP.stacktrace
+	end)
+then
+	print("Using STP as debugger.")
+end
+
+
 
 function dump(o)
    if type(o) == 'table' then
@@ -427,16 +441,20 @@ end
 function get_run_file_in_namespace(ns)
 	return function(fname)
 		chunk = XLuaGetCode(fname)
-		setfenv(chunk,ns)
-		chunk()
+		if chunk == nil then
+			print("Error: unable to load the file '"..full_path.."' for dofile.")
+			print(debug.traceback())
+			print("")
+		else
+			setfenv(chunk,ns)
+			chunk()
+		end
 	end
 end
 
 --------------------------------------------------------------------------------
 
 function run_module_in_namespace(fn)
-	print("Running module in namespace")
-
 	n = create_namespace()
 	all_timers = { }
 	
@@ -468,6 +486,9 @@ end
 function do_callout(fname)
 	func=n[fname]
 	if func ~= nil then
+		if STP ~= nil then
+			STP.add_known_function(func, fname)
+		end
 		func()
 	end
 end
