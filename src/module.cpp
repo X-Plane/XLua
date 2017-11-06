@@ -313,6 +313,7 @@ xmap_class::xmap_class(const string& in_file_name) :
 		fseek(fi,0,SEEK_SET);
 		m_buffer = (char *) malloc(m_size);
 		size_t bytes = fread(m_buffer,1,m_size,fi);
+		(void) bytes;
 		fclose(fi);
 	}
 }

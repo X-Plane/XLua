@@ -2,7 +2,8 @@
 //	This source code is licensed under the MIT open source license.
 //	See LICENSE.txt for the full terms of the license.
 
-#define VERSION "1.0.0b1"
+
+#define VERSION "1.0.0r1"
 
 #include <stdio.h>
 #include <string.h>
@@ -204,7 +205,7 @@ PLUGIN_API int XPluginStart(
 	{
 		char fname_buf[2048];
 		char * fptr;
-		int result = XPLMGetDirectoryContents(
+		XPLMGetDirectoryContents(
 								scripts_dir_path.c_str(),
 								offset,
 								fname_buf,
