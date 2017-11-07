@@ -9,3 +9,17 @@ XLua is developed internally by Laminar Research and is intended to help our int
 
 XLua is **not** meant to be an "official" Lua plugin for X-Plane, and it definitely does not replace any of the existing Lua plugins, all of which have significantly more features than XLua itself.
 
+Release Notes
+-----------------
+
+1.0.0r1 - 11/6/2017
+
+Bug fixes:
+ * Support for unicode install paths on Windows.
+ * Timing source is now sim time and not user interface time. Fixes scripts breaking on pause.
+ * Debug logging of missing datarefs.
+ * Full back-trace of uncaught Lua exceptions.
+
+1.0.0b1 - 11/26/16
+
+Initial Release
