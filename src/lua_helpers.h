@@ -22,9 +22,11 @@ extern "C" {
 // Returns the lua error if there is one or 0 if success; lua error message
 // is printed automagically.
 // i - int passed as number
-int fmt_pcall(lua_State * L, const char * fmt, ...);
-int vfmt_pcall(lua_State * L, const char * fmt, va_list va);
+int fmt_pcall(lua_State * L, int dbg, const char * fmt, ...);
+int vfmt_pcall(lua_State * L, int dbg, const char * fmt, va_list va);
 
-int fmt_pcall_stdvars(lua_State * L, const char * fmt, ...);
+int fmt_pcall_stdvars(lua_State * L, int dbg, const char * fmt, ...);
+
+int lua_pushtraceback(lua_State * L);
 
 #endif /* lua_helpers_h */

@@ -148,7 +148,7 @@ static void xlua_notify_helper(xlua_dref * who, void * ref)
 	lua_State * L = setup_lua_callback(ref);
 	if(L)
 	{
-		fmt_pcall_stdvars(L,"");
+		fmt_pcall_stdvars(L,module::debug_proc_from_interp(L),"");
 	}
 }
 
@@ -164,16 +164,16 @@ static int XLuaCreateDataRef(lua_State * L)
 		return luaL_argerror(L, 1, "dataref name must not be an empty string.");
 
 	int my_writeable;
-	if(strcmp(lua_tostring(L,3),"yes")==0)
+	if(strcmp(writable,"yes")==0)
 		my_writeable = 1;
-	else if (strcmp(lua_tostring(L,3),"no")==0)
+	else if (strcmp(writable,"no")==0)
 		my_writeable = 0;
 	else 
 		return luaL_argerror(L, 3, "writable must be 'yes' or 'no'");
 	
 	xlua_dref_type my_type = xlua_none;
 	int my_dim = 1;
-	const char * c = lua_tostring(L,2);
+	const char * c = typestr;
 	if(strcmp(c,"string") == 0)
 		my_type = xlua_string;
 	else if(strcmp(c,"number")==0)
@@ -329,7 +329,7 @@ static void cmd_cb_helper(xlua_cmd * cmd, int phase, float elapsed, void * ref)
 	lua_State * L = setup_lua_callback(ref);
 	if(L)
 	{
-		fmt_pcall_stdvars(L,"if",phase, elapsed);
+		fmt_pcall_stdvars(L,module::debug_proc_from_interp(L),"if",phase, elapsed);
 	}
 }
 
@@ -388,7 +388,7 @@ static void timer_cb(void * ref)
 	lua_State * L = setup_lua_callback(ref);
 	if(L)
 	{
-		fmt_pcall_stdvars(L,"");
+		fmt_pcall_stdvars(L,module::debug_proc_from_interp(L),"");
 	}	
 }
 

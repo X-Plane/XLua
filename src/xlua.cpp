@@ -2,7 +2,8 @@
 //	This source code is licensed under the MIT open source license.
 //	See LICENSE.txt for the full terms of the license.
 
-#define VERSION "1.0.0b1"
+
+#define VERSION "1.0.0r1"
 
 #include <stdio.h>
 #include <string.h>
@@ -115,7 +116,7 @@ static float xlua_pre_timer_master_cb(
                                    int                  inCounter,    
                                    void *               inRefcon)
 {
-	xlua_do_timers_for_time(XPLMGetElapsedTime());
+	xlua_do_timers_for_time(xlua_get_simulated_time());
 	
 	if(XPLMGetDatai(g_replay_active) == 0)
 	if(XPLMGetDataf(g_sim_period) > 0.0f)	
@@ -204,7 +205,7 @@ PLUGIN_API int XPluginStart(
 	{
 		char fname_buf[2048];
 		char * fptr;
-		int result = XPLMGetDirectoryContents(
+		XPLMGetDirectoryContents(
 								scripts_dir_path.c_str(),
 								offset,
 								fname_buf,

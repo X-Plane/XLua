@@ -15,6 +15,24 @@
 #include <assert.h>
 #include "lua_helpers.h"
 
+static const char * shorten_to_file(const char * path)
+{
+	const char * p = path, * t = path;
+	while(*p)
+	{
+		if(*p == '/' || *p == '\\')
+			t = p+1;
+		++p;
+	}
+	return t;
+}
+
+static int length_of_dir(const char * p)
+{
+	const char * f = shorten_to_file(p);
+	return f - p;
+}
+
 #if !MOBILE
 
 class	xmap_class {
@@ -103,7 +121,8 @@ module::module(
 	m_memory(NULL),
 	m_path(in_module_path)
 {
-	printf("Running %s/%s\n", in_init_script, in_module_script);
+	int boiler_plate_paths = length_of_dir(in_init_script);
+	printf("Running %s\n", in_module_script+boiler_plate_paths);
 	
 #if MOBILE
 	m_interp = luaL_newstate();
@@ -128,12 +147,15 @@ module::module(
 	xmap_class linit(in_init_script);
 	if(!linit.exists())
 		CTOR_FAIL(-1, "load init script");
-	int load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), in_init_script);
+	
+	m_debug_proc = lua_pushtraceback(m_interp);
+	
+	int load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), in_init_script+boiler_plate_paths);
 	CTOR_FAIL(load_result, "load init script")
 
-	int init_script_result = lua_pcall(m_interp, 0, 0, 0);
+	int init_script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
 	CTOR_FAIL(init_script_result, "run init script");
-	
+
 	lua_getfield(m_interp, LUA_GLOBALSINDEX, "run_module_in_namespace");
 	
 	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
@@ -141,10 +163,10 @@ module::module(
 	xmap_class lmod(in_module_script);
 	if(!lmod.exists())
 		CTOR_FAIL(-1, "load module");
-	int module_load_result = luaL_loadbuffer(m_interp, (const char*)lmod.begin(), lmod.size(), in_module_script);
+	int module_load_result = luaL_loadbuffer(m_interp, (const char*)lmod.begin(), lmod.size(), in_module_script+boiler_plate_paths);
 	CTOR_FAIL(module_load_result,"load module");
 	
-	int module_run_result = lua_pcall(m_interp, 1, 0, 0);
+	int module_run_result = lua_pcall(m_interp, 1, 0, m_debug_proc);
 	CTOR_FAIL(module_run_result,"run module");
 }
 
@@ -157,13 +179,20 @@ int module::load_module_relative_path(const string& path)
 	
 	if(!script_text.exists())
 	{
-		lua_pushstring(m_interp, (string("Unable to load script file: ") + path).c_str());
-		return LUA_ERRERR;
+		return luaL_error(m_interp, "Unable to load script file: %s", path.c_str());
 	}
 	
 	int load_result = luaL_loadbuffer(m_interp, (const char*)script_text.begin(), script_text.size(), path.c_str());
 	
 	return load_result;
+}
+
+int module::debug_proc_from_interp(lua_State * interp)
+{
+	module * me = module_from_interp(interp);
+	if(me)
+		return me->m_debug_proc;
+	return 0;
 }
 
 module * module::module_from_interp(lua_State * interp)
@@ -235,7 +264,7 @@ void module::do_callout(const char * f)
 	}
 	else
 	{	
-		fmt_pcall_stdvars(m_interp,"s",f);	
+		fmt_pcall_stdvars(m_interp,m_debug_proc,"s",f);
 	}
 }
 
@@ -284,8 +313,8 @@ xmap_class::xmap_class(const string& in_file_name) :
 		fseek(fi,0,SEEK_SET);
 		m_buffer = (char *) malloc(m_size);
 		size_t bytes = fread(m_buffer,1,m_size,fi);
+		(void) bytes;
 		fclose(fi);
-		printf("Read %zd bytes from %s\n", bytes, in_file_name.c_str());
 	}
 }
 

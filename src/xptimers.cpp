@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <XPLMProcessing.h>
+#include <XPLMDataAccess.h>
 
 struct xlua_timer {
 	xlua_timer *		m_next;
@@ -51,7 +52,7 @@ void xlua_run_timer(xlua_timer * t, double delay, double repeat)
 	if(delay == -1.0)
 		t->m_next_fire_time = delay;
 	else
-		t->m_next_fire_time = XPLMGetElapsedTime() + delay;
+		t->m_next_fire_time = xlua_get_simulated_time() + delay;
 }
 
 int xlua_is_timer_scheduled(xlua_timer * t)
@@ -85,4 +86,11 @@ void xlua_timer_cleanup()
 		s_timers = s_timers->m_next;
 		delete k;
 	}
+}
+
+
+double xlua_get_simulated_time(void)
+{
+	static XPLMDataRef sim_time = XPLMFindDataRef("sim/time/total_running_time_sec");
+	return XPLMGetDataf(sim_time);
 }
