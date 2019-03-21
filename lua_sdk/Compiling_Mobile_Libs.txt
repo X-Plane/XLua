@@ -1,43 +1,56 @@
 **********************************************************
 APPLE IPHONE
+NOTE: HELLLLLLLLLLLLLL!!!! LuaJIT compiles an intermediate "buildvm" which they use as their compiler to get 'super fast JIT' that's better than Clang. This means that even though we're
+compiling for a damn iPhone, we STILL need to compile an i386/x86_64 app...and the pointer sizes of the buildvm need to match that of the target device. In other words, building a 32bit
+armv7 binary requires us to build an i386 buildvm. Here comes Apple who dropped i386 support somewhere between the 10.12 and 10.14 SDK. Luckily, Ben is an old grouchy fart who still
+had the 10.12 SDK on his machine so I took it and alter the paths to build this as you can see below. But I've been told that Mojave is the LAST version of the OS that will even RUN
+a 32bit app so we're going to have future problems building this!
 **********************************************************
 
 FOR ARMV7
 --------------------------------
 ISDKP=$(xcrun --sdk iphoneos --show-sdk-path)
 ICC=$(xcrun --sdk iphoneos --find clang)
-ISDKF="-arch armv7 -isysroot $ISDKP -miphoneos-version-min=8.0 -fembed-bitcode"
-make HOST_CC="clang -m32 -arch i386" CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS BUILDMODE=static
+ISDKF="-arch armv7 -isysroot $ISDKP -miphoneos-version-min=10.0 -fembed-bitcode"
+HOSTFLAGS="clang -m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk"
+make DEFAULT_CC=clang HOST_CC="$HOSTFLAGS" CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS BUILDMODE=static
 
 FOR ARMV7S
 --------------------------------
 ISDKP=$(xcrun --sdk iphoneos --show-sdk-path)
 ICC=$(xcrun --sdk iphoneos --find clang)
-ISDKF="-arch armv7s -isysroot $ISDKP -miphoneos-version-min=8.0 -fembed-bitcode"
-make HOST_CC="clang -m32 -arch i386" CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS BUILDMODE=static
+ISDKF="-arch armv7s -isysroot $ISDKP -miphoneos-version-min=10.0 -fembed-bitcode"
+HOSTFLAGS="clang -m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk"
+make DEFAULT_CC=clang HOST_CC="$HOSTFLAGS" CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS BUILDMODE=static
 
 FOR ARM64
 --------------------------------
 ISDKP=$(xcrun --sdk iphoneos --show-sdk-path)
 ICC=$(xcrun --sdk iphoneos --find clang)
-ISDKF="-arch arm64 -isysroot $ISDKP -miphoneos-version-min=8.0 -fembed-bitcode"
-make HOST_CC="clang -m64 -arch x86_64" CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS BUILDMODE=static
+ISDKF="-arch arm64 -isysroot $ISDKP -miphoneos-version-min=10.0 -fembed-bitcode"
+HOSTFLAGS="clang -m64 -arch x86_64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk"
+make DEFAULT_CC=clang HOST_CC="$HOSTFLAGS" CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS BUILDMODE=static
+
+FOR ARM64E
+--------------------------------
+ISDKP=$(xcrun --sdk iphoneos --show-sdk-path)
+ICC=$(xcrun --sdk iphoneos --find clang)
+ISDKF="-arch arm64e -isysroot $ISDKP -miphoneos-version-min=10.0 -fembed-bitcode"
+HOSTFLAGS="clang -m64 -arch x86_64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk"
+make DEFAULT_CC=clang HOST_CC="$HOSTFLAGS" CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS BUILDMODE=static
 
 FOR SIMULATOR
+NOTE: You must force LJ_TARGET_IOS to 1 in lj_arch.h or it'll think we're building for MacOSX and will try and use 'system()' which doesn't exist on iPhoneSimulator or iPhone
+NOTE2: We're NOT using the 10.12 SDK here. Doing so causes luaL_newstate to crash.
 --------------------------------
 ISDKP=$(xcrun --sdk iphonesimulator --show-sdk-path)
 ICC=$(xcrun --sdk iphonesimulator --find clang)
-ISDKF="-arch i386 -isysroot $ISDKP -miphoneos-version-min=8.0 -fembed-bitcode"
-make HOST_CC="clang -m32 -arch i386” CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS BUILDMODE=static
-
-ISDKP=$(xcrun --sdk iphonesimulator --show-sdk-path)
-ICC=$(xcrun --sdk iphonesimulator --find clang)
-ISDKF="-arch x86_64 -isysroot $ISDKP -miphoneos-version-min=8.0 -fembed-bitcode"
-make HOST_CC="clang -m64 -arch x86_64" CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS BUILDMODE=static
+ISDKF="-arch x86_64 -isysroot $ISDKP -miphoneos-version-min=10.0 -fembed-bitcode"
+make DEFAULT_CC="clang -DLUAJIT_ENABLE_GC64" CROSS="$(dirname $ICC)/" TARGET_FLAGS="$ISDKF" TARGET_SYS=iOS BUILDMODE=static
 
 TO COMBINE THEM INTO ONE STATIC LIB
 -----------------------------------
-xcrun -sdk iphoneos lipo -create -arch armv7 libluajit_armv7.a -arch armv7s libluajit_armv7s.a -arch arm64 libluajit_arm64.a -arch x86_64 libluajit_x86_64.a -arch i386 libluajit_i386.a -output libluajit_iOS.a
+xcrun -sdk iphoneos lipo -create -arch armv7 libluajit_armv7.a -arch armv7s libluajit_armv7s.a -arch arm64 libluajit_arm64.a -arch arm64e libluajit_arm64e.a -arch x86_64 libluajit_x86_64.a -output libluajit_iOS.a
 
 TO TEST
 -----------------------------------
@@ -48,10 +61,24 @@ xcrun -sdk iphoneos lipo -info libluajit_iOS.a
 ANDROID
 **********************************************************
 
-NDK=/Users/cjserio/Code/X-Plane/iphone/SDK/android/ndk
-NDKABI=16
-NDKVER=$NDK/toolchains/arm-linux-androideabi-4.8
-NDKP=$NDKVER/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-
-NDKF="--sysroot $NDK/platforms/android-$NDKABI/arch-arm"
-NDKARCH="-march=armv7-a -Wl,--fix-cortex-a8"
-make DEFAULT_CC="gcc" HOST_CC="gcc -m32" CROSS=$NDKP TARGET_FLAGS="$NDKF $NDKARCH" TARGET_SYS=Linux BUILDMODE=static
+FOR ARMV7A
+--------------------------------
+NDK=~/Library/Android/sdk/ndk-bundle
+NDKABI=19
+NDKVER=$NDK/toolchains/llvm
+NDKP=$NDKVER/prebuilt/darwin-x86_64/bin/
+NDKF="--sysroot $NDK/sysroot"
+NDKARCH=" -mfloat-abi=softfp -Wl,--fix-cortex-a8 -target armv7a-linux-androideabi$NDKABI"
+HOSTFLAGS="clang -m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk"
+make android DEFAULT_CC="clang" HOST_CC="$HOSTFLAGS" CROSS=$NDKP TARGET_FLAGS="$NDKF $NDKARCH" TARGET_SYS=Linux TARGET_AR="$NDKP/arm-linux-androideabi-ar rcus 2>/dev/null" BUILDMODE=static
+
+FOR ARM64
+--------------------------------
+NDK=~/Library/Android/sdk/ndk-bundle
+NDKABI=19
+NDKVER=$NDK/toolchains/llvm
+NDKP=$NDKVER/prebuilt/darwin-x86_64/bin/
+NDKF="--sysroot $NDK/sysroot"
+NDKARCH=" -mfloat-abi=softfp -Wl,--fix-cortex-a8 -target aarch64-linux-android$NDKABI"
+HOSTFLAGS="clang -m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk"
+make android DEFAULT_CC="clang" HOST_CC="$HOSTFLAGS" CROSS=$NDKP TARGET_FLAGS="$NDKF $NDKARCH" TARGET_SYS=Linux TARGET_AR="$NDKP/aarch64-linux-android-ar rcus 2>/dev/null" BUILDMODE=static
