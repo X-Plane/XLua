@@ -80,5 +80,5 @@ NDKVER=$NDK/toolchains/llvm
 NDKP=$NDKVER/prebuilt/darwin-x86_64/bin/
 NDKF="--sysroot $NDK/sysroot"
 NDKARCH=" -mfloat-abi=softfp -Wl,--fix-cortex-a8 -target aarch64-linux-android$NDKABI"
-HOSTFLAGS="clang -m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk"
+HOSTFLAGS="clang -m64 -arch x86_64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk"
 make android DEFAULT_CC="clang" HOST_CC="$HOSTFLAGS" CROSS=$NDKP TARGET_FLAGS="$NDKF $NDKARCH" TARGET_SYS=Linux TARGET_AR="$NDKP/aarch64-linux-android-ar rcus 2>/dev/null" BUILDMODE=static
