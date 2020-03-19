@@ -259,15 +259,26 @@ static void resolve_dref(xlua_dref * d)
 
 void			xlua_validate_drefs()
 {
+#if MOBILE
+	bool dref_missing = false;
 	for(xlua_dref * f = s_drefs; f; f = f->m_next)
 	{
-	#if MOBILE
-		assert(f->m_dref != NULL);
-	#else
+		if(f->m_dref == NULL)
+		{
+			dref_missing = true;
+			printf("WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
+		}
+	}
+	
+	assert(!dref_missing);
+	
+#else
+	for(xlua_dref * f = s_drefs; f; f = f->m_next)
+	{
 		if(f->m_dref == NULL)
 			printf("WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
-	#endif
 	}
+#endif
 }
 
 xlua_dref *		xlua_find_dref(const char * name)
