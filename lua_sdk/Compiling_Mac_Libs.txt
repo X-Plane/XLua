@@ -1,0 +1,4 @@
+ 1) From inside the LuaJIT-2.1.0-beta3 source folder run:
+MACOSX_DEPLOYMENT_TARGET=10.10 CFLAGS="-DLUAJIT_ENABLE_GC64" make
+ 
+NOTE: This will make libluajit.a in the src folder on whatever architecture you're buidling it on. I had to make the x86_64 one on my iMac and the arm64 one on my M1 Macbook because Lua uses an intermediate minilua executable to generate more source to compile and if you tell it to cross compile for arm64 (while on x86_64 for example), it'll then try to run that executable on the HOST machine which is going to be compiled for the wrong architecture.

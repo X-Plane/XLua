@@ -232,8 +232,8 @@
 					"$(HEADER_SEARCH_PATHS)",
 				);
 				MACH_O_TYPE = mh_bundle;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				ONLY_ACTIVE_ARCH = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"$(OTHER_LDFLAGS)",
 					"-Wl,-exported_symbol",
@@ -300,8 +300,8 @@
 					"$(HEADER_SEARCH_PATHS)",
 				);
 				MACH_O_TYPE = mh_bundle;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				ONLY_ACTIVE_ARCH = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"$(OTHER_LDFLAGS)",
 					"-Wl,-exported_symbol",
@@ -327,7 +327,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = /code/design/Resources/plugins/;
+				DSTROOT = ../../../Resources/plugins/;
 				INSTALL_PATH = /xlua/64/;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -340,7 +340,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = /code/design/Resources/plugins/;
+				DSTROOT = ../../../Resources/plugins/;
 				INSTALL_PATH = /xlua/64/;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",

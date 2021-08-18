@@ -124,11 +124,7 @@ module::module(
 	int boiler_plate_paths = length_of_dir(in_init_script);
 	printf("Running %s\n", in_module_script+boiler_plate_paths);
 	
-#if MOBILE
 	m_interp = luaL_newstate();
-#else
-	m_interp = lua_newstate(in_alloc_func, in_alloc_ref);
-#endif
 
 	if(m_interp == NULL)
 	{
