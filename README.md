@@ -12,6 +12,13 @@ XLua is **not** meant to be an "official" Lua plugin for X-Plane, and it definit
 Release Notes
 -----------------
 
+1.1.0r1 - 08/21/2021
+
+Features:
+ * Upgraded to LuaJIT 2.1
+ * LuaJIT GC64 support is now enabled so that custom allocator is no longer necessary.
+ * Mac arm64 support
+
 1.0.0r1 - 11/6/2017
 
 Bug fixes:
