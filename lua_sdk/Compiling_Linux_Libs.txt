@@ -1,0 +1,8 @@
+Compiling LuaJIT with Ubuntu 14.04 LTS:
+
+  podman run -e=CFLAGS=-fPIC --mount=type=bind,source=$(pwd)/LuaJIT-2.1.0/,destination=/build docker.io/library/ubuntu:14.04 bash -c "cd /build && apt-get update && apt-get install -y build-essential && make"
+
+
+Compiling XLua with Ubuntu 14.04 LTS:
+
+  podman run --mount=type=bind,source=$(pwd),destination=/build docker.io/library/ubuntu:14.04 bash -c "cd /build && apt-get update && apt-get install -y build-essential && make"
