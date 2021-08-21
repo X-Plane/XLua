@@ -1,0 +1,4 @@
+ 1) From inside the LuaJIT-2.1.0/src folder IN AN x64 VS2019 COMMAND PROMPT run:
+NOTE: It MUST be an x64 command prompt, not an x86 one!
+
+msvcbuild.bat static
