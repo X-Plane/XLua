@@ -326,6 +326,7 @@
 		D607B19C09A556E400699BC3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Distribution: Laminar Research (LPH4NFE92D)";
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ../../../Resources/plugins/;
 				INSTALL_PATH = /xlua/64/;
@@ -334,20 +335,24 @@
 					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 			};
 			name = Debug;
 		};
 		D607B19D09A556E400699BC3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Distribution: Laminar Research (LPH4NFE92D)";
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ../../../Resources/plugins/;
+				ENABLE_HARDENED_RUNTIME = YES;
 				INSTALL_PATH = /xlua/64/;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 			};
 			name = Release;
 		};
