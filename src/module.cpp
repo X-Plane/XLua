@@ -122,7 +122,8 @@ module::module(
 	m_path(in_module_path)
 {
 	int boiler_plate_paths = length_of_dir(in_init_script);
-	printf("Running %s\n", in_module_script+boiler_plate_paths);
+	m_log_path = in_module_script + boiler_plate_paths;
+	printf("Running %s\n", m_log_path.c_str());
 	
 	m_interp = luaL_newstate();
 
@@ -146,7 +147,7 @@ module::module(
 	
 	m_debug_proc = lua_pushtraceback(m_interp);
 	
-	int load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), in_init_script+boiler_plate_paths);
+	int load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), m_log_path.c_str());
 	CTOR_FAIL(load_result, "load init script")
 
 	int init_script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
@@ -159,7 +160,7 @@ module::module(
 	xmap_class lmod(in_module_script);
 	if(!lmod.exists())
 		CTOR_FAIL(-1, "load module");
-	int module_load_result = luaL_loadbuffer(m_interp, (const char*)lmod.begin(), lmod.size(), in_module_script+boiler_plate_paths);
+	int module_load_result = luaL_loadbuffer(m_interp, (const char*)lmod.begin(), lmod.size(), m_log_path.c_str());
 	CTOR_FAIL(module_load_result,"load module");
 	
 	int module_run_result = lua_pcall(m_interp, 1, 0, m_debug_proc);

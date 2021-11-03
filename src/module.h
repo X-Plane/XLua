@@ -41,7 +41,8 @@ public:
 			
 			// Pushes error string or chunk onto interp stack, returns error code or 0.  
 			int			load_module_relative_path(const string& path);
-	
+	const	string		&get_log_path(void) { return m_log_path; }
+
 			void		acf_load();
 			void		acf_unload();
 			void		flight_init();
@@ -58,6 +59,7 @@ private:
 	lua_State *				m_interp;
 	module_alloc_block *	m_memory;
 	string					m_path;
+	string					m_log_path;
 	int						m_debug_proc;
 
 	module();

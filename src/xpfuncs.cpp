@@ -21,6 +21,9 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include <XPLMUtilities.h>
+#include <XPLMDataAccess.h>
+
 /*
 	TODO: figure out when we have to resync our datarefs
 	TODO: what if dref already registered before acf reload?  (maybe no harm?)
@@ -28,7 +31,7 @@
 
  */
 
-
+static XPLMDataRef drSimRealTime = nullptr;
 
 // This is kind of a mess - Lua [annoyingly] doesn't give you a way to store a closure/Lua interpreter function
 // in C space.  The hack is to use luaL_ref to fill a new key in the registry table with a copy of ANY value from
@@ -450,6 +453,69 @@ static int XLuaIsTimerScheduled(lua_State * L)
 	FUNC(XLuaRunTimer) \
 	FUNC(XLuaIsTimerScheduled)
 
+static int l_my_print(lua_State *L)
+{
+	int nargs = lua_gettop(L);
+	module *me = module::module_from_interp(L);
+
+	char prefix[256];
+	float hrs, min, sec, real_time = XPLMGetDataf(drSimRealTime);
+	hrs = (int)(real_time / 3600.0f);
+	min = (int)(real_time / 60.0f) - (int)(hrs * 60.0f);
+	sec = real_time-(hrs * 3600.0f) - (min * 60.0f);
+	sprintf(prefix, "%d:%02d:%06.3f LUA: ", (int)hrs, (int)min, sec);
+
+	// Unwieldy... but on the other hand, lua debug statements could in theory come from anywhere, from
+	// several different instances of xlua at the same time so the full path probably is needed.
+	std::string output = prefix + me->get_log_path() + "\n";
+	XPLMDebugString(output.c_str());
+	output = prefix;
+
+	char num_buf[128];
+
+	for (int i = 1; i <= nargs; i++)
+	{
+		switch (lua_type(L, i))
+		{
+			case LUA_TNIL:
+				output += "(nil)";
+				break;
+
+			case LUA_TBOOLEAN:
+				output += lua_toboolean(L, i) ? "true" : "false";
+				break;
+
+			case LUA_TNUMBER:
+				lua_number2str(num_buf, lua_tonumber(L, i));
+				output += num_buf;
+				break;
+
+			case LUA_TSTRING:
+				output += lua_tostring(L, i);
+				break;
+
+			case LUA_TTABLE:
+				// At least let people know that tables need to be split down for print() .
+				output += "(table)";
+				break;
+
+			default:
+				output += "(???)";
+		}
+
+		output += " ";
+	}
+
+	output += "\n";
+	XPLMDebugString(output.c_str());
+
+	return 0;
+}
+
+static const struct luaL_Reg printlib[] = {
+	{ "print", l_my_print },
+	{ NULL, NULL } /* end of array */
+};
 
 void	add_xpfuncs_to_interp(lua_State * L)
 {
@@ -457,5 +523,12 @@ void	add_xpfuncs_to_interp(lua_State * L)
 		lua_register(L,#x,x);
 		
 	FUNC_LIST
-	
+
+	// For logging
+	drSimRealTime = XPLMFindDataRef("sim/network/misc/network_time_sec");
+
+	// Register the custom print handler
+	lua_getglobal(L, "_G");
+	luaL_register(L, NULL, printlib);
+	lua_pop(L, 1);
 }
