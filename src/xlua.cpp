@@ -159,7 +159,7 @@ PLUGIN_API int XPluginStart(
 	pre.structSize = sizeof(pre);
 	post.structSize = sizeof(post);
 	pre.phase = xplm_FlightLoop_Phase_BeforeFlightModel;
-	post.phase = xplm_FlightLoop_Phase_BeforeFlightModel;
+	post.phase = xplm_FlightLoop_Phase_AfterFlightModel;
 	pre.callbackFunc = xlua_pre_timer_master_cb;
 	post.callbackFunc = xlua_post_timer_master_cb;
 
