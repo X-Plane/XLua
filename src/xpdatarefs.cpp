@@ -618,7 +618,7 @@ void			xlua_relink_all_drefs()
 		if(d->m_ours)
 		if(dre != XPLM_NO_PLUGIN_ID)
 		{
-			printf("registered: %s\n", d->m_name.c_str());
+//			printf("registered: %s\n", d->m_name.c_str());
 			XPLMSendMessageToPlugin(dre, MSG_ADD_DATAREF, (void *)d->m_name.c_str());		
 		}		
 #endif
