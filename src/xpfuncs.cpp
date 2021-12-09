@@ -469,7 +469,7 @@ static int l_my_print(lua_State *L)
 	// several different instances of xlua at the same time so the full path probably is needed.
 	std::string output = prefix + me->get_log_path() + "\n";
 	XPLMDebugString(output.c_str());
-	output = prefix;
+	output.clear();
 
 	char num_buf[128];
 
@@ -506,7 +506,11 @@ static int l_my_print(lua_State *L)
 		output += " ";
 	}
 
+	// Keep the console output too.
+	puts(output.c_str());
+
 	output += "\n";
+	XPLMDebugString(prefix);
 	XPLMDebugString(output.c_str());
 
 	return 0;
