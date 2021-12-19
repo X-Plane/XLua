@@ -34,7 +34,7 @@
 		D60205611CC7CC8C00933688 /* xpfuncs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xpfuncs.h; sourceTree = "<group>"; };
 		D60205621CC7CC8C00933688 /* xptimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xptimers.cpp; sourceTree = "<group>"; };
 		D60205631CC7CC8C00933688 /* xptimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xptimers.h; sourceTree = "<group>"; };
-		D607B19909A556E400699BC3 /* mac.xpl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = mac.xpl; sourceTree = BUILT_PRODUCTS_DIR; };
+		D607B19909A556E400699BC3 /* xlua.xpl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = xlua.xpl; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6A7BDA916A1DEA200D1426A /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		D6A7BDC016A1DEC000D1426A /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		D6A7BDF016A1DED200D1426A /* XPLM.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XPLM.framework; path = SDK/Libraries/Mac/XPLM.framework; sourceTree = "<group>"; };
@@ -97,7 +97,7 @@
 		D607B19A09A556E400699BC3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D607B19909A556E400699BC3 /* mac.xpl */,
+				D607B19909A556E400699BC3 /* xlua.xpl */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -136,7 +136,7 @@
 			);
 			name = xlua;
 			productName = StarterPlugin;
-			productReference = D607B19909A556E400699BC3 /* mac.xpl */;
+			productReference = D607B19909A556E400699BC3 /* xlua.xpl */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */
@@ -146,6 +146,11 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0910;
+				TargetAttributes = {
+					D607B19809A556E400699BC3 = {
+						DevelopmentTeam = LPH4NFE92D;
+					};
+				};
 			};
 			buildConfigurationList = D607B16209A5563100699BC3 /* Build configuration list for PBXProject "xlua" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -249,7 +254,6 @@
 					lua_sdk/libluajit_mac.a,
 				);
 				PREBINDING = NO;
-				PRODUCT_NAME = mac;
 				SDKROOT = macosx;
 				XPSDK_ROOT = SDK;
 			};
@@ -317,7 +321,6 @@
 					lua_sdk/libluajit_mac.a,
 				);
 				PREBINDING = NO;
-				PRODUCT_NAME = mac;
 				SDKROOT = macosx;
 				XPSDK_ROOT = SDK;
 			};
@@ -326,33 +329,31 @@
 		D607B19C09A556E400699BC3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "Apple Distribution: Laminar Research (LPH4NFE92D)";
-				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = ../../../Resources/plugins/;
-				INSTALL_PATH = /xlua/64/;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				DEVELOPMENT_TEAM = LPH4NFE92D;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
+				PRODUCT_NAME = xlua;
 			};
 			name = Debug;
 		};
 		D607B19D09A556E400699BC3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "Apple Distribution: Laminar Research (LPH4NFE92D)";
-				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = ../../../Resources/plugins/;
+				CODE_SIGN_IDENTITY = "Developer ID Application: Laminar Research (LPH4NFE92D)";
+				DEVELOPMENT_TEAM = LPH4NFE92D;
 				ENABLE_HARDENED_RUNTIME = YES;
-				INSTALL_PATH = /xlua/64/;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
+				PRODUCT_NAME = xlua;
 			};
 			name = Release;
 		};
