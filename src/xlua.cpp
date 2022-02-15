@@ -226,12 +226,12 @@ int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefco
 	// command in init.lua for example...
 	if (inPhase == xplm_CommandBegin && g_is_acf_inited)
 	{
-		CleanupScripts();
-		InitScripts();
-
 		// Set to false to clear state on this too. Provided the XLuaReloadOnFlightChange() call is still in the scripts,
 		// it will be immediately set back to true from the XPLM_MSG_AIRPORT_LOADED code below.
 		g_bReloadOnFlightChange = false;
+
+		CleanupScripts();
+		InitScripts();
 
 		if (!(intptr_t)inRefcon)	// Recursion block - ResetState() can be called from XPluginReceiveMessage().
 		{
