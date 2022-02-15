@@ -18,5 +18,7 @@ extern "C" {
 
 void	add_xpfuncs_to_interp(lua_State * interp);
 
+void InitScripts(void);
+void CleanupScripts(void);
 
 #endif /* xpfuncs_h */

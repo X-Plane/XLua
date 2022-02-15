@@ -225,7 +225,7 @@ void		module::acf_unload()
 	do_callout("aircraft_unload");
 }
 
-void		module::flight_init()
+void		module::flight_start()
 {
 	do_callout("flight_start");
 }

@@ -45,7 +45,7 @@ public:
 
 			void		acf_load();
 			void		acf_unload();
-			void		flight_init();
+			void		flight_start();
 			void		flight_crash();
 			
 			void		pre_physics();

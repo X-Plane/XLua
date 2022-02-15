@@ -19,6 +19,8 @@
 
 using std::string;
 
+int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon);
+
 struct xlua_cmd {
 	xlua_cmd() : m_next(NULL),m_cmd(NULL),m_ours(0),
 		m_pre_handler(NULL),m_pre_ref(NULL),
@@ -186,5 +188,11 @@ void xlua_cmd_cleanup()
 		s_cmds = s_cmds->m_next;
 		delete k;
 	}
+
+	assert(s_cmds == nullptr);
 }
 
+void xlua_cmd_mark_reload_on_change()
+{
+	g_bReloadOnFlightChange = true;
+}

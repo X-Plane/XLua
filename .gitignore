@@ -1,7 +1,7 @@
 xlua.xcodeproj/*
 !xlua.xcodeproj/project.pbxproj
 !xlua.xcodeproj/xcshareddata/
-/Debug/32/*
-/Debug/64/*
+/Debug/**
+/Release/**
 /.vs/*
 /xlua.vcxproj.user

@@ -22,6 +22,8 @@
 #include <XPLMDataAccess.h>
 #include <XPLMUtilities.h>
 #include <XPLMProcessing.h>
+#include <XPLMMenus.h>
+#include <XPLMPlanes.h>
 
 #include "module.h"
 #include "xpdatarefs.h"
@@ -51,9 +53,13 @@ extern "C" {
 static vector<module *>g_modules;
 static XPLMFlightLoopID	g_pre_loop = NULL;
 static XPLMFlightLoopID	g_post_loop = NULL;
-static int				g_is_acf_inited = 0;
+static bool				g_is_acf_inited = false;
 XPLMDataRef				g_replay_active = NULL;
 XPLMDataRef				g_sim_period = NULL;
+XPLMCommandRef			reset_cmd = nullptr;
+XPLMMenuID				PluginMenu = 0;
+
+static string plugin_base_path;
 
 struct lua_alloc_request_t {
 			void *	ud;
@@ -62,16 +68,20 @@ struct lua_alloc_request_t {
 			size_t	nsize;
 };
 
+enum eMenuItems : int
+{
+	MI_ResetState,
+};
+
+bool g_bReloadOnFlightChange = false;
+
+PLUGIN_API void XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void* inParam);
+
 #define		ALLOC_OPEN		0x00A110C1
 #define		ALLOC_REALLOC	0x00A110C2
 #define		ALLOC_CLOSE		0x00A110C3
 #define		ALLOC_LOCK		0x00A110C4
 #define		ALLOC_UNLOCK	0x00A110C5
-
-
-
-
-
 
 static void lua_lock()
 {
@@ -140,13 +150,113 @@ static float xlua_post_timer_master_cb(
 	return -1;
 }
 
+void InitScripts(void)
+{
+	assert(g_modules.empty() && !plugin_base_path.empty());
+
+	string init_script_path(plugin_base_path);
+	init_script_path += "init.lua";
+	string scripts_dir_path(plugin_base_path);
+
+	scripts_dir_path += "scripts";
+
+	int offset = 0;
+	int mf, fcount;
+	while (1)
+	{
+		char fname_buf[2048];
+		char* fptr;
+		XPLMGetDirectoryContents(
+			scripts_dir_path.c_str(),
+			offset,
+			fname_buf,
+			sizeof(fname_buf),
+			&fptr,
+			1,
+			&mf,
+			&fcount);
+		if (fcount == 0)
+			break;
+
+		if (strcmp(fptr, ".DS_Store") != 0)
+		{
+			string mod_path(scripts_dir_path);
+			mod_path += "/";
+			mod_path += fptr;
+			mod_path += "/";
+			string script_path(mod_path);
+			script_path += fptr;
+			script_path += ".lua";
+
+			g_modules.push_back(new module(
+				mod_path.c_str(),
+				init_script_path.c_str(),
+				script_path.c_str(),
+				lj_alloc_f,
+				NULL));
+		}
+
+		++offset;
+		if (offset == mf)
+			break;
+	}
+}
+
+void CleanupScripts(void)
+{
+	if (g_is_acf_inited)
+	{
+		for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+			(*m)->acf_unload();
+		g_is_acf_inited = false;
+	}
+
+	for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+		delete (*m);
+	g_modules.clear();
+
+	xlua_dref_cleanup();
+	xlua_cmd_cleanup();
+	xlua_timer_cleanup();
+}
+
+int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
+{
+	// Don't allow this to be called if the aircraft isn't ready, just in case somebody puts the LUA
+	// command in init.lua for example...
+	if (inPhase == xplm_CommandBegin && g_is_acf_inited)
+	{
+		CleanupScripts();
+		InitScripts();
+
+		// Set to false to clear state on this too. Provided the XLuaReloadOnFlightChange() call is still in the scripts,
+		// it will be immediately set back to true from the XPLM_MSG_AIRPORT_LOADED code below.
+		g_bReloadOnFlightChange = false;
+
+		if (!(intptr_t)inRefcon)	// Recursion block - ResetState() can be called from XPluginReceiveMessage().
+		{
+			XPluginReceiveMessage(XPLM_PLUGIN_XPLANE, XPLM_MSG_AIRPORT_LOADED, nullptr);
+		}
+	}
+
+	return 0;
+}
+
+static void MenuHandler(void* menuRef, void* itemRef)
+{
+	switch ((eMenuItems)(size_t)itemRef)
+	{
+		case MI_ResetState:
+			ResetState(reset_cmd, xplm_CommandBegin, nullptr);
+			break;
+	}
+}
 
 PLUGIN_API int XPluginStart(
 						char *		outName,
 						char *		outSig,
 						char *		outDesc)
 {
-
     strcpy(outName, "XLua " VERSION);
     strcpy(outSig, "com.x-plane.xlua." VERSION);
     strcpy(outDesc, "A minimal scripting environment for aircraft authors.");
@@ -170,89 +280,85 @@ PLUGIN_API int XPluginStart(
 	
 	XPLMEnableFeature("XPLM_USE_NATIVE_PATHS", 1);
 	
-	char path_to_me_c[2048];
-	XPLMGetPluginInfo(XPLMGetMyID(), NULL, path_to_me_c, NULL, NULL);
-	
-	// Plugin base path: pop off two dirs from the plugin name to get the base path.
-	string plugin_base_path(path_to_me_c);
-	string::size_type lp = plugin_base_path.find_last_of("/\\");
-	plugin_base_path.erase(lp);
-	lp = plugin_base_path.find_last_of("/\\");
-	plugin_base_path.erase(lp+1);
-	
-	string init_script_path(plugin_base_path);
-	init_script_path += "init.lua";
-	string scripts_dir_path(plugin_base_path);
-	
-	scripts_dir_path += "scripts";
-
-	int offset = 0;
-	int mf, fcount;
-	while(1)
+	// Plugin base path: pop off two dirs from the plugin name to get the base path for scripts, *not* the owning aircraft's base path.
+	char pName[256], pPath[512] = { 0 }, myPath[512] = { 0 };
+	XPLMGetPluginInfo(XPLMGetMyID(), nullptr, myPath, nullptr, nullptr);
+	plugin_base_path = myPath;
+	for (int s = 0; s < 2; ++s)
 	{
-		char fname_buf[2048];
-		char * fptr;
-		XPLMGetDirectoryContents(
-								scripts_dir_path.c_str(),
-								offset,
-								fname_buf,
-								sizeof(fname_buf),
-								&fptr,
-								1,
-								&mf,
-								&fcount);
-		if(fcount == 0)
-			break;
-		
-		if(strcmp(fptr, ".DS_Store") != 0)
-		{		
-			string mod_path(scripts_dir_path);
-			mod_path += "/";
-			mod_path += fptr;
-			mod_path += "/";
-			string script_path(mod_path);
-			script_path += fptr;
-			script_path += ".lua";
-
-			g_modules.push_back(new module(
-				mod_path.c_str(),
-				init_script_path.c_str(),
-				script_path.c_str(),
-				lj_alloc_f,
-				NULL));
+		string::size_type lp = plugin_base_path.find_last_of(XPLMGetDirectorySeparator());
+		if (lp != std::string::npos)
+		{
+			plugin_base_path.erase(lp);
 		}
-			
-		++offset;
-		if(offset == mf)
-			break;
+	}
+	plugin_base_path += XPLMGetDirectorySeparator();
+
+	// Do we want to add a "reset" menu item? Only for the user's plane.
+	XPLMGetNthAircraftModel(XPLM_USER_AIRCRAFT, pName, pPath);
+	char *PDest = strrchr(pPath, *XPLMGetDirectorySeparator());
+	if (PDest != nullptr)
+	{
+		*PDest = 0;
+		const size_t acPathLen = strlen(pPath);
+		std::string ac_base_path(plugin_base_path);
+		string::size_type lp = std::string::npos;
+
+		do
+		{
+			lp = ac_base_path.find_last_of(XPLMGetDirectorySeparator());
+			if (lp != std::string::npos)
+			{
+				ac_base_path.erase(lp);
+			}
+
+			if (ac_base_path.compare(pPath) == 0)
+			{
+				const char* menuName;
+				lp = ac_base_path.find_last_of(XPLMGetDirectorySeparator());
+				if (lp != std::string::npos)
+				{
+					menuName = ac_base_path.c_str() + lp + 1;
+				}
+				else
+				{
+					menuName = outName;
+				}
+
+				int item = XPLMAppendMenuItem(XPLMFindPluginsMenu(), menuName, nullptr, FALSE);
+				PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), item, MenuHandler, nullptr);
+				XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, FALSE);
+				break;
+			}
+		} while (lp != std::string::npos && ac_base_path.size() >= acPathLen);
 	}
 
+	InitScripts();
+
+	reset_cmd = XPLMCreateCommand("laminar/xlua/reload_all_scripts", "Reload scripts and state for this aircraft");
+	if (reset_cmd != nullptr)
+	{
+		XPLMRegisterCommandHandler(reset_cmd, ResetState, TRUE, nullptr);
+	}
 
 	return 1;
 }
 
 PLUGIN_API void	XPluginStop(void)
 {
-	if(g_is_acf_inited)
+	if (PluginMenu != nullptr)
 	{
-		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-			(*m)->acf_unload();
-		g_is_acf_inited = 0;
+		XPLMDestroyMenu(PluginMenu);
+		PluginMenu = nullptr;
 	}
 
-	for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-		delete (*m);
-	g_modules.clear();
-	
-	xlua_dref_cleanup();
-	xlua_cmd_cleanup();
-	xlua_timer_cleanup();
+	CleanupScripts();
 	
 	XPLMDestroyFlightLoop(g_pre_loop);
 	XPLMDestroyFlightLoop(g_post_loop);
 	g_pre_loop = NULL;
 	g_post_loop = NULL;	
-	g_is_acf_inited = 0;
+	g_is_acf_inited = false;
 }
 
 PLUGIN_API void XPluginDisable(void)
@@ -276,16 +382,23 @@ PLUGIN_API void XPluginReceiveMessage(
 	switch(inMessage) {
 	case XPLM_MSG_PLANE_LOADED:
 		if(inParam == 0)
-			g_is_acf_inited = 0;
+			g_is_acf_inited = false;
 		break;
+
 	case XPLM_MSG_PLANE_UNLOADED:
 		if(g_is_acf_inited)
 		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)		
 			(*m)->acf_unload();
-		g_is_acf_inited = 0;
+		g_is_acf_inited = false;
 		break;
+
 	case XPLM_MSG_AIRPORT_LOADED:
-		if(!g_is_acf_inited)
+		if (g_bReloadOnFlightChange && g_is_acf_inited)
+		{
+			ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)TRUE);
+		}
+
+		if (!g_is_acf_inited)
 		{
 			// Pick up any last stragglers from out-of-order load and then validate our datarefs!
 			xlua_relink_all_drefs();
@@ -293,11 +406,15 @@ PLUGIN_API void XPluginReceiveMessage(
 			
 			for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
 				(*m)->acf_load();
-			g_is_acf_inited = 1;							
+
+			g_is_acf_inited = true;
 		}
+
 		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-			(*m)->flight_init();
+			(*m)->flight_start();
+
 		break;
+
 	case XPLM_MSG_PLANE_CRASHED:
 		assert(g_is_acf_inited);
 		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)

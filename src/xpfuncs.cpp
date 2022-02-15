@@ -33,6 +33,8 @@
 
 static XPLMDataRef drSimRealTime = nullptr;
 
+int l_my_print(lua_State* L);
+
 // This is kind of a mess - Lua [annoyingly] doesn't give you a way to store a closure/Lua interpreter function
 // in C space.  The hack is to use luaL_ref to fill a new key in the registry table with a copy of ANY value from
 // the stack - since this is type agnostic and takes a strong reference it (1) prevents the closure from being 
@@ -429,7 +431,20 @@ static int XLuaIsTimerScheduled(lua_State * L)
 	return 1;
 }
 
+static int XLuaReloadOnFlightChange(lua_State* L)
+{
+	char log[512];
+	sprintf(log, "Aircraft scripts will be fully reloaded when flight details change.");
 
+	// Log the fact that the plugin's been put into reinit-on-flight-change mode.
+	lua_pushstring(L, log);
+	l_my_print(L);
+	lua_pop(L, 1);
+
+	xlua_cmd_mark_reload_on_change();
+
+	return 0;
+}
 
 #define FUNC_LIST \
 	FUNC(XLuaGetCode) \
@@ -451,7 +466,8 @@ static int XLuaIsTimerScheduled(lua_State * L)
 	FUNC(XLuaCommandOnce) \
 	FUNC(XLuaCreateTimer) \
 	FUNC(XLuaRunTimer) \
-	FUNC(XLuaIsTimerScheduled)
+	FUNC(XLuaIsTimerScheduled) \
+	FUNC(XLuaReloadOnFlightChange)
 
 static int l_my_print(lua_State *L)
 {

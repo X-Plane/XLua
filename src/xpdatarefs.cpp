@@ -639,9 +639,9 @@ void			xlua_dref_cleanup()
 		
 		delete kill;
 	}
+
+	assert(s_drefs == nullptr);
 }
-
-
 
 
 
