@@ -325,9 +325,9 @@ PLUGIN_API int XPluginStart(
 					menuName = outName;
 				}
 
-				int item = XPLMAppendMenuItem(XPLMFindPluginsMenu(), menuName, nullptr, FALSE);
+				int item = XPLMAppendMenuItem(XPLMFindPluginsMenu(), menuName, nullptr, 0);
 				PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), item, MenuHandler, nullptr);
-				XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, FALSE);
+				XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, 0);
 				break;
 			}
 		} while (lp != std::string::npos && ac_base_path.size() >= acPathLen);
@@ -338,7 +338,7 @@ PLUGIN_API int XPluginStart(
 	reset_cmd = XPLMCreateCommand("laminar/xlua/reload_all_scripts", "Reload scripts and state for this aircraft");
 	if (reset_cmd != nullptr)
 	{
-		XPLMRegisterCommandHandler(reset_cmd, ResetState, TRUE, nullptr);
+		XPLMRegisterCommandHandler(reset_cmd, ResetState, 1, nullptr);
 	}
 
 	return 1;
@@ -395,7 +395,7 @@ PLUGIN_API void XPluginReceiveMessage(
 	case XPLM_MSG_AIRPORT_LOADED:
 		if (g_bReloadOnFlightChange && g_is_acf_inited)
 		{
-			ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)TRUE);
+			ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)1);
 		}
 
 		if (!g_is_acf_inited)

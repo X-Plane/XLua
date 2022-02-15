@@ -33,7 +33,7 @@
 
 static XPLMDataRef drSimRealTime = nullptr;
 
-int l_my_print(lua_State* L);
+static int l_my_print(lua_State* L);
 
 // This is kind of a mess - Lua [annoyingly] doesn't give you a way to store a closure/Lua interpreter function
 // in C space.  The hack is to use luaL_ref to fill a new key in the registry table with a copy of ANY value from
