@@ -10,6 +10,13 @@ XLua is **not** meant to be an "official" Lua plugin for X-Plane, and it definit
 
 ## Release Notes
 
+**1.2.0r1 - 02/16/2022**
+
+* Adds script reload support:
+  * Via menu item under the aircraft menu
+  * Via command `laminar/xlua/reload_all_scripts`
+  * Via a new instruction `XLuaReloadOnFlightChange()` that flags the aircraft for reload when flight conditions change (engines running / engines off)
+
 **1.1.0r1 - 08/21/2021**
 
 Features:
@@ -204,18 +211,22 @@ This returns true if the timer function will run at any time in the future.  It 
 
 Using `print("")` will output to the terminal on Mac/Linux/Windows (provided X-Plane has been started from the command line), and will also output a line to the X-Plane log.txt file, prefixed with `LUA:`
 
-Using "Developer > Reload the Current Aircraft and Art" X-Plane menu will also reload your XLua script files.
+Using "Developer > Reload the Current Aircraft and Art" X-Plane menu will reload your XLua script files.
+
+Since 1.2.0, you can also reload your scripts via the aircraft menu, or via the `laminar/xlua/reload_all_scripts` command.
+
+On some complex aircraft, you might also need to reset your scripts if the "Start with engines running" checkbox on the "Flight Configuration" screen changes. In this case, you can insert the `XLuaReloadOnFlightChange()` instruction once on any of your scripts, in any place. Note that this DOES NOT invoke an immediate reload of the scripts, but only flags the aircraft scripts to be reloaded when the flight configuration changes, which is something that XLua didn't do before.
 
 ### FAQ
 
-* **Q:** I'm getting a `attempt to index global '...' (a nil value)` while trying to access a member of, sort or iterate over a global table; or I'm getting unexpected results from a `pairs` operation over a global table.
-* **A:** This is a known issue (#4). You need to either make your table local or declare your global table using `raw_rable(my_tablename)` before you use it. Please note that you cannot assign dataref references inside a raw table.
+* _**I'm getting a `attempt to index global '...' (a nil value)` while trying to access a member of, sort, or iterate over a global table; or I'm getting unexpected results from a `pairs` operation over a global table.**_
+  * This is a known issue (#4). You need to either make your table local or declare your global table using `raw_rable(my_tablename)` before you use it. Please note that you cannot assign dataref references inside a raw table.
 
 
-* **Q:** Does XLua have any graphics or screen drawing capabilities?
-* **A:** There is (currently) no way to draw to the screen/window in XLua.
+* _**Does XLua have any graphics or screen drawing capabilities?**_
+  * There is (currently) no way to draw to the screen/window in XLua.
 
 
-* **Q:** Is there a way to compile a XLua script in a binary plugin (xpl file)?
-* **A:** No. If you want or need to encrypt Lua scripts, you need to use SASL.
+* _**Is there a way to compile a XLua script in a binary plugin (xpl file)?**_
+  * No. If you want or need to encrypt Lua scripts, you need to use SASL.
 
