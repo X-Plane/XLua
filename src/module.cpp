@@ -195,7 +195,7 @@ int module::debug_proc_from_interp(lua_State * interp)
 	return 0;
 }
 
-module * module::module_from_interp(lua_State * interp)
+::module * module::module_from_interp(lua_State * interp)
 {
 	lua_getglobal(interp,"__module_ptr");
 	
