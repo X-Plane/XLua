@@ -12,20 +12,20 @@
 #include "xptimers.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include <XPLMProcessing.h>
 #include <XPLMDataAccess.h>
 
 struct xlua_timer {
-	xlua_timer *		m_next;
+	xlua_timer *	m_next = nullptr;
 	xlua_timer_f 	m_func;
 	void *			m_ref;
 	
 	double			m_next_fire_time;
 	double			m_repeat_interval;	// -1 to stop after 1
-	
 };
 
-static xlua_timer * s_timers;
+static xlua_timer * s_timers = nullptr;
 
 xlua_timer * xlua_create_timer(xlua_timer_f func, void * ref)
 {
@@ -86,6 +86,8 @@ void xlua_timer_cleanup()
 		s_timers = s_timers->m_next;
 		delete k;
 	}
+
+	assert(s_timers == nullptr);
 }
 
 

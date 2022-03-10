@@ -30,4 +30,7 @@ void xlua_cmd_once(xlua_cmd * cmd);
 
 void xlua_cmd_cleanup();
 
+void xlua_cmd_mark_reload_on_change(void);
+extern bool g_bReloadOnFlightChange;
+
 #endif /* xpcommands_h */
