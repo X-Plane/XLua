@@ -1,0 +1,35 @@
+#!/bin/bash
+# 
+# The running machine must have Apple ID credentials pre-registered in the key chain under
+# the KC item AC_PASSWORD
+
+# Note: this only works on macOS, since it relies on Apple tools.
+
+# Usage:
+# notarize.sh some/path/file.zip some/other/path/binary staple
+# Put file "binary" from "some/other/path/" in zip file "file.zip" in directory "some/path/" and staple the result.
+#
+# notarize.sh file.zip /some/path/to/binary
+# Put file "binary" from "/some/path/to/" in "file.zip" in the current working directory, and notarize it. Do not staple.
+
+# Definitely don't call this without at least two arguments. It does not do much (any...) checking for correctness.
+
+# Both these should be full paths, or relative from the current working directory.
+zip_path=$1
+file_to_notarize=$2
+
+# If this equals "staple", do staple. If it's missing or is anything else, do not.
+staple=$3
+
+rm "$zip_path"
+zip -r "$zip_path" "$file_to_notarize"
+
+xcrun notarytool submit "$zip_path" \
+                   --keychain-profile "AC_PASSWORD" \
+                   --wait \
+                   --timeout 10m
+
+if [ $staple = "staple" ]
+then
+    xcrun stapler staple "xlua.xpl"
+fi
