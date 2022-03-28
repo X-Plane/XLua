@@ -52,16 +52,16 @@ The installation of the plugin looks like this on disk:
 /My airplane
     /plugins
         /xlua
-        /lin_x64 <-- these contain the real binaries
-        /mac_x64
-        /win_x64
-        init.lua  <-- part of the plugin, do not modify
-        /scripts  <-- your aircraft specific scripts
-            /adf
-                adf.lua
-                adf_helpers.lua
-            /stec_500
-                stec_500.lua
+            /lin_x64 <-- these contain the real binaries
+            /mac_x64
+            /win_x64
+            init.lua  <-- part of the plugin, do not modify
+            /scripts  <-- your aircraft specific scripts
+                /adf
+                    adf.lua
+                    adf_helpers.lua
+                /stec_500
+                    stec_500.lua
 ```
 
 In this example, there are two modules installed: “stec_500” and “adf”.  **The main lua file for a module has the same name as the module itself**.
