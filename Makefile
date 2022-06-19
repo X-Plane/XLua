@@ -36,7 +36,7 @@ ALL_DEPS64		:= $(sort $(CDEPS64) $(CXXDEPS64))
 ALL_OBJECTS64	:= $(sort $(COBJECTS64) $(CXXOBJECTS64))
 
 CFLAGS := $(DEFINES) $(INCLUDES) -fPIC -fvisibility=hidden
-
+CPPFLAGS := -std=c++11
 
 # Phony directive tells make that these are "virtual" targets, even if a file named "clean" exists.
 .PHONY: all clean $(TARGET)
@@ -72,8 +72,8 @@ $(BUILDDIR)/obj64/%.o : %.c
 
 $(BUILDDIR)/obj64/%.o : %.cpp
 	mkdir -p $(dir $@)
-	g++ $(CFLAGS) -m64 -c $< -o $@
-	g++ $(CFLAGS) -MM -MT $@ -o $(@:.o=.cppdep) $<
+	g++ $(CFLAGS) $(CPPFLAGS) -m64 -c $< -o $@
+	g++ $(CFLAGS) $(CPPFLAGS) -MM -MT $@ -o $(@:.o=.cppdep) $<
 
 clean:
 	@echo Cleaning out everything.
