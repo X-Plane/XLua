@@ -22,7 +22,8 @@ case "$PLATFORM" in
 	MSBUILD="$MSVC_ROOT"/MSBuild/Current/Bin/MSBuild.exe 
 	"$MSBUILD" xlua.vcxproj /t:Clean		
 	"$MSBUILD" /m /p:Configuration="Release" /p:Platform="x64" xlua.vcxproj
-	mv Release/plugins/win_x64/xlua.pdb Release/plugins/win_x64/xlua.xpl jenkins/build_products
+	mv Release/plugins/win_x64/xlua.pdb Release/plugins/win_x64/xlua_win.pdb 
+	mv Release/plugins/win_x64/xlua.xpl jenkins/build_products/xlua_win.xpl
 	;;
 "APL")
 	
@@ -51,12 +52,12 @@ case "$PLATFORM" in
 				no-staple
 	fi
 	
-	mv xlua.xcarchive/Products/usr/local/lib/xlua.xpl jenkins/build_products
+	mv xlua.xcarchive/Products/usr/local/lib/xlua.xpl jenkins/build_products/xlua_mac.xpl
 	;;
 "LIN")
 	make clean
 	make
-	cp build/xlua/64/lin.xpl jenkins/build_products
+	cp build/xlua/64/lin.xpl jenkins/build_products/xlua_lin.xpl
 	make clean
 	;;
 *)
