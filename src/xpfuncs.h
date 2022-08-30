@@ -18,6 +18,22 @@ extern "C" {
 
 void	add_xpfuncs_to_interp(lua_State * interp);
 
+template <typename T>
+T xlua_checkuserdata(lua_State * L, int narg, const char * msg)
+{
+    void * ret = lua_touserdata(L, narg);
+    if(ret == NULL)
+        luaL_argerror(L, narg, msg);
+    return *((T*)ret);
+}
+
+template<typename T>
+void xlua_pushuserdata(lua_State * state, T data)
+{
+    void* ud = lua_newuserdata(state, sizeof(T));
+    memcpy(ud, &data, sizeof(T));
+}
+
 void InitScripts(void);
 void CleanupScripts(void);
 
