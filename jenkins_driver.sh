@@ -35,7 +35,7 @@ MSVC_ROOT="/mnt/c/Program Files/Microsoft Visual Studio/2022/Community"
 
 if [[ `uname -a` == *Darwin* ]]; then
 	PLATFORM=APL
-elif [[ `uname -a` == *Microsoft* ]]; then
+elif [[ `uname -a` == *icrosoft* ]]; then
 	PLATFORM=IBM
 else
 	PLATFORM=LIN
