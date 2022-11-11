@@ -22,7 +22,9 @@ case "$PLATFORM" in
 	MSBUILD="$MSVC_ROOT"/MSBuild/Current/Bin/MSBuild.exe 
 	"$MSBUILD" xlua.vcxproj /t:Clean		
 	"$MSBUILD" /m /p:Configuration="Release" /p:Platform="x64" xlua.vcxproj
-	mv Release/plugins/win_x64/xlua.pdb Release/plugins/win_x64/xlua_win.pdb 
+	echo mv Release/plugins/win_x64/xlua.pdb jenkins/build_products/xlua_win.pdb
+	mv Release/plugins/win_x64/xlua.pdb jenkins/build_products/xlua_win.pdb
+	echo mv Release/plugins/win_x64/xlua.xpl jenkins/build_products/xlua_win.xpl
 	mv Release/plugins/win_x64/xlua.xpl jenkins/build_products/xlua_win.xpl
 	;;
 "APL")
@@ -58,13 +60,9 @@ case "$PLATFORM" in
 	make clean
 	make
 	cp build/xlua/64/lin.xpl jenkins/build_products/xlua_lin.xpl
-	make clean
 	;;
 *)
 	echo "PLATFORM not set properly - it must be one of APL IBM or LIN"
 	exit 1
 	;;
 esac
-
-clean
-
