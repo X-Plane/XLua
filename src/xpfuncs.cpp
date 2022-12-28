@@ -24,6 +24,8 @@
 #include <XPLMUtilities.h>
 #include <XPLMDataAccess.h>
 
+#include "../log.h"
+
 /*
 	TODO: figure out when we have to resync our datarefs
 	TODO: what if dref already registered before acf reload?  (maybe no harm?)
@@ -93,7 +95,11 @@ lua_State * setup_lua_callback(void * ref)
 	lua_rawgeti (cb->L, LUA_REGISTRYINDEX, cb->slot);
 	if(!lua_isfunction(cb->L, -1))
 	{
+#if defined (NO_LOG_MESSAGE)
 		printf("ERROR: we did not persist a closure?!?");
+#else
+		log_message("xlua: ERROR: we did not persist a closure?!?");
+#endif
 		lua_pop(cb->L, 1);
 		return 0;
 	}
@@ -116,7 +122,11 @@ static int XLuaGetCode(lua_State * L)
 	if(result)
 	{
 		const char * err_msg = luaL_checkstring(L,1);
+#if defined (NO_LOG_MESSAGE)
 		printf("%s: %s", name, err_msg);
+#else
+		log_message("xlua: %s: %s", name, err_msg);
+#endif
 	}
 	
 	return 1;

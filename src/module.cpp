@@ -13,6 +13,8 @@
 #include "xpfuncs.h"
 #include <stdlib.h>
 #include <assert.h>
+
+#include "../log.h"
 #include "lua_helpers.h"
 
 static const char * shorten_to_file(const char * path)
@@ -123,8 +125,11 @@ module::module(
 {
 	int boiler_plate_paths = length_of_dir(in_init_script);
 	m_log_path = in_module_script + boiler_plate_paths;
+#if defined (NO_LOG_MESSAGE)
 	printf("Running %s\n", m_log_path.c_str());
-	
+#else
+	log_message("xlua: Running %s\n", m_log_path.c_str());
+#endif
 	m_interp = luaL_newstate();
 
 	if(m_interp == NULL)
