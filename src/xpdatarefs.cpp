@@ -277,9 +277,10 @@ void			xlua_validate_drefs()
 #else
 	for(xlua_dref * f = s_drefs; f; f = f->m_next)
 	{
-		if(f->m_dref == NULL)
+		if (f->m_dref == NULL) {
 			printf("WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
 			log_message("WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
+		}
 	}
 #endif
 }
