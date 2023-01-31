@@ -100,15 +100,6 @@ lua_State * setup_lua_callback(void * ref)
 	return cb->L;
 }
 
-template <typename T>
-T * luaL_checkuserdata(lua_State * L, int narg, const char * msg)
-{
-	T * ret = (T*) lua_touserdata(L, narg);
-	if(ret == NULL)
-		luaL_argerror(L, narg, msg);
-	return ret;	
-}
-
 //----------------------------------------------------------------
 // MISC
 //----------------------------------------------------------------
@@ -144,7 +135,7 @@ static int XLuaFindDataRef(lua_State * L)
 	xlua_dref * r = xlua_find_dref(name);
 	assert(r);
 	
-	lua_pushlightuserdata(L, r);
+    xlua_pushuserdata(L, r);
 	return 1;
 }
 
@@ -205,7 +196,7 @@ static int XLuaCreateDataRef(lua_State * L)
 							cb);							
 	assert(r);
 	
-	lua_pushlightuserdata(L, r);
+    xlua_pushuserdata(L, r);
 	return 1;
 	
 }
@@ -213,7 +204,7 @@ static int XLuaCreateDataRef(lua_State * L)
 // dref -> "array[4]"
 static int XLuaGetDataRefType(lua_State * L)
 {
-	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
+	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
 
 	xlua_dref_type dt = xlua_dref_get_type(d);
 	
@@ -241,7 +232,7 @@ static int XLuaGetDataRefType(lua_State * L)
 // XPLMGetNumber dref -> value
 static int XLuaGetNumber(lua_State * L)
 {
-	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
+	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
 	
 	lua_pushnumber(L, xlua_dref_get_number(d));
 	return 1;	
@@ -250,7 +241,7 @@ static int XLuaGetNumber(lua_State * L)
 // XPLMSetNumber dref value
 static int XLuaSetNumber(lua_State * L)
 {
-	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
+	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
 	double v = luaL_checknumber(L, 2);
 	
 	xlua_dref_set_number(d,v);
@@ -260,7 +251,7 @@ static int XLuaSetNumber(lua_State * L)
 // XPLMGetArray dref idx -> value
 static int XLuaGetArray(lua_State * L)
 {
-	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
+	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
 	double idx = luaL_checknumber(L, 2);	
 	
 	lua_pushnumber(L, xlua_dref_get_array(d,idx));
@@ -270,7 +261,7 @@ static int XLuaGetArray(lua_State * L)
 // XPLMSetArray dref dix value
 static int XLuaSetArray(lua_State * L)
 {
-	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
+	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
 	double idx = luaL_checknumber(L, 2);
 	double v = luaL_checknumber(L, 3);
 	
@@ -281,7 +272,7 @@ static int XLuaSetArray(lua_State * L)
 // XPLMGetString dref -> value
 static int XLuaGetString(lua_State * L)
 {
-	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
+	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
 	
 	lua_pushstring(L, xlua_dref_get_string(d).c_str());
 	return 1;	
@@ -290,7 +281,7 @@ static int XLuaGetString(lua_State * L)
 // XPLMSetString dref value
 static int XLuaSetString(lua_State * L)
 {
-	xlua_dref * d = luaL_checkuserdata<xlua_dref>(L,1,"expected dataref");
+	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
 	const char * s = luaL_checkstring(L, 2);
 	xlua_dref_set_string(d,string(s));
 	return 0;	
@@ -312,7 +303,7 @@ static int XLuaFindCommand(lua_State * L)
 	}
 	assert(r);
 	
-	lua_pushlightuserdata(L, r);
+    xlua_pushuserdata(L, r);
 	return 1;
 }
 
@@ -325,7 +316,7 @@ static int XLuaCreateCommand(lua_State * L)
 	xlua_cmd * r = xlua_create_cmd(name,desc);
 	assert(r);
 	
-	lua_pushlightuserdata(L, r);
+    xlua_pushuserdata(L, r);
 	return 1;
 }
 
@@ -341,7 +332,7 @@ static void cmd_cb_helper(xlua_cmd * cmd, int phase, float elapsed, void * ref)
 // XPLMReplaceCommand cmd handler
 static int XLuaReplaceCommand(lua_State * L)
 {
-	xlua_cmd * d = luaL_checkuserdata<xlua_cmd>(L,1,"expected command");
+	xlua_cmd * d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
 	notify_cb_t * cb = wrap_lua_func(L, 2);
 	
 	xlua_cmd_install_handler(d, cmd_cb_helper, cb);
@@ -351,7 +342,7 @@ static int XLuaReplaceCommand(lua_State * L)
 // XPLMWrapCommand cmd handler1 handler2
 static int XLuaWrapCommand(lua_State * L)
 {
-	xlua_cmd * d = luaL_checkuserdata<xlua_cmd>(L,1,"expected command");
+	xlua_cmd * d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
 	notify_cb_t * cb1 = wrap_lua_func(L, 2);
 	notify_cb_t * cb2 = wrap_lua_func(L, 3);
 	
@@ -363,7 +354,7 @@ static int XLuaWrapCommand(lua_State * L)
 // XPLMCommandStart cmd
 static int XLuaCommandStart(lua_State * L)
 {
-	xlua_cmd * d = luaL_checkuserdata<xlua_cmd>(L,1,"expected command");
+	xlua_cmd * d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
 	xlua_cmd_start(d);
 	return 0;
 }
@@ -371,7 +362,7 @@ static int XLuaCommandStart(lua_State * L)
 // XPLMCommandStop cmd
 static int XLuaCommandStop(lua_State * L)
 {
-	xlua_cmd * d = luaL_checkuserdata<xlua_cmd>(L,1,"expected command");
+	xlua_cmd * d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
 	xlua_cmd_stop(d);
 	return 0;
 }
@@ -379,7 +370,7 @@ static int XLuaCommandStop(lua_State * L)
 // XPLMCommandOnce cmd
 static int XLuaCommandOnce(lua_State * L)
 {
-	xlua_cmd * d = luaL_checkuserdata<xlua_cmd>(L,1,"expected command");
+	xlua_cmd * d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
 	xlua_cmd_once(d);
 	return 0;
 }
@@ -407,14 +398,14 @@ static int XLuaCreateTimer(lua_State * L)
 	xlua_timer * t = xlua_create_timer(timer_cb, helper);
 	assert(t);
 	
-	lua_pushlightuserdata(L, t);
+    xlua_pushuserdata(L, t);
 	return 1;
 }
 
 // XPLMRunTimer timer delay repeat
 static int XLuaRunTimer(lua_State * L)
 {
-	xlua_timer * t = luaL_checkuserdata<xlua_timer>(L,1,"expected timer");
+	xlua_timer * t = xlua_checkuserdata<xlua_timer*>(L,1,"expected timer");
 	if(!t)
 		return 0;
 	
@@ -425,7 +416,7 @@ static int XLuaRunTimer(lua_State * L)
 // XPLMIsTimerScheduled ptr -> int
 static int XLuaIsTimerScheduled(lua_State * L)
 {
-	xlua_timer * t = luaL_checkuserdata<xlua_timer>(L,1,"expected timer");
+	xlua_timer * t = xlua_checkuserdata<xlua_timer*>(L,1,"expected timer");
 	int sched = xlua_is_timer_scheduled(t);
 	lua_pushboolean(L, sched);
 	return 1;

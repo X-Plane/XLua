@@ -134,7 +134,7 @@ module::module(
 	}
 	luaL_openlibs(m_interp);
 
-	lua_pushlightuserdata(m_interp, this);
+    xlua_pushuserdata(m_interp, this);
 	lua_setglobal(m_interp, "__module_ptr");		
 		
 	add_xpfuncs_to_interp(m_interp);
@@ -194,20 +194,11 @@ int module::debug_proc_from_interp(lua_State * interp)
 
 ::module * module::module_from_interp(lua_State * interp)
 {
-	lua_getglobal(interp,"__module_ptr");
-	
-	if(lua_islightuserdata(interp, -1))
-	{
-		module * me = (module *) lua_touserdata(interp, -1);
-		lua_pop(interp, 1);
-		return me;
-	} 
-	else
-	{
-		assert(!"No defined module");
-		lua_pop(interp, 1);
-		return NULL;
-	}
+    lua_getglobal(interp,"__module_ptr");
+
+    module * me = xlua_checkuserdata<module*>(interp, -1, "module* is missing");
+    lua_pop(interp, 1);
+    return me;
 }
 
 void *		module::module_alloc_tracked(size_t amount)
