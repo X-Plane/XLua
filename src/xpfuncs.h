@@ -11,6 +11,8 @@
 #ifndef xpfuncs_h
 #define xpfuncs_h
 
+#include <cstring>
+
 extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
