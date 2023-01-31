@@ -33,9 +33,9 @@ if [ -z $APP_SPECIFIC_PASSWORD ]; then
 else
     echo "Using username, password and team-id for credentials"
     xcrun notarytool submit "$zip_path" \
-                   --apple-id "${{ secrets.APPLE_ID }}" \
-                   --team-id "${{ secrets.APPLE_TEAM_ID }}" \
-                   --password "${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}" \
+                   --apple-id "${APPLE_ID}" \
+                   --team-id "${APPLE_TEAM_ID}" \
+                   --password "${APP_SPECIFIC_PASSWORD}" \
                    --wait \
                    --timeout 10m
 fi
