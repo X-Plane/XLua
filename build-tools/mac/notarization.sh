@@ -24,10 +24,21 @@ staple=$3
 rm "$zip_path"
 zip -r "$zip_path" "$file_to_notarize"
 
-xcrun notarytool submit "$zip_path" \
+if [ -z $APP_SPECIFIC_PASSWORD ]; then
+    echo "APP_SPECIFIC_PASSWORD or APPLE_TEAM_ID is not set. Using Keychain for credentials"
+    xcrun notarytool submit "$zip_path" \
                    --keychain-profile "AC_PASSWORD" \
                    --wait \
                    --timeout 10m
+else
+    echo "Using username, password and team-id for credentials"
+    xcrun notarytool submit "$zip_path" \
+                   --apple-id "${APPLE_ID}" \
+                   --team-id "${APPLE_TEAM_ID}" \
+                   --password "${APP_SPECIFIC_PASSWORD}" \
+                   --wait \
+                   --timeout 10m
+fi
 
 if [ $staple = "staple" ]
 then
