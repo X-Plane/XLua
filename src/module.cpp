@@ -146,8 +146,10 @@ module::module(
 		CTOR_FAIL(-1, "load init script");
 	
 	m_debug_proc = lua_pushtraceback(m_interp);
-	
-	int load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), m_log_path.c_str());
+
+	// IMC - init file path corrected for traceback
+	std::string init_log_path = in_init_script + boiler_plate_paths;
+	int load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), init_log_path.c_str());
 	CTOR_FAIL(load_result, "load init script")
 
 	int init_script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
