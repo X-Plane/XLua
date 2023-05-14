@@ -16,6 +16,8 @@
 #include <XPLMProcessing.h>
 #include <XPLMDataAccess.h>
 
+#include "log.h"
+
 struct xlua_timer {
 	xlua_timer *	m_next = nullptr;
 	xlua_timer_f 	m_func;
@@ -33,6 +35,7 @@ xlua_timer * xlua_create_timer(xlua_timer_f func, void * ref)
 	if(t->m_func == func && t->m_ref == ref)
 	{
 		printf("ERROR: timer already exists.");
+		log_message("ERROR: timer already exists.");
 		return NULL;
 	}
 

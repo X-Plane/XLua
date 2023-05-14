@@ -24,6 +24,8 @@
 #include <XPLMUtilities.h>
 #include <XPLMDataAccess.h>
 
+#include "log.h"
+
 /*
 	TODO: figure out when we have to resync our datarefs
 	TODO: what if dref already registered before acf reload?  (maybe no harm?)
@@ -94,6 +96,7 @@ lua_State * setup_lua_callback(void * ref)
 	if(!lua_isfunction(cb->L, -1))
 	{
 		printf("ERROR: we did not persist a closure?!?");
+		log_message("ERROR: we did not persist a closure?!?");
 		lua_pop(cb->L, 1);
 		return 0;
 	}
@@ -117,6 +120,7 @@ static int XLuaGetCode(lua_State * L)
 	{
 		const char * err_msg = luaL_checkstring(L,1);
 		printf("%s: %s", name, err_msg);
+		log_message("%s: %s", name, err_msg);
 	}
 	
 	return 1;
@@ -521,6 +525,30 @@ static int l_my_print(lua_State *L)
 	XPLMDebugString(output.c_str());
 
 	return 0;
+}
+
+int log_message(char const* const format, ...)
+{
+	char prefix[256];
+	float hrs, min, sec, real_time = XPLMGetDataf(drSimRealTime);
+	hrs = (int)(real_time / 3600.0f);
+	min = (int)(real_time / 60.0f) - (int)(hrs * 60.0f);
+	sec = real_time - (hrs * 3600.0f) - (min * 60.0f);
+	sprintf(prefix, "%d:%02d:%06.3f LUA: ", (int)hrs, (int)min, sec);
+
+	std::string output(prefix);
+	
+	char buffer[2048];
+	va_list args;
+	va_start(args, format);
+	int result = vsprintf_s(buffer, sizeof(buffer), format, args);
+	va_end(args);
+
+	output += buffer;
+
+	XPLMDebugString(output.c_str());
+
+	return result;
 }
 
 static const struct luaL_Reg printlib[] = {

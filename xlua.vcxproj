@@ -32,6 +32,7 @@
     <ClInclude Include="lua_sdk\lua.h" />
     <ClInclude Include="lua_sdk\luaconf.h" />
     <ClInclude Include="lua_sdk\lualib.h" />
+    <ClInclude Include="src\log.h" />
     <ClInclude Include="src\lua_helpers.h" />
     <ClInclude Include="src\module.h" />
     <ClInclude Include="src\xpcommands.h" />

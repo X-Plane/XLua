@@ -17,6 +17,8 @@
 #include <assert.h>
 #include <string>
 
+#include "log.h"
+
 using std::string;
 
 int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon);
@@ -97,6 +99,7 @@ xlua_cmd * xlua_create_cmd(const char * name, const char * desc)
 		if(i->m_ours)
 		{
 			printf("ERROR: command already exists: %s\n", name);
+			log_message("ERROR: command already exists: %s\n", name);
 			return NULL;
 		}
 		i->m_ours = 1;
@@ -128,6 +131,7 @@ void xlua_cmd_install_handler(xlua_cmd * cmd, xlua_cmd_handler_f handler, void *
 	if(cmd->m_main_handler != NULL)
 	{
 		printf("ERROR: there is already a main handler installed: %s.\n", cmd->m_name.c_str());
+		log_message("ERROR: there is already a main handler installed: %s.\n", cmd->m_name.c_str());
 		return;
 	}
 	cmd->m_main_handler = handler;
@@ -141,6 +145,7 @@ void xlua_cmd_install_pre_wrapper(xlua_cmd * cmd, xlua_cmd_handler_f handler, vo
 	if(cmd->m_pre_handler != NULL)
 	{
 		printf("ERROR: there is already a pre handler installed: %s.\n", cmd->m_name.c_str());
+		log_message("ERROR: there is already a pre handler installed: %s.\n", cmd->m_name.c_str());
 		return;
 	}
 	cmd->m_pre_handler = handler;
@@ -153,6 +158,7 @@ void xlua_cmd_install_post_wrapper(xlua_cmd * cmd, xlua_cmd_handler_f handler, v
 	if(cmd->m_post_handler != NULL)
 	{
 		printf("ERROR: there is already a post handler installed: %s.\n", cmd->m_name.c_str());
+		log_message("ERROR: there is already a post handler installed: %s.\n", cmd->m_name.c_str());
 		return;	
 	}
 	cmd->m_post_handler = handler;

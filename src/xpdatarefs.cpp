@@ -18,6 +18,8 @@
 #include <assert.h>
 #include <algorithm>
 
+#include "log.h"
+
 using std::min;
 using std::max;
 using std::vector;
@@ -275,8 +277,10 @@ void			xlua_validate_drefs()
 #else
 	for(xlua_dref * f = s_drefs; f; f = f->m_next)
 	{
-		if(f->m_dref == NULL)
+		if (f->m_dref == NULL) {
 			printf("WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
+			log_message("WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
+		}
 	}
 #endif
 }
@@ -324,6 +328,7 @@ xlua_dref *		xlua_create_dref(const char * name, xlua_dref_type type, int dim, i
 		if(f->m_ours || f->m_dref)
 		{
 			printf("ERROR: %s is already a dataref.\n",name);
+			log_message("ERROR: %s is already a dataref.\n", name);
 			return NULL;
 		}
 		TRACE_DATAREFS("Reusing %s as %p\n", name,f);		
@@ -333,6 +338,7 @@ xlua_dref *		xlua_create_dref(const char * name, xlua_dref_type type, int dim, i
 	if(n.find('[') != n.npos)
 	{
 		printf("ERROR: %s contains brackets in its name.\n", name);
+		log_message("ERROR: %s contains brackets in its name.\n", name);
 		return NULL;
 	}
 	
@@ -340,6 +346,7 @@ xlua_dref *		xlua_create_dref(const char * name, xlua_dref_type type, int dim, i
 	if(other && XPLMIsDataRefGood(other))
 	{
 		printf("ERROR: %s is used by another plugin.\n", name);
+		log_message("ERROR: %s is used by another plugin.\n", name);
 		return NULL;
 	}
 	
@@ -604,6 +611,7 @@ void			xlua_relink_all_drefs()
 	if(!XPLMIsPluginEnabled(dre))
 	{
 		printf("WARNING: can't register drefs - DRE is not enabled.\n");
+		log_message("WARNING: can't register drefs - DRE is not enabled.\n");
 		dre = XPLM_NO_PLUGIN_ID;
 	}
 #endif
