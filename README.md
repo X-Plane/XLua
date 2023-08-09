@@ -9,6 +9,10 @@ XLua is developed internally by Laminar Research and is intended to help our int
 XLua is **not** meant to be an "official" Lua plugin for X-Plane, and it definitely does not replace any of the existing Lua plugins, all of which have significantly more features than XLua itself.
 
 ## Release Notes
+**1.3.0r1 - 08/09/2023**
+* Improved logging of lua errors
+* Lua print() and other log lines go to both console and X-Plane log file, tagged as `?/LUA:`
+* Add ability to query a timer's time remaining `XLuaGetTimerRemaining()`. Pass in a timer reference created by `XLuaCreateTimer()`, returns a Number.
 
 **1.2.0r1 - 02/16/2022**
 
