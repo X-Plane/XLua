@@ -18,6 +18,8 @@
 #include <assert.h>
 #include <algorithm>
 
+#include "log.h"
+
 using std::min;
 using std::max;
 using std::vector;
@@ -27,7 +29,7 @@ using std::vector;
 #define STAT_PLUGIN_SIG "xplanesdk.examples.DataRefEditor"
 #endif
 
-//#define TRACE_DATAREFS printf
+//#define TRACE_DATAREFS log_message
 #define TRACE_DATAREFS(...)
 
 
@@ -266,7 +268,7 @@ void			xlua_validate_drefs()
 		if(f->m_dref == NULL)
 		{
 			dref_missing = true;
-			printf("WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
+			log_message(nullptr, "WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
 		}
 	}
 	
@@ -275,8 +277,9 @@ void			xlua_validate_drefs()
 #else
 	for(xlua_dref * f = s_drefs; f; f = f->m_next)
 	{
-		if(f->m_dref == NULL)
-			printf("WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
+		if (f->m_dref == NULL) {
+			log_message(nullptr, "WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
+		}
 	}
 #endif
 }
@@ -309,37 +312,56 @@ xlua_dref *		xlua_find_dref(const char * name)
 	return d;
 }
 
-xlua_dref *		xlua_create_dref(const char * name, xlua_dref_type type, int dim, int writable, xlua_dref_notify_f func, void * ref)
+xlua_dref *		xlua_create_dref(lua_State* L, const char * name, xlua_dref_type type, int dim, int writable, xlua_dref_notify_f func, void * ref)
 {
 	assert(type != xlua_none);
 	assert(name);
 	assert(type != xlua_array || dim > 0);
 	assert(writable || func == NULL);
 	
+	XPLMDataTypeID type_mask = xplmType_Unknown;
+	switch (type) {
+		case xlua_number:
+			type_mask = xplmType_Int | xplmType_Float | xplmType_Double;
+			break;
+
+		case xlua_array:
+			type_mask = xplmType_FloatArray | xplmType_IntArray;
+			break;
+
+		case xlua_string:
+			type_mask = xplmType_Data;
+			break;
+
+		default:
+			break;
+	}
+
 	string n(name);
 	xlua_dref * f;
 	for(f = s_drefs; f; f = f->m_next)
 	if(f->m_name == n)
 	{
-		if(f->m_ours || f->m_dref)
+		if (f->m_ours && f->m_dref && f->m_types == type_mask && f->m_notify_func)
 		{
-			printf("ERROR: %s is already a dataref.\n",name);
-			return NULL;
+			log_message(L, "Reusing %s as %p\n", name, f);
+			return f;
 		}
-		TRACE_DATAREFS("Reusing %s as %p\n", name,f);		
-		break;
+
+		log_message(L, "ERROR: %s is already a dataref.\n", name);
+		return NULL;
 	}
 	
 	if(n.find('[') != n.npos)
 	{
-		printf("ERROR: %s contains brackets in its name.\n", name);
+		log_message(L, "ERROR: %s contains brackets in its name.\n", name);
 		return NULL;
 	}
 	
 	XPLMDataRef other = XPLMFindDataRef(name);
 	if(other && XPLMIsDataRefGood(other))
 	{
-		printf("ERROR: %s is used by another plugin.\n", name);
+		log_message(L, "ERROR: %s is used by another plugin.\n", name);
 		return NULL;
 	}
 	
@@ -349,7 +371,7 @@ xlua_dref *		xlua_create_dref(const char * name, xlua_dref_type type, int dim, i
 		d = new xlua_dref;
 		d->m_next = s_drefs;
 		s_drefs = d;
-		TRACE_DATAREFS("Creating %s as %p\n", name,d);		
+		TRACE_DATAREFS("Creating %s as %p\n", name,d);
 	}
 	d->m_name = name;
 	d->m_index = -1;
@@ -357,10 +379,10 @@ xlua_dref *		xlua_create_dref(const char * name, xlua_dref_type type, int dim, i
 	d->m_notify_func = func;
 	d->m_notify_ref = ref;
 	d->m_number_storage = 0;
+	d->m_types = type_mask;
 
 	switch(type) {
 	case xlua_number:
-		d->m_types = xplmType_Int|xplmType_Float|xplmType_Double;
 		d->m_dref = XPLMRegisterDataAccessor(name, d->m_types, writable,
 						xlua_geti, xlua_seti,
 						xlua_getf, xlua_setf,
@@ -371,7 +393,6 @@ xlua_dref *		xlua_create_dref(const char * name, xlua_dref_type type, int dim, i
 						d, d);
 		break;
 	case xlua_array:
-		d->m_types = xplmType_FloatArray|xplmType_IntArray;
 		d->m_dref = XPLMRegisterDataAccessor(name, d->m_types, writable,
 						NULL, NULL,
 						NULL, NULL,
@@ -383,7 +404,6 @@ xlua_dref *		xlua_create_dref(const char * name, xlua_dref_type type, int dim, i
 		d->m_array_storage.resize(dim);
 		break;
 	case xlua_string:
-		d->m_types = xplmType_Data;
 		d->m_dref = XPLMRegisterDataAccessor(name, d->m_types, writable,
 						NULL, NULL,
 						NULL, NULL,
@@ -603,7 +623,7 @@ void			xlua_relink_all_drefs()
 	if(dre != XPLM_NO_PLUGIN_ID)
 	if(!XPLMIsPluginEnabled(dre))
 	{
-		printf("WARNING: can't register drefs - DRE is not enabled.\n");
+		log_message(nullptr, "WARNING: can't register drefs - DRE is not enabled.\n");
 		dre = XPLM_NO_PLUGIN_ID;
 	}
 #endif
@@ -618,8 +638,8 @@ void			xlua_relink_all_drefs()
 		if(d->m_ours)
 		if(dre != XPLM_NO_PLUGIN_ID)
 		{
-//			printf("registered: %s\n", d->m_name.c_str());
-			XPLMSendMessageToPlugin(dre, MSG_ADD_DATAREF, (void *)d->m_name.c_str());		
+//			TRACE_DATAREFS("registered: %s\n", d->m_name.c_str());
+			XPLMSendMessageToPlugin(dre, MSG_ADD_DATAREF, (void *)d->m_name.c_str());
 		}		
 #endif
 	}

@@ -12,6 +12,10 @@
 #include <string.h>
 #include <stdarg.h>
 #include <XPLMDataAccess.h>
+#include <XPLMUtilities.h>
+
+
+#include "log.h"
 
 extern XPLMDataRef				g_replay_active;
 extern XPLMDataRef				g_sim_period;
@@ -82,6 +86,10 @@ static int traceback(lua_State * L)
 	lua_pushinteger(L, 1);
 	lua_call(L,2,1);
 
+	// IMC make sure we see the message in the log file!
+	// Pass nullptr here so we don't get a duplicate stack trace.
+	log_message(nullptr, "traceback: %s\n", lua_tostring(L, -1));
+
 //	lua_getfield(L, LUA_GLOBALSINDEX, "STP");
 //	lua_getfield(L, -1, "stacktrace");
 //	lua_pushvalue(L, 1);
@@ -139,7 +147,10 @@ int vfmt_pcall(lua_State * L, int dbg, const char * fmt, va_list va)
 	int e = lua_pcall(L, count, 0, dbg);
 	if(e != 0)
 	{
-		printf("%s\n", lua_tostring(L, -1));
+		const char* msg = lua_tostring(L, -1);
+
+		log_message(L, "lua call failed code: %d, msg: %s\n", e, msg);
+
 		lua_pop(L,-1);
 	}
 	return e;

@@ -24,6 +24,8 @@
 #include <XPLMUtilities.h>
 #include <XPLMDataAccess.h>
 
+#include "log.h"
+
 /*
 	TODO: figure out when we have to resync our datarefs
 	TODO: what if dref already registered before acf reload?  (maybe no harm?)
@@ -93,7 +95,7 @@ lua_State * setup_lua_callback(void * ref)
 	lua_rawgeti (cb->L, LUA_REGISTRYINDEX, cb->slot);
 	if(!lua_isfunction(cb->L, -1))
 	{
-		printf("ERROR: we did not persist a closure?!?");
+		log_message(cb->L, "ERROR: we did not persist a closure?!?");
 		lua_pop(cb->L, 1);
 		return 0;
 	}
@@ -115,8 +117,10 @@ static int XLuaGetCode(lua_State * L)
 	
 	if(result)
 	{
-		const char * err_msg = luaL_checkstring(L,1);
-		printf("%s: %s", name, err_msg);
+		const char * err_msg = luaL_checkstring(L, 2);
+		log_message(L, "%s: %s\n", name, err_msg);
+
+		return 0;
 	}
 	
 	return 1;
@@ -187,7 +191,7 @@ static int XLuaCreateDataRef(lua_State * L)
 	else
 		return luaL_argerror(L, 2, "Type must be number, string, or array[n]");
 	
-	xlua_dref * r = xlua_create_dref(
+	xlua_dref * r = xlua_create_dref(L,
 							name,
 							my_type,
 							my_dim,
@@ -313,20 +317,56 @@ static int XLuaCreateCommand(lua_State * L)
 	const char * name = luaL_checkstring(L, 1);
 	const char * desc = luaL_checkstring(L, 2);
 
-	xlua_cmd * r = xlua_create_cmd(name,desc);
+	xlua_cmd * r = xlua_create_cmd(L,name,desc);
 	assert(r);
 	
     xlua_pushuserdata(L, r);
 	return 1;
 }
 
-static void cmd_cb_helper(xlua_cmd * cmd, int phase, float elapsed, void * ref)
+static int cmd_filter_cb_helper(xlua_cmd* cmd, int phase, float elapsed, void* ref)
+{
+	int res = 1;
+
+	lua_State* L = setup_lua_callback(ref);
+	if (L)
+	{
+		int e = lua_pcall(L, 0, 1, module::debug_proc_from_interp(L));
+		if (e != 0)
+		{
+			l_my_print(L);
+			lua_pop(L, -1);
+		}
+		else
+		{
+			res = lua_toboolean(L, -1);
+			lua_pop(L, 1);
+		}
+	}
+
+	return res;
+}
+
+static int cmd_cb_helper(xlua_cmd * cmd, int phase, float elapsed, void * ref)
 {
 	lua_State * L = setup_lua_callback(ref);
 	if(L)
 	{
-		fmt_pcall_stdvars(L,module::debug_proc_from_interp(L),"if",phase, elapsed);
+		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L),"if",phase, elapsed);
 	}
+
+	return 1;
+}
+
+// XPLMFilterCommand handler
+static int XLuaFilterCommand(lua_State* L)
+{
+	xlua_cmd* cmd = xlua_checkuserdata<xlua_cmd*>(L, 1, "expected command");
+	notify_cb_t* cb_filter = wrap_lua_func(L, 2);
+
+	xlua_cmd_install_filter(L, cmd, cmd_filter_cb_helper, cb_filter);
+
+	return 0;
 }
 
 // XPLMReplaceCommand cmd handler
@@ -335,7 +375,7 @@ static int XLuaReplaceCommand(lua_State * L)
 	xlua_cmd * d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
 	notify_cb_t * cb = wrap_lua_func(L, 2);
 	
-	xlua_cmd_install_handler(d, cmd_cb_helper, cb);
+	xlua_cmd_install_handler(L,d, cmd_cb_helper, cb);
 	return 0;	
 }
 
@@ -346,8 +386,8 @@ static int XLuaWrapCommand(lua_State * L)
 	notify_cb_t * cb1 = wrap_lua_func(L, 2);
 	notify_cb_t * cb2 = wrap_lua_func(L, 3);
 	
-	xlua_cmd_install_pre_wrapper(d, cmd_cb_helper, cb1);
-	xlua_cmd_install_post_wrapper(d, cmd_cb_helper, cb2);
+	xlua_cmd_install_pre_wrapper(L, d, cmd_cb_helper, cb1);
+	xlua_cmd_install_post_wrapper(L, d, cmd_cb_helper, cb2);
 	return 0;	
 }
 
@@ -395,10 +435,21 @@ static int XLuaCreateTimer(lua_State * L)
 	if(helper == NULL)
 		return 0;
 	
-	xlua_timer * t = xlua_create_timer(timer_cb, helper);
+	xlua_timer * t = xlua_create_timer(L, timer_cb, helper);
 	assert(t);
 	
     xlua_pushuserdata(L, t);
+	return 1;
+}
+
+// Get the number of seconds a timer has to go, or -1 if not scheduled.
+static int XLuaGetTimerRemaining(lua_State* L)
+{
+	xlua_timer* t = xlua_checkuserdata<xlua_timer*>(L, 1, "expected timer");
+	if (t == nullptr)
+		return 0;
+
+	lua_pushnumber(L, xlua_get_timer_remaining(t));
 	return 1;
 }
 
@@ -452,32 +503,40 @@ static int XLuaReloadOnFlightChange(lua_State* L)
 	FUNC(XLuaCreateCommand) \
 	FUNC(XLuaReplaceCommand) \
 	FUNC(XLuaWrapCommand) \
+	FUNC(XLuaFilterCommand) \
 	FUNC(XLuaCommandStart) \
 	FUNC(XLuaCommandStop) \
 	FUNC(XLuaCommandOnce) \
 	FUNC(XLuaCreateTimer) \
 	FUNC(XLuaRunTimer) \
 	FUNC(XLuaIsTimerScheduled) \
+	FUNC(XLuaGetTimerRemaining) \
 	FUNC(XLuaReloadOnFlightChange)
+
+std::string get_log_prefix(char l)
+{
+	char prefix[256];
+	float hrs, min, sec, real_time = XPLMGetDataf(drSimRealTime);
+	hrs = (int)(real_time / 3600.0f);
+	min = (int)(real_time / 60.0f) - (int)(hrs * 60.0f);
+	sec = real_time - (hrs * 3600.0f) - (min * 60.0f);
+	sprintf(prefix, "%d:%02d:%06.3f %c/LUA: ", (int)hrs, (int)min, sec, l);
+
+	return std::string(prefix);
+}
 
 static int l_my_print(lua_State *L)
 {
 	int nargs = lua_gettop(L);
 	module *me = module::module_from_interp(L);
 
-	char prefix[256];
-	float hrs, min, sec, real_time = XPLMGetDataf(drSimRealTime);
-	hrs = (int)(real_time / 3600.0f);
-	min = (int)(real_time / 60.0f) - (int)(hrs * 60.0f);
-	sec = real_time-(hrs * 3600.0f) - (min * 60.0f);
-	sprintf(prefix, "%d:%02d:%06.3f LUA: ", (int)hrs, (int)min, sec);
+	std::string prefix = get_log_prefix();
 
 	// Unwieldy... but on the other hand, lua debug statements could in theory come from anywhere, from
 	// several different instances of xlua at the same time so the full path probably is needed.
-	std::string output = prefix + me->get_log_path() + "\n";
-	XPLMDebugString(output.c_str());
-	output.clear();
+	XPLMDebugString((prefix + me->get_log_path() + "\n").c_str());
 
+	std::string output;
 	char num_buf[128];
 
 	for (int i = 1; i <= nargs; i++)
@@ -517,10 +576,68 @@ static int l_my_print(lua_State *L)
 	puts(output.c_str());
 
 	output += "\n";
-	XPLMDebugString(prefix);
-	XPLMDebugString(output.c_str());
+	XPLMDebugString((prefix + output).c_str());
 
 	return 0;
+}
+
+int log_message(lua_State *L, char const* const format, ...)
+{
+	char buffer[2048];
+	char lp = 'I';
+	std::string prefix(get_log_prefix());
+
+	if (L != nullptr)
+	{
+		lua_Debug ar = {};
+		char const* line_prefix = "";
+
+		for (int level = 0; lua_getstack(L, level, &ar); ++level)
+		{
+			if (lp == 'I')
+			{
+				lp = 'E';
+				prefix = get_log_prefix(lp);
+			}
+
+			lua_getinfo(L, "nSl", &ar);
+
+			char const* source_name = (ar.short_src[0] == 0 ? "memory" : ar.short_src);
+			if (ar.source != nullptr && ar.source[0] == '=')
+			{
+				source_name = &ar.source[1];
+			}
+
+			if (ar.name == nullptr)
+			{
+				snprintf(buffer, sizeof(buffer), "%sOn line %d of '%s':\n", line_prefix, ar.currentline, source_name);
+			}
+			else
+			{
+				snprintf(buffer, sizeof(buffer), "%sIn %s on line %d of '%s':\n", line_prefix, ar.name, ar.currentline, source_name);
+			}
+
+			XPLMDebugString(prefix.c_str()); XPLMDebugString(buffer);
+			puts(prefix.c_str()); puts(buffer);
+			buffer[0] = 0;
+
+			line_prefix = " -> ";
+			memset(&ar, 0, sizeof(ar));
+		}
+	}
+
+	va_list args;
+	va_start(args, format);
+	int result = vsnprintf(buffer, sizeof(buffer), format, args);
+	va_end(args);
+
+	std::string output(prefix);
+	output += buffer;
+
+	XPLMDebugString(output.c_str());
+	printf("%s\n", output.c_str());
+
+	return result;
 }
 
 static const struct luaL_Reg printlib[] = {

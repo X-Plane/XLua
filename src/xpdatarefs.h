@@ -12,6 +12,7 @@
 #define xpdatarefs_h
 
 #include <string>
+#include "lua.h"
 
 using std::string;
 
@@ -27,7 +28,7 @@ enum xlua_dref_type {
 typedef void (* xlua_dref_notify_f)(xlua_dref * who, void * ref);
 
 xlua_dref *		xlua_find_dref(const char * name);
-xlua_dref *		xlua_create_dref(
+xlua_dref *		xlua_create_dref(lua_State* L,
 						const char *				name, 
 						xlua_dref_type			type, 
 						int						dim, 

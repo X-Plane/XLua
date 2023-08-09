@@ -41,7 +41,7 @@ public:
 			
 			// Pushes error string or chunk onto interp stack, returns error code or 0.  
 			int			load_module_relative_path(const string& path);
-	const	string		&get_log_path(void) { return m_log_path; }
+	const	string		&get_log_path(void) const { return m_log_path; }
 
 			void		acf_load();
 			void		acf_unload();

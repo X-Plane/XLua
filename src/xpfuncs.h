@@ -11,7 +11,7 @@
 #ifndef xpfuncs_h
 #define xpfuncs_h
 
-#include <cstring>
+#include <string>
 
 extern "C" {
 #include <lua.h>
@@ -19,6 +19,7 @@ extern "C" {
 };
 
 void	add_xpfuncs_to_interp(lua_State * interp);
+std::string get_log_prefix(char l='I');
 
 template <typename T>
 T xlua_checkuserdata(lua_State * L, int narg, const char * msg)
