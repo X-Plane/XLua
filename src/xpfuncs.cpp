@@ -618,7 +618,7 @@ int log_message(lua_State *L, char const* const format, ...)
 			}
 
 			XPLMDebugString(prefix.c_str()); XPLMDebugString(buffer);
-			puts(prefix.c_str()); puts(buffer);
+			printf("%s", prefix.c_str()); printf("%s", buffer);
 			buffer[0] = 0;
 
 			line_prefix = " -> ";
@@ -635,7 +635,7 @@ int log_message(lua_State *L, char const* const format, ...)
 	output += buffer;
 
 	XPLMDebugString(output.c_str());
-	printf("%s\n", output.c_str());
+	printf("%s", output.c_str());
 
 	return result;
 }
