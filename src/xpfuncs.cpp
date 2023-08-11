@@ -335,13 +335,13 @@ static int cmd_filter_cb_helper(xlua_cmd* cmd, int phase, float elapsed, void* r
 		if (e != 0)
 		{
 			l_my_print(L);
-			lua_pop(L, -1);
 		}
 		else
 		{
 			res = lua_toboolean(L, -1);
-			lua_pop(L, 1);
 		}
+
+		lua_pop(L, 1);
 	}
 
 	return res;

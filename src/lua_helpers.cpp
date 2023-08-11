@@ -148,10 +148,12 @@ int vfmt_pcall(lua_State * L, int dbg, const char * fmt, va_list va)
 	if(e != 0)
 	{
 		const char* msg = lua_tostring(L, -1);
-
-		log_message(L, "lua call failed code: %d, msg: %s\n", e, msg);
-
-		lua_pop(L,-1);
+		if (!dbg)
+		{
+			// In dbg mode the traceback handler will have been called, which already prints this message.
+			log_message(L, "lua call failed code: %d, msg: %s\n", e, msg);
+		}
+		lua_pop(L, 1);
 	}
 	return e;
 }
