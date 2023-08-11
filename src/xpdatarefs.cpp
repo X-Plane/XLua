@@ -29,7 +29,7 @@ using std::vector;
 #define STAT_PLUGIN_SIG "xplanesdk.examples.DataRefEditor"
 #endif
 
-//#define TRACE_DATAREFS log_message
+//#define TRACE_DATAREFS log_message(L,__VA_ARGS__)
 #define TRACE_DATAREFS(...)
 
 
@@ -342,14 +342,14 @@ xlua_dref *		xlua_create_dref(lua_State* L, const char * name, xlua_dref_type ty
 	for(f = s_drefs; f; f = f->m_next)
 	if(f->m_name == n)
 	{
-		if (f->m_ours && f->m_dref && f->m_types == type_mask && f->m_notify_func)
+		if (f->m_ours || f->m_dref)
 		{
-			log_message(L, "Reusing %s as %p\n", name, f);
-			return f;
+			log_message(L, "ERROR: %s is already a dataref.\n", name);
+			return NULL;
 		}
 
-		log_message(L, "ERROR: %s is already a dataref.\n", name);
-		return NULL;
+		TRACE_DATAREFS("Reusing %s as %p\n", name, f);
+		break;
 	}
 	
 	if(n.find('[') != n.npos)
