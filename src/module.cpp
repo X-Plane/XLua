@@ -248,13 +248,14 @@ void module::do_callout(const char * f)
 {
 	if(m_interp == NULL)
 		return;
+
 	lua_getfield(m_interp, LUA_GLOBALSINDEX, "do_callout");
-	if(lua_isnil(m_interp, -1))
+	if (!lua_isfunction(m_interp, -1))
 	{
 		lua_pop(m_interp, 1);
 	}
 	else
-	{	
+	{
 		fmt_pcall_stdvars(m_interp,m_debug_proc,"s",f);
 	}
 }
@@ -264,7 +265,6 @@ module::~module()
 	if(m_interp)
 		lua_close(m_interp);
 	destroy_alloc_block(m_memory);
-		
 }
 
 #if !MOBILE
