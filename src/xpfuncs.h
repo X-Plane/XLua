@@ -12,6 +12,7 @@
 #define xpfuncs_h
 
 #include <string>
+#include <string.h>
 
 extern "C" {
 #include <lua.h>
