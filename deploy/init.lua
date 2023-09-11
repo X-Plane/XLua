@@ -241,6 +241,12 @@ function wrap_command(name, before, after)
 	return make_command_obj(c)
 end
 
+function filter_command(name, func)
+	c = XLuaFindCommand(name)
+	XLuaFilterCommand(c,func)
+	return make_command_obj(c)
+end
+
 --------------------------------------------------------------------------------
 -- TIMER UTILITIES
 --------------------------------------------------------------------------------
