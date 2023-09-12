@@ -13,6 +13,7 @@ XLua is **not** meant to be an "official" Lua plugin for X-Plane, and it definit
 * Improved logging of lua errors
 * Lua print() and other log lines go to both console and X-Plane log file, tagged as `?/LUA:`
 * Add ability to query a timer's time remaining `XLuaGetTimerRemaining()`. Pass in a timer reference created by `XLuaCreateTimer()`, returns a Number.
+* Adds `filter_command` support.
 
 **1.2.0r1 - 02/16/2022**
 
@@ -171,13 +172,13 @@ function command_handler(phase, duration)
 end
 ```
 
-The `phase` is an integer that will be `0` when the command is first pressed, `1` while it is being held down, and `2` when it is released.  For any command invocation, you are guaranteed exactly one "begin" and one "end", with one or more “held down” in the middle.  But note that if the user has multiple joysticks mapped to the command you could get a second "down" while the first one is running.
+The `phase` is an integer that will be `0` (start) when the command is first pressed, `1` (continue) while it is being held down, and `2` (stop) when it is released.  For any command invocation, you are guaranteed exactly one "start" and one "stop", with one or more "continue" in the middle if the command is "held down". But note that if the user has multiple joysticks mapped to the command you could get a second "start" while the first one is running.
 
 The `duration` is how long the command has been held down in seconds, starting at 0.
 
 `create_command` returns a command object but you can ignore that object if you just need to make a command and not run it yourself.
 
-You can customize existing commands in two ways:
+You can customize existing commands in three ways:
 
 `c = replace_command(name, handler)`
 
@@ -186,6 +187,16 @@ This takes an existing command (e.g. one of X-Plane’s commands) and replaces t
 `c = wrap_command(name, before_handler, after_handler)`
 
 This takes an existing command (e.g. one of X-Plane’s commands) and installs two new handlers - the before handler runs before X-Plane, and the after handler runs after. You can use this to “listen” for a command and do extra stuff without losing X-Plane’s capabilities. You must provide both functions even if one does nothing.
+
+`c = filter_command(name, handler)`
+
+This allows you to provide a function that defines a 'filter' for a command.  The filter will determine whether the command is actually invoked or not, or continues to be invoked if it is already active. As with other command modifiers such as `wrap_command` or `replace_command`, this returns a reference to the command. The filter function takes no parameters, and should return boolean `true` if the filtered command is to proceed and boolean `false` if the filtered command is to be blocked.
+
+The filter function will be called for each "start" and "continue" phase message. It is not called for the "stop" phase because this means the command is ended and so does not need filtering. You may return `false` at any time so there is no need to differentiate between "start" and "continue".
+
+**CAUTION:** When a command is filtered and you change the filter state from `true` to `false` while the command is in the "continue" phase:
+  * If it's a custom Lua command you will get a "stop" when the filter goes `false` and a "start" when the filter goes `true` if the command has not been stopped in the meantime. 
+  * If it's a native sim command, there is currently no "start"/"stop" sent; instead it blocks the sim from receiving the "continue" messages. This does rely on the individual command logic in the sim paying attention to the "continue" phase, which is not always the case. This may change in the future.
 
 ### Timers
 
