@@ -121,7 +121,8 @@ module::module(
 							void *				in_alloc_ref) :
 	m_interp(NULL),
 	m_memory(NULL),
-	m_path(in_module_path)
+	m_path(in_module_path),
+	m_debug_proc(0)
 {
 	int boiler_plate_paths = length_of_dir(in_init_script);
 	m_log_path = in_module_script + boiler_plate_paths;
