@@ -151,11 +151,35 @@ module::module(
 	
 	m_debug_proc = lua_pushtraceback(m_interp);
 	
-	int load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), in_init_script + boiler_plate_paths);
+	/*
+	* Where do these numbers come from?
+	* 
+	* In short, see lj_jit.h, all the optimization parameters. Each of those ends up with a constant like
+	* 'JIT_P_<name>'. Search the luajit code for anywhere that checks any of the JIT_P_max* parameters, stick
+	* a breakpoint on the following call to lj_trace_err, slowly increase the values in J->param[whatever] until the
+	* breakpoint stops hitting. Would be nice if this auto-tuned TBH. They end up calling RaiseException() on Windows but
+	* catching that in any pcall() here does nothing because the JIT catches it itself.
+	* 
+	* Actual errors to breakpoint on: LJ_TRERR_SNAPOV, LJ_TRERR_MCODEAL, LJ_TRERR_MCODEOV, LJ_TRERR_TRACEOV, LJ_TRLINK_INTERP, lj_trace_flushall
+	*
+	* If these limits are hit then the jit tries, fails after a while and falls back to standard lua. On every frame.
+	* 
+	* Current A330 requirements without allocation errors:
+	*				maxmcode		maxtrace		maxirconst		maxside
+	*   default		512				1000			500				100
+	*   A330		7168			3072			1500			400
+	* 
+	*/
+
+	int load_result = luaL_loadstring(m_interp, "jit.opt.start(\"maxmcode=8192\", \"maxtrace=4096\", \"maxirconst=1500\", \"maxside=500\")");
+	CTOR_FAIL(load_result, "set jit defaults")
+	int script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
+
+	load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), in_init_script + boiler_plate_paths);
 	CTOR_FAIL(load_result, "load init script")
 
-	int init_script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
-	CTOR_FAIL(init_script_result, "run init script");
+	script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
+	CTOR_FAIL(script_result, "run init script");
 
 	lua_getfield(m_interp, LUA_GLOBALSINDEX, "run_module_in_namespace");
 	
