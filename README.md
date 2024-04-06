@@ -9,6 +9,10 @@ XLua is developed internally by Laminar Research and is intended to help our int
 XLua is **not** meant to be an "official" Lua plugin for X-Plane, and it definitely does not replace any of the existing Lua plugins, all of which have significantly more features than XLua itself.
 
 ## Release Notes
+**1.4.0r1 - 08/09/2023**
+* Update to LuaJIT 2.1.0 rolling
+* Set large enough LuaJIT parameters to handle all default aircraft
+
 **1.3.0r1 - 08/09/2023**
 * Improved logging of lua errors
 * Lua print() and other log lines go to both console and X-Plane log file, tagged as `?/LUA:`
@@ -245,3 +249,6 @@ On some complex aircraft, you might also need to reset your scripts if the "Star
 * _**Is there a way to compile a XLua script in a binary plugin (xpl file)?**_
   * No. If you want or need to encrypt Lua scripts, you need to use SASL.
 
+* _**Performance is terrible!**_
+  * If you have particularly complex Lua running from a single file then it's possible for the JIT to hit compiled-in memory limits. This causes a dramatic degradation of sim performance. From 1.4.0r1, these defaults are considerably higher than before and are enough to run the most complex of the Laminar Research aircraft. You can tell if your aircraft has the same issue by adding the line 'jit.off()' to the top of each of your scripts, or to the top of the init.lua script to disable it completely. If this immediately improves performance, you need to increase the memory limits further.
+  * XLua currently uses this: `jit.opt.start("maxmcode=7168", "maxtrace=3072", "maxirconst=1500", "maxside=400")`.
