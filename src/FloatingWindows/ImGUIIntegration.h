@@ -28,7 +28,7 @@
 #include <string>
 #include "FloatingWindow.h"
 #include "../imgui/imgui.h"
-#include "../LuaJIT-2.1.0/src/lua.hpp"
+#include "../luajit/src/lua.hpp"
 
 namespace flwnd {
 

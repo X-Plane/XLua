@@ -4,3 +4,7 @@
 [submodule "imgui"]
 	path = imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "luajit"]
+	path = luajit
+	url = https://luajit.org/git/luajit.git
+	branch = v2.1

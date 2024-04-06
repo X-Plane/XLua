@@ -7,7 +7,7 @@
 #ifndef FLOATINGWINDOWS_FLWINTEGRATION_H_
 #define FLOATINGWINDOWS_FLWINTEGRATION_H_
 
-#include "../../LuaJIT-2.1.0/src/lua.hpp"
+#include "../../luajit/src/lua.hpp"
 
 void LoadImguiBindings(lua_State* lState);
 
