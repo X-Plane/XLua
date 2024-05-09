@@ -9,6 +9,9 @@ XLua is developed internally by Laminar Research and is intended to help our int
 XLua is **not** meant to be an "official" Lua plugin for X-Plane, and it definitely does not replace any of the existing Lua plugins, all of which have significantly more features than XLua itself.
 
 ## Release Notes
+**1.3.0r2 - 09/05/2024**
+* Adds `get_timer_remaining` stub to init.lua.
+
 **1.3.0r1 - 08/09/2023**
 * Improved logging of lua errors
 * Lua print() and other log lines go to both console and X-Plane log file, tagged as `?/LUA:`
@@ -221,6 +224,10 @@ This ensures that `func` does not run again until you re-schedule it; any schedu
 `is_timer_scheduled(func)`
 
 This returns true if the timer function will run at any time in the future.  It returns false if the timer isn’t scheduled or if `func` has never been used as a timer.
+
+`get_timer_remaining(func)`
+
+This returns the number of seconds remaining before the given timer function will be called. If the timer function has not been registered, false is returned.
 
 ### Debugging facilities
 

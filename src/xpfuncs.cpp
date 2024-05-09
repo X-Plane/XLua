@@ -447,9 +447,14 @@ static int XLuaGetTimerRemaining(lua_State* L)
 {
 	xlua_timer* t = xlua_checkuserdata<xlua_timer*>(L, 1, "expected timer");
 	if (t == nullptr)
-		return 0;
+	{
+		lua_pushnumber(L, -1);
+	}
+	else
+	{
+		lua_pushnumber(L, xlua_get_timer_remaining(t));
+	}
 
-	lua_pushnumber(L, xlua_get_timer_remaining(t));
 	return 1;
 }
 
