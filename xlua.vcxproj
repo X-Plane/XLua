@@ -19,6 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="imgui\imgui.cpp" />
+    <ClCompile Include="imgui\imgui_demo.cpp" />
+    <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="imgui\imgui_tables.cpp" />
+    <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="imgui\misc\cpp\imgui_stdlib.cpp" />
+    <ClCompile Include="imgui_lua_bindings\imgui_lua_bindings.cpp" />
+    <ClCompile Include="src\FloatingWindows\FloatingWindow.cpp" />
+    <ClCompile Include="src\FloatingWindows\FLWIntegration.cpp" />
+    <ClCompile Include="src\FloatingWindows\ImGUIIntegration.cpp" />
     <ClCompile Include="src\lua_helpers.cpp" />
     <ClCompile Include="src\module.cpp" />
     <ClCompile Include="src\xlua.cpp" />
@@ -28,16 +38,33 @@
     <ClCompile Include="src\xptimers.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\imgui_internal.h" />
+    <ClInclude Include="imgui\imstb_rectpack.h" />
+    <ClInclude Include="imgui\imstb_textedit.h" />
+    <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="imgui\misc\cpp\imgui_stdlib.h" />
     <ClInclude Include="lua_sdk\lauxlib.h" />
     <ClInclude Include="lua_sdk\lua.h" />
     <ClInclude Include="lua_sdk\luaconf.h" />
     <ClInclude Include="lua_sdk\lualib.h" />
+    <ClInclude Include="src\FloatingWindows\FloatingWindow.h" />
+    <ClInclude Include="src\FloatingWindows\FLWIntegration.h" />
+    <ClInclude Include="src\FloatingWindows\ImGUIIntegration.h" />
+    <ClInclude Include="src\FloatingWindows\stb_image.h" />
     <ClInclude Include="src\lua_helpers.h" />
     <ClInclude Include="src\module.h" />
     <ClInclude Include="src\xpcommands.h" />
     <ClInclude Include="src\xpdatarefs.h" />
     <ClInclude Include="src\xpfuncs.h" />
     <ClInclude Include="src\xptimers.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="imgui\misc\debuggers\imgui.natstepfilter" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="imgui\misc\debuggers\imgui.natvis" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <SccProjectName />
@@ -50,25 +77,25 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -174,8 +201,8 @@
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>SDK\CHeaders\XPLM;SDK\CHeaders\Widgets;lua_sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;SIMDATA_EXPORTS;IBM=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>SDK\CHeaders\XPLM;SDK\CHeaders\Widgets;lua_sdk;imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;XPLM200;XPLM210;XPLM300;XPLM301;XPLM302;XPLM303;XPLM400;NDEBUG;_WINDOWS;_USRDLL;SIMDATA_EXPORTS;IBM=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\64\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Release\64\xlua.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeader>
@@ -260,8 +287,8 @@
       <Optimization>Disabled</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
-      <AdditionalIncludeDirectories>SDK\CHeaders\XPLM;SDK\CHeaders\Widgets;lua_sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SIMDATA_EXPORTS;IBM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>SDK\CHeaders\XPLM;SDK\CHeaders\Widgets;lua_sdk;imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;XPLM200;XPLM210;XPLM300;XPLM301;XPLM302;XPLM303;XPLM400;_DEBUG;_WINDOWS;_USRDLL;SIMDATA_EXPORTS;IBM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug\64\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Debug\64\xlua.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeader>
