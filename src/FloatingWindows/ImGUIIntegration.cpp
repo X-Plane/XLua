@@ -39,28 +39,6 @@ ImGUIWindow::ImGUIWindow(int width, int height, int decoration):
     io.ConfigMacOSXBehaviors = false; // This is the new version above Imgui 1.60
     io.ConfigFlags = ImGuiConfigFlags_NavNoCaptureKeyboard;
 
-    io.KeyMap[ImGuiKey_Tab] = XPLM_VK_TAB;
-    io.KeyMap[ImGuiKey_LeftArrow] = XPLM_VK_LEFT;
-    io.KeyMap[ImGuiKey_RightArrow] = XPLM_VK_RIGHT;
-    io.KeyMap[ImGuiKey_UpArrow] = XPLM_VK_UP;
-    io.KeyMap[ImGuiKey_DownArrow] = XPLM_VK_DOWN;
-    io.KeyMap[ImGuiKey_PageUp] = XPLM_VK_PRIOR;
-    io.KeyMap[ImGuiKey_PageDown] = XPLM_VK_NEXT;
-    io.KeyMap[ImGuiKey_Home] = XPLM_VK_HOME;
-    io.KeyMap[ImGuiKey_End] = XPLM_VK_END;
-    io.KeyMap[ImGuiKey_Insert] = XPLM_VK_INSERT;
-    io.KeyMap[ImGuiKey_Delete] = XPLM_VK_DELETE;
-    io.KeyMap[ImGuiKey_Backspace] = XPLM_VK_BACK;
-    io.KeyMap[ImGuiKey_Space] = XPLM_VK_SPACE;
-    io.KeyMap[ImGuiKey_Enter] = XPLM_VK_ENTER;
-    io.KeyMap[ImGuiKey_Escape] = XPLM_VK_ESCAPE;
-    io.KeyMap[ImGuiKey_A] = XPLM_VK_A;
-    io.KeyMap[ImGuiKey_C] = XPLM_VK_C;
-    io.KeyMap[ImGuiKey_V] = XPLM_VK_V;
-    io.KeyMap[ImGuiKey_X] = XPLM_VK_X;
-    io.KeyMap[ImGuiKey_Y] = XPLM_VK_Y;
-    io.KeyMap[ImGuiKey_Z] = XPLM_VK_Z;
-
     uint8_t *pixels;
     int fontTexWidth, fontTexHeight;
     io.Fonts->GetTexDataAsAlpha8(&pixels, &fontTexWidth, &fontTexHeight);
@@ -108,8 +86,6 @@ void ImGUIWindow::onDraw() {
         requestInputFocus(true);
     } else if (!io.WantTextInput && hasKeyboardFocus) {
         requestInputFocus(false);
-        // reset keysdown otherwise we'll think any keys used to defocus the keyboard are still down!
-        std::fill(std::begin(io.KeysDown), std::end(io.KeysDown), false);
     }
 
     FloatingWindow::onDraw();
@@ -289,8 +265,8 @@ void ImGUIWindow::onKey(char key, XPLMKeyFlags flags, char virtualKey, bool losi
     if (io.WantTextInput) {
         // If you press and hold a key, the flags will actually be down, 0, 0, ..., up
         // So the key always has to be considered as pressed unless the up flag is set
-        auto vk = static_cast<unsigned char>(virtualKey);
-        io.KeysDown[vk] = (flags & xplm_UpFlag) != xplm_UpFlag;
+        auto vk = static_cast<ImGuiKey>(virtualKey);
+		io.AddKeyEvent(vk, (flags & xplm_UpFlag) != xplm_UpFlag);
         io.KeyShift = (flags & xplm_ShiftFlag) == xplm_ShiftFlag;
         io.KeyAlt = (flags & xplm_OptionAltFlag) == xplm_OptionAltFlag;
         io.KeyCtrl = (flags & xplm_ControlFlag) == xplm_ControlFlag;
