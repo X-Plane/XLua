@@ -1,0 +1,6 @@
+[submodule "imgui_lua_bindings"]
+	path = imgui_lua_bindings
+	url = ../../casssoft/imgui_lua_bindings.git
+[submodule "imgui"]
+	path = imgui
+	url = https://github.com/ocornut/imgui.git
