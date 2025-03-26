@@ -53,6 +53,7 @@
     <ClInclude Include="src\FloatingWindows\FLWIntegration.h" />
     <ClInclude Include="src\FloatingWindows\ImGUIIntegration.h" />
     <ClInclude Include="src\FloatingWindows\stb_image.h" />
+    <ClInclude Include="src\log.h" />
     <ClInclude Include="src\lua_helpers.h" />
     <ClInclude Include="src\module.h" />
     <ClInclude Include="src\xpcommands.h" />
@@ -132,6 +133,7 @@
     <TargetExt>.xpl</TargetExt>
     <GenerateManifest>false</GenerateManifest>
     <TargetName>xlua</TargetName>
+    <IncludePath>$(ProjectDir)\src\FloatingWindows;$(ProjectDir)\src\FloatingWindows\GL;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>.\Debug\plugins\$(TargetName)\32\</OutDir>
@@ -148,6 +150,7 @@
     <TargetExt>.xpl</TargetExt>
     <GenerateManifest>false</GenerateManifest>
     <TargetName>xlua</TargetName>
+    <IncludePath>$(ProjectDir)\src\FloatingWindows;$(ProjectDir)\src\FloatingWindows\GL;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -210,6 +213,7 @@
       <ObjectFileName>.\Release\64\</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\64\</ProgramDataBaseFileName>
       <StructMemberAlignment>Default</StructMemberAlignment>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -297,6 +301,7 @@
       <ProgramDataBaseFileName>.\Debug\64\</ProgramDataBaseFileName>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <StructMemberAlignment>Default</StructMemberAlignment>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>

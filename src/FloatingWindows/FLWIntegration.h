@@ -7,18 +7,15 @@
 #ifndef FLOATINGWINDOWS_FLWINTEGRATION_H_
 #define FLOATINGWINDOWS_FLWINTEGRATION_H_
 
-#include "lua.hpp"
+#include "../../LuaJIT-2.1.0/src/lua.hpp"
 
-// globals for imgui lua bindings
-extern lua_State* lState;
-void LoadImguiBindings();
+void LoadImguiBindings(lua_State* lState);
 
 namespace flwnd {
 
-void initFloatingWindowSupport();
-void deinitFloatingWindowSupport();
-void onFlightLoop();
-bool FindAndQuarantine (lua_State *L);
+void initFloatingWindowSupport(lua_State* L);
+void deinitFloatingWindowSupport(lua_State* L);
+void onFlightLoop(lua_State* L);
 
 }
 

@@ -52,7 +52,7 @@ ImGUIWindow::ImGUIWindow(int width, int height, int decoration):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, fontTexWidth, fontTexHeight, 0, GL_ALPHA, GL_UNSIGNED_BYTE, pixels);
-    io.Fonts->TexID = (void *)(intptr_t)(fontTextureId);
+    io.Fonts->TexID = (ImTextureID)(intptr_t)(fontTextureId);
 }
 
 void ImGUIWindow::setBuildCallback(BuildCallback cb) {
@@ -120,7 +120,7 @@ void ImGUIWindow::buildGUI() {
             ImGuiWindowFlags_NoResize |
             ImGuiWindowFlags_NoCollapse |
             ImGuiWindowFlags_HorizontalScrollbar;
-    ImGui::Begin("FlyWithLua", nullptr, fwl_imgui_wnd_flags);
+    ImGui::Begin("XLua", nullptr, fwl_imgui_wnd_flags);
 
     if (doBuild) {
         doBuild(*this);

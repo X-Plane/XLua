@@ -7,17 +7,12 @@
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #else
-#include <GL/gl.h>
-//#include <GL/glext.h>
+    #if defined(_WIN32)
+        #include <windows.h>
+    #endif
+    #include <GL/gl.h>
+    #include <GL/glext.h>
 #endif
-
-#define XPLM200
-#define XPLM210
-#define XPLM300
-#define XPLM301
-#define XPLM302
-#define XPLM303
-#define XPLM400
 
 #include <XPLMGraphics.h>
 #include <XPLMDisplay.h>
@@ -26,7 +21,6 @@
 #include <memory>
 #include <stdexcept>
 #include "FloatingWindow.h"
-//#include "../FlyWithLua.h"
 
 namespace {
 
@@ -70,7 +64,7 @@ void FloatingWindow::createWindow() {
         try {
             reinterpret_cast<FloatingWindow*>(ref)->onDraw();
         } catch (std::exception& e) {
-            flywithlua::logMsg(logToDevCon, std::string("Caught error: ") + e.what());
+            fprintf(stderr, "Caught error: %s", e.what());
         }
     };
     params.handleMouseClickFunc = [] (XPLMWindowID id, int x, int y, XPLMMouseStatus status, void *ref) -> int {

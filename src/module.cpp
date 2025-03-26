@@ -16,6 +16,9 @@
 
 #include "log.h"
 #include "lua_helpers.h"
+#include <lua.h>
+
+#include "FLWIntegration.h"
 
 static const char * shorten_to_file(const char * path)
 {
@@ -141,7 +144,8 @@ module::module(
 	log_message(m_interp, "Running %s\n", m_log_path.c_str());
 
 	add_xpfuncs_to_interp(m_interp);
-	
+	flwnd::initFloatingWindowSupport(m_interp);
+
 	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
 	// we need to load the Lua script from an already allocated memory buffer.
 	xmap_class linit(in_init_script);
@@ -237,6 +241,8 @@ void		module::pre_physics()
 void		module::post_physics()
 {
 	do_callout("after_physics");
+
+	flwnd::onFlightLoop(m_interp);
 }
 
 void		module::post_replay()
@@ -262,8 +268,12 @@ void module::do_callout(const char * f)
 
 module::~module()
 {
-	if(m_interp)
+	if (m_interp)
+	{
+		flwnd::deinitFloatingWindowSupport(m_interp);
 		lua_close(m_interp);
+	}
+
 	destroy_alloc_block(m_memory);
 }
 
