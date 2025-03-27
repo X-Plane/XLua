@@ -35,6 +35,7 @@
     <ClCompile Include="src\FloatingWindows\ImGUIIntegration.cpp">
       <Filter>FloatingWindows</Filter>
     </ClCompile>
+    <ClCompile Include="imgui_lua_bindings\imgui_lua_bindings.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua_sdk\lauxlib.h" />
@@ -80,6 +81,7 @@
     <ClInclude Include="src\FloatingWindows\stb_image.h">
       <Filter>FloatingWindows</Filter>
     </ClInclude>
+    <ClInclude Include="src\log.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
