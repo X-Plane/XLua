@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		29A35AC22D96E4930065038F /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29A35ABE2D96E4930065038F /* imgui_widgets.cpp */; };
+		29A35AC32D96E4930065038F /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29A35ABB2D96E4930065038F /* imgui_draw.cpp */; };
+		29A35AC42D96E4930065038F /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29A35AB92D96E4930065038F /* imgui.cpp */; };
+		29A35AC52D96E4930065038F /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29A35ABA2D96E4930065038F /* imgui_demo.cpp */; };
+		29A35AC62D96E4930065038F /* imgui_tables.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29A35ABD2D96E4930065038F /* imgui_tables.cpp */; };
+		29A35AEE2D96E4F90065038F /* FloatingWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29A35AE72D96E4F90065038F /* FloatingWindow.cpp */; };
+		29A35AEF2D96E4F90065038F /* ImGUIIntegration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29A35AEB2D96E4F90065038F /* ImGUIIntegration.cpp */; };
+		29A35AF02D96E4F90065038F /* FLWIntegration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29A35AE92D96E4F90065038F /* FLWIntegration.cpp */; };
+		29A35AF32D96E6BE0065038F /* imgui_lua_bindings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29A35AF22D96E6BE0065038F /* imgui_lua_bindings.cpp */; };
 		D60205641CC7CC8C00933688 /* lua_helpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D60205571CC7CC8C00933688 /* lua_helpers.cpp */; };
 		D60205651CC7CC8C00933688 /* module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D60205591CC7CC8C00933688 /* module.cpp */; };
 		D60205661CC7CC8C00933688 /* xlua.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D602055B1CC7CC8C00933688 /* xlua.cpp */; };
@@ -21,6 +30,31 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		29A35AB72D96E4930065038F /* imconfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imconfig.h; path = imgui/imconfig.h; sourceTree = SOURCE_ROOT; };
+		29A35AB82D96E4930065038F /* imgui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imgui.h; path = imgui/imgui.h; sourceTree = SOURCE_ROOT; };
+		29A35AB92D96E4930065038F /* imgui.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = imgui.cpp; path = imgui/imgui.cpp; sourceTree = SOURCE_ROOT; };
+		29A35ABA2D96E4930065038F /* imgui_demo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = imgui_demo.cpp; path = imgui/imgui_demo.cpp; sourceTree = SOURCE_ROOT; };
+		29A35ABB2D96E4930065038F /* imgui_draw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = imgui_draw.cpp; path = imgui/imgui_draw.cpp; sourceTree = SOURCE_ROOT; };
+		29A35ABC2D96E4930065038F /* imgui_internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imgui_internal.h; path = imgui/imgui_internal.h; sourceTree = SOURCE_ROOT; };
+		29A35ABD2D96E4930065038F /* imgui_tables.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = imgui_tables.cpp; path = imgui/imgui_tables.cpp; sourceTree = SOURCE_ROOT; };
+		29A35ABE2D96E4930065038F /* imgui_widgets.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = imgui_widgets.cpp; path = imgui/imgui_widgets.cpp; sourceTree = SOURCE_ROOT; };
+		29A35ABF2D96E4930065038F /* imstb_rectpack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imstb_rectpack.h; path = imgui/imstb_rectpack.h; sourceTree = SOURCE_ROOT; };
+		29A35AC02D96E4930065038F /* imstb_textedit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imstb_textedit.h; path = imgui/imstb_textedit.h; sourceTree = SOURCE_ROOT; };
+		29A35AC12D96E4930065038F /* imstb_truetype.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imstb_truetype.h; path = imgui/imstb_truetype.h; sourceTree = SOURCE_ROOT; };
+		29A35AC72D96E4B40065038F /* log.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
+		29A35ADF2D96E4F90065038F /* khrplatform.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = khrplatform.h; sourceTree = "<group>"; };
+		29A35AE12D96E4F90065038F /* glext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = glext.h; sourceTree = "<group>"; };
+		29A35AE32D96E4F90065038F /* config.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = config.hpp; sourceTree = "<group>"; };
+		29A35AE42D96E4F90065038F /* sol.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = sol.hpp; sourceTree = "<group>"; };
+		29A35AE62D96E4F90065038F /* FloatingWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FloatingWindow.h; sourceTree = "<group>"; };
+		29A35AE72D96E4F90065038F /* FloatingWindow.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FloatingWindow.cpp; sourceTree = "<group>"; };
+		29A35AE82D96E4F90065038F /* FLWIntegration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLWIntegration.h; sourceTree = "<group>"; };
+		29A35AE92D96E4F90065038F /* FLWIntegration.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FLWIntegration.cpp; sourceTree = "<group>"; };
+		29A35AEA2D96E4F90065038F /* ImGUIIntegration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ImGUIIntegration.h; sourceTree = "<group>"; };
+		29A35AEB2D96E4F90065038F /* ImGUIIntegration.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ImGUIIntegration.cpp; sourceTree = "<group>"; };
+		29A35AEC2D96E4F90065038F /* stb_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
+		29A35AF12D96E6BE0065038F /* imgui_iterator.inl */ = {isa = PBXFileReference; lastKnownFileType = text; name = imgui_iterator.inl; path = imgui_lua_bindings/imgui_iterator.inl; sourceTree = SOURCE_ROOT; };
+		29A35AF22D96E6BE0065038F /* imgui_lua_bindings.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = imgui_lua_bindings.cpp; path = imgui_lua_bindings/imgui_lua_bindings.cpp; sourceTree = SOURCE_ROOT; };
 		D60205571CC7CC8C00933688 /* lua_helpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lua_helpers.cpp; sourceTree = "<group>"; };
 		D60205581CC7CC8C00933688 /* lua_helpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lua_helpers.h; sourceTree = "<group>"; };
 		D60205591CC7CC8C00933688 /* module.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = module.cpp; sourceTree = "<group>"; };
@@ -56,6 +90,66 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		29A35AB62D96E43A0065038F /* imgui */ = {
+			isa = PBXGroup;
+			children = (
+				29A35AB72D96E4930065038F /* imconfig.h */,
+				29A35AB82D96E4930065038F /* imgui.h */,
+				29A35AB92D96E4930065038F /* imgui.cpp */,
+				29A35ABA2D96E4930065038F /* imgui_demo.cpp */,
+				29A35ABB2D96E4930065038F /* imgui_draw.cpp */,
+				29A35ABC2D96E4930065038F /* imgui_internal.h */,
+				29A35ABD2D96E4930065038F /* imgui_tables.cpp */,
+				29A35ABE2D96E4930065038F /* imgui_widgets.cpp */,
+				29A35ABF2D96E4930065038F /* imstb_rectpack.h */,
+				29A35AC02D96E4930065038F /* imstb_textedit.h */,
+				29A35AC12D96E4930065038F /* imstb_truetype.h */,
+			);
+			path = imgui;
+			sourceTree = "<group>";
+		};
+		29A35AE02D96E4F90065038F /* KHR */ = {
+			isa = PBXGroup;
+			children = (
+				29A35ADF2D96E4F90065038F /* khrplatform.h */,
+			);
+			path = KHR;
+			sourceTree = "<group>";
+		};
+		29A35AE22D96E4F90065038F /* GL */ = {
+			isa = PBXGroup;
+			children = (
+				29A35AE02D96E4F90065038F /* KHR */,
+				29A35AE12D96E4F90065038F /* glext.h */,
+			);
+			path = GL;
+			sourceTree = "<group>";
+		};
+		29A35AE52D96E4F90065038F /* sol */ = {
+			isa = PBXGroup;
+			children = (
+				29A35AE32D96E4F90065038F /* config.hpp */,
+				29A35AE42D96E4F90065038F /* sol.hpp */,
+			);
+			path = sol;
+			sourceTree = "<group>";
+		};
+		29A35AED2D96E4F90065038F /* FloatingWindows */ = {
+			isa = PBXGroup;
+			children = (
+				29A35AE22D96E4F90065038F /* GL */,
+				29A35AE52D96E4F90065038F /* sol */,
+				29A35AE62D96E4F90065038F /* FloatingWindow.h */,
+				29A35AE72D96E4F90065038F /* FloatingWindow.cpp */,
+				29A35AE82D96E4F90065038F /* FLWIntegration.h */,
+				29A35AE92D96E4F90065038F /* FLWIntegration.cpp */,
+				29A35AEA2D96E4F90065038F /* ImGUIIntegration.h */,
+				29A35AEB2D96E4F90065038F /* ImGUIIntegration.cpp */,
+				29A35AEC2D96E4F90065038F /* stb_image.h */,
+			);
+			path = FloatingWindows;
+			sourceTree = "<group>";
+		};
 		AC4E46B809C2E0B3006B7E1B /* Source */ = {
 			isa = PBXGroup;
 			children = (
@@ -67,11 +161,15 @@
 		D60205561CC7CC8C00933688 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				29A35AF12D96E6BE0065038F /* imgui_iterator.inl */,
+				29A35AF22D96E6BE0065038F /* imgui_lua_bindings.cpp */,
+				29A35AB62D96E43A0065038F /* imgui */,
 				D60205571CC7CC8C00933688 /* lua_helpers.cpp */,
 				D60205581CC7CC8C00933688 /* lua_helpers.h */,
 				D60205591CC7CC8C00933688 /* module.cpp */,
 				D602055A1CC7CC8C00933688 /* module.h */,
 				D602055B1CC7CC8C00933688 /* xlua.cpp */,
+				29A35AC72D96E4B40065038F /* log.h */,
 				D602055C1CC7CC8C00933688 /* xpcommands.cpp */,
 				D602055D1CC7CC8C00933688 /* xpcommands.h */,
 				D602055E1CC7CC8C00933688 /* xpdatarefs.cpp */,
@@ -80,6 +178,7 @@
 				D60205611CC7CC8C00933688 /* xpfuncs.h */,
 				D60205621CC7CC8C00933688 /* xptimers.cpp */,
 				D60205631CC7CC8C00933688 /* xptimers.h */,
+				29A35AED2D96E4F90065038F /* FloatingWindows */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -148,7 +247,7 @@
 				LastUpgradeCheck = 0910;
 				TargetAttributes = {
 					D607B19809A556E400699BC3 = {
-						DevelopmentTeam = LPH4NFE92D;
+						DevelopmentTeam = 5HY2Y4V4MM;
 					};
 				};
 			};
@@ -177,9 +276,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				29A35AF32D96E6BE0065038F /* imgui_lua_bindings.cpp in Sources */,
 				D60205651CC7CC8C00933688 /* module.cpp in Sources */,
 				D60205681CC7CC8C00933688 /* xpdatarefs.cpp in Sources */,
 				D60205691CC7CC8C00933688 /* xpfuncs.cpp in Sources */,
+				29A35AC22D96E4930065038F /* imgui_widgets.cpp in Sources */,
+				29A35AC32D96E4930065038F /* imgui_draw.cpp in Sources */,
+				29A35AC42D96E4930065038F /* imgui.cpp in Sources */,
+				29A35AEE2D96E4F90065038F /* FloatingWindow.cpp in Sources */,
+				29A35AEF2D96E4F90065038F /* ImGUIIntegration.cpp in Sources */,
+				29A35AF02D96E4F90065038F /* FLWIntegration.cpp in Sources */,
+				29A35AC52D96E4930065038F /* imgui_demo.cpp in Sources */,
+				29A35AC62D96E4930065038F /* imgui_tables.cpp in Sources */,
 				D60205661CC7CC8C00933688 /* xlua.cpp in Sources */,
 				D60205641CC7CC8C00933688 /* lua_helpers.cpp in Sources */,
 				D60205671CC7CC8C00933688 /* xpcommands.cpp in Sources */,
@@ -210,6 +318,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				DEPLOYMENT_LOCATION = NO;
+				DEVELOPMENT_TEAM = 5HY2Y4V4MM;
 				DYLIB_COMPATIBILITY_VERSION = "";
 				DYLIB_CURRENT_VERSION = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -280,6 +389,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				DEPLOYMENT_LOCATION = NO;
+				DEVELOPMENT_TEAM = 5HY2Y4V4MM;
 				DYLIB_COMPATIBILITY_VERSION = "";
 				DYLIB_CURRENT_VERSION = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -331,12 +441,26 @@
 		D607B19C09A556E400699BC3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CODE_SIGN_IDENTITY = "Apple Development";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APL=1",
+					"IBM=0",
+					"LIN=0",
+					LUA_BINDINGS_LOCAL_STATE,
+					XPLM400,
+					XPLM303,
+					XPLM302,
+					XPLM301,
+					XPLM300,
+					XPLM210,
+					XPLM200,
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_NAME = xlua;
 			};
@@ -345,14 +469,28 @@
 		D607B19D09A556E400699BC3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				DEVELOPMENT_TEAM = LPH4NFE92D;
 				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APL=1",
+					"IBM=0",
+					"LIN=0",
+					LUA_BINDINGS_LOCAL_STATE,
+					XPLM400,
+					XPLM303,
+					XPLM302,
+					XPLM301,
+					XPLM300,
+					XPLM210,
+					XPLM200,
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_NAME = xlua;
 			};
