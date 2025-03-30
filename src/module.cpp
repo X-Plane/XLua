@@ -13,11 +13,15 @@
 #include "xpfuncs.h"
 #include <stdlib.h>
 #include <assert.h>
-
+#include <ranges>
+#include <string_view>
 #include "log.h"
 #include "lua_helpers.h"
 #include <lua.h>
-
+extern "C"
+{
+	#include "../luajit/src/luajit.h"
+}
 #include "FLWIntegration.h"
 
 static const char * shorten_to_file(const char * path)
@@ -115,6 +119,65 @@ if(errcode != 0) { \
 	lua_close(m_interp); \
 	m_interp = NULL; \
 	return; }
+
+void profile_callback(void* data, lua_State* L, int samples, int vmstate)
+{
+	if (vmstate != 'C')
+	{
+		size_t buflen = 0;
+//		char const* p = luaJIT_profile_dumpstack(L, "flZ;", -20, &buflen);
+		char const* p = luaJIT_profile_dumpstack(L, "fZ;", -20, &buflen);
+		if (p != nullptr)
+		{
+			module* me = (module*)data;
+			std::string cb(p, buflen);
+
+			char const* pch = strtok(cb.data(), ";");
+			while (pch != nullptr)
+			{
+				auto& this_fn = me->m_profile[pch];
+				this_fn.cumulative += samples;
+
+				pch = strtok(nullptr, ";");
+				if (pch == nullptr)
+				{
+					// Last one - this is 'self'.
+					this_fn.self += samples;
+				}
+			}
+		}
+	}
+}
+
+void module::start_profile(void)
+{
+	log_message(m_interp, "Lua profiler started in %s\n", get_log_path().c_str());
+	luaJIT_profile_start(m_interp, "li1", profile_callback, this);
+}
+
+void module::stop_profile(void)
+{
+	log_message(m_interp, "Lua profiler stopped in %s\n", get_log_path().c_str());
+	luaJIT_profile_stop(m_interp);
+}
+
+void module::dump_profile(bool clear)
+{
+	if (clear)
+	{
+		m_profile.clear();
+	}
+	else
+	{
+		log_message(m_interp, "========================\n");
+		log_message(m_interp, "Profile for %s\n", m_log_path.c_str());
+		for (auto it = m_profile.begin(); it != m_profile.end(); ++it)
+		{
+			log_message(m_interp, "%s : %zu\n", it->first.c_str(), it->second);
+		}
+		log_message(m_interp, "========================\n");
+	}
+}
 
 module::module(
 							const char *		in_module_path,
@@ -295,6 +358,9 @@ module::~module()
 {
 	if (m_interp)
 	{
+		luaJIT_profile_stop(m_interp);
+		dump_profile(false);
+
 		flwnd::deinitFloatingWindowSupport(m_interp);
 		lua_close(m_interp);
 	}

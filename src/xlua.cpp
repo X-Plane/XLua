@@ -3,12 +3,15 @@
 //	See LICENSE.txt for the full terms of the license.
 
 
-#define VERSION "1.3.0r1"
+#define VERSION "1.5.0r1"
 
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <vector>
+#include <memory>
+#include <algorithm>
+#include <ranges>
 
 #ifndef XPLM200
 #define XPLM200
@@ -30,19 +33,9 @@
 #include "xpcommands.h"
 #include "xptimers.h"
 
+#include "ImGUIIntegration.h"
+
 using std::vector;
-
-/*
-
-	TODO: get good errors on compile error.
-	TODO: pipe output somewhere useful.
-
-
-
-
-
-
- */
 
 extern "C" {
 #include "lua.h"
@@ -71,9 +64,11 @@ struct lua_alloc_request_t {
 enum eMenuItems : int
 {
 	MI_ResetState,
+	MI_ShowProfiler,
 };
 
 bool g_bReloadOnFlightChange = false;
+std::shared_ptr<flwnd::ImGUIWindow> profilerWnd;
 
 PLUGIN_API void XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void* inParam);
 
@@ -147,6 +142,16 @@ static float xlua_post_timer_master_cb(
 	else
 	for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)		
 		(*m)->post_replay();
+
+	if (profilerWnd)
+	{
+		if (!profilerWnd->isVisible())
+		{
+			profilerWnd->reportClose();
+			profilerWnd.reset();
+		}
+	}
+
 	return -1;
 }
 
@@ -242,12 +247,194 @@ int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefco
 	return 0;
 }
 
+void ShowProfiler(void)
+{
+	using namespace flwnd;
+
+	if (!profilerWnd)
+	{
+		profilerWnd = std::make_shared<ImGUIWindow>(500, 300, xplm_WindowDecorationRoundRectangle);
+
+		profilerWnd->setTitle("XLua Profiler");
+		profilerWnd->setBuildCallback([](ImGUIWindow& wnd) -> void
+									  {
+										  static int module_selected_idx = 0;
+										  static bool profiler_running = false, last_profiler_running = false, show_as_percent = true;
+										  static module* last_selected_module = nullptr;
+
+										  module* selected_module = nullptr;
+										  if (module_selected_idx >= 0 && module_selected_idx < g_modules.size())
+										  {
+											  selected_module = g_modules.at(module_selected_idx);
+
+											  if (profiler_running != last_profiler_running)
+											  {
+												  if (profiler_running)
+												  {
+													  selected_module->start_profile();
+												  }
+												  else
+												  {
+													  selected_module->stop_profile();
+												  }
+
+												  last_profiler_running = profiler_running;
+											  }
+										  }
+
+										  if (selected_module != last_selected_module)
+										  {
+											  if (profiler_running)
+											  {
+												  if (last_selected_module != nullptr && std::find(g_modules.begin(), g_modules.end(), last_selected_module) != g_modules.end())
+												  {
+													  last_selected_module->stop_profile();
+												  }
+
+												  selected_module->start_profile();
+											  }
+
+											  last_selected_module = selected_module;
+										  }
+
+										  if (ImGui::BeginCombo("##modules", (selected_module == nullptr ? "" : selected_module->get_log_path().c_str()), ImGuiComboFlags_::ImGuiComboFlags_None))
+										  {
+											  for (size_t i=0; i < g_modules.size(); ++i)
+											  {
+												  if (ImGui::Selectable(g_modules[i]->get_log_path().c_str(), g_modules[i] == selected_module))
+												  {
+													  // Was selected?
+													  module_selected_idx = i;
+												  }
+											  }
+
+											  ImGui::EndCombo();
+										  }
+
+										  ImGui::SameLine();
+										  ImGui::Checkbox("Run Profiler", &profiler_running);
+										  ImGui::SameLine();
+										  ImGui::Checkbox("Show as %", &show_as_percent);
+
+										  ImGui::BeginDisabled(selected_module == nullptr || selected_module->m_profile.empty());
+										  if (ImGui::Button("Dump to Log"))
+										  {
+											  selected_module->dump_profile(false);
+										  }
+										  ImGui::SameLine();
+										  if (ImGui::Button("Dump and Clear"))
+										  {
+											  selected_module->dump_profile(true);
+										  }
+										  ImGui::EndDisabled();
+
+										  if (ImGui::BeginTable("Results", 3, ImGuiTableFlags_::ImGuiTableFlags_Borders | ImGuiTableFlags_::ImGuiTableFlags_Resizable | ImGuiTableFlags_::ImGuiTableFlags_Sortable))
+										  {
+											  ImGui::TableSetupColumn("Call Site");
+											  ImGui::TableSetupColumn("Inclusive");
+											  ImGui::TableSetupColumn("Self");
+											  ImGui::TableHeadersRow();
+
+											  if (selected_module != nullptr)
+											  {
+												  typedef decltype(module::m_profile)::const_iterator prof_type;
+
+												  std::vector<prof_type> profile_iterators_vec;
+												  profile_iterators_vec.reserve(selected_module->m_profile.size());
+												  size_t total_self = 0;
+												  for (prof_type i = selected_module->m_profile.cbegin(); i != selected_module->m_profile.cend(); ++i)
+												  {
+													  profile_iterators_vec.emplace_back(i);
+													  total_self += i->second.self;
+												  }
+
+												  // Sort our data if sort specs have been changed!
+												  if (ImGuiTableSortSpecs* sort_specs = ImGui::TableGetSortSpecs())
+												  {
+													  // Sadly our data is potentially changing per-frame so the sort also needs to be per-frame.
+													  //if (sort_specs->SpecsDirty)
+													  //{
+														 // MyItem::SortWithSortSpecs(sort_specs, items.Data, items.Size);
+														 // sort_specs->SpecsDirty = false;
+													  //}
+
+													  std::sort(profile_iterators_vec.begin(), profile_iterators_vec.end(),
+																		[sort_specs](prof_type const& lhs, prof_type const& rhs) -> bool
+																		{
+																			for (int n = 0; n < sort_specs->SpecsCount; n++)
+																			{
+																				ImGuiTableColumnSortSpecs const* sort_spec = &sort_specs->Specs[n];
+
+																				int delta = 0;
+																				if (sort_spec->ColumnIndex == 0)
+																					delta = lhs->first.compare(rhs->first);
+																				else if (sort_spec->ColumnIndex == 1)
+																					delta = (lhs->second.cumulative - rhs->second.cumulative);
+																				else
+																					delta = (lhs->second.self - rhs->second.self);
+
+																				if (delta > 0)
+																					return (sort_spec->SortDirection == ImGuiSortDirection_Ascending);
+																				if (delta < 0)
+																					return (sort_spec->SortDirection != ImGuiSortDirection_Ascending);
+																			}
+
+																			return lhs->first.compare(rhs->first) < 0;
+																		});
+												  }
+
+												  for (auto const &it : profile_iterators_vec)
+												  {
+													  const auto& [site, count] = *it;
+													  ImGui::TableNextRow();
+
+													  ImGui::TableNextColumn();
+													  ImGui::Text("%s", site.c_str());
+
+													  if (show_as_percent)
+													  {
+														  ImGui::TableNextColumn();
+														  ImGui::Text("%0.3f%%", 100 * static_cast<float>(count.cumulative) / total_self);
+
+														  ImGui::TableNextColumn();
+														  ImGui::Text("%0.3f%%", 100 * static_cast<float>(count.self) / total_self);
+													  }
+													  else
+													  {
+														  ImGui::TableNextColumn();
+														  ImGui::Text("%zu", count.cumulative);
+
+														  ImGui::TableNextColumn();
+														  ImGui::Text("%zu", count.self);
+													  }
+												  }
+											  }
+
+											  ImGui::EndTable();
+										  }
+									  });
+
+		profilerWnd->setCloseCallback([](FloatingWindow& wnd) -> void
+									  {
+										  wnd.setVisible(false);
+									  });
+	}
+	else
+	{
+		profilerWnd->setVisible(true);
+	}
+}
+
 static void MenuHandler(void* menuRef, void* itemRef)
 {
 	switch ((eMenuItems)(size_t)itemRef)
 	{
 		case MI_ResetState:
 			ResetState(reset_cmd, xplm_CommandBegin, nullptr);
+			break;
+
+		case MI_ShowProfiler:
+			ShowProfiler();
 			break;
 	}
 }
@@ -328,6 +515,7 @@ PLUGIN_API int XPluginStart(
 				int item = XPLMAppendMenuItem(XPLMFindPluginsMenu(), menuName, nullptr, 0);
 				PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), item, MenuHandler, nullptr);
 				XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, 0);
+				XPLMAppendMenuItem(PluginMenu, "Show Profiler", (void*)MI_ShowProfiler, 1);
 				break;
 			}
 		} while (lp != std::string::npos && ac_base_path.size() >= acPathLen);

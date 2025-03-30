@@ -262,7 +262,7 @@ static int XLuaGetArray(lua_State * L)
 	return 1;	
 }
 
-// XPLMSetArray dref dix value
+// XPLMSetArray dref idx value
 static int XLuaSetArray(lua_State * L)
 {
 	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");

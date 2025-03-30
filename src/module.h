@@ -18,6 +18,7 @@ extern "C" {
 }
 
 #include <string>
+#include <map>
 
 using std::string;
 
@@ -52,6 +53,17 @@ public:
 			void		post_physics();
 			void		post_replay();
 
+			void		start_profile(void);
+			void		stop_profile(void);
+			void		dump_profile(bool clear);
+
+			struct prof_data
+			{
+				size_t cumulative = 0;
+				size_t self = 0;
+			};
+
+			std::map<std::string, prof_data> m_profile;
 private:
 
 		void			do_callout(const char * call_name);
