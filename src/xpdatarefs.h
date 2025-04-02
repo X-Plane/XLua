@@ -12,6 +12,8 @@
 #define xpdatarefs_h
 
 #include <string>
+#include <vector>
+
 #include "lua.h"
 
 using std::string;
@@ -43,6 +45,7 @@ double			xlua_dref_get_number(xlua_dref * who);
 void			xlua_dref_set_number(xlua_dref * who, double value);
 double			xlua_dref_get_array(xlua_dref * who, int n);
 void			xlua_dref_set_array(xlua_dref * who, int n, double value);
+void			xlua_dref_set_array(xlua_dref* who, std::vector<double> const& values);
 string			xlua_dref_get_string(xlua_dref * who);
 void			xlua_dref_set_string(xlua_dref * who, const string& value);
 

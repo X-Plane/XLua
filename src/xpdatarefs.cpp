@@ -17,6 +17,7 @@
 #include <vector>
 #include <assert.h>
 #include <algorithm>
+#include <iterator>
 
 #include "log.h"
 
@@ -51,7 +52,7 @@ struct	xlua_dref {
 
 static xlua_dref *		s_drefs = NULL;
 
-// For nunmbers
+// For numbers
 static int	xlua_geti(void * ref)
 {
 	xlua_dref * r = (xlua_dref *) ref;
@@ -551,6 +552,31 @@ double			xlua_dref_get_array(xlua_dref * d, int n)
 		return 0.0;
 	}
 	return 0.0;
+}
+
+void			xlua_dref_set_array(xlua_dref* d, std::vector<double> const& values)
+{
+	if (d->m_ours)
+	{
+		size_t const min_to_write = min(d->m_array_storage.size(), values.size());
+		for (size_t i = 0; i < min_to_write; ++i)
+		{
+			d->m_array_storage[i] = values[i];
+		}
+		return;
+	}
+	if (d->m_types & xplmType_FloatArray)
+	{
+		std::vector<float> fa;
+		std::transform(values.begin(), values.end(), std::back_inserter(fa), [](double v) { return static_cast<float>(v); });
+		XPLMSetDatavf(d->m_dref, fa.data(), 0, fa.size());
+	}
+	if (d->m_types & xplmType_IntArray)
+	{
+		std::vector<int> ia;
+		std::transform(values.begin(), values.end(), std::back_inserter(ia), [](double v) { return static_cast<int>(v); });
+		XPLMSetDatavi(d->m_dref, ia.data(), 0, ia.size());
+	}
 }
 
 void			xlua_dref_set_array(xlua_dref * d, int n, double value)

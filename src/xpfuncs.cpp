@@ -273,6 +273,27 @@ static int XLuaSetArray(lua_State * L)
 	return 0;		
 }
 
+// XLuaSetArrayFromArray dref value_array
+static int XLuaSetArrayFromArray(lua_State* L)
+{
+	xlua_dref* d = xlua_checkuserdata<xlua_dref*>(L, 1, "expected dataref");
+	luaL_checktype(L, 2, LUA_TTABLE);
+
+	lua_pushvalue(L, 2);
+	lua_pushnil(L);
+
+	std::vector<double> tableVals;
+	while (lua_next(L, -2))
+	{
+		tableVals.emplace_back(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
+
+	xlua_dref_set_array(d, tableVals);
+	return 0;
+}
+
 // XPLMGetString dref -> value
 static int XLuaGetString(lua_State * L)
 {
@@ -502,6 +523,7 @@ static int XLuaReloadOnFlightChange(lua_State* L)
 	FUNC(XLuaSetNumber) \
 	FUNC(XLuaGetArray) \
 	FUNC(XLuaSetArray) \
+	FUNC(XLuaSetArrayFromArray) \
 	FUNC(XLuaGetString) \
 	FUNC(XLuaSetString) \
 	FUNC(XLuaFindCommand) \

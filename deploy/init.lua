@@ -111,7 +111,7 @@ function wrap_dref_any_deferred(in_dref)
 		
 		One special case: if we have an array we need to return a table so the client
 		can then run the [] operator on the table.  We cache our table object after
-		the first time we find it in "arr" and if askesd again we can just return it
+		the first time we find it in "arr" and if asked again we can just return it
 		immediately and not leak out a huge number of tables to be GCed later.
 		
 		Right now I only expose the table in the read function, because in theory
@@ -153,8 +153,10 @@ function wrap_dref_any_deferred(in_dref)
 				return XLuaSetString(self.dref,v)
 			elseif t == "number" then
 				return XLuaSetNumber(self.dref,v)
+			elseif string.find(t, "array") then
+				return XLuaSetArrayFromArray(self.dref,v)
 			else
-				error("Previously unresolved dataref is being written to but is an array or is still undefined.")
+				error("Previously unresolved dataref is being written to but is still undefined.")
 			end			
 		end,	
 		dref = in_dref,
@@ -399,8 +401,6 @@ end
 function namespace_write(table, key, value)
 	--print("Namespace write of "..key)
 	ftable = rawget(table,'functions')
-	vtable = rawget(table,'values')
-	rkeys = rawget(table,'raw_table_keys')
 	
 	func = ftable[key]
 	if func ~= nil then
@@ -409,8 +409,20 @@ function namespace_write(table, key, value)
 		if seems_like_prop(value) then
 			ftable[key] = value
 		else
+			vtable = rawget(table,'values')
+			rkeys = rawget(table,'raw_table_keys')
+
 			if not seems_like_object(value) and type(value) == "table" and getmetatable(value) == nil and rkeys[key] == nil then
-				--print("Bare table wrap for "..key)
+				local vk = rawget(vtable, key)
+				local dr
+				if vk ~= nil then
+					dr = rawget(vk, "dref")
+					if dr ~= nil and string.find(XLuaGetDataRefType(dr), "array%[") then
+						XLuaSetArrayFromArray(dr,value)
+						return
+					end
+				end
+
 				v = {
 					functions = {},
 					values = {},
