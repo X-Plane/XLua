@@ -11,6 +11,13 @@
 #ifndef module_h
 #define module_h
 
+#include <stddef.h>
+#include <sys/types.h>
+#include <stdint.h>
+#if defined(_MSC_VER)
+	typedef int64_t ssize_t;
+#endif
+
 extern "C" {
 #include <lua.h>
 #include <lualib.h>
@@ -55,15 +62,17 @@ public:
 
 			void		start_profile(void);
 			void		stop_profile(void);
-			void		dump_profile(bool clear);
+			void		dump_profile() const;
+			void		clear_profile(void) { m_profile.clear(); }
 
 			struct prof_data
 			{
-				size_t cumulative = 0;
-				size_t self = 0;
+				ssize_t cumulative = 0;
+				ssize_t self = 0;
 			};
 
 			std::map<std::string, prof_data> m_profile;
+			bool m_profile_line_level = false;
 private:
 
 		void			do_callout(const char * call_name);
@@ -76,7 +85,6 @@ private:
 
 	module();
 	module(const module& rhs);
-	module& operator=(const module& rhs);
 
 };
 

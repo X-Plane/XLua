@@ -11,7 +11,7 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
-#include <ranges>
+#include <array>
 
 #ifndef XPLM200
 #define XPLM200
@@ -253,12 +253,12 @@ void ShowProfiler(void)
 
 	if (!profilerWnd)
 	{
-		profilerWnd = std::make_shared<ImGUIWindow>(500, 300, xplm_WindowDecorationRoundRectangle);
+		profilerWnd = std::make_shared<ImGUIWindow>(800, 300, xplm_WindowDecorationRoundRectangle);
 
 		profilerWnd->setTitle("XLua Profiler");
 		profilerWnd->setBuildCallback([](ImGUIWindow& wnd) -> void
 									  {
-										  static int module_selected_idx = 0;
+										  static int module_selected_idx = 0, profiler_mode = 0, last_profiler_mode = 0;
 										  static bool profiler_running = false, last_profiler_running = false, show_as_percent = true;
 										  static module* last_selected_module = nullptr;
 
@@ -269,13 +269,16 @@ void ShowProfiler(void)
 
 											  if (profiler_running != last_profiler_running)
 											  {
-												  if (profiler_running)
+												  if (selected_module != nullptr)
 												  {
-													  selected_module->start_profile();
-												  }
-												  else
-												  {
-													  selected_module->stop_profile();
+													  if (profiler_running)
+													  {
+														  selected_module->start_profile();
+													  }
+													  else
+													  {
+														  selected_module->stop_profile();
+													  }
 												  }
 
 												  last_profiler_running = profiler_running;
@@ -297,34 +300,65 @@ void ShowProfiler(void)
 											  last_selected_module = selected_module;
 										  }
 
-										  if (ImGui::BeginCombo("##modules", (selected_module == nullptr ? "" : selected_module->get_log_path().c_str()), ImGuiComboFlags_::ImGuiComboFlags_None))
+										  if (ImGui::BeginCombo("##modules", (selected_module == nullptr ? "" : selected_module->get_log_path().c_str()), 
+																ImGuiComboFlags_::ImGuiComboFlags_None))
 										  {
 											  for (size_t i=0; i < g_modules.size(); ++i)
 											  {
 												  if (ImGui::Selectable(g_modules[i]->get_log_path().c_str(), g_modules[i] == selected_module))
 												  {
 													  // Was selected?
-													  module_selected_idx = i;
+													  module_selected_idx = static_cast<int>(i);
 												  }
 											  }
 
 											  ImGui::EndCombo();
 										  }
 
-										  ImGui::SameLine();
-										  ImGui::Checkbox("Run Profiler", &profiler_running);
-										  ImGui::SameLine();
+										  if (ImGui::BeginCombo("Mode", profiler_mode == 0 ? "Function" : "Line", ImGuiComboFlags_::ImGuiComboFlags_WidthFitPreview))
+										  {
+											  static const std::array<std::pair<char const*, int>, 2> kModes{ 
+												  std::pair<char const*, int>{ "Function", 0 }, 
+												  std::pair<char const*, int>{ "Line", 1 }
+											  };
+
+											  for (auto const& [t, i] : kModes)
+											  {
+												  if (ImGui::Selectable(t, profiler_mode == 0))
+												  {
+													  // Need to clear all results.
+													  for (auto& mod : g_modules)
+													  {
+														  mod->clear_profile();
+													  }
+
+													  profiler_mode = i;
+
+													  if (selected_module != nullptr)
+													  {
+														  selected_module->m_profile_line_level = (profiler_mode == 1);
+													  }
+												  }
+											  }
+
+											  ImGui::EndCombo();
+										  }
+
+										  ImGui::SameLine(0, 20);
 										  ImGui::Checkbox("Show as %", &show_as_percent);
 
+										  ImGui::Checkbox("Run Profiler", &profiler_running);
+
+										  ImGui::SameLine(0, 20);
 										  ImGui::BeginDisabled(selected_module == nullptr || selected_module->m_profile.empty());
 										  if (ImGui::Button("Dump to Log"))
 										  {
-											  selected_module->dump_profile(false);
+											  selected_module->dump_profile();
 										  }
 										  ImGui::SameLine();
-										  if (ImGui::Button("Dump and Clear"))
+										  if (ImGui::Button("Clear"))
 										  {
-											  selected_module->dump_profile(true);
+											  selected_module->clear_profile();
 										  }
 										  ImGui::EndDisabled();
 
