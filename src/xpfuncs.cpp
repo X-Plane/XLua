@@ -208,10 +208,14 @@ static int XLuaCreateDataRef(lua_State * L)
 // dref -> "array[4]"
 static int XLuaGetDataRefType(lua_State * L)
 {
-	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
+	xlua_dref_type dt = xlua_none;
 
-	xlua_dref_type dt = xlua_dref_get_type(d);
-	
+	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
+	if (d != nullptr)
+	{
+		dt = xlua_dref_get_type(d);
+	}
+
 	switch(dt) {
 	case xlua_none:
 		lua_pushstring(L, "none");
@@ -256,7 +260,7 @@ static int XLuaSetNumber(lua_State * L)
 static int XLuaGetArray(lua_State * L)
 {
 	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
-	double idx = luaL_checknumber(L, 2);	
+	int idx = static_cast<int>(luaL_checknumber(L, 2));
 	
 	lua_pushnumber(L, xlua_dref_get_array(d,idx));
 	return 1;	
@@ -266,9 +270,9 @@ static int XLuaGetArray(lua_State * L)
 static int XLuaSetArray(lua_State * L)
 {
 	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
-	double idx = luaL_checknumber(L, 2);
+	int idx = static_cast<int>(luaL_checknumber(L, 2));
 	double v = luaL_checknumber(L, 3);
-	
+
 	xlua_dref_set_array(d,idx,v);
 	return 0;		
 }
@@ -543,9 +547,10 @@ static int XLuaReloadOnFlightChange(lua_State* L)
 std::string get_log_prefix(char l)
 {
 	char prefix[256];
-	float hrs, min, sec, real_time = XPLMGetDataf(drSimRealTime);
-	hrs = (int)(real_time / 3600.0f);
-	min = (int)(real_time / 60.0f) - (int)(hrs * 60.0f);
+	int hrs, min;
+	float sec, real_time = XPLMGetDataf(drSimRealTime);
+	hrs = static_cast<int>(real_time / 3600.0f);
+	min = static_cast<int>(real_time / 60.0f) - (int)(hrs * 60.0f);
 	sec = real_time - (hrs * 3600.0f) - (min * 60.0f);
 	sprintf(prefix, "%d:%02d:%06.3f %c/LUA: ", (int)hrs, (int)min, sec, l);
 
