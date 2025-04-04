@@ -9,7 +9,17 @@ SOURCES = \
 	src/xpcommands.cpp \
 	src/xpdatarefs.cpp \
 	src/xpfuncs.cpp \
-	src/xptimers.cpp
+	src/xptimers.cpp \
+	imgui_lua_bindings/imgui_lua_bindings.cpp \
+	imgui/imgui.cpp \
+	imgui/imgui_demo.cpp \
+	imgui/imgui_draw.cpp \
+	imgui/imgui_tables.cpp \
+	imgui/imgui_widgets.cpp \
+	src/FloatingWindows/FloatingWindow.cpp \
+	src/FloatingWindows/FLWIntegration.cpp \
+	src/FloatingWindows/ImGUIIntegration.cpp
+	
 
 LIBS = -lluajit
 
@@ -18,7 +28,7 @@ INCLUDES = \
 	-I$(SRC_BASE)/SDK/CHeaders/XPLM \
 	-I$(SRC_BASE)/SDK/CHeaders/Widgets
 
-DEFINES = -DAPL=0 -DIBM=0 -DLIN=1
+DEFINES = -DAPL=0 -DIBM=0 -DLIN=1 XPLM200 XPLM210 XPLM300 XPLM301 XPLM302 XPLM303 XPLM400 LUA_BINDINGS_LOCAL_STATE
 
 ############################################################################
 
@@ -48,7 +58,7 @@ CPPFLAGS := -std=c++11
 
 # Target rules - these just induce the right .xpl files.
 
-$(TARGET): $(BUILDDIR)/$(TARGET)/64/lin.xpl
+$(TARGET): $(BUILDDIR)/$(TARGET)/lin_x64/xlua.xpl
 	
 
 $(BUILDDIR)/$(TARGET)/64/lin.xpl: $(ALL_OBJECTS64)
