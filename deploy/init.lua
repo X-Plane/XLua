@@ -446,19 +446,22 @@ function namespace_write(table, key, value)
 end
 
 function namespace_read(table,key)
-	ftable = rawget(table,'functions')
 	vtable = rawget(table,'values')
-	func = ftable[key]
-	if func ~= nil then
-		return func.__get(func)
-	end
 	var = vtable[key]
 	if var ~= nil then
 		return var
 	end
+
+	ftable = rawget(table,'functions')
+	func = ftable[key]
+	if func ~= nil then
+		return func.__get(func)
+	end
+
 	if table.parent ~= nil then
 		return table.parent[key]
 	end
+
 	return nil
 end
 
