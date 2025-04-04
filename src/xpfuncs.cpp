@@ -518,6 +518,124 @@ static int XLuaReloadOnFlightChange(lua_State* L)
 	return 0;
 }
 
+std::map<std::pair<lua_State const*, std::string>, xlua_dref*> cachedDrefs;
+
+#define NS_READ_STATS 1
+static int namespace_read_native(lua_State* L)
+{
+	// The namespace is a table containing 'functions', 'values', 'raw_table_keys' etc.
+	// That table has a custom metatable with overrides for __index, __newindex etc.
+	luaL_checktype(L, 1, LUA_TTABLE);
+
+#if NS_READ_STATS
+	static size_t c_values = 0, c_funcs = 0, c_cache_reads = 0, c_cache_writes = 0;
+	static std::map<std::string, size_t> c_val_reads;
+#endif
+	char const* wanted_key = lua_tostring(L, 2);
+
+	lua_pushstring(L, "values");
+	lua_rawget(L, 1);					// Pops 'values', pushes the result.
+
+	lua_pushvalue(L, 2);				// Re-push the index, i.e. put at -1
+	lua_gettable(L, -2);
+	lua_remove(L, -2);					// Dump the 'values' table from the stack
+	if (lua_type(L, -1) != LUA_TNIL)
+	{
+#if NS_READ_STATS
+		++c_values;
+		if (wanted_key != nullptr)
+		{
+			c_val_reads[wanted_key]++;
+		}
+		else
+		{
+			c_val_reads["<None>"]++;
+		}
+#endif
+		return 1;						// Topmost item is the value we need.
+	}
+	lua_pop(L, 1);						// Pop the 'nil'
+
+	if (wanted_key != nullptr)
+	{
+		auto cache = cachedDrefs.find({ L, wanted_key });
+		if (cache != cachedDrefs.end())
+		{
+			xlua_dref_type dt = xlua_dref_get_type(cache->second);
+			if (dt == xlua_dref_type::xlua_number)
+			{
+				lua_pushnumber(L, xlua_dref_get_number(cache->second));
+			}
+			else
+			{
+				lua_pushstring(L, xlua_dref_get_string(cache->second).c_str());
+			}
+
+#if NS_READ_STATS
+			++c_cache_reads;
+#endif
+			return 1;
+		}
+	}
+
+	lua_pushstring(L, "functions");
+	lua_rawget(L, 1);					// Pops 'functions', pushes the result.
+
+	lua_pushvalue(L, 2);				// Re-push the index, i.e. put at -1
+	lua_gettable(L, -2);
+	lua_remove(L, -2);					// Dump the 'functions' table from the stack
+	if (lua_type(L, -1) != LUA_TNIL)
+	{
+		// If should have a '__get' method - this is a lua stub referencing the C call i.e. XLuaGetNumber() .
+		lua_pushstring(L, "__get");
+		lua_rawget(L, -2);				// Pops '__get', pushes the result, which should be a function.
+
+		/////
+		lua_pushstring(L, "dref");		// Test to see if there's a dref value. If so, we can shortcut the whole process next time.
+		lua_rawget(L, -3);
+		if (lua_type(L, -1) == LUA_TUSERDATA)
+		{
+			xlua_dref** actual_dref = static_cast<xlua_dref**>(lua_touserdata(L, -1));
+			xlua_dref_type dt = xlua_dref_get_type(*actual_dref);
+			if (dt == xlua_dref_type::xlua_number || dt == xlua_dref_type::xlua_string)
+			{
+				cachedDrefs.emplace(std::pair<lua_State const*, std::string>{ L, wanted_key }, *actual_dref);
+#if NS_READ_STATS
+				++c_cache_writes;
+#endif
+			}
+		}
+		lua_pop(L, 1);
+		/////
+
+		lua_pushvalue(L, -2);			// Push the table again as a parameter.
+		lua_call(L, 1, 1);
+
+#if NS_READ_STATS
+		++c_funcs;
+#endif
+
+		return 1;						// Topmost item is the value we need.
+	}
+	lua_pop(L, 1);						// Pop the 'nil'
+
+	lua_pushstring(L, "parent");
+	lua_rawget(L, 1);					// Pops 'parent', pushes the result.
+	if (lua_type(L, -1) != LUA_TNIL)
+	{
+		lua_pushvalue(L, 2);				// Re-push the index, i.e. put at -1
+		lua_gettable(L, -2);
+	}
+	else
+	{
+		lua_pushnil(L);
+	}
+
+	lua_remove(L, -2);					// Dump the 'parent' table from the stack
+
+	return 1;
+}
+
 #define FUNC_LIST \
 	FUNC(XLuaGetCode) \
 	FUNC(XLuaFindDataRef) \
@@ -542,7 +660,8 @@ static int XLuaReloadOnFlightChange(lua_State* L)
 	FUNC(XLuaRunTimer) \
 	FUNC(XLuaIsTimerScheduled) \
 	FUNC(XLuaGetTimerRemaining) \
-	FUNC(XLuaReloadOnFlightChange)
+	FUNC(XLuaReloadOnFlightChange) \
+	FUNC(namespace_read_native)
 
 std::string get_log_prefix(char l)
 {
