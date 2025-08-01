@@ -13,7 +13,6 @@
 #include "xpfuncs.h"
 #include <stdlib.h>
 #include <assert.h>
-#include <ranges>
 #include <string_view>
 #include "log.h"
 #include "lua_helpers.h"

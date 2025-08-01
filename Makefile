@@ -26,9 +26,11 @@ LIBS = -lluajit
 INCLUDES = \
 	-I$(SRC_BASE)/lua_sdk \
 	-I$(SRC_BASE)/SDK/CHeaders/XPLM \
-	-I$(SRC_BASE)/SDK/CHeaders/Widgets
+	-I$(SRC_BASE)/SDK/CHeaders/Widgets \
+	-I$(SRC_BASE)/imgui \
+	-I$(SRC_BASE)/src/FloatingWindows
 
-DEFINES = -DAPL=0 -DIBM=0 -DLIN=1 XPLM200 XPLM210 XPLM300 XPLM301 XPLM302 XPLM303 XPLM400 LUA_BINDINGS_LOCAL_STATE
+DEFINES = -DAPL=0 -DIBM=0 -DLIN=1 -DXPLM200 -DXPLM210-D -DXPLM300 -DXPLM301 -DXPLM302 -DXPLM303 -DXPLM400 -DLUA_BINDINGS_LOCAL_STATE
 
 ############################################################################
 
@@ -46,7 +48,7 @@ ALL_DEPS64		:= $(sort $(CDEPS64) $(CXXDEPS64))
 ALL_OBJECTS64	:= $(sort $(COBJECTS64) $(CXXOBJECTS64))
 
 CFLAGS := $(DEFINES) $(INCLUDES) -fPIC -fvisibility=hidden
-CPPFLAGS := -std=c++11
+CPPFLAGS := -std=c++2a
 
 # Phony directive tells make that these are "virtual" targets, even if a file named "clean" exists.
 .PHONY: all clean $(TARGET)
@@ -61,7 +63,7 @@ CPPFLAGS := -std=c++11
 $(TARGET): $(BUILDDIR)/$(TARGET)/lin_x64/xlua.xpl
 	
 
-$(BUILDDIR)/$(TARGET)/64/lin.xpl: $(ALL_OBJECTS64)
+$(BUILDDIR)/$(TARGET)/lin_x64/xlua.xpl: $(ALL_OBJECTS64)
 	@echo Linking $@
 	mkdir -p $(dir $@)
 	gcc -Llua_sdk -m64 -static-libgcc -shared -Wl,--version-script=exports.txt -o $@ $(ALL_OBJECTS64) $(LIBS)

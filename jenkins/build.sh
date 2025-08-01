@@ -23,9 +23,9 @@ case "$PLATFORM" in
 	"$MSBUILD" xlua.vcxproj /t:Clean		
 	"$MSBUILD" /m /p:Configuration="Release" /p:Platform="x64" xlua.vcxproj
 	echo mv Release/plugins/win_x64/xlua.pdb jenkins/build_products/xlua_win.pdb
-	mv Release/plugins/win_x64/xlua.pdb jenkins/build_products/xlua_win.pdb
+	mv Release/plugins/win_x64/xlua.pdb jenkins/build_products/win_x64/xlua.pdb
 	echo mv Release/plugins/win_x64/xlua.xpl jenkins/build_products/xlua_win.xpl
-	mv Release/plugins/win_x64/xlua.xpl jenkins/build_products/xlua_win.xpl
+	mv Release/plugins/win_x64/xlua.xpl jenkins/build_products/win_x64/xlua.xpl
 	;;
 "APL")
 	
@@ -53,13 +53,15 @@ case "$PLATFORM" in
 				xlua.xcarchive/Products/usr/local/lib/xlua.xpl \
 				no-staple
 	fi
-	
-	mv xlua.xcarchive/Products/usr/local/lib/xlua.xpl jenkins/build_products/xlua_mac.xpl
+
+ 	mkdir -p jenkins/build_products/mac_x64
+	mv xlua.xcarchive/Products/usr/local/lib/xlua.xpl jenkins/build_products/mac_x64/xlua.xpl
 	;;
 "LIN")
 	make clean
 	make
-	cp build/xlua/64/lin.xpl jenkins/build_products/xlua_lin.xpl
+  	mkdir -p jenkins/build_products/lin_x64
+	cp build/xlua/lin_x64/xlua.xpl jenkins/build_products/lin_x64/xlua.xpl
 	;;
 *)
 	echo "PLATFORM not set properly - it must be one of APL IBM or LIN"
