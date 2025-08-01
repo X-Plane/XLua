@@ -9,6 +9,11 @@ XLua is developed internally by Laminar Research and is intended to help our int
 XLua is **not** meant to be an "official" Lua plugin for X-Plane, and it definitely does not replace any of the existing Lua plugins, all of which have significantly more features than XLua itself.
 
 ## Release Notes
+**1.5.0r1 - 08/01/2025**
+* Adds imgui features to lua
+* Small performance improvements
+* Adds "isnan" utility function
+
 **1.3.0r2 - 09/05/2024**
 * Adds `get_timer_remaining` stub to init.lua.
 
@@ -252,3 +257,9 @@ On some complex aircraft, you might also need to reset your scripts if the "Star
 * _**Is there a way to compile a XLua script in a binary plugin (xpl file)?**_
   * No. If you want or need to encrypt Lua scripts, you need to use SASL.
 
+### Credits
+
+* Uses imgui (https://github.com/ocornut/imgui)
+* Uses imgui_lua_bindings (Originally https://github.com/casssoft/imgui_lua_bindings, now https://github.com/jimkeir-laminar/imgui_lua_bindings)
+* Uses parts of FlyWithLua (https://github.com/X-Friese/FlyWithLua)
+* Uses luajit (https://luajit.org/)
