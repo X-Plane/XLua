@@ -556,3 +556,7 @@ function do_callout(fname)
 		func()
 	end
 end
+
+function isnan(x)
+    return type(x) == "number" and x == x+1
+end
