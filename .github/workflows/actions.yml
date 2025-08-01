@@ -1,6 +1,8 @@
 name: XLua Build
 
-on: [push]
+on:
+  push:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,8 +14,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        submodules: 'recursive'
         fetch-depth: 0
+        submodules: recursive
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
@@ -46,7 +48,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: yes
+          fetch-depth: 0
+          submodules: recursive
       - name: Setup Credentials
         uses: apple-actions/import-codesign-certs@v1
         with: 
@@ -71,7 +74,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true
+          fetch-depth: 0
+          submodules: recursive
 
       - name: Build
         run: |
