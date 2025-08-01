@@ -33,42 +33,42 @@ jobs:
     - name: Archive production artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: xlua_win
+        name: win_x64
         path: |
           jenkins\build_products\win_x64\xlua.pdb
           jenkins\build_products\win_x64\xlua.xpl
         if-no-files-found: error
           
-  build-mac:
-    runs-on: macos-11
-    env:
-      APPLE_ID: ${{ secrets.APPLE_ID }}
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
+  # build-mac:
+  #   runs-on: macos-11
+  #   env:
+  #     APPLE_ID: ${{ secrets.APPLE_ID }}
+  #     APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+  #     APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #         submodules: recursive
           
-      - name: Setup Credentials
-        uses: apple-actions/import-codesign-certs@v1
-        with: 
-          p12-file-base64: ${{ secrets.APPLE_DEV_CERTIFICATE }}
-          p12-password: ${{ secrets.APPLE_DEV_CERTIFICATE_PASSWORD }}
+  #     - name: Setup Credentials
+  #       uses: apple-actions/import-codesign-certs@v1
+  #       with: 
+  #         p12-file-base64: ${{ secrets.APPLE_DEV_CERTIFICATE }}
+  #         p12-password: ${{ secrets.APPLE_DEV_CERTIFICATE_PASSWORD }}
           
-      - name: Build
-        run: |
-          ./jenkins_driver.sh
+  #     - name: Build
+  #       run: |
+  #         ./jenkins_driver.sh
           
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: xlua_mac
-          path: |
-            jenkins/build_products/mac_x64/xlua.xpl
-          if-no-files-found: error
+  #     - name: Archive production artifacts
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: mac_x64
+  #         path: |
+  #           jenkins/build_products/mac_x64/xlua.xpl
+  #         if-no-files-found: error
           
   build-linux:
     runs-on: ubuntu-latest
@@ -84,10 +84,37 @@ jobs:
       - name: Build
         run: |
           ./jenkins_driver.sh
+
       - name: Archive production artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: xlua_lin
+          name: lin_x64
           path: |
             jenkins/build_products/lin_x64/xlua.xpl
           if-no-files-found: error
+
+  create-archive:
+    needs: [build-windows, build-linux]
+    
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Gather Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./deploy/
+
+      - name: Zip Artifacts
+        run: |
+          ls -R ./
+          cd ./deploy
+          zip -r ../release.zip ./
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v4
+        with:
+           name: release_archive
+           path: ./release.zip
+           if-no-files-found: error
