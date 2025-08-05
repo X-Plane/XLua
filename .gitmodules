@@ -6,5 +6,5 @@
 	url = https://github.com/ocornut/imgui.git
 [submodule "luajit"]
 	path = luajit
-	url = https://luajit.org/git/luajit.git
+	url = https://github.com/LuaJIT/LuaJIT.git
 	branch = v2.1
