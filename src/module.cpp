@@ -21,7 +21,10 @@ extern "C"
 {
 	#include "../luajit/src/luajit.h"
 }
+
+#if !MOBILE
 #include "FLWIntegration.h"
+#endif
 
 static const char * shorten_to_file(const char * path)
 {
@@ -199,8 +202,9 @@ module::module(
 	log_message(m_interp, "Running %s\n", m_log_path.c_str());
 
 	add_xpfuncs_to_interp(m_interp);
+#if !MOBILE
 	flwnd::initFloatingWindowSupport(m_interp);
-
+#endif
 	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
 	// we need to load the Lua script from an already allocated memory buffer.
 	xmap_class linit(in_init_script);
@@ -320,8 +324,9 @@ void		module::pre_physics()
 void		module::post_physics()
 {
 	do_callout("after_physics");
-
+#if !MOBILE
 	flwnd::onFlightLoop(m_interp);
+#endif
 }
 
 void		module::post_replay()
@@ -350,8 +355,9 @@ module::~module()
 	if (m_interp)
 	{
 		luaJIT_profile_stop(m_interp);
-
+#if !MOBILE
 		flwnd::deinitFloatingWindowSupport(m_interp);
+#endif
 		lua_close(m_interp);
 	}
 

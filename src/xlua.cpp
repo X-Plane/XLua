@@ -33,7 +33,9 @@
 #include "xpcommands.h"
 #include "xptimers.h"
 
+#if !MOBILE
 #include "ImGUIIntegration.h"
+#endif
 
 using std::vector;
 
@@ -64,11 +66,16 @@ struct lua_alloc_request_t {
 enum eMenuItems : int
 {
 	MI_ResetState,
+#if !MOBILE
 	MI_ShowProfiler,
+#endif
 };
 
 bool g_bReloadOnFlightChange = false;
+
+#if !MOBILE
 std::shared_ptr<flwnd::ImGUIWindow> profilerWnd;
+#endif
 
 PLUGIN_API void XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void* inParam);
 
@@ -142,7 +149,7 @@ static float xlua_post_timer_master_cb(
 	else
 	for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)		
 		(*m)->post_replay();
-
+#if !MOBILE
 	if (profilerWnd)
 	{
 		if (!profilerWnd->isVisible())
@@ -151,7 +158,7 @@ static float xlua_post_timer_master_cb(
 			profilerWnd.reset();
 		}
 	}
-
+#endif
 	return -1;
 }
 
@@ -246,7 +253,7 @@ int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefco
 
 	return 0;
 }
-
+#if !MOBILE
 void ShowProfiler(void)
 {
 	using namespace flwnd;
@@ -458,7 +465,7 @@ void ShowProfiler(void)
 		profilerWnd->setVisible(true);
 	}
 }
-
+#endif
 static void MenuHandler(void* menuRef, void* itemRef)
 {
 	switch ((eMenuItems)(size_t)itemRef)
@@ -466,10 +473,11 @@ static void MenuHandler(void* menuRef, void* itemRef)
 		case MI_ResetState:
 			ResetState(reset_cmd, xplm_CommandBegin, nullptr);
 			break;
-
+#if !MOBILE
 		case MI_ShowProfiler:
 			ShowProfiler();
 			break;
+#endif
 	}
 }
 
@@ -549,7 +557,9 @@ PLUGIN_API int XPluginStart(
 				int item = XPLMAppendMenuItem(XPLMFindPluginsMenu(), menuName, nullptr, 0);
 				PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), item, MenuHandler, nullptr);
 				XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, 0);
+#if !MOBILE
 				XPLMAppendMenuItem(PluginMenu, "Show Profiler", (void*)MI_ShowProfiler, 1);
+#endif
 				break;
 			}
 		} while (lp != std::string::npos && ac_base_path.size() >= acPathLen);
