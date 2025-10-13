@@ -199,12 +199,14 @@ module::module(
     xlua_pushuserdata(m_interp, this);
 	lua_setglobal(m_interp, "__module_ptr");
 
+	add_xpfuncs_to_interp(m_interp);
+
 	log_message(m_interp, "Running %s\n", m_log_path.c_str());
 
-	add_xpfuncs_to_interp(m_interp);
 #if !MOBILE
 	flwnd::initFloatingWindowSupport(m_interp);
 #endif
+
 	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
 	// we need to load the Lua script from an already allocated memory buffer.
 	xmap_class linit(in_init_script);
