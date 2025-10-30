@@ -38,6 +38,34 @@ void xlua_pushuserdata(lua_State * state, T data)
     memcpy(ud, &data, sizeof(T));
 }
 
+template <typename T>
+T xlua_checkfunction(lua_State* L, int narg, const char* msg)
+{
+    T* ret = static_cast<T*>(lua_tofunction(L, narg));
+    if (ret == NULL)
+        luaL_argerror(L, narg, msg);
+    return *ret;
+}
+
+template <typename T>
+T&& xlua_checknamedstruct(lua_State* L, int narg, const char* msg)
+{
+#error Lua tables are not in guaranteed order. Check the stack contains the table
+#error and then create a local T, populating it by member name. Somehow.
+
+#error Alternatively, force all struct creation to be done in XLua, returning some kind of type-safe
+#error container and in this call, check the container is the expected one. Probably better solution.
+
+    if (lua_istable(L, narg))
+    {
+        T* ret = static_cast<T*>(lua_totable(L, narg));
+        if (ret != NULL)
+            return *ret;
+    }
+
+    luaL_argerror(L, narg, msg);
+}
+
 void InitScripts(void);
 void CleanupScripts(void);
 

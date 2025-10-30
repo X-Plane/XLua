@@ -36,6 +36,51 @@
       <Filter>FloatingWindows</Filter>
     </ClCompile>
     <ClCompile Include="imgui_lua_bindings\imgui_lua_bindings.cpp" />
+    <ClCompile Include="SDK\XLua_glue\XPLMCamera_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMDataAccess_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMDisplay_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMGraphics_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMInstance_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMMap_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMMenus_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMNavigation_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMPlanes_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMPlugin_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMProcessing_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMScenery_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMSound_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMUtilities_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMWeather_glue.cpp">
+      <Filter>XPLM Glue</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua_sdk\lauxlib.h" />
@@ -82,6 +127,54 @@
       <Filter>FloatingWindows</Filter>
     </ClInclude>
     <ClInclude Include="src\log.h" />
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMCamera.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMDataAccess.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMDefs.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMDisplay.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMGraphics.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMInstance.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMMap.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMMenus.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMNavigation.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMPlanes.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMPlugin.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMProcessing.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMScenery.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMSound.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMUtilities.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMWeather.h">
+      <Filter>XPLM Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -89,6 +182,12 @@
     </Filter>
     <Filter Include="FloatingWindows">
       <UniqueIdentifier>{19fbe8bc-e757-4448-b07a-9a19fb67fd92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XPLM Headers">
+      <UniqueIdentifier>{af145c57-9cf0-4790-852b-4071083f9856}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XPLM Glue">
+      <UniqueIdentifier>{c17e1479-f5ec-4c3f-b1a9-1fbc2ec15943}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
