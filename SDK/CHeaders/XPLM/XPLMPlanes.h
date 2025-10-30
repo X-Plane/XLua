@@ -29,8 +29,12 @@ extern "C" {
 /***************************************************************************
  * USER AIRCRAFT ACCESS
  ***************************************************************************/
+/*
+ * These routines are used to manipulate the user's aircraft.
+ *
+ */
 
-#if defined(XPLM420)
+#if defined(XPLM430)
 /*
  * XPLMInitResult
  * 
@@ -62,14 +66,11 @@ enum {
     /* The requested runway is not found                                          */
     xplm_Init_MissingRunway                  = 6,
 
-    /* No scenery found for the requested location                                */
-    xplm_Init_MissingScenery                 = 7,
-
 
 };
 typedef int XPLMInitResult;
-#endif /* XPLM420 */
-#if defined(XPLM420)
+#endif /* XPLM430 */
+#if defined(XPLM430)
 /*
  * XPLMInitFlight
  * 
@@ -78,10 +79,10 @@ typedef int XPLMInitResult;
  * XPLMInitResult enum value.
  *
  */
-XPLM_API int        XPLMInitFlight(
+XPLM_API XPLMInitResult XPLMInitFlight(
                          char const*          inJsonData);
-#endif /* XPLM420 */
-#if defined(XPLM420)
+#endif /* XPLM430 */
+#if defined(XPLM430)
 /*
  * XPLMUpdateFlight
  * 
@@ -91,7 +92,7 @@ XPLM_API int        XPLMInitFlight(
  */
 XPLM_API XPLMInitResult XPLMUpdateFlight(
                          char const*          inJsonData);
-#endif /* XPLM420 */
+#endif /* XPLM430 */
 /*
  * XPLMSetUsersAircraft
  * 
@@ -134,6 +135,10 @@ XPLM_API void       XPLMPlaceUserAtLocation(
 /***************************************************************************
  * GLOBAL AIRCRAFT ACCESS
  ***************************************************************************/
+/*
+ * You may call these routines at any time.
+ *
+ */
 
 /* The user's aircraft is always index 0.                                     */
 #define XPLM_USER_AIRCRAFT   0
@@ -216,7 +221,6 @@ XPLM_API void       XPLMGetNthAircraftModel(
  *
  */
 
-
 /*
  * XPLMPlanesAvailable_f
  * 
@@ -227,7 +231,6 @@ XPLM_API void       XPLMGetNthAircraftModel(
  */
 typedef void (* XPLMPlanesAvailable_f)(
                          void *               inRefcon);
-
 /*
  * XPLMAcquirePlanes
  * 
@@ -249,7 +252,6 @@ XPLM_API int        XPLMAcquirePlanes(
                          char **              inAircraft,             /* Can be NULL */
                          XPLMPlanesAvailable_f inCallback,
                          void *               inRefcon);
-
 /*
  * XPLMReleasePlanes
  * 
@@ -258,7 +260,6 @@ XPLM_API int        XPLMAcquirePlanes(
  *
  */
 XPLM_API void       XPLMReleasePlanes(void);
-
 /*
  * XPLMSetActiveAircraftCount
  * 
@@ -269,7 +270,6 @@ XPLM_API void       XPLMReleasePlanes(void);
  */
 XPLM_API void       XPLMSetActiveAircraftCount(
                          int                  inCount);
-
 /*
  * XPLMSetAircraftModel
  * 
@@ -282,7 +282,6 @@ XPLM_API void       XPLMSetActiveAircraftCount(
 XPLM_API void       XPLMSetAircraftModel(
                          int                  inIndex,
                          const char *         inAircraftPath);
-
 /*
  * XPLMDisableAIForPlane
  * 
@@ -292,7 +291,6 @@ XPLM_API void       XPLMSetAircraftModel(
  */
 XPLM_API void       XPLMDisableAIForPlane(
                          int                  inPlaneIndex);
-
 #if defined(XPLM_DEPRECATED)
 /*
  * XPLMDrawAircraft
@@ -319,7 +317,6 @@ XPLM_API void       XPLMDrawAircraft(
                          int                  inFullDraw,
                          XPLMPlaneDrawState_t * inDrawStateInfo);
 #endif /* XPLM_DEPRECATED */
-
 #if defined(XPLM_DEPRECATED)
 /*
  * XPLMReinitUsersPlane
@@ -341,7 +338,6 @@ XPLM_API void       XPLMDrawAircraft(
  */
 XPLM_API void       XPLMReinitUsersPlane(void);
 #endif /* XPLM_DEPRECATED */
-
 #ifdef __cplusplus
 }
 #endif

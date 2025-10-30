@@ -73,7 +73,6 @@ enum {
 
 };
 typedef int XPLMAudioBus;
-
 /*
  * XPLMBankID
  * 
@@ -92,7 +91,6 @@ enum {
 };
 typedef int XPLMBankID;
 
-
 /* 
  * If you want to get full access to FMOD sound features, you need to include fmod.h or fmod.hpp yourself FIRST.
  * If you only need the basic wrapper functions which allow 3D placement and playback on a specified channel, there
@@ -108,7 +106,6 @@ typedef int XPLMBankID;
  *            with their C++ equivalents. See https://www.fmod.com/docs/2.02/api/white-papers-handle-system.html .
  */
 #if defined(_FMOD_COMMON_H)
-
 /*
  * XPLMGetFMODStudio
  * 
@@ -123,7 +120,6 @@ typedef int XPLMBankID;
  *
  */
 XPLM_API FMOD_STUDIO_SYSTEM* XPLMGetFMODStudio(void);
-
 /*
  * XPLMGetFMODChannelGroup
  * 
@@ -133,7 +129,6 @@ XPLM_API FMOD_STUDIO_SYSTEM* XPLMGetFMODStudio(void);
  */
 XPLM_API FMOD_CHANNELGROUP* XPLMGetFMODChannelGroup(
                          XPLMAudioBus         audioType);
-
 
 #else
 /*
@@ -157,7 +152,6 @@ typedef struct FMOD_VECTOR
 } FMOD_VECTOR;
 typedef void FMOD_CHANNEL;
 #endif
-
 /*
  * XPLMPCMComplete_f
  * 
@@ -169,7 +163,6 @@ typedef void FMOD_CHANNEL;
 typedef void (* XPLMPCMComplete_f)(
                          void *               inRefcon,
                          FMOD_RESULT          status);
-
 /*
  * XPLMPlayPCMOnBus
  * 
@@ -198,7 +191,6 @@ XPLM_API FMOD_CHANNEL* XPLMPlayPCMOnBus(
                          XPLMAudioBus         audioType,
                          XPLMPCMComplete_f    inCallback,
                          void *               inRefcon);              /* Can be NULL */
-
 /*
  * XPLMStopAudio
  * 
@@ -209,7 +201,6 @@ XPLM_API FMOD_CHANNEL* XPLMPlayPCMOnBus(
  */
 XPLM_API FMOD_RESULT XPLMStopAudio(
                          FMOD_CHANNEL*        fmod_channel);
-
 /*
  * XPLMSetAudioPosition
  * 
@@ -221,7 +212,6 @@ XPLM_API FMOD_RESULT XPLMSetAudioPosition(
                          FMOD_CHANNEL*        fmod_channel,
                          FMOD_VECTOR*         position,
                          FMOD_VECTOR*         velocity);
-
 /*
  * XPLMSetAudioFadeDistance
  * 
@@ -237,7 +227,6 @@ XPLM_API FMOD_RESULT XPLMSetAudioFadeDistance(
                          FMOD_CHANNEL*        fmod_channel,
                          float                min_fade_distance,
                          float                max_fade_distance);
-
 /*
  * XPLMSetAudioVolume
  * 
@@ -250,7 +239,6 @@ XPLM_API FMOD_RESULT XPLMSetAudioFadeDistance(
 XPLM_API FMOD_RESULT XPLMSetAudioVolume(
                          FMOD_CHANNEL*        fmod_channel,
                          float                source_volume);
-
 /*
  * XPLMSetAudioPitch
  * 
@@ -260,7 +248,6 @@ XPLM_API FMOD_RESULT XPLMSetAudioVolume(
 XPLM_API FMOD_RESULT XPLMSetAudioPitch(
                          FMOD_CHANNEL*        fmod_channel,
                          float                audio_pitch_hz);
-
 /*
  * XPLMSetAudioCone
  * 
@@ -275,7 +262,6 @@ XPLM_API FMOD_RESULT XPLMSetAudioCone(
                          float                outside_angle,
                          float                outside_volume,
                          FMOD_VECTOR*         orientation);
-
 #endif /* XPLM400 */
 #ifdef __cplusplus
 }

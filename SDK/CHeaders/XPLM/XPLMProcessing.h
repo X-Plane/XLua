@@ -67,7 +67,6 @@ enum {
 };
 typedef int XPLMFlightLoopPhaseType;
 #endif /* XPLM210 */
-
 #if defined(XPLM210)
 /*
  * XPLMFlightLoopID
@@ -79,7 +78,6 @@ typedef int XPLMFlightLoopPhaseType;
  */
 typedef void * XPLMFlightLoopID;
 #endif /* XPLM210 */
-
 /*
  * XPLMFlightLoop_f
  * 
@@ -119,7 +117,6 @@ typedef float (* XPLMFlightLoop_f)(
                          float                inElapsedTimeSinceLastFlightLoop,
                          int                  inCounter,
                          void *               inRefcon);
-
 #if defined(XPLM210)
 /*
  * XPLMCreateFlightLoop_t
@@ -136,7 +133,6 @@ typedef struct {
      void *                    refcon;
 } XPLMCreateFlightLoop_t;
 #endif /* XPLM210 */
-
 /*
  * XPLMGetElapsedTime
  * 
@@ -150,7 +146,6 @@ typedef struct {
  *
  */
 XPLM_API float      XPLMGetElapsedTime(void);
-
 /*
  * XPLMGetCycleNumber
  * 
@@ -159,7 +154,6 @@ XPLM_API float      XPLMGetElapsedTime(void);
  *
  */
 XPLM_API int        XPLMGetCycleNumber(void);
-
 /*
  * XPLMRegisterFlightLoopCallback
  * 
@@ -179,7 +173,6 @@ XPLM_API void       XPLMRegisterFlightLoopCallback(
                          XPLMFlightLoop_f     inFlightLoop,
                          float                inInterval,
                          void *               inRefcon);
-
 /*
  * XPLMUnregisterFlightLoopCallback
  * 
@@ -194,7 +187,6 @@ XPLM_API void       XPLMRegisterFlightLoopCallback(
 XPLM_API void       XPLMUnregisterFlightLoopCallback(
                          XPLMFlightLoop_f     inFlightLoop,
                          void *               inRefcon);
-
 /*
  * XPLMSetFlightLoopCallbackInterval
  * 
@@ -214,7 +206,6 @@ XPLM_API void       XPLMSetFlightLoopCallbackInterval(
                          float                inInterval,
                          int                  inRelativeToNow,
                          void *               inRefcon);
-
 #if defined(XPLM210)
 /*
  * XPLMCreateFlightLoop
@@ -227,7 +218,6 @@ XPLM_API void       XPLMSetFlightLoopCallbackInterval(
 XPLM_API XPLMFlightLoopID XPLMCreateFlightLoop(
                          XPLMCreateFlightLoop_t * inParams);
 #endif /* XPLM210 */
-
 #if defined(XPLM210)
 /*
  * XPLMDestroyFlightLoop
@@ -239,7 +229,6 @@ XPLM_API XPLMFlightLoopID XPLMCreateFlightLoop(
 XPLM_API void       XPLMDestroyFlightLoop(
                          XPLMFlightLoopID     inFlightLoopID);
 #endif /* XPLM210 */
-
 #if defined(XPLM210)
 /*
  * XPLMScheduleFlightLoop
@@ -259,7 +248,6 @@ XPLM_API void       XPLMScheduleFlightLoop(
                          float                inInterval,
                          int                  inRelativeToNow);
 #endif /* XPLM210 */
-
 #ifdef __cplusplus
 }
 #endif
