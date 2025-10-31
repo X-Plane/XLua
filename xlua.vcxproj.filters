@@ -37,49 +37,49 @@
     </ClCompile>
     <ClCompile Include="imgui_lua_bindings\imgui_lua_bindings.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMCamera_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
     </ClCompile>
     <ClCompile Include="SDK\XLua_glue\XPLMDataAccess_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
     </ClCompile>
     <ClCompile Include="SDK\XLua_glue\XPLMDisplay_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
     </ClCompile>
     <ClCompile Include="SDK\XLua_glue\XPLMGraphics_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
     </ClCompile>
     <ClCompile Include="SDK\XLua_glue\XPLMInstance_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
     </ClCompile>
     <ClCompile Include="SDK\XLua_glue\XPLMMap_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
     </ClCompile>
     <ClCompile Include="SDK\XLua_glue\XPLMMenus_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
     </ClCompile>
     <ClCompile Include="SDK\XLua_glue\XPLMNavigation_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
     </ClCompile>
     <ClCompile Include="SDK\XLua_glue\XPLMPlanes_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
     </ClCompile>
     <ClCompile Include="SDK\XLua_glue\XPLMPlugin_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
     </ClCompile>
     <ClCompile Include="SDK\XLua_glue\XPLMProcessing_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
     </ClCompile>
     <ClCompile Include="SDK\XLua_glue\XPLMScenery_glue.cpp">
-      <Filter>XPLM Glue</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\XLua_glue\XPLMSound_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
     </ClCompile>
     <ClCompile Include="SDK\XLua_glue\XPLMUtilities_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
     </ClCompile>
     <ClCompile Include="SDK\XLua_glue\XPLMWeather_glue.cpp">
-      <Filter>XPLM Glue</Filter>
+      <Filter>Glue</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XLua_Register_glue.cpp">
+      <Filter>Glue</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -183,11 +183,11 @@
     <Filter Include="FloatingWindows">
       <UniqueIdentifier>{19fbe8bc-e757-4448-b07a-9a19fb67fd92}</UniqueIdentifier>
     </Filter>
-    <Filter Include="XPLM Headers">
-      <UniqueIdentifier>{af145c57-9cf0-4790-852b-4071083f9856}</UniqueIdentifier>
+    <Filter Include="Glue">
+      <UniqueIdentifier>{94d58214-f5a3-427f-a068-2f5e646f9ac2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="XPLM Glue">
-      <UniqueIdentifier>{c17e1479-f5ec-4c3f-b1a9-1fbc2ec15943}</UniqueIdentifier>
+    <Filter Include="XPLM Headers">
+      <UniqueIdentifier>{003d836b-04bb-43af-8906-011f424b9c34}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -34,72 +34,109 @@
  */
 
 static XPLMDataRef drSimRealTime = nullptr;
+static const std::string kTimerCallbackSig("TimerCallback");
+static const std::string kDatarefCallbackSig("DatarefCallback");
+static const std::string kFilterCallbackSig("FilterCallback");
+static const std::string kCommandCallbackSig("CmdCallback");
 
 static int l_my_print(lua_State* L);
 
-// This is kind of a mess - Lua [annoyingly] doesn't give you a way to store a closure/Lua interpreter function
-// in C space.  The hack is to use luaL_ref to fill a new key in the registry table with a copy of ANY value from
-// the stack - since this is type agnostic and takes a strong reference it (1) prevents the closure from being 
-// garbage collected and (2) works with closures.
-
-struct notify_cb_t {
-	lua_State *		L;
-	int				slot;
-};
-
 // Given an interp and a stack arg that is a lua function/closure,
 // this routine stashes a strong ref to the closure in the registry,
-// allcoates a callback struct and stashes the slot and interp in the
+// allocates a callback struct and stashes the slot and interp in the
 // CB struct.  This CB struct is a single C ptr that we can use to 
 // reconstruct the closure from C land.
 //
 // If the closure is actually nil, we return NULL and allocate nothing.
 // The memory is tracked by the interp's module and is collected for us
 // at shutdown.
-notify_cb_t * wrap_lua_func(lua_State * L, int idx)
+notify_cb_t* wrap_first_lua_func(lua_State * L, int func_stack_idx, std::string const cb_typename, int refcon_reg_index)
 {
-	if(lua_isnil(L, idx))
+	if (lua_isnil(L, func_stack_idx))
 	{
-		luaL_argerror(L, idx, "nil not allowed for callback");
-		return NULL;
+		luaL_argerror(L, func_stack_idx, "nil not allowed for callback");
+		return nullptr;
 	}
-	luaL_checktype(L, idx, LUA_TFUNCTION);
-	
-	module * me = module::module_from_interp(L);
-	notify_cb_t * cb = (notify_cb_t *) me->module_alloc_tracked(sizeof(notify_cb_t));
-	cb = new notify_cb_t;
-	cb->L = L;
-	lua_pushvalue (L, idx);
-	cb->slot = luaL_ref(L, LUA_REGISTRYINDEX);		
+
+	module* me = module::module_from_interp(L);
+	notify_cb_t* cb = (notify_cb_t*)me->module_alloc_tracked(sizeof(notify_cb_t));
+	cb = new (cb) notify_cb_t(L);
+	cb->origRefconRegIndex = refcon_reg_index;
+
+	wrap_next_lua_func(cb, func_stack_idx, cb_typename);
+
 	return cb;
 }
 
-notify_cb_t * wrap_lua_func_nil(lua_State * L, int idx)
+bool wrap_next_lua_func(notify_cb_t* cb_record, int func_stack_idx, std::string const cb_typename)
 {
-	if(lua_isnil(L,idx))
+	if (lua_isnil(cb_record->L, func_stack_idx))
 	{
-		return NULL;
+		luaL_argerror(cb_record->L, func_stack_idx, "nil not allowed for callback");
+		return false;
 	}
-	return wrap_lua_func(L, idx);
+
+	luaL_checktype(cb_record->L, func_stack_idx, LUA_TFUNCTION);
+
+	// Now store the registry reference index into the callback array, in the given position.
+	lua_pushvalue(cb_record->L, func_stack_idx);
+	cb_record->callbacks[cb_typename] = luaL_ref(cb_record->L, LUA_REGISTRYINDEX);
+
+	return true;
+}
+
+notify_cb_t * wrap_lua_func_nil(lua_State * L, int idx, std::string const callbackKey)
+{
+	if (lua_isnil(L,idx))
+	{
+		return nullptr;
+	}
+
+	return wrap_first_lua_func(L, idx, callbackKey, 0);
+}
+
+// Similar idea to above, but capture a value and just return the index into the registry.
+int capture_lua_value(lua_State* L, int idx)
+{
+	lua_pushvalue(L, idx);
+	return luaL_ref(L, LUA_REGISTRYINDEX);
 }
 
 // Given a void * that is really a CB struct, this routine either
 // pushes the lua function onto the stack (so that we can then push 
 // args and pcall) or returns 0 if we should not call because the CB is
 // nil or borked.
-lua_State * setup_lua_callback(void * ref)
+lua_State* setup_lua_callback(void * ref, std::string const callbackKey)
 {
-	if(ref == NULL) 
-		return NULL;
+	if (ref == nullptr)
+		return nullptr;
+
 	notify_cb_t * cb = (notify_cb_t *) ref;
-	lua_rawgeti (cb->L, LUA_REGISTRYINDEX, cb->slot);
-	if(!lua_isfunction(cb->L, -1))
+
+	if (callbackKey.empty())
 	{
+		log_message(cb->L, "ERROR: Anonymous closure specified.");
+		return nullptr;
+	}
+
+	auto storedKey = cb->callbacks.find(callbackKey);
+	if (storedKey != cb->callbacks.end())
+	{
+		lua_rawgeti(cb->L, LUA_REGISTRYINDEX, storedKey->second);
+		if (lua_isfunction(cb->L, -1))
+		{
+			return cb->L;
+		}
+
 		log_message(cb->L, "ERROR: we did not persist a closure?!?");
 		lua_pop(cb->L, 1);
-		return 0;
 	}
-	return cb->L;
+	else
+	{
+		log_message(cb->L, "ERROR: Callback %s is not recognised!", callbackKey.c_str());
+	}
+
+	return nullptr;
 }
 
 //----------------------------------------------------------------
@@ -143,12 +180,12 @@ static int XLuaFindDataRef(lua_State * L)
 	return 1;
 }
 
-static void xlua_notify_helper(xlua_dref * who, void * ref)
+static void xlua_dataref_notify_helper(xlua_dref* who, void* ref)
 {
-	lua_State * L = setup_lua_callback(ref);
-	if(L)
+	lua_State * L = setup_lua_callback(ref, kDatarefCallbackSig);
+	if (L)
 	{
-		fmt_pcall_stdvars(L,module::debug_proc_from_interp(L),"");
+		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "");
 	}
 }
 
@@ -157,8 +194,8 @@ static int XLuaCreateDataRef(lua_State * L)
 {
 	const char * name = luaL_checkstring(L, 1);
 	const char * typestr = luaL_checkstring(L,2);
-	const char * writable = luaL_checkstring(L,3);	
-	notify_cb_t * cb = wrap_lua_func_nil(L, 4);
+	const char * writable = luaL_checkstring(L,3);
+	notify_cb_t * cb = wrap_lua_func_nil(L, 4, kDatarefCallbackSig);
 	
 	if(strlen(name) == 0)
 		return luaL_argerror(L, 1, "dataref name must not be an empty string.");
@@ -196,8 +233,8 @@ static int XLuaCreateDataRef(lua_State * L)
 							my_type,
 							my_dim,
 							my_writeable,
-							(my_writeable && cb) ? xlua_notify_helper : NULL,
-							cb);							
+							(my_writeable && cb) ? xlua_dataref_notify_helper : NULL,
+							cb);
 	assert(r);
 	
     xlua_pushuserdata(L, r);
@@ -353,7 +390,7 @@ static int cmd_filter_cb_helper(xlua_cmd* cmd, int phase, float elapsed, void* r
 {
 	int res = 1;
 
-	lua_State* L = setup_lua_callback(ref);
+	lua_State* L = setup_lua_callback(ref, kFilterCallbackSig);
 	if (L)
 	{
 		int e = lua_pcall(L, 0, 1, module::debug_proc_from_interp(L));
@@ -374,10 +411,10 @@ static int cmd_filter_cb_helper(xlua_cmd* cmd, int phase, float elapsed, void* r
 
 static int cmd_cb_helper(xlua_cmd * cmd, int phase, float elapsed, void * ref)
 {
-	lua_State * L = setup_lua_callback(ref);
-	if(L)
+	lua_State * L = setup_lua_callback(ref, kCommandCallbackSig);
+	if (L)
 	{
-		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L),"if",phase, elapsed);
+		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "if", phase, elapsed);
 	}
 
 	return 1;
@@ -387,7 +424,7 @@ static int cmd_cb_helper(xlua_cmd * cmd, int phase, float elapsed, void * ref)
 static int XLuaFilterCommand(lua_State* L)
 {
 	xlua_cmd* cmd = xlua_checkuserdata<xlua_cmd*>(L, 1, "expected command");
-	notify_cb_t* cb_filter = wrap_lua_func(L, 2);
+	notify_cb_t* cb_filter = wrap_first_lua_func(L, 2, kFilterCallbackSig, 0);
 
 	xlua_cmd_install_filter(L, cmd, cmd_filter_cb_helper, cb_filter);
 
@@ -398,18 +435,18 @@ static int XLuaFilterCommand(lua_State* L)
 static int XLuaReplaceCommand(lua_State * L)
 {
 	xlua_cmd * d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
-	notify_cb_t * cb = wrap_lua_func(L, 2);
+	notify_cb_t * cb = wrap_first_lua_func(L, 2, kCommandCallbackSig, 0);
 	
-	xlua_cmd_install_handler(L,d, cmd_cb_helper, cb);
-	return 0;	
+	xlua_cmd_install_handler(L, d, cmd_cb_helper, cb);
+	return 0;
 }
 
 // XPLMWrapCommand cmd handler1 handler2
 static int XLuaWrapCommand(lua_State * L)
 {
 	xlua_cmd * d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
-	notify_cb_t * cb1 = wrap_lua_func(L, 2);
-	notify_cb_t * cb2 = wrap_lua_func(L, 3);
+	notify_cb_t * cb1 = wrap_first_lua_func(L, 2, kCommandCallbackSig, 0);
+	notify_cb_t * cb2 = wrap_first_lua_func(L, 3, kCommandCallbackSig, 0);
 	
 	xlua_cmd_install_pre_wrapper(L, d, cmd_cb_helper, cb1);
 	xlua_cmd_install_post_wrapper(L, d, cmd_cb_helper, cb2);
@@ -446,17 +483,17 @@ static int XLuaCommandOnce(lua_State * L)
 
 static void timer_cb(void * ref)
 {
-	lua_State * L = setup_lua_callback(ref);
-	if(L)
+	lua_State * L = setup_lua_callback(ref, kTimerCallbackSig);
+	if (L)
 	{
-		fmt_pcall_stdvars(L,module::debug_proc_from_interp(L),"");
-	}	
+		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "");
+	}
 }
 
 // XPLMCreateTimer func -> ptr
 static int XLuaCreateTimer(lua_State * L)
 {
-	notify_cb_t * helper = wrap_lua_func(L, -1);
+	notify_cb_t * helper = wrap_first_lua_func(L, -1, kTimerCallbackSig, 0);
 	if(helper == NULL)
 		return 0;
 	
@@ -796,7 +833,7 @@ static const struct luaL_Reg printlib[] = {
 	{ NULL, NULL } /* end of array */
 };
 
-void	add_xpfuncs_to_interp(lua_State * L)
+void	add_xlua_funcs_to_interp(lua_State * L)
 {
 	#define FUNC(x) \
 		lua_register(L,#x,x);
@@ -810,4 +847,36 @@ void	add_xpfuncs_to_interp(lua_State * L)
 	lua_getglobal(L, "_G");
 	luaL_register(L, NULL, printlib);
 	lua_pop(L, 1);
+}
+
+static std::map<void*, notify_cb_t*> allRegisteredCallbacks;
+
+void CleanupStoredCallbacks(lua_State* L, int keyIndexInRegistry)
+{
+	// Get the value. Could be any type but most likely void*.
+	// If it isn't a void* then convert it somehow; straight cast for numbers, maybe a hash for strings?
+	// Can't assume that we get the same value from lua - could be a string, for example.
+	void* key;
+
+	module* me = module::module_from_interp(L);
+
+	auto exists = allRegisteredCallbacks.find(key);
+	if (exists != allRegisteredCallbacks.end())
+	{
+		// Un-pin all functions.
+		for (auto const& [name, regidx] : exists->second->callbacks)
+		{
+			luaL_unref(L, LUA_REGISTRYINDEX, regidx);
+		}
+
+		luaL_unref(L, LUA_REGISTRYINDEX, exists->second->origRefconRegIndex);
+
+		// me->module_free_tracked(*exists);		// Hah! A dealloc function? Yeah, right.
+	}
+}
+
+bool xlua_checkboolean(lua_State* L, int narg)
+{
+	luaL_checktype(L, narg, LUA_TBOOLEAN);
+	return lua_toboolean(L, narg);
 }

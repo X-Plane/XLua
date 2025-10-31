@@ -738,10 +738,10 @@ typedef struct {
      * ATTR_cockpit_device. The string is copied when you call                    *
      * XPLMCreateAvionicsEx, so you don't need to hold this string in memory after*
      * the call.                                                                  */
-     char *                    deviceID;
+     char const*               deviceID;
     /* A null-terminated string to give a user-readable name to your device, which*
      * can be presented in UI dialogs.                                            */
-     char *                    deviceName;
+     char const*               deviceName;
     /* A reference which will be passed into your draw and mouse callbacks. Use   *
      * this to pass information to yourself as needed.                            */
      void *                    refcon;

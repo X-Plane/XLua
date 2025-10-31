@@ -26,6 +26,7 @@
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="imgui\misc\cpp\imgui_stdlib.cpp" />
     <ClCompile Include="imgui_lua_bindings\imgui_lua_bindings.cpp" />
+    <ClCompile Include="SDK\XLua_glue\XLua_Register_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMCamera_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMDataAccess_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMDisplay_glue.cpp" />
@@ -38,7 +39,6 @@
     <ClCompile Include="SDK\XLua_glue\XPLMPlugin_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMProcessing_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMScenery_glue.cpp" />
-    <ClCompile Include="SDK\XLua_glue\XPLMSound_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMUtilities_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMWeather_glue.cpp" />
     <ClCompile Include="src\FloatingWindows\FloatingWindow.cpp" />
@@ -116,6 +116,7 @@
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
+    <UseDynamicDebugging>true</UseDynamicDebugging>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -330,7 +331,7 @@
       </PrecompiledHeader>
       <ObjectFileName>.\Debug\64\</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug\64\</ProgramDataBaseFileName>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <StructMemberAlignment>Default</StructMemberAlignment>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>

@@ -26,6 +26,8 @@ extern "C"
 #include "FLWIntegration.h"
 #endif
 
+void add_xplm_to_interp(lua_State* L);
+
 static const char * shorten_to_file(const char * path)
 {
 	const char * p = path, * t = path;
@@ -199,10 +201,27 @@ module::module(
     xlua_pushuserdata(m_interp, this);
 	lua_setglobal(m_interp, "__module_ptr");
 
-	add_xpfuncs_to_interp(m_interp);
+	add_xlua_funcs_to_interp(m_interp);
+	add_xplm_to_interp(m_interp);
+
+	lua_getfield(m_interp, LUA_GLOBALSINDEX, "package");
+	lua_getfield(m_interp, -1, "path");
+	std::string cur_path = lua_tostring(m_interp, -1);
+	lua_pop(m_interp, 1);
+	if (!cur_path.empty() && cur_path.back() != ';')
+	{
+		cur_path += ";";
+	}
+	lua_pushstring(m_interp, (cur_path + m_path + "../../include/?.lua").c_str());
+	lua_setfield(m_interp, -2, "path");
+	lua_pop(m_interp, 1); // Remove the package table from the stack
+
+	log_message(m_interp, "Running %s\n", m_log_path.c_str());
+
 #if !MOBILE
 	flwnd::initFloatingWindowSupport(m_interp);
 #endif
+
 	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
 	// we need to load the Lua script from an already allocated memory buffer.
 	xmap_class linit(in_init_script);
@@ -344,7 +363,7 @@ void module::do_callout(const char * f)
 	}
 	else
 	{
-		fmt_pcall_stdvars(m_interp,m_debug_proc,"s",f);
+		fmt_pcall_stdvars(m_interp, m_debug_proc, false, "s", f);
 	}
 }
 
