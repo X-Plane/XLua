@@ -199,8 +199,6 @@ module::module(
     xlua_pushuserdata(m_interp, this);
 	lua_setglobal(m_interp, "__module_ptr");
 
-	log_message(m_interp, "Running %s\n", m_log_path.c_str());
-
 	add_xpfuncs_to_interp(m_interp);
 #if !MOBILE
 	flwnd::initFloatingWindowSupport(m_interp);
