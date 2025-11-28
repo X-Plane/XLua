@@ -29,6 +29,7 @@
     <ClCompile Include="SDK\XLua_glue\XLua_Register_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMCamera_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMDataAccess_glue.cpp" />
+    <ClCompile Include="SDK\XLua_glue\XPLMDefs_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMDisplay_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMGraphics_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMInstance_glue.cpp" />

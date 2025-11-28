@@ -28,14 +28,69 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
+XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
+void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
 
-static void cb_XPLMMenuHandler_f(void * inMenuRef, void * inItemRef)
+XPLMMenuID* Make_XPLMMenuID(lua_State* L, XPLMMenuID const& init)
+{
+	XPLMMenuID* ud = static_cast<XPLMMenuID*>(lua_newuserdata(L, sizeof(XPLMMenuID)));
+	memcpy(ud, &init, sizeof(XPLMMenuID));
+
+	luaL_getmetatable(L, "_mt_XPLMMenuID");
+	lua_setmetatable(L, -2);
+
+	return ud;
+}
+
+static int _XPLMMenuID_Constructor(lua_State* L)
+{
+	XPLMMenuID defval = XPLM_NO_PLUGIN_ID;				// TODO: Example only! Do we need a 'defaultvalue' attribute somewhere?
+	if (lua_gettop(L) > 0)
+	{
+		defval = luaL_checkinteger(L, 1);
+	}
+	Make_XPLMMenuID(L, defval);
+
+	return 1;
+}
+
+static int _XPLMMenuID_compare(lua_State* L)
+{
+	XPLMMenuID const test1 = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected XPLMMenuID");
+	XPLMMenuID const test2 = xlua_checkuserdata<XPLMMenuID>(L, 2, "Expected XPLMMenuID");
+
+	lua_pushboolean(L, test1 == test2);
+	return 1;
+}
+
+void RegType_XPLMMenuID(lua_State* L)
+{
+	luaL_newmetatable(L, "_mt_XPLMMenuID");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+
+	lua_pushstring(L, "XPLMMenuID");
+	lua_setfield(L, -2, "__name");
+
+/*	lua_pushcfunction(L, _XPLMMenuID_to_string);
+	lua_setfield(L, -2, "__tostring");
+
+	lua_pushcfunction(L, _XPLMMenuID_compare);
+	lua_setfield(L, -2, "__eq");
+*/
+
+	lua_register(L, "XPLMMenuID", _XPLMMenuID_Constructor);
+
+	lua_pop(L, 1);
+}
+
+static void cb_XPLMMenuHandler_f(void* inMenuRef, void* inItemRef)
 {
 	notify_cb_t* cb = static_cast<notify_cb_t*>(inMenuRef);
 	lua_State* L = setup_lua_callback(cb, "XPLMMenuHandler_f");
 	if (L)
 	{
-		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r?", cb->origRefconRegIndex, inItemRef);
+		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rr", cb->origRefconRegIndex, inItemRef);
 	}
 }
 

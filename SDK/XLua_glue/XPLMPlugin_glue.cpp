@@ -27,11 +27,14 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
+XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
+void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 int XLuaGetMyID(lua_State* L)
 {
 	XPLMPluginID res = XPLMGetMyID();
-	xlua_pushuserdata<XPLMPluginID>(L, res);
+	Make_XPLMPluginID(L, res);
 
 	return 1;
 }
@@ -49,7 +52,7 @@ int XLuaGetNthPlugin(lua_State* L)
 	int inIndex = luaL_checkinteger(L, 1);
 
 	XPLMPluginID res = XPLMGetNthPlugin(inIndex);
-	xlua_pushuserdata<XPLMPluginID>(L, res);
+	Make_XPLMPluginID(L, res);
 
 	return 1;
 }
@@ -59,7 +62,7 @@ int XLuaFindPluginByPath(lua_State* L)
 	const char * inPath = luaL_checkstring(L, 1);
 
 	XPLMPluginID res = XPLMFindPluginByPath(inPath);
-	xlua_pushuserdata<XPLMPluginID>(L, res);
+	Make_XPLMPluginID(L, res);
 
 	return 1;
 }
@@ -69,7 +72,7 @@ int XLuaFindPluginBySignature(lua_State* L)
 	const char * inSignature = luaL_checkstring(L, 1);
 
 	XPLMPluginID res = XPLMFindPluginBySignature(inSignature);
-	xlua_pushuserdata<XPLMPluginID>(L, res);
+	Make_XPLMPluginID(L, res);
 
 	return 1;
 }
@@ -117,7 +120,7 @@ int XLuaIsPluginEnabled(lua_State* L)
 		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
 	}
 
-	bool res = XPLMIsPluginEnabled(inPluginID);
+	int res = XPLMIsPluginEnabled(inPluginID);
 	lua_pushboolean(L, res);
 
 	return 1;
@@ -131,7 +134,7 @@ int XLuaEnablePlugin(lua_State* L)
 		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
 	}
 
-	bool res = XPLMEnablePlugin(inPluginID);
+	int res = XPLMEnablePlugin(inPluginID);
 	lua_pushboolean(L, res);
 
 	return 1;
@@ -176,7 +179,7 @@ int XLuaSendMessageToPlugin(lua_State* L)
 	return 0;
 }
 
-static void cb_XPLMFeatureEnumerator_f(const char * inFeature, void * inRef)
+static void cb_XPLMFeatureEnumerator_f(const char * inFeature, void* inRef)
 {
 	notify_cb_t* cb = static_cast<notify_cb_t*>(inRef);
 	lua_State* L = setup_lua_callback(cb, "XPLMFeatureEnumerator_f");
@@ -190,7 +193,7 @@ int XLuaHasFeature(lua_State* L)
 {
 	const char * inFeature = luaL_checkstring(L, 1);
 
-	bool res = XPLMHasFeature(inFeature);
+	int res = XPLMHasFeature(inFeature);
 	lua_pushboolean(L, res);
 
 	return 1;
@@ -200,7 +203,7 @@ int XLuaIsFeatureEnabled(lua_State* L)
 {
 	const char * inFeature = luaL_checkstring(L, 1);
 
-	bool res = XPLMIsFeatureEnabled(inFeature);
+	int res = XPLMIsFeatureEnabled(inFeature);
 	lua_pushboolean(L, res);
 
 	return 1;

@@ -27,8 +27,10 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
-extern XPLMPlaneDrawState_t XPLMPlaneDrawState_t_from_table(lua_State* L, int stackpos);
-extern void XPLMPlaneDrawState_t_to_table(lua_State* L, XPLMPlaneDrawState_t const& src);
+XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
+void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+XPLMPlaneDrawState_t XPLMPlaneDrawState_t_from_table(lua_State* L, int stackpos);
+void XPLMPlaneDrawState_t_to_table(lua_State* L, XPLMPlaneDrawState_t const& src);
 
 int XLuaInitFlight(lua_State* L)
 {
@@ -96,70 +98,70 @@ XPLMPlaneDrawState_t XPLMPlaneDrawState_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "gearPosition");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.gearPosition = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "flapRatio");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.flapRatio = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "spoilerRatio");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.spoilerRatio = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "speedBrakeRatio");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.speedBrakeRatio = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "slatRatio");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.slatRatio = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "wingSweep");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.wingSweep = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "thrust");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.thrust = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "yokePitch");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.yokePitch = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "yokeHeading");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.yokeHeading = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "yokeRoll");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.yokeRoll = static_cast<float>(luaL_checknumber(L, -1));
 	}
@@ -270,7 +272,7 @@ int XLuaGetNthAircraftModel(lua_State* L)
 	return 1;
 }
 
-static void cb_XPLMPlanesAvailable_f(void * inRefcon)
+static void cb_XPLMPlanesAvailable_f(void* inRefcon)
 {
 	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMPlanesAvailable_f");

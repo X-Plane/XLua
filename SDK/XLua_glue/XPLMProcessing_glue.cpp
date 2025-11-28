@@ -27,10 +27,65 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
-extern XPLMCreateFlightLoop_t XPLMCreateFlightLoop_t_from_table(lua_State* L, int stackpos);
-extern void XPLMCreateFlightLoop_t_to_table(lua_State* L, XPLMCreateFlightLoop_t const& src);
+XPLMCreateFlightLoop_t XPLMCreateFlightLoop_t_from_table(lua_State* L, int stackpos);
+void XPLMCreateFlightLoop_t_to_table(lua_State* L, XPLMCreateFlightLoop_t const& src);
+XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
+void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
 
-static float cb_XPLMFlightLoop_f(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void * inRefcon)
+XPLMFlightLoopID* Make_XPLMFlightLoopID(lua_State* L, XPLMFlightLoopID const& init)
+{
+	XPLMFlightLoopID* ud = static_cast<XPLMFlightLoopID*>(lua_newuserdata(L, sizeof(XPLMFlightLoopID)));
+	memcpy(ud, &init, sizeof(XPLMFlightLoopID));
+
+	luaL_getmetatable(L, "_mt_XPLMFlightLoopID");
+	lua_setmetatable(L, -2);
+
+	return ud;
+}
+
+static int _XPLMFlightLoopID_Constructor(lua_State* L)
+{
+	XPLMFlightLoopID defval = XPLM_NO_PLUGIN_ID;				// TODO: Example only! Do we need a 'defaultvalue' attribute somewhere?
+	if (lua_gettop(L) > 0)
+	{
+		defval = luaL_checkinteger(L, 1);
+	}
+	Make_XPLMFlightLoopID(L, defval);
+
+	return 1;
+}
+
+static int _XPLMFlightLoopID_compare(lua_State* L)
+{
+	XPLMFlightLoopID const test1 = xlua_checkuserdata<XPLMFlightLoopID>(L, 1, "Expected XPLMFlightLoopID");
+	XPLMFlightLoopID const test2 = xlua_checkuserdata<XPLMFlightLoopID>(L, 2, "Expected XPLMFlightLoopID");
+
+	lua_pushboolean(L, test1 == test2);
+	return 1;
+}
+
+void RegType_XPLMFlightLoopID(lua_State* L)
+{
+	luaL_newmetatable(L, "_mt_XPLMFlightLoopID");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+
+	lua_pushstring(L, "XPLMFlightLoopID");
+	lua_setfield(L, -2, "__name");
+
+/*	lua_pushcfunction(L, _XPLMFlightLoopID_to_string);
+	lua_setfield(L, -2, "__tostring");
+
+	lua_pushcfunction(L, _XPLMFlightLoopID_compare);
+	lua_setfield(L, -2, "__eq");
+*/
+
+	lua_register(L, "XPLMFlightLoopID", _XPLMFlightLoopID_Constructor);
+
+	lua_pop(L, 1);
+}
+
+static float cb_XPLMFlightLoop_f(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void* inRefcon)
 {
 	float res = {};
 	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
@@ -64,7 +119,7 @@ XPLMCreateFlightLoop_t XPLMCreateFlightLoop_t_from_table(lua_State* L, int stack
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "phase");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.phase = static_cast<XPLMFlightLoopPhaseType>(luaL_checkinteger(L, -1));
 	}
@@ -75,9 +130,9 @@ XPLMCreateFlightLoop_t XPLMCreateFlightLoop_t_from_table(lua_State* L, int stack
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "refcon");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
-		out.refcon = static_cast<void *>(xlua_checkuserdata<void*>(L, -1, "Expected userdata<void*>"));
+		out.refcon = static_cast<void*>(xlua_checkuserdata<void*>(L, -1, "Expected userdata<void*>"));
 	}
 	lua_pop(L, 1);
 

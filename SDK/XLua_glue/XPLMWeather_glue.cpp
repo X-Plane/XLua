@@ -27,12 +27,14 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
-extern XPLMWeatherInfoClouds_t XPLMWeatherInfoClouds_t_from_table(lua_State* L, int stackpos);
-extern void XPLMWeatherInfoClouds_t_to_table(lua_State* L, XPLMWeatherInfoClouds_t const& src);
-extern XPLMWeatherInfoWinds_t XPLMWeatherInfoWinds_t_from_table(lua_State* L, int stackpos);
-extern void XPLMWeatherInfoWinds_t_to_table(lua_State* L, XPLMWeatherInfoWinds_t const& src);
-extern XPLMWeatherInfo_t XPLMWeatherInfo_t_from_table(lua_State* L, int stackpos);
-extern void XPLMWeatherInfo_t_to_table(lua_State* L, XPLMWeatherInfo_t const& src);
+XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
+void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+XPLMWeatherInfoClouds_t XPLMWeatherInfoClouds_t_from_table(lua_State* L, int stackpos);
+void XPLMWeatherInfoClouds_t_to_table(lua_State* L, XPLMWeatherInfoClouds_t const& src);
+XPLMWeatherInfoWinds_t XPLMWeatherInfoWinds_t_from_table(lua_State* L, int stackpos);
+void XPLMWeatherInfoWinds_t_to_table(lua_State* L, XPLMWeatherInfoWinds_t const& src);
+XPLMWeatherInfo_t XPLMWeatherInfo_t_from_table(lua_State* L, int stackpos);
+void XPLMWeatherInfo_t_to_table(lua_State* L, XPLMWeatherInfo_t const& src);
 /*
  * XPLMWeatherInfoWinds_t
  * 
@@ -47,42 +49,42 @@ XPLMWeatherInfoWinds_t XPLMWeatherInfoWinds_t_from_table(lua_State* L, int stack
 	luaL_checktype(L, stackpos, LUA_TTABLE);
 
 	lua_getfield(L, -1, "alt_msl");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.alt_msl = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "speed");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.speed = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "direction");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.direction = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "gust_speed");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.gust_speed = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "shear");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.shear = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "turbulence");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.turbulence = static_cast<float>(luaL_checknumber(L, -1));
 	}
@@ -144,28 +146,28 @@ XPLMWeatherInfoClouds_t XPLMWeatherInfoClouds_t_from_table(lua_State* L, int sta
 	luaL_checktype(L, stackpos, LUA_TTABLE);
 
 	lua_getfield(L, -1, "cloud_type");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.cloud_type = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "coverage");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.coverage = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "alt_top");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.alt_top = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "alt_base");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.alt_base = static_cast<float>(luaL_checknumber(L, -1));
 	}
@@ -221,168 +223,200 @@ XPLMWeatherInfo_t XPLMWeatherInfo_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "temperature_alt");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.temperature_alt = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "dewpoint_alt");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.dewpoint_alt = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "pressure_alt");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.pressure_alt = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "precip_rate_alt");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.precip_rate_alt = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "wind_dir_alt");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.wind_dir_alt = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "wind_spd_alt");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.wind_spd_alt = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "turbulence_alt");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.turbulence_alt = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "wave_height");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.wave_height = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "wave_length");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.wave_length = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "wave_dir");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.wave_dir = static_cast<int>(luaL_checkinteger(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "wave_speed");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.wave_speed = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "visibility");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.visibility = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "precip_rate");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.precip_rate = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "thermal_climb");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.thermal_climb = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "pressure_sl");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.pressure_sl = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	//lua_getfield(L, -1, "wind_layers[XPLM_NUM_WIND_LAYERS]");
-	//if (lua_isnil(L, -1))
-	//{
-	//	out.wind_layers[XPLM_NUM_WIND_LAYERS] = static_cast<XPLMWeatherInfoWinds_t>(luaL_checktable<XPLMWeatherInfoWinds_t>(L, -1));
-	//}
-	//lua_pop(L, 1);
+	for (size_t i = 0; i < 13; ++i)
+	{
+		lua_rawgeti(L, -1, i + 1);
+		if (!lua_isnil(L, -1))
+		{
+			out.wind_layers[i] = XPLMWeatherInfoWinds_t_from_table(L, -1);
+		}
+		else
+		{
+			out.wind_layers[i] = XPLMWeatherInfoWinds_t{};
+		}
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
 
-	//lua_getfield(L, -1, "cloud_layers[XPLM_NUM_CLOUD_LAYERS]");
-	//if (lua_isnil(L, -1))
-	//{
-	//	out.cloud_layers[XPLM_NUM_CLOUD_LAYERS] = static_cast<XPLMWeatherInfoClouds_t>(luaL_checktable<XPLMWeatherInfoClouds_t>(L, -1));
-	//}
-	//lua_pop(L, 1);
+	for (size_t i = 0; i < 3; ++i)
+	{
+		lua_rawgeti(L, -1, i + 1);
+		if (!lua_isnil(L, -1))
+		{
+			out.cloud_layers[i] = XPLMWeatherInfoClouds_t_from_table(L, -1);
+		}
+		else
+		{
+			out.cloud_layers[i] = XPLMWeatherInfoClouds_t{};
+		}
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
 
-	//lua_getfield(L, -1, "temp_layers[XPLM_NUM_TEMPERATURE_LAYERS]");
-	//if (lua_isnil(L, -1))
-	//{
-	//	out.temp_layers[XPLM_NUM_TEMPERATURE_LAYERS] = static_cast<float>(luaL_checknumber(L, -1));
-	//}
-	//lua_pop(L, 1);
+	for (size_t i = 0; i < 13; ++i)
+	{
+		lua_rawgeti(L, -1, i + 1);
+		if (!lua_isnil(L, -1))
+		{
+			out.temp_layers[i] = static_cast<float>(luaL_checknumber(L, -1));
+		}
+		else
+		{
+			out.temp_layers[i] = float{};
+		}
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
 
-	//lua_getfield(L, -1, "dewp_layers[XPLM_NUM_TEMPERATURE_LAYERS]");
-	//if (lua_isnil(L, -1))
-	//{
-	//	out.dewp_layers[XPLM_NUM_TEMPERATURE_LAYERS] = static_cast<float>(luaL_checknumber(L, -1));
-	//}
-	//lua_pop(L, 1);
+	for (size_t i = 0; i < 13; ++i)
+	{
+		lua_rawgeti(L, -1, i + 1);
+		if (!lua_isnil(L, -1))
+		{
+			out.dewp_layers[i] = static_cast<float>(luaL_checknumber(L, -1));
+		}
+		else
+		{
+			out.dewp_layers[i] = float{};
+		}
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "troposphere_alt");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.troposphere_alt = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "troposphere_temp");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.troposphere_temp = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "age");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.age = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "radius_nm");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.radius_nm = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "max_altitude_msl_ft");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.max_altitude_msl_ft = static_cast<float>(luaL_checknumber(L, -1));
 	}
@@ -455,21 +489,45 @@ void XPLMWeatherInfo_t_to_table(lua_State* L, XPLMWeatherInfo_t const& src)
 	lua_pushnumber(L, src.pressure_sl);
 	lua_settable(L, -3);
 
-	//lua_pushstring(L, "wind_layers[XPLM_NUM_WIND_LAYERS]");
-	//lua_pushtable<XPLMWeatherInfoWinds_t>(L, src.wind_layers[XPLM_NUM_WIND_LAYERS]);
-	//lua_settable(L, -3);
+	lua_pushstring(L, "wind_layers");
+	lua_newtable(L);
+	for (size_t i = 0; i < 13; ++i)
+	{
+		lua_pushinteger(L, i+1);
+		XPLMWeatherInfoWinds_t_to_table(L, src.wind_layers[i]);
+		lua_settable(L, -3);
+	}
+	lua_settable(L, -3);
 
-	//lua_pushstring(L, "cloud_layers[XPLM_NUM_CLOUD_LAYERS]");
-	//lua_pushtable<XPLMWeatherInfoClouds_t>(L, src.cloud_layers[XPLM_NUM_CLOUD_LAYERS]);
-	//lua_settable(L, -3);
+	lua_pushstring(L, "cloud_layers");
+	lua_newtable(L);
+	for (size_t i = 0; i < 3; ++i)
+	{
+		lua_pushinteger(L, i+1);
+		XPLMWeatherInfoClouds_t_to_table(L, src.cloud_layers[i]);
+		lua_settable(L, -3);
+	}
+	lua_settable(L, -3);
 
-	//lua_pushstring(L, "temp_layers[XPLM_NUM_TEMPERATURE_LAYERS]");
-	//lua_pushnumber(L, src.temp_layers[XPLM_NUM_TEMPERATURE_LAYERS]);
-	//lua_settable(L, -3);
+	lua_pushstring(L, "temp_layers");
+	lua_newtable(L);
+	for (size_t i = 0; i < 13; ++i)
+	{
+		lua_pushinteger(L, i+1);
+		lua_pushnumber(L, src.temp_layers[i]);
+		lua_settable(L, -3);
+	}
+	lua_settable(L, -3);
 
-	//lua_pushstring(L, "dewp_layers[XPLM_NUM_TEMPERATURE_LAYERS]");
-	//lua_pushnumber(L, src.dewp_layers[XPLM_NUM_TEMPERATURE_LAYERS]);
-	//lua_settable(L, -3);
+	lua_pushstring(L, "dewp_layers");
+	lua_newtable(L);
+	for (size_t i = 0; i < 13; ++i)
+	{
+		lua_pushinteger(L, i+1);
+		lua_pushnumber(L, src.dewp_layers[i]);
+		lua_settable(L, -3);
+	}
+	lua_settable(L, -3);
 
 	lua_pushstring(L, "troposphere_alt");
 	lua_pushnumber(L, src.troposphere_alt);
@@ -512,7 +570,7 @@ int XLuaGetWeatherAtLocation(lua_State* L)
 	XPLMWeatherInfo_t out_info;
 	out_info.structSize = sizeof(XPLMWeatherInfo_t);
 
-	bool res = XPLMGetWeatherAtLocation(latitude, longitude, altitude_m, &out_info);
+	int res = XPLMGetWeatherAtLocation(latitude, longitude, altitude_m, &out_info);
 	lua_pushboolean(L, res);
 
 	lua_createtable(L, 0, 1); // 0 array slots and 1 key-value pairs

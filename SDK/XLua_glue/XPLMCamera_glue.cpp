@@ -27,8 +27,10 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
-extern XPLMCameraPosition_t XPLMCameraPosition_t_from_table(lua_State* L, int stackpos);
-extern void XPLMCameraPosition_t_to_table(lua_State* L, XPLMCameraPosition_t const& src);
+XPLMCameraPosition_t XPLMCameraPosition_t_from_table(lua_State* L, int stackpos);
+void XPLMCameraPosition_t_to_table(lua_State* L, XPLMCameraPosition_t const& src);
+XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
+void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
 /*
  * XPLMCameraPosition_t
  * 
@@ -43,49 +45,49 @@ XPLMCameraPosition_t XPLMCameraPosition_t_from_table(lua_State* L, int stackpos)
 	luaL_checktype(L, stackpos, LUA_TTABLE);
 
 	lua_getfield(L, -1, "x");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.x = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "y");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.y = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "z");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.z = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "pitch");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.pitch = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "heading");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.heading = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "roll");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.roll = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "zoom");
-	if (lua_isnil(L, -1))
+	if (!lua_isnil(L, -1))
 	{
 		out.zoom = static_cast<float>(luaL_checknumber(L, -1));
 	}
@@ -138,7 +140,7 @@ int MakeXPLMCameraPosition_t(lua_State* L)
  *
  */
 
-static int cb_XPLMCameraControl_f(XPLMCameraPosition_t * outCameraPosition, int inIsLosingControl, void * inRefcon)
+static int cb_XPLMCameraControl_f(XPLMCameraPosition_t * outCameraPosition, int inIsLosingControl, void* inRefcon)
 {
 	int res = {};
 	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
@@ -176,7 +178,7 @@ int XLuaDontControlCamera(lua_State* L)
 int XLuaIsCameraBeingControlled(lua_State* L)
 {
 	XPLMCameraControlDuration outCameraControlDuration;
-	bool res = XPLMIsCameraBeingControlled(&outCameraControlDuration);
+	int res = XPLMIsCameraBeingControlled(&outCameraControlDuration);
 	lua_pushboolean(L, res);
 
 	lua_createtable(L, 0, 1); // 0 array slots and 1 key-value pairs

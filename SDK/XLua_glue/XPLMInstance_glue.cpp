@@ -28,12 +28,67 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
-extern XPLMDrawInfoDouble_t XPLMDrawInfoDouble_t_from_table(lua_State* L, int stackpos);
-extern void XPLMDrawInfoDouble_t_to_table(lua_State* L, XPLMDrawInfoDouble_t const& src);
-extern XPLMDrawInfo_t XPLMDrawInfo_t_from_table(lua_State* L, int stackpos);
-extern void XPLMDrawInfo_t_to_table(lua_State* L, XPLMDrawInfo_t const& src);
-extern XPLMProbeInfo_t XPLMProbeInfo_t_from_table(lua_State* L, int stackpos);
-extern void XPLMProbeInfo_t_to_table(lua_State* L, XPLMProbeInfo_t const& src);
+XPLMDrawInfoDouble_t XPLMDrawInfoDouble_t_from_table(lua_State* L, int stackpos);
+void XPLMDrawInfoDouble_t_to_table(lua_State* L, XPLMDrawInfoDouble_t const& src);
+XPLMDrawInfo_t XPLMDrawInfo_t_from_table(lua_State* L, int stackpos);
+void XPLMDrawInfo_t_to_table(lua_State* L, XPLMDrawInfo_t const& src);
+XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
+void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+XPLMProbeInfo_t XPLMProbeInfo_t_from_table(lua_State* L, int stackpos);
+void XPLMProbeInfo_t_to_table(lua_State* L, XPLMProbeInfo_t const& src);
+
+XPLMInstanceRef* Make_XPLMInstanceRef(lua_State* L, XPLMInstanceRef const& init)
+{
+	XPLMInstanceRef* ud = static_cast<XPLMInstanceRef*>(lua_newuserdata(L, sizeof(XPLMInstanceRef)));
+	memcpy(ud, &init, sizeof(XPLMInstanceRef));
+
+	luaL_getmetatable(L, "_mt_XPLMInstanceRef");
+	lua_setmetatable(L, -2);
+
+	return ud;
+}
+
+static int _XPLMInstanceRef_Constructor(lua_State* L)
+{
+	XPLMInstanceRef defval = XPLM_NO_PLUGIN_ID;				// TODO: Example only! Do we need a 'defaultvalue' attribute somewhere?
+	if (lua_gettop(L) > 0)
+	{
+		defval = luaL_checkinteger(L, 1);
+	}
+	Make_XPLMInstanceRef(L, defval);
+
+	return 1;
+}
+
+static int _XPLMInstanceRef_compare(lua_State* L)
+{
+	XPLMInstanceRef const test1 = xlua_checkuserdata<XPLMInstanceRef>(L, 1, "Expected XPLMInstanceRef");
+	XPLMInstanceRef const test2 = xlua_checkuserdata<XPLMInstanceRef>(L, 2, "Expected XPLMInstanceRef");
+
+	lua_pushboolean(L, test1 == test2);
+	return 1;
+}
+
+void RegType_XPLMInstanceRef(lua_State* L)
+{
+	luaL_newmetatable(L, "_mt_XPLMInstanceRef");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+
+	lua_pushstring(L, "XPLMInstanceRef");
+	lua_setfield(L, -2, "__name");
+
+/*	lua_pushcfunction(L, _XPLMInstanceRef_to_string);
+	lua_setfield(L, -2, "__tostring");
+
+	lua_pushcfunction(L, _XPLMInstanceRef_compare);
+	lua_setfield(L, -2, "__eq");
+*/
+
+	lua_register(L, "XPLMInstanceRef", _XPLMInstanceRef_Constructor);
+
+	lua_pop(L, 1);
+}
 
 int XLuaInstanceSetAutoShift(lua_State* L)
 {

@@ -27,6 +27,8 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
+XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
+void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
 
 int XLuaGetSystemPath(lua_State* L)
 {
@@ -69,7 +71,7 @@ int XLuaLoadDataFile(lua_State* L)
 	XPLMDataFileType inFileType = luaL_checkinteger(L, 1);
 	const char * inFilePath = luaL_checkstring(L, 2);
 
-	bool res = XPLMLoadDataFile(inFileType, inFilePath);
+	int res = XPLMLoadDataFile(inFileType, inFilePath);
 	lua_pushboolean(L, res);
 
 	return 1;
@@ -80,7 +82,7 @@ int XLuaSaveDataFile(lua_State* L)
 	XPLMDataFileType inFileType = luaL_checkinteger(L, 1);
 	const char * inFilePath = luaL_checkstring(L, 2);
 
-	bool res = XPLMSaveDataFile(inFileType, inFilePath);
+	int res = XPLMSaveDataFile(inFileType, inFilePath);
 	lua_pushboolean(L, res);
 
 	return 1;
@@ -88,7 +90,7 @@ int XLuaSaveDataFile(lua_State* L)
 
 int XLuaInitialized(lua_State* L)
 {
-	bool res = XPLMInitialized();
+	int res = XPLMInitialized();
 	lua_pushboolean(L, res);
 
 	return 1;
@@ -131,7 +133,14 @@ int XLuaFindSymbol(lua_State* L)
 	const char * inString = luaL_checkstring(L, 1);
 
 	void * res = XPLMFindSymbol(inString);
-	xlua_pushuserdata<void*>(L, res);
+	if (res == nullptr)
+	{
+		lua_pushnil(L);
+	}
+	else
+	{
+		xlua_pushuserdata<void*>(L, res);
+	}
 
 	return 1;
 }
@@ -177,7 +186,60 @@ int XLuaReloadScenery(lua_State* L)
 	return 0;
 }
 
-static int cb_XPLMCommandCallback_f(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void * inRefcon)
+XPLMCommandRef* Make_XPLMCommandRef(lua_State* L, XPLMCommandRef const& init)
+{
+	XPLMCommandRef* ud = static_cast<XPLMCommandRef*>(lua_newuserdata(L, sizeof(XPLMCommandRef)));
+	memcpy(ud, &init, sizeof(XPLMCommandRef));
+
+	luaL_getmetatable(L, "_mt_XPLMCommandRef");
+	lua_setmetatable(L, -2);
+
+	return ud;
+}
+
+static int _XPLMCommandRef_Constructor(lua_State* L)
+{
+	XPLMCommandRef defval = nullptr;				// TODO: Example only! Do we need a 'defaultvalue' attribute somewhere?
+	if (lua_gettop(L) > 0)
+	{
+//		defval = luaL_checkinteger(L, 1);
+	}
+	Make_XPLMCommandRef(L, defval);
+
+	return 1;
+}
+
+static int _XPLMCommandRef_compare(lua_State* L)
+{
+	XPLMCommandRef const test1 = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected XPLMCommandRef");
+	XPLMCommandRef const test2 = xlua_checkuserdata<XPLMCommandRef>(L, 2, "Expected XPLMCommandRef");
+
+	lua_pushboolean(L, test1 == test2);
+	return 1;
+}
+
+void RegType_XPLMCommandRef(lua_State* L)
+{
+	luaL_newmetatable(L, "_mt_XPLMCommandRef");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+
+	lua_pushstring(L, "XPLMCommandRef");
+	lua_setfield(L, -2, "__name");
+
+/*	lua_pushcfunction(L, _XPLMCommandRef_to_string);
+	lua_setfield(L, -2, "__tostring");
+
+	lua_pushcfunction(L, _XPLMCommandRef_compare);
+	lua_setfield(L, -2, "__eq");
+*/
+
+	lua_register(L, "XPLMCommandRef", _XPLMCommandRef_Constructor);
+
+	lua_pop(L, 1);
+}
+
+static int cb_XPLMCommandCallback_f(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
 {
 	int res = {};
 	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);

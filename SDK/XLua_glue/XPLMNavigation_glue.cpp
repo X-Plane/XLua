@@ -27,11 +27,66 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
+XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
+void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+
+XPLMNavRef* Make_XPLMNavRef(lua_State* L, XPLMNavRef const& init)
+{
+	XPLMNavRef* ud = static_cast<XPLMNavRef*>(lua_newuserdata(L, sizeof(XPLMNavRef)));
+	memcpy(ud, &init, sizeof(XPLMNavRef));
+
+	luaL_getmetatable(L, "_mt_XPLMNavRef");
+	lua_setmetatable(L, -2);
+
+	return ud;
+}
+
+static int _XPLMNavRef_Constructor(lua_State* L)
+{
+	XPLMNavRef defval = XPLM_NO_PLUGIN_ID;				// TODO: Example only! Do we need a 'defaultvalue' attribute somewhere?
+	if (lua_gettop(L) > 0)
+	{
+		defval = luaL_checkinteger(L, 1);
+	}
+	Make_XPLMNavRef(L, defval);
+
+	return 1;
+}
+
+static int _XPLMNavRef_compare(lua_State* L)
+{
+	XPLMNavRef const test1 = xlua_checkuserdata<XPLMNavRef>(L, 1, "Expected XPLMNavRef");
+	XPLMNavRef const test2 = xlua_checkuserdata<XPLMNavRef>(L, 2, "Expected XPLMNavRef");
+
+	lua_pushboolean(L, test1 == test2);
+	return 1;
+}
+
+void RegType_XPLMNavRef(lua_State* L)
+{
+	luaL_newmetatable(L, "_mt_XPLMNavRef");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+
+	lua_pushstring(L, "XPLMNavRef");
+	lua_setfield(L, -2, "__name");
+
+/*	lua_pushcfunction(L, _XPLMNavRef_to_string);
+	lua_setfield(L, -2, "__tostring");
+
+	lua_pushcfunction(L, _XPLMNavRef_compare);
+	lua_setfield(L, -2, "__eq");
+*/
+
+	lua_register(L, "XPLMNavRef", _XPLMNavRef_Constructor);
+
+	lua_pop(L, 1);
+}
 
 int XLuaGetFirstNavAid(lua_State* L)
 {
 	XPLMNavRef res = XPLMGetFirstNavAid();
-	xlua_pushuserdata<XPLMNavRef>(L, res);
+	Make_XPLMNavRef(L, res);
 
 	return 1;
 }
@@ -45,7 +100,7 @@ int XLuaGetNextNavAid(lua_State* L)
 	}
 
 	XPLMNavRef res = XPLMGetNextNavAid(inNavAidRef);
-	xlua_pushuserdata<XPLMNavRef>(L, res);
+	Make_XPLMNavRef(L, res);
 
 	return 1;
 }
@@ -55,7 +110,7 @@ int XLuaFindFirstNavAidOfType(lua_State* L)
 	XPLMNavType inType = luaL_checkinteger(L, 1);
 
 	XPLMNavRef res = XPLMFindFirstNavAidOfType(inType);
-	xlua_pushuserdata<XPLMNavRef>(L, res);
+	Make_XPLMNavRef(L, res);
 
 	return 1;
 }
@@ -65,7 +120,7 @@ int XLuaFindLastNavAidOfType(lua_State* L)
 	XPLMNavType inType = luaL_checkinteger(L, 1);
 
 	XPLMNavRef res = XPLMFindLastNavAidOfType(inType);
-	xlua_pushuserdata<XPLMNavRef>(L, res);
+	Make_XPLMNavRef(L, res);
 
 	return 1;
 }
@@ -427,7 +482,7 @@ int XLuaGetGPSDestinationType(lua_State* L)
 int XLuaGetGPSDestination(lua_State* L)
 {
 	XPLMNavRef res = XPLMGetGPSDestination();
-	xlua_pushuserdata<XPLMNavRef>(L, res);
+	Make_XPLMNavRef(L, res);
 
 	return 1;
 }
