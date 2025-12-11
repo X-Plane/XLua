@@ -141,6 +141,9 @@ int vfmt_pcall(lua_State* L, int dbg, B expects_returnval, const char* fmt, va_l
 		case 'r':
 			lua_rawgeti(L, LUA_REGISTRYINDEX, va_arg(va, int));
 			break;
+		case 'u':		// userdata
+			lua_pushlightuserdata(L, va_arg(va, void*));
+			break;
 		default:
 			lua_pushlightuserdata(L, va_arg(va, void*));
 			break;
@@ -153,7 +156,7 @@ int vfmt_pcall(lua_State* L, int dbg, B expects_returnval, const char* fmt, va_l
 	if(e != 0)
 	{
 		const char* msg = lua_tostring(L, -1);
-		if (!dbg)
+		if (dbg == 0 || e == LUA_ERRERR)
 		{
 			// In dbg mode the traceback handler will have been called, which already prints this message.
 			log_message(L, "lua call failed code: %d, msg: %s\n", e, msg);
