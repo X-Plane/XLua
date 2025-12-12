@@ -10,7 +10,7 @@
 /***************************************************************************
  * XPLMUtilities
  ***************************************************************************/
-
+#include <optional>
 #include "XPLMDefs.h"
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
@@ -35,11 +35,7 @@ int XLuaGetSystemPath(lua_State* L)
 	char outSystemPath[512];
 	XPLMGetSystemPath(outSystemPath);
 
-	lua_createtable(L, 0, 1); // 0 array slots and 1 key-value pairs
-
-	lua_pushstring(L, "outSystemPath");
 	lua_pushstring(L, outSystemPath);
-	lua_settable(L, -3);
 
 	return 1;
 }
@@ -49,11 +45,7 @@ int XLuaGetPrefsPath(lua_State* L)
 	char outPrefsPath[512];
 	XPLMGetPrefsPath(outPrefsPath);
 
-	lua_createtable(L, 0, 1); // 0 array slots and 1 key-value pairs
-
-	lua_pushstring(L, "outPrefsPath");
 	lua_pushstring(L, outPrefsPath);
-	lua_settable(L, -3);
 
 	return 1;
 }
@@ -68,10 +60,10 @@ int XLuaGetDirectorySeparator(lua_State* L)
 
 int XLuaLoadDataFile(lua_State* L)
 {
-	XPLMDataFileType inFileType = luaL_checkinteger(L, 1);
-	const char * inFilePath = luaL_checkstring(L, 2);
+	XPLMDataFileType inFileType = xlua_checkinteger(L, 1);
+	std::optional<std::string> inFilePath = xlua_checkoptstring(L, 2);
 
-	int res = XPLMLoadDataFile(inFileType, inFilePath);
+	int res = XPLMLoadDataFile(inFileType, (inFilePath ? inFilePath->c_str() : nullptr));
 	lua_pushboolean(L, res);
 
 	return 1;
@@ -79,8 +71,8 @@ int XLuaLoadDataFile(lua_State* L)
 
 int XLuaSaveDataFile(lua_State* L)
 {
-	XPLMDataFileType inFileType = luaL_checkinteger(L, 1);
-	const char * inFilePath = luaL_checkstring(L, 2);
+	XPLMDataFileType inFileType = xlua_checkinteger(L, 1);
+	const char * inFilePath = xlua_checkstring(L, 2);
 
 	int res = XPLMSaveDataFile(inFileType, inFilePath);
 	lua_pushboolean(L, res);
@@ -106,14 +98,17 @@ int XLuaGetVersions(lua_State* L)
 	lua_createtable(L, 0, 3); // 0 array slots and 3 key-value pairs
 
 	lua_pushstring(L, "outXPlaneVersion");
+
 	lua_pushinteger(L, outXPlaneVersion);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outXPLMVersion");
+
 	lua_pushinteger(L, outXPLMVersion);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outHostID");
+
 	lua_pushinteger(L, outHostID);
 	lua_settable(L, -3);
 
@@ -128,26 +123,9 @@ int XLuaGetLanguage(lua_State* L)
 	return 1;
 }
 
-int XLuaFindSymbol(lua_State* L)
-{
-	const char * inString = luaL_checkstring(L, 1);
-
-	void * res = XPLMFindSymbol(inString);
-	if (res == nullptr)
-	{
-		lua_pushnil(L);
-	}
-	else
-	{
-		xlua_pushuserdata<void*>(L, res);
-	}
-
-	return 1;
-}
-
 int XLuaDebugString(lua_State* L)
 {
-	const char * inString = luaL_checkstring(L, 1);
+	const char * inString = xlua_checkstring(L, 1);
 
 	XPLMDebugString(inString);
 
@@ -156,7 +134,7 @@ int XLuaDebugString(lua_State* L)
 
 int XLuaSpeakString(lua_State* L)
 {
-	const char * inString = luaL_checkstring(L, 1);
+	const char * inString = xlua_checkstring(L, 1);
 
 	XPLMSpeakString(inString);
 
@@ -199,13 +177,7 @@ XPLMCommandRef* Make_XPLMCommandRef(lua_State* L, XPLMCommandRef const& init)
 
 static int _XPLMCommandRef_Constructor(lua_State* L)
 {
-	XPLMCommandRef defval = nullptr;				// TODO: Example only! Do we need a 'defaultvalue' attribute somewhere?
-	if (lua_gettop(L) > 0)
-	{
-//		defval = luaL_checkinteger(L, 1);
-	}
-	Make_XPLMCommandRef(L, defval);
-
+	Make_XPLMCommandRef(L, nullptr);
 	return 1;
 }
 
@@ -246,9 +218,11 @@ static int cb_XPLMCommandCallback_f(XPLMCommandRef inCommand, XPLMCommandPhase i
 	lua_State* L = setup_lua_callback(cb, "XPLMCommandCallback_f");
 	if (L)
 	{
-		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "??r", inCommand, inPhase, cb->origRefconRegIndex);
-		res = xlua_checkboolean(L, 1) ? 1 : 0;
-		lua_pop(L, 1);
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uir", inCommand, inPhase, cb->origRefconRegIndex))
+		{
+			res = xlua_checkboolean(L, -1) ? 1 : 0;
+			lua_pop(L, 1);
+		}
 	}
 
 	return res;
@@ -256,7 +230,7 @@ static int cb_XPLMCommandCallback_f(XPLMCommandRef inCommand, XPLMCommandPhase i
 
 int XLuaFindCommand(lua_State* L)
 {
-	const char * inName = luaL_checkstring(L, 1);
+	const char * inName = xlua_checkstring(L, 1);
 
 	XPLMCommandRef res = XPLMFindCommand(inName);
 	if (res == nullptr)
@@ -312,8 +286,8 @@ int XLuaCommandOnce(lua_State* L)
 
 int XLuaCreateCommand(lua_State* L)
 {
-	const char * inName = luaL_checkstring(L, 1);
-	const char * inDescription = luaL_checkstring(L, 2);
+	const char * inName = xlua_checkstring(L, 1);
+	const char * inDescription = xlua_checkstring(L, 2);
 
 	XPLMCommandRef res = XPLMCreateCommand(inName, inDescription);
 	if (res == nullptr)
@@ -366,8 +340,8 @@ int XLuaUnregisterCommandHandler(lua_State* L)
 
 int XLuaSimulateKeyPress(lua_State* L)
 {
-	int inKeyType = luaL_checkinteger(L, 1);
-	int inKey = luaL_checkinteger(L, 2);
+	int inKeyType = xlua_checkinteger(L, 1);
+	int inKey = xlua_checkinteger(L, 2);
 
 	XPLMSimulateKeyPress(inKeyType, inKey);
 
@@ -376,7 +350,7 @@ int XLuaSimulateKeyPress(lua_State* L)
 
 int XLuaCommandKeyStroke(lua_State* L)
 {
-	XPLMCommandKeyID inKey = luaL_checkinteger(L, 1);
+	XPLMCommandKeyID inKey = xlua_checkinteger(L, 1);
 
 	XPLMCommandKeyStroke(inKey);
 
@@ -385,7 +359,7 @@ int XLuaCommandKeyStroke(lua_State* L)
 
 int XLuaCommandButtonPress(lua_State* L)
 {
-	XPLMCommandButtonID inButton = luaL_checkinteger(L, 1);
+	XPLMCommandButtonID inButton = xlua_checkinteger(L, 1);
 
 	XPLMCommandButtonPress(inButton);
 
@@ -394,7 +368,7 @@ int XLuaCommandButtonPress(lua_State* L)
 
 int XLuaCommandButtonRelease(lua_State* L)
 {
-	XPLMCommandButtonID inButton = luaL_checkinteger(L, 1);
+	XPLMCommandButtonID inButton = xlua_checkinteger(L, 1);
 
 	XPLMCommandButtonRelease(inButton);
 

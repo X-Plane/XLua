@@ -10,7 +10,7 @@
 /***************************************************************************
  * XPLMPlanes
  ***************************************************************************/
-
+#include <optional>
 #include "XPLMDefs.h"
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
@@ -34,7 +34,7 @@ void XPLMPlaneDrawState_t_to_table(lua_State* L, XPLMPlaneDrawState_t const& src
 
 int XLuaInitFlight(lua_State* L)
 {
-	char const* inJsonData = luaL_checkstring(L, 1);
+	char const* inJsonData = xlua_checkstring(L, 1);
 
 	XPLMInitResult res = XPLMInitFlight(inJsonData);
 	lua_pushinteger(L, res);
@@ -44,7 +44,7 @@ int XLuaInitFlight(lua_State* L)
 
 int XLuaUpdateFlight(lua_State* L)
 {
-	char const* inJsonData = luaL_checkstring(L, 1);
+	char const* inJsonData = xlua_checkstring(L, 1);
 
 	XPLMInitResult res = XPLMUpdateFlight(inJsonData);
 	lua_pushinteger(L, res);
@@ -54,7 +54,7 @@ int XLuaUpdateFlight(lua_State* L)
 
 int XLuaSetUsersAircraft(lua_State* L)
 {
-	const char * inAircraftPath = luaL_checkstring(L, 1);
+	const char * inAircraftPath = xlua_checkstring(L, 1);
 
 	XPLMSetUsersAircraft(inAircraftPath);
 
@@ -63,7 +63,7 @@ int XLuaSetUsersAircraft(lua_State* L)
 
 int XLuaPlaceUserAtAirport(lua_State* L)
 {
-	const char * inAirportCode = luaL_checkstring(L, 1);
+	const char * inAirportCode = xlua_checkstring(L, 1);
 
 	XPLMPlaceUserAtAirport(inAirportCode);
 
@@ -72,11 +72,11 @@ int XLuaPlaceUserAtAirport(lua_State* L)
 
 int XLuaPlaceUserAtLocation(lua_State* L)
 {
-	double latitudeDegrees = luaL_checknumber(L, 1);
-	double longitudeDegrees = luaL_checknumber(L, 2);
-	float elevationMetersMSL = luaL_checknumber(L, 3);
-	float headingDegreesTrue = luaL_checknumber(L, 4);
-	float speedMetersPerSecond = luaL_checknumber(L, 5);
+	double latitudeDegrees = xlua_checknumber(L, 1);
+	double longitudeDegrees = xlua_checknumber(L, 2);
+	float elevationMetersMSL = xlua_checknumber(L, 3);
+	float headingDegreesTrue = xlua_checknumber(L, 4);
+	float speedMetersPerSecond = xlua_checknumber(L, 5);
 
 	XPLMPlaceUserAtLocation(latitudeDegrees, longitudeDegrees, elevationMetersMSL, headingDegreesTrue, speedMetersPerSecond);
 
@@ -237,14 +237,17 @@ int XLuaCountAircraft(lua_State* L)
 	lua_createtable(L, 0, 3); // 0 array slots and 3 key-value pairs
 
 	lua_pushstring(L, "outTotalAircraft");
+
 	lua_pushinteger(L, outTotalAircraft);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outActiveAircraft");
+
 	lua_pushinteger(L, outActiveAircraft);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outController");
+
 	xlua_pushuserdata<XPLMPluginID>(L, outController);
 	lua_settable(L, -3);
 
@@ -253,7 +256,7 @@ int XLuaCountAircraft(lua_State* L)
 
 int XLuaGetNthAircraftModel(lua_State* L)
 {
-	int inIndex = luaL_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 1);
 	char outFileName[256];
 	char outPath[512];
 
@@ -262,10 +265,12 @@ int XLuaGetNthAircraftModel(lua_State* L)
 	lua_createtable(L, 0, 2); // 0 array slots and 2 key-value pairs
 
 	lua_pushstring(L, "outFileName");
+
 	lua_pushstring(L, outFileName);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outPath");
+
 	lua_pushstring(L, outPath);
 	lua_settable(L, -3);
 
@@ -278,7 +283,9 @@ static void cb_XPLMPlanesAvailable_f(void* inRefcon)
 	lua_State* L = setup_lua_callback(cb, "XPLMPlanesAvailable_f");
 	if (L)
 	{
-		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r", cb->origRefconRegIndex);
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r", cb->origRefconRegIndex))
+		{
+		}
 	}
 }
 
@@ -291,7 +298,7 @@ int XLuaReleasePlanes(lua_State* L)
 
 int XLuaSetActiveAircraftCount(lua_State* L)
 {
-	int inCount = luaL_checkinteger(L, 1);
+	int inCount = xlua_checkinteger(L, 1);
 
 	XPLMSetActiveAircraftCount(inCount);
 
@@ -300,8 +307,8 @@ int XLuaSetActiveAircraftCount(lua_State* L)
 
 int XLuaSetAircraftModel(lua_State* L)
 {
-	int inIndex = luaL_checkinteger(L, 1);
-	const char * inAircraftPath = luaL_checkstring(L, 2);
+	int inIndex = xlua_checkinteger(L, 1);
+	const char * inAircraftPath = xlua_checkstring(L, 2);
 
 	XPLMSetAircraftModel(inIndex, inAircraftPath);
 
@@ -310,7 +317,7 @@ int XLuaSetAircraftModel(lua_State* L)
 
 int XLuaDisableAIForPlane(lua_State* L)
 {
-	int inPlaneIndex = luaL_checkinteger(L, 1);
+	int inPlaneIndex = xlua_checkinteger(L, 1);
 
 	XPLMDisableAIForPlane(inPlaneIndex);
 
@@ -319,13 +326,13 @@ int XLuaDisableAIForPlane(lua_State* L)
 
 int XLuaDrawAircraft(lua_State* L)
 {
-	int inPlaneIndex = luaL_checkinteger(L, 1);
-	float inX = luaL_checknumber(L, 2);
-	float inY = luaL_checknumber(L, 3);
-	float inZ = luaL_checknumber(L, 4);
-	float inPitch = luaL_checknumber(L, 5);
-	float inRoll = luaL_checknumber(L, 6);
-	float inYaw = luaL_checknumber(L, 7);
+	int inPlaneIndex = xlua_checkinteger(L, 1);
+	float inX = xlua_checknumber(L, 2);
+	float inY = xlua_checknumber(L, 3);
+	float inZ = xlua_checknumber(L, 4);
+	float inPitch = xlua_checknumber(L, 5);
+	float inRoll = xlua_checknumber(L, 6);
+	float inYaw = xlua_checknumber(L, 7);
 	bool inFullDraw = xlua_checkboolean(L, 8);
 	XPLMPlaneDrawState_t inDrawStateInfo = XPLMPlaneDrawState_t_from_table(L, 9);
 

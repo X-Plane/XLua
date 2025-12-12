@@ -14,6 +14,7 @@
 #include <string>
 #include <string.h>
 #include <map>
+#include <optional>
 
 extern "C" {
 #include <lua.h>
@@ -53,6 +54,9 @@ notify_cb_t* wrap_first_lua_func(lua_State* L, int func_stack_idx, std::string c
 bool wrap_next_lua_func(notify_cb_t* cb_record, int func_stack_idx, std::string const cb_typename);
 
 bool xlua_checkboolean(lua_State* L, int narg);
+int xlua_checkinteger(lua_State* L, int narg);
+lua_Number xlua_checknumber(lua_State* L, int narg);
+char const* xlua_checkstring(lua_State* L, int narg);
 
 template <typename T>
 T xlua_checkuserdata(lua_State * L, int narg, const char * msg)
@@ -69,6 +73,11 @@ void xlua_pushuserdata(lua_State * state, T data)
     T* ud = static_cast<T*>(lua_newuserdata(state, sizeof(T)));
     memcpy(ud, &data, sizeof(T));
 }
+
+std::optional<std::string> xlua_checkoptstring(lua_State* L, int narg);
+std::optional<float>       xlua_checkoptfloat(lua_State* L, int narg);
+std::optional<double>      xlua_checkoptdouble(lua_State* L, int narg);
+std::optional<int>         xlua_checkoptint(lua_State* L, int narg);
 
 void InitScripts(void);
 void CleanupScripts(void);

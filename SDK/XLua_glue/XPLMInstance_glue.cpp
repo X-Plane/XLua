@@ -10,7 +10,7 @@
 /***************************************************************************
  * XPLMInstance
  ***************************************************************************/
-
+#include <optional>
 #include "XPLMDefs.h"
 #include "XPLMScenery.h"
 
@@ -50,13 +50,7 @@ XPLMInstanceRef* Make_XPLMInstanceRef(lua_State* L, XPLMInstanceRef const& init)
 
 static int _XPLMInstanceRef_Constructor(lua_State* L)
 {
-	XPLMInstanceRef defval = XPLM_NO_PLUGIN_ID;				// TODO: Example only! Do we need a 'defaultvalue' attribute somewhere?
-	if (lua_gettop(L) > 0)
-	{
-		defval = luaL_checkinteger(L, 1);
-	}
-	Make_XPLMInstanceRef(L, defval);
-
+	Make_XPLMInstanceRef(L, nullptr);
 	return 1;
 }
 

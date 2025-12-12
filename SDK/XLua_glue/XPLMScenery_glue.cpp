@@ -10,7 +10,7 @@
 /***************************************************************************
  * XPLMScenery
  ***************************************************************************/
-
+#include <optional>
 #include "XPLMDefs.h"
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
@@ -49,13 +49,7 @@ XPLMProbeRef* Make_XPLMProbeRef(lua_State* L, XPLMProbeRef const& init)
 
 static int _XPLMProbeRef_Constructor(lua_State* L)
 {
-	XPLMProbeRef defval = nullptr;// XPLM_NO_PLUGIN_ID;				// TODO: Example only! Do we need a 'defaultvalue' attribute somewhere?
-	if (lua_gettop(L) > 0)
-	{
-//		defval = luaL_checkinteger(L, 1);
-	}
-	Make_XPLMProbeRef(L, defval);
-
+	Make_XPLMProbeRef(L, nullptr);
 	return 1;
 }
 
@@ -235,7 +229,7 @@ int MakeXPLMProbeInfo_t(lua_State* L)
 
 int XLuaCreateProbe(lua_State* L)
 {
-	XPLMProbeType inProbeType = luaL_checkinteger(L, 1);
+	XPLMProbeType inProbeType = xlua_checkinteger(L, 1);
 
 	XPLMProbeRef res = XPLMCreateProbe(inProbeType);
 	if (res == nullptr)
@@ -270,15 +264,13 @@ int XLuaProbeTerrainXYZ(lua_State* L)
 	{
 		inProbe = xlua_checkuserdata<XPLMProbeRef>(L, 1, "Expected userdata<XPLMProbeRef>");
 	}
-	float inX = luaL_checknumber(L, 2);
-	float inY = luaL_checknumber(L, 3);
-	float inZ = luaL_checknumber(L, 4);
+	float inX = xlua_checknumber(L, 2);
+	float inY = xlua_checknumber(L, 3);
+	float inZ = xlua_checknumber(L, 4);
 	XPLMProbeInfo_t outInfo = XPLMProbeInfo_t_from_table(L, 5);
 
 	XPLMProbeResult res = XPLMProbeTerrainXYZ(inProbe, inX, inY, inZ, &outInfo);
 	lua_pushinteger(L, res);
-
-	lua_createtable(L, 0, 1); // 0 array slots and 1 key-value pairs
 	XPLMProbeInfo_t_to_table(L, outInfo);
 
 	return 2;
@@ -286,8 +278,8 @@ int XLuaProbeTerrainXYZ(lua_State* L)
 
 int XLuaGetMagneticVariation(lua_State* L)
 {
-	double latitude = luaL_checknumber(L, 1);
-	double longitude = luaL_checknumber(L, 2);
+	double latitude = xlua_checknumber(L, 1);
+	double longitude = xlua_checknumber(L, 2);
 
 	float res = XPLMGetMagneticVariation(latitude, longitude);
 	lua_pushnumber(L, res);
@@ -297,7 +289,7 @@ int XLuaGetMagneticVariation(lua_State* L)
 
 int XLuaDegTrueToDegMagnetic(lua_State* L)
 {
-	float headingDegreesTrue = luaL_checknumber(L, 1);
+	float headingDegreesTrue = xlua_checknumber(L, 1);
 
 	float res = XPLMDegTrueToDegMagnetic(headingDegreesTrue);
 	lua_pushnumber(L, res);
@@ -307,7 +299,7 @@ int XLuaDegTrueToDegMagnetic(lua_State* L)
 
 int XLuaDegMagneticToDegTrue(lua_State* L)
 {
-	float headingDegreesMagnetic = luaL_checknumber(L, 1);
+	float headingDegreesMagnetic = xlua_checknumber(L, 1);
 
 	float res = XPLMDegMagneticToDegTrue(headingDegreesMagnetic);
 	lua_pushnumber(L, res);
@@ -328,13 +320,7 @@ XPLMObjectRef* Make_XPLMObjectRef(lua_State* L, XPLMObjectRef const& init)
 
 static int _XPLMObjectRef_Constructor(lua_State* L)
 {
-	XPLMObjectRef defval = XPLM_NO_PLUGIN_ID;				// TODO: Example only! Do we need a 'defaultvalue' attribute somewhere?
-	if (lua_gettop(L) > 0)
-	{
-		defval = luaL_checkinteger(L, 1);
-	}
-	Make_XPLMObjectRef(L, defval);
-
+	Make_XPLMObjectRef(L, nullptr);
 	return 1;
 }
 
@@ -574,13 +560,15 @@ static void cb_XPLMObjectLoaded_f(XPLMObjectRef inObject, void* inRefcon)
 	lua_State* L = setup_lua_callback(cb, "XPLMObjectLoaded_f");
 	if (L)
 	{
-		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "?r", inObject, cb->origRefconRegIndex);
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ur", inObject, cb->origRefconRegIndex))
+		{
+		}
 	}
 }
 
 int XLuaLoadObject(lua_State* L)
 {
-	const char * inPath = luaL_checkstring(L, 1);
+	const char * inPath = xlua_checkstring(L, 1);
 
 	XPLMObjectRef res = XPLMLoadObject(inPath);
 	if (res == nullptr)
@@ -597,7 +585,7 @@ int XLuaLoadObject(lua_State* L)
 
 int XLuaLoadObjectAsync(lua_State* L)
 {
-	const char * inPath = luaL_checkstring(L, 1);
+	const char * inPath = xlua_checkstring(L, 1);
 	int refcon_regindex = capture_lua_value(L, 3);
 	CleanupStoredCallbacks(L, refcon_regindex);
 
@@ -615,7 +603,7 @@ int XLuaDrawObjects(lua_State* L)
 	{
 		inObject = xlua_checkuserdata<XPLMObjectRef>(L, 1, "Expected userdata<XPLMObjectRef>");
 	}
-	int inCount = luaL_checkinteger(L, 2);
+	int inCount = xlua_checkinteger(L, 2);
 	XPLMDrawInfo_t inLocations = XPLMDrawInfo_t_from_table(L, 3);
 	bool lighting = xlua_checkboolean(L, 4);
 	bool earth_relative = xlua_checkboolean(L, 5);
@@ -644,15 +632,17 @@ static void cb_XPLMLibraryEnumerator_f(const char * inFilePath, void* inRef)
 	lua_State* L = setup_lua_callback(cb, "XPLMLibraryEnumerator_f");
 	if (L)
 	{
-		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFilePath, cb->origRefconRegIndex);
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFilePath, cb->origRefconRegIndex))
+		{
+		}
 	}
 }
 
 int XLuaLookupObjects(lua_State* L)
 {
-	const char * inPath = luaL_checkstring(L, 1);
-	float inLatitude = luaL_checknumber(L, 2);
-	float inLongitude = luaL_checknumber(L, 3);
+	const char * inPath = xlua_checkstring(L, 1);
+	float inLatitude = xlua_checknumber(L, 2);
+	float inLongitude = xlua_checknumber(L, 3);
 	int refcon_regindex = capture_lua_value(L, 5);
 	CleanupStoredCallbacks(L, refcon_regindex);
 

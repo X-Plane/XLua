@@ -10,6 +10,8 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <optional>
+
 #include "xpfuncs.h"
 #include "lua_helpers.h"
 #include "xpdatarefs.h"
@@ -879,4 +881,59 @@ bool xlua_checkboolean(lua_State* L, int narg)
 {
 	luaL_checktype(L, narg, LUA_TBOOLEAN);
 	return lua_toboolean(L, narg);
+}
+
+int xlua_checkinteger(lua_State* L, int narg)
+{
+	return luaL_checkinteger(L, narg);
+}
+
+lua_Number xlua_checknumber(lua_State* L, int narg)
+{ 
+	return luaL_checknumber(L, narg);
+}
+
+char const* xlua_checkstring(lua_State* L, int narg)
+{
+	return luaL_checkstring(L, narg);
+}
+
+std::optional<std::string> xlua_checkoptstring(lua_State* L, int narg)
+{
+	if (lua_isnil(L, narg))
+	{
+		return std::nullopt;
+	}
+
+	return std::make_optional<std::string>(luaL_checkstring(L, narg));
+}
+
+std::optional<float> xlua_checkoptfloat(lua_State* L, int narg)
+{
+	if (lua_isnil(L, narg))
+	{
+		return std::nullopt;
+	}
+
+	return std::make_optional<float>(static_cast<float>(luaL_checknumber(L, narg)));
+}
+
+std::optional<double> xlua_checkoptdouble(lua_State* L, int narg)
+{
+	if (lua_isnil(L, narg))
+	{
+		return std::nullopt;
+	}
+
+	return std::make_optional<double>(static_cast<double>(luaL_checknumber(L, narg)));
+}
+
+std::optional<int> xlua_checkoptint(lua_State* L, int narg)
+{
+	if (lua_isnil(L, narg))
+	{
+		return std::nullopt;
+	}
+
+	return std::make_optional<int>(static_cast<int>(luaL_checkinteger(L, narg)));
 }

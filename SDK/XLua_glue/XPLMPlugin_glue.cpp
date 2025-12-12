@@ -10,7 +10,7 @@
 /***************************************************************************
  * XPLMPlugin
  ***************************************************************************/
-
+#include <optional>
 #include "XPLMDefs.h"
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
@@ -49,7 +49,7 @@ int XLuaCountPlugins(lua_State* L)
 
 int XLuaGetNthPlugin(lua_State* L)
 {
-	int inIndex = luaL_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 1);
 
 	XPLMPluginID res = XPLMGetNthPlugin(inIndex);
 	Make_XPLMPluginID(L, res);
@@ -59,7 +59,7 @@ int XLuaGetNthPlugin(lua_State* L)
 
 int XLuaFindPluginByPath(lua_State* L)
 {
-	const char * inPath = luaL_checkstring(L, 1);
+	const char * inPath = xlua_checkstring(L, 1);
 
 	XPLMPluginID res = XPLMFindPluginByPath(inPath);
 	Make_XPLMPluginID(L, res);
@@ -69,7 +69,7 @@ int XLuaFindPluginByPath(lua_State* L)
 
 int XLuaFindPluginBySignature(lua_State* L)
 {
-	const char * inSignature = luaL_checkstring(L, 1);
+	const char * inSignature = xlua_checkstring(L, 1);
 
 	XPLMPluginID res = XPLMFindPluginBySignature(inSignature);
 	Make_XPLMPluginID(L, res);
@@ -94,18 +94,22 @@ int XLuaGetPluginInfo(lua_State* L)
 	lua_createtable(L, 0, 4); // 0 array slots and 4 key-value pairs
 
 	lua_pushstring(L, "outName");
+
 	lua_pushstring(L, outName);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outFilePath");
+
 	lua_pushstring(L, outFilePath);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outSignature");
+
 	lua_pushstring(L, outSignature);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outDescription");
+
 	lua_pushstring(L, outDescription);
 	lua_settable(L, -3);
 
@@ -167,7 +171,7 @@ int XLuaSendMessageToPlugin(lua_State* L)
 	{
 		inPlugin = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
 	}
-	int inMessage = luaL_checkinteger(L, 2);
+	int inMessage = xlua_checkinteger(L, 2);
 	void * inParam = {};
 	if (lua_isuserdata(L, 3))
 	{
@@ -185,13 +189,15 @@ static void cb_XPLMFeatureEnumerator_f(const char * inFeature, void* inRef)
 	lua_State* L = setup_lua_callback(cb, "XPLMFeatureEnumerator_f");
 	if (L)
 	{
-		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFeature, cb->origRefconRegIndex);
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFeature, cb->origRefconRegIndex))
+		{
+		}
 	}
 }
 
 int XLuaHasFeature(lua_State* L)
 {
-	const char * inFeature = luaL_checkstring(L, 1);
+	const char * inFeature = xlua_checkstring(L, 1);
 
 	int res = XPLMHasFeature(inFeature);
 	lua_pushboolean(L, res);
@@ -201,7 +207,7 @@ int XLuaHasFeature(lua_State* L)
 
 int XLuaIsFeatureEnabled(lua_State* L)
 {
-	const char * inFeature = luaL_checkstring(L, 1);
+	const char * inFeature = xlua_checkstring(L, 1);
 
 	int res = XPLMIsFeatureEnabled(inFeature);
 	lua_pushboolean(L, res);
@@ -211,7 +217,7 @@ int XLuaIsFeatureEnabled(lua_State* L)
 
 int XLuaEnableFeature(lua_State* L)
 {
-	const char * inFeature = luaL_checkstring(L, 1);
+	const char * inFeature = xlua_checkstring(L, 1);
 	bool inEnable = xlua_checkboolean(L, 2);
 
 	XPLMEnableFeature(inFeature, inEnable);

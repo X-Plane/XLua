@@ -94,10 +94,10 @@ extern "C"
 	int XLuaFindDataRef(lua_State* L);
 	int XLuaFindFirstNavAidOfType(lua_State* L);
 	int XLuaFindLastNavAidOfType(lua_State* L);
+	int XLuaFindNavAid(lua_State* L);
 	int XLuaFindPluginByPath(lua_State* L);
 	int XLuaFindPluginBySignature(lua_State* L);
 	int XLuaFindPluginsMenu(lua_State* L);
-	int XLuaFindSymbol(lua_State* L);
 	int MakeXPLMFixedString150_t(lua_State* L);
 	int XLuaGenerateTextureNumbers(lua_State* L);
 	int XLuaGetAllMonitorBoundsGlobal(lua_State* L);
@@ -369,10 +369,10 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMFindDataRef", XLuaFindDataRef);
 	lua_register(L, "XPLMFindFirstNavAidOfType", XLuaFindFirstNavAidOfType);
 	lua_register(L, "XPLMFindLastNavAidOfType", XLuaFindLastNavAidOfType);
+	lua_register(L, "XPLMFindNavAid", XLuaFindNavAid);
 	lua_register(L, "XPLMFindPluginByPath", XLuaFindPluginByPath);
 	lua_register(L, "XPLMFindPluginBySignature", XLuaFindPluginBySignature);
 	lua_register(L, "XPLMFindPluginsMenu", XLuaFindPluginsMenu);
-	lua_register(L, "XPLMFindSymbol", XLuaFindSymbol);
 	lua_register(L, "XPLMFixedString150_t", MakeXPLMFixedString150_t);
 	lua_register(L, "XPLMGenerateTextureNumbers", XLuaGenerateTextureNumbers);
 	lua_register(L, "XPLMGetAllMonitorBoundsGlobal", XLuaGetAllMonitorBoundsGlobal);

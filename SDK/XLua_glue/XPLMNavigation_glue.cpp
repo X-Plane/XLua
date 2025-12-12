@@ -10,7 +10,7 @@
 /***************************************************************************
  * XPLMNavigation
  ***************************************************************************/
-
+#include <optional>
 #include "XPLMDefs.h"
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
@@ -48,8 +48,8 @@ static int _XPLMNavRef_Constructor(lua_State* L)
 	{
 		defval = luaL_checkinteger(L, 1);
 	}
-	Make_XPLMNavRef(L, defval);
 
+	Make_XPLMNavRef(L, defval);
 	return 1;
 }
 
@@ -107,7 +107,7 @@ int XLuaGetNextNavAid(lua_State* L)
 
 int XLuaFindFirstNavAidOfType(lua_State* L)
 {
-	XPLMNavType inType = luaL_checkinteger(L, 1);
+	XPLMNavType inType = xlua_checkinteger(L, 1);
 
 	XPLMNavRef res = XPLMFindFirstNavAidOfType(inType);
 	Make_XPLMNavRef(L, res);
@@ -117,9 +117,24 @@ int XLuaFindFirstNavAidOfType(lua_State* L)
 
 int XLuaFindLastNavAidOfType(lua_State* L)
 {
-	XPLMNavType inType = luaL_checkinteger(L, 1);
+	XPLMNavType inType = xlua_checkinteger(L, 1);
 
 	XPLMNavRef res = XPLMFindLastNavAidOfType(inType);
+	Make_XPLMNavRef(L, res);
+
+	return 1;
+}
+
+int XLuaFindNavAid(lua_State* L)
+{
+	std::optional<std::string> inNameFragment = xlua_checkoptstring(L, 1);
+	std::optional<std::string> inIDFragment = xlua_checkoptstring(L, 2);
+	std::optional<float> inLat = xlua_checkoptfloat(L, 3);
+	std::optional<float> inLon = xlua_checkoptfloat(L, 4);
+	std::optional<int> inFrequency = xlua_checkoptint(L, 5);
+	XPLMNavType inType = xlua_checkinteger(L, 6);
+
+	XPLMNavRef res = XPLMFindNavAid((inNameFragment ? inNameFragment->c_str() : nullptr), (inIDFragment ? inIDFragment->c_str() : nullptr), (inLat ? &*inLat : nullptr), (inLon ? &*inLon : nullptr), (inFrequency ? &*inFrequency : nullptr), inType);
 	Make_XPLMNavRef(L, res);
 
 	return 1;
@@ -147,38 +162,47 @@ int XLuaGetNavAidInfo(lua_State* L)
 	lua_createtable(L, 0, 9); // 0 array slots and 9 key-value pairs
 
 	lua_pushstring(L, "outType");
+
 	lua_pushinteger(L, outType);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLatitude");
+
 	lua_pushnumber(L, outLatitude);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLongitude");
+
 	lua_pushnumber(L, outLongitude);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outHeight");
+
 	lua_pushnumber(L, outHeight);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outFrequency");
+
 	lua_pushinteger(L, outFrequency);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outHeading");
+
 	lua_pushnumber(L, outHeading);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outID");
+
 	lua_pushstring(L, outID);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outName");
+
 	lua_pushstring(L, outName);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outReg");
+
 	lua_pushstring(L, outReg);
 	lua_settable(L, -3);
 
@@ -211,7 +235,7 @@ int XLuaGetDestinationFMSEntry(lua_State* L)
 
 int XLuaSetDisplayedFMSEntry(lua_State* L)
 {
-	int inIndex = luaL_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 1);
 
 	XPLMSetDisplayedFMSEntry(inIndex);
 
@@ -220,7 +244,7 @@ int XLuaSetDisplayedFMSEntry(lua_State* L)
 
 int XLuaSetDestinationFMSEntry(lua_State* L)
 {
-	int inIndex = luaL_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 1);
 
 	XPLMSetDestinationFMSEntry(inIndex);
 
@@ -229,7 +253,7 @@ int XLuaSetDestinationFMSEntry(lua_State* L)
 
 int XLuaGetFMSEntryInfo(lua_State* L)
 {
-	int inIndex = luaL_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 1);
 	XPLMNavType outType;
 	char outID[256];
 	XPLMNavRef outRef;
@@ -242,26 +266,32 @@ int XLuaGetFMSEntryInfo(lua_State* L)
 	lua_createtable(L, 0, 6); // 0 array slots and 6 key-value pairs
 
 	lua_pushstring(L, "outType");
+
 	lua_pushinteger(L, outType);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outID");
+
 	lua_pushstring(L, outID);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outRef");
+
 	xlua_pushuserdata<XPLMNavRef>(L, outRef);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outAltitude");
+
 	lua_pushinteger(L, outAltitude);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLat");
+
 	lua_pushnumber(L, outLat);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLon");
+
 	lua_pushnumber(L, outLon);
 	lua_settable(L, -3);
 
@@ -270,13 +300,13 @@ int XLuaGetFMSEntryInfo(lua_State* L)
 
 int XLuaSetFMSEntryInfo(lua_State* L)
 {
-	int inIndex = luaL_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 1);
 	XPLMNavRef inRef = {};
 	if (lua_isuserdata(L, 2))
 	{
 		inRef = xlua_checkuserdata<XPLMNavRef>(L, 2, "Expected userdata<XPLMNavRef>");
 	}
-	int inAltitude = luaL_checkinteger(L, 3);
+	int inAltitude = xlua_checkinteger(L, 3);
 
 	XPLMSetFMSEntryInfo(inIndex, inRef, inAltitude);
 
@@ -285,10 +315,10 @@ int XLuaSetFMSEntryInfo(lua_State* L)
 
 int XLuaSetFMSEntryLatLon(lua_State* L)
 {
-	int inIndex = luaL_checkinteger(L, 1);
-	float inLat = luaL_checknumber(L, 2);
-	float inLon = luaL_checknumber(L, 3);
-	int inAltitude = luaL_checkinteger(L, 4);
+	int inIndex = xlua_checkinteger(L, 1);
+	float inLat = xlua_checknumber(L, 2);
+	float inLon = xlua_checknumber(L, 3);
+	int inAltitude = xlua_checkinteger(L, 4);
 
 	XPLMSetFMSEntryLatLon(inIndex, inLat, inLon, inAltitude);
 
@@ -297,7 +327,7 @@ int XLuaSetFMSEntryLatLon(lua_State* L)
 
 int XLuaClearFMSEntry(lua_State* L)
 {
-	int inIndex = luaL_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 1);
 
 	XPLMClearFMSEntry(inIndex);
 
@@ -306,7 +336,7 @@ int XLuaClearFMSEntry(lua_State* L)
 
 int XLuaCountFMSFlightPlanEntries(lua_State* L)
 {
-	XPLMNavFlightPlan inFlightPlan = luaL_checkinteger(L, 1);
+	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
 
 	int res = XPLMCountFMSFlightPlanEntries(inFlightPlan);
 	lua_pushinteger(L, res);
@@ -316,7 +346,7 @@ int XLuaCountFMSFlightPlanEntries(lua_State* L)
 
 int XLuaGetDisplayedFMSFlightPlanEntry(lua_State* L)
 {
-	XPLMNavFlightPlan inFlightPlan = luaL_checkinteger(L, 1);
+	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
 
 	int res = XPLMGetDisplayedFMSFlightPlanEntry(inFlightPlan);
 	lua_pushinteger(L, res);
@@ -326,7 +356,7 @@ int XLuaGetDisplayedFMSFlightPlanEntry(lua_State* L)
 
 int XLuaGetDestinationFMSFlightPlanEntry(lua_State* L)
 {
-	XPLMNavFlightPlan inFlightPlan = luaL_checkinteger(L, 1);
+	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
 
 	int res = XPLMGetDestinationFMSFlightPlanEntry(inFlightPlan);
 	lua_pushinteger(L, res);
@@ -336,8 +366,8 @@ int XLuaGetDestinationFMSFlightPlanEntry(lua_State* L)
 
 int XLuaSetDisplayedFMSFlightPlanEntry(lua_State* L)
 {
-	XPLMNavFlightPlan inFlightPlan = luaL_checkinteger(L, 1);
-	int inIndex = luaL_checkinteger(L, 2);
+	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 2);
 
 	XPLMSetDisplayedFMSFlightPlanEntry(inFlightPlan, inIndex);
 
@@ -346,8 +376,8 @@ int XLuaSetDisplayedFMSFlightPlanEntry(lua_State* L)
 
 int XLuaSetDestinationFMSFlightPlanEntry(lua_State* L)
 {
-	XPLMNavFlightPlan inFlightPlan = luaL_checkinteger(L, 1);
-	int inIndex = luaL_checkinteger(L, 2);
+	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 2);
 
 	XPLMSetDestinationFMSFlightPlanEntry(inFlightPlan, inIndex);
 
@@ -356,8 +386,8 @@ int XLuaSetDestinationFMSFlightPlanEntry(lua_State* L)
 
 int XLuaSetDirectToFMSFlightPlanEntry(lua_State* L)
 {
-	XPLMNavFlightPlan inFlightPlan = luaL_checkinteger(L, 1);
-	int inIndex = luaL_checkinteger(L, 2);
+	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 2);
 
 	XPLMSetDirectToFMSFlightPlanEntry(inFlightPlan, inIndex);
 
@@ -366,8 +396,8 @@ int XLuaSetDirectToFMSFlightPlanEntry(lua_State* L)
 
 int XLuaGetFMSFlightPlanEntryInfo(lua_State* L)
 {
-	XPLMNavFlightPlan inFlightPlan = luaL_checkinteger(L, 1);
-	int inIndex = luaL_checkinteger(L, 2);
+	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 2);
 	XPLMNavType outType;
 	char outID[256];
 	XPLMNavRef outRef;
@@ -380,26 +410,32 @@ int XLuaGetFMSFlightPlanEntryInfo(lua_State* L)
 	lua_createtable(L, 0, 6); // 0 array slots and 6 key-value pairs
 
 	lua_pushstring(L, "outType");
+
 	lua_pushinteger(L, outType);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outID");
+
 	lua_pushstring(L, outID);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outRef");
+
 	xlua_pushuserdata<XPLMNavRef>(L, outRef);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outAltitude");
+
 	lua_pushinteger(L, outAltitude);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLat");
+
 	lua_pushnumber(L, outLat);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLon");
+
 	lua_pushnumber(L, outLon);
 	lua_settable(L, -3);
 
@@ -408,14 +444,14 @@ int XLuaGetFMSFlightPlanEntryInfo(lua_State* L)
 
 int XLuaSetFMSFlightPlanEntryInfo(lua_State* L)
 {
-	XPLMNavFlightPlan inFlightPlan = luaL_checkinteger(L, 1);
-	int inIndex = luaL_checkinteger(L, 2);
+	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 2);
 	XPLMNavRef inRef = {};
 	if (lua_isuserdata(L, 3))
 	{
 		inRef = xlua_checkuserdata<XPLMNavRef>(L, 3, "Expected userdata<XPLMNavRef>");
 	}
-	int inAltitude = luaL_checkinteger(L, 4);
+	int inAltitude = xlua_checkinteger(L, 4);
 
 	XPLMSetFMSFlightPlanEntryInfo(inFlightPlan, inIndex, inRef, inAltitude);
 
@@ -424,11 +460,11 @@ int XLuaSetFMSFlightPlanEntryInfo(lua_State* L)
 
 int XLuaSetFMSFlightPlanEntryLatLon(lua_State* L)
 {
-	XPLMNavFlightPlan inFlightPlan = luaL_checkinteger(L, 1);
-	int inIndex = luaL_checkinteger(L, 2);
-	float inLat = luaL_checknumber(L, 3);
-	float inLon = luaL_checknumber(L, 4);
-	int inAltitude = luaL_checkinteger(L, 5);
+	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 2);
+	float inLat = xlua_checknumber(L, 3);
+	float inLon = xlua_checknumber(L, 4);
+	int inAltitude = xlua_checkinteger(L, 5);
 
 	XPLMSetFMSFlightPlanEntryLatLon(inFlightPlan, inIndex, inLat, inLon, inAltitude);
 
@@ -437,13 +473,13 @@ int XLuaSetFMSFlightPlanEntryLatLon(lua_State* L)
 
 int XLuaSetFMSFlightPlanEntryLatLonWithId(lua_State* L)
 {
-	XPLMNavFlightPlan inFlightPlan = luaL_checkinteger(L, 1);
-	int inIndex = luaL_checkinteger(L, 2);
-	float inLat = luaL_checknumber(L, 3);
-	float inLon = luaL_checknumber(L, 4);
-	int inAltitude = luaL_checkinteger(L, 5);
-	const char* inId = luaL_checkstring(L, 6);
-	unsigned int inIdLength = luaL_checkinteger(L, 7);
+	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 2);
+	float inLat = xlua_checknumber(L, 3);
+	float inLon = xlua_checknumber(L, 4);
+	int inAltitude = xlua_checkinteger(L, 5);
+	const char* inId = xlua_checkstring(L, 6);
+	unsigned int inIdLength = xlua_checkinteger(L, 7);
 
 	XPLMSetFMSFlightPlanEntryLatLonWithId(inFlightPlan, inIndex, inLat, inLon, inAltitude, inId, inIdLength);
 
@@ -452,8 +488,8 @@ int XLuaSetFMSFlightPlanEntryLatLonWithId(lua_State* L)
 
 int XLuaClearFMSFlightPlanEntry(lua_State* L)
 {
-	XPLMNavFlightPlan inFlightPlan = luaL_checkinteger(L, 1);
-	int inIndex = luaL_checkinteger(L, 2);
+	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
+	int inIndex = xlua_checkinteger(L, 2);
 
 	XPLMClearFMSFlightPlanEntry(inFlightPlan, inIndex);
 
@@ -462,9 +498,9 @@ int XLuaClearFMSFlightPlanEntry(lua_State* L)
 
 int XLuaLoadFMSFlightPlan(lua_State* L)
 {
-	int inDevice = luaL_checkinteger(L, 1);
-	const char * inBuffer = luaL_checkstring(L, 2);
-	unsigned int inBufferLen = luaL_checkinteger(L, 3);
+	int inDevice = xlua_checkinteger(L, 1);
+	const char * inBuffer = xlua_checkstring(L, 2);
+	unsigned int inBufferLen = xlua_checkinteger(L, 3);
 
 	XPLMLoadFMSFlightPlan(inDevice, inBuffer, inBufferLen);
 

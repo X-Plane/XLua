@@ -10,7 +10,7 @@
 /***************************************************************************
  * XPLMProcessing
  ***************************************************************************/
-
+#include <optional>
 #include "XPLMDefs.h"
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
@@ -45,13 +45,7 @@ XPLMFlightLoopID* Make_XPLMFlightLoopID(lua_State* L, XPLMFlightLoopID const& in
 
 static int _XPLMFlightLoopID_Constructor(lua_State* L)
 {
-	XPLMFlightLoopID defval = XPLM_NO_PLUGIN_ID;				// TODO: Example only! Do we need a 'defaultvalue' attribute somewhere?
-	if (lua_gettop(L) > 0)
-	{
-		defval = luaL_checkinteger(L, 1);
-	}
-	Make_XPLMFlightLoopID(L, defval);
-
+	Make_XPLMFlightLoopID(L, nullptr);
 	return 1;
 }
 
@@ -92,9 +86,11 @@ static float cb_XPLMFlightLoop_f(float inElapsedSinceLastCall, float inElapsedTi
 	lua_State* L = setup_lua_callback(cb, "XPLMFlightLoop_f");
 	if (L)
 	{
-		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "ffir", inElapsedSinceLastCall, inElapsedTimeSinceLastFlightLoop, inCounter, cb->origRefconRegIndex);
-		res = luaL_checknumber(L, 1);
-		lua_pop(L, 1);
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "ddir", inElapsedSinceLastCall, inElapsedTimeSinceLastFlightLoop, inCounter, cb->origRefconRegIndex))
+		{
+			res = luaL_checknumber(L, -1);
+			lua_pop(L, 1);
+		}
 	}
 
 	return res;
@@ -186,7 +182,7 @@ int XLuaRegisterFlightLoopCallback(lua_State* L)
 	CleanupStoredCallbacks(L, refcon_regindex);
 
 	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 1, "XPLMFlightLoop_f", refcon_regindex);
-	float inInterval = luaL_checknumber(L, 2);
+	float inInterval = xlua_checknumber(L, 2);
 
 	XPLMRegisterFlightLoopCallback(cb_XPLMFlightLoop_f, inInterval, cb_capture_0);
 
@@ -211,7 +207,7 @@ int XLuaSetFlightLoopCallbackInterval(lua_State* L)
 	CleanupStoredCallbacks(L, refcon_regindex);
 
 	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 1, "XPLMFlightLoop_f", refcon_regindex);
-	float inInterval = luaL_checknumber(L, 2);
+	float inInterval = xlua_checknumber(L, 2);
 	bool inRelativeToNow = xlua_checkboolean(L, 3);
 
 	XPLMSetFlightLoopCallbackInterval(cb_XPLMFlightLoop_f, inInterval, inRelativeToNow, cb_capture_0);
@@ -256,7 +252,7 @@ int XLuaScheduleFlightLoop(lua_State* L)
 	{
 		inFlightLoopID = xlua_checkuserdata<XPLMFlightLoopID>(L, 1, "Expected userdata<XPLMFlightLoopID>");
 	}
-	float inInterval = luaL_checknumber(L, 2);
+	float inInterval = xlua_checknumber(L, 2);
 	bool inRelativeToNow = xlua_checkboolean(L, 3);
 
 	XPLMScheduleFlightLoop(inFlightLoopID, inInterval, inRelativeToNow);

@@ -10,7 +10,7 @@
 /***************************************************************************
  * XPLMCamera
  ***************************************************************************/
-
+#include <optional>
 #include "XPLMDefs.h"
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
@@ -147,9 +147,11 @@ static int cb_XPLMCameraControl_f(XPLMCameraPosition_t * outCameraPosition, int 
 	lua_State* L = setup_lua_callback(cb, "XPLMCameraControl_f");
 	if (L)
 	{
-		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "?br", outCameraPosition, static_cast<bool>(inIsLosingControl), cb->origRefconRegIndex);
-		res = xlua_checkboolean(L, 1) ? 1 : 0;
-		lua_pop(L, 1);
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "?br", outCameraPosition, static_cast<bool>(inIsLosingControl), cb->origRefconRegIndex))
+		{
+			res = xlua_checkboolean(L, -1) ? 1 : 0;
+			lua_pop(L, 1);
+		}
 	}
 
 	return res;
@@ -157,7 +159,7 @@ static int cb_XPLMCameraControl_f(XPLMCameraPosition_t * outCameraPosition, int 
 
 int XLuaControlCamera(lua_State* L)
 {
-	XPLMCameraControlDuration inHowLong = luaL_checkinteger(L, 1);
+	XPLMCameraControlDuration inHowLong = xlua_checkinteger(L, 1);
 	int refcon_regindex = capture_lua_value(L, 3);
 	CleanupStoredCallbacks(L, refcon_regindex);
 
@@ -181,11 +183,7 @@ int XLuaIsCameraBeingControlled(lua_State* L)
 	int res = XPLMIsCameraBeingControlled(&outCameraControlDuration);
 	lua_pushboolean(L, res);
 
-	lua_createtable(L, 0, 1); // 0 array slots and 1 key-value pairs
-
-	lua_pushstring(L, "outCameraControlDuration");
 	lua_pushinteger(L, outCameraControlDuration);
-	lua_settable(L, -3);
 
 	return 2;
 }
@@ -194,8 +192,6 @@ int XLuaReadCameraPosition(lua_State* L)
 {
 	XPLMCameraPosition_t outCameraPosition;
 	XPLMReadCameraPosition(&outCameraPosition);
-
-	lua_createtable(L, 0, 1); // 0 array slots and 1 key-value pairs
 	XPLMCameraPosition_t_to_table(L, outCameraPosition);
 
 	return 1;

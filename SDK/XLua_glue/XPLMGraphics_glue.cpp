@@ -10,7 +10,7 @@
 /***************************************************************************
  * XPLMGraphics
  ***************************************************************************/
-
+#include <optional>
 #include "XPLMDefs.h"
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
@@ -33,7 +33,7 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 int XLuaSetGraphicsState(lua_State* L)
 {
 	bool inEnableFog = xlua_checkboolean(L, 1);
-	int inNumberTexUnits = luaL_checkinteger(L, 2);
+	int inNumberTexUnits = xlua_checkinteger(L, 2);
 	bool inEnableLighting = xlua_checkboolean(L, 3);
 	bool inEnableAlphaTesting = xlua_checkboolean(L, 4);
 	bool inEnableAlphaBlending = xlua_checkboolean(L, 5);
@@ -47,8 +47,8 @@ int XLuaSetGraphicsState(lua_State* L)
 
 int XLuaBindTexture2d(lua_State* L)
 {
-	int inTextureNum = luaL_checkinteger(L, 1);
-	int inTextureUnit = luaL_checkinteger(L, 2);
+	int inTextureNum = xlua_checkinteger(L, 1);
+	int inTextureUnit = xlua_checkinteger(L, 2);
 
 	XPLMBindTexture2d(inTextureNum, inTextureUnit);
 
@@ -58,22 +58,18 @@ int XLuaBindTexture2d(lua_State* L)
 int XLuaGenerateTextureNumbers(lua_State* L)
 {
 	int outTextureIDs;
-	int inCount = luaL_checkinteger(L, 1);
+	int inCount = xlua_checkinteger(L, 1);
 
 	XPLMGenerateTextureNumbers(&outTextureIDs, inCount);
 
-	lua_createtable(L, 0, 1); // 0 array slots and 1 key-value pairs
-
-	lua_pushstring(L, "outTextureIDs");
 	lua_pushinteger(L, outTextureIDs);
-	lua_settable(L, -3);
 
 	return 1;
 }
 
 int XLuaGetTexture(lua_State* L)
 {
-	XPLMTextureID inTexture = luaL_checkinteger(L, 1);
+	XPLMTextureID inTexture = xlua_checkinteger(L, 1);
 
 	int res = XPLMGetTexture(inTexture);
 	lua_pushinteger(L, res);
@@ -83,9 +79,9 @@ int XLuaGetTexture(lua_State* L)
 
 int XLuaWorldToLocal(lua_State* L)
 {
-	double inLatitude = luaL_checknumber(L, 1);
-	double inLongitude = luaL_checknumber(L, 2);
-	double inAltitude = luaL_checknumber(L, 3);
+	double inLatitude = xlua_checknumber(L, 1);
+	double inLongitude = xlua_checknumber(L, 2);
+	double inAltitude = xlua_checknumber(L, 3);
 	double outX;
 	double outY;
 	double outZ;
@@ -95,14 +91,17 @@ int XLuaWorldToLocal(lua_State* L)
 	lua_createtable(L, 0, 3); // 0 array slots and 3 key-value pairs
 
 	lua_pushstring(L, "outX");
+
 	lua_pushnumber(L, outX);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outY");
+
 	lua_pushnumber(L, outY);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outZ");
+
 	lua_pushnumber(L, outZ);
 	lua_settable(L, -3);
 
@@ -111,9 +110,9 @@ int XLuaWorldToLocal(lua_State* L)
 
 int XLuaLocalToWorld(lua_State* L)
 {
-	double inX = luaL_checknumber(L, 1);
-	double inY = luaL_checknumber(L, 2);
-	double inZ = luaL_checknumber(L, 3);
+	double inX = xlua_checknumber(L, 1);
+	double inY = xlua_checknumber(L, 2);
+	double inZ = xlua_checknumber(L, 3);
 	double outLatitude;
 	double outLongitude;
 	double outAltitude;
@@ -123,14 +122,17 @@ int XLuaLocalToWorld(lua_State* L)
 	lua_createtable(L, 0, 3); // 0 array slots and 3 key-value pairs
 
 	lua_pushstring(L, "outLatitude");
+
 	lua_pushnumber(L, outLatitude);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLongitude");
+
 	lua_pushnumber(L, outLongitude);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outAltitude");
+
 	lua_pushnumber(L, outAltitude);
 	lua_settable(L, -3);
 
@@ -139,10 +141,10 @@ int XLuaLocalToWorld(lua_State* L)
 
 int XLuaDrawTranslucentDarkBox(lua_State* L)
 {
-	int inLeft = luaL_checkinteger(L, 1);
-	int inTop = luaL_checkinteger(L, 2);
-	int inRight = luaL_checkinteger(L, 3);
-	int inBottom = luaL_checkinteger(L, 4);
+	int inLeft = xlua_checkinteger(L, 1);
+	int inTop = xlua_checkinteger(L, 2);
+	int inRight = xlua_checkinteger(L, 3);
+	int inBottom = xlua_checkinteger(L, 4);
 
 	XPLMDrawTranslucentDarkBox(inLeft, inTop, inRight, inBottom);
 
@@ -166,13 +168,13 @@ int XLuaDrawNumber(lua_State* L)
 		lua_pop(L, 1);
 	}
 
-	int inXOffset = luaL_checkinteger(L, 2);
-	int inYOffset = luaL_checkinteger(L, 3);
-	double inValue = luaL_checknumber(L, 4);
-	int inDigits = luaL_checkinteger(L, 5);
-	int inDecimals = luaL_checkinteger(L, 6);
+	int inXOffset = xlua_checkinteger(L, 2);
+	int inYOffset = xlua_checkinteger(L, 3);
+	double inValue = xlua_checknumber(L, 4);
+	int inDigits = xlua_checkinteger(L, 5);
+	int inDecimals = xlua_checkinteger(L, 6);
 	bool inShowSign = xlua_checkboolean(L, 7);
-	XPLMFontID inFontID = luaL_checkinteger(L, 8);
+	XPLMFontID inFontID = xlua_checkinteger(L, 8);
 
 	XPLMDrawNumber(inColorRGB, inXOffset, inYOffset, inValue, inDigits, inDecimals, inShowSign, inFontID);
 	delete[] inColorRGB;
@@ -182,7 +184,7 @@ int XLuaDrawNumber(lua_State* L)
 
 int XLuaGetFontDimensions(lua_State* L)
 {
-	XPLMFontID inFontID = luaL_checkinteger(L, 1);
+	XPLMFontID inFontID = xlua_checkinteger(L, 1);
 	int outCharWidth;
 	int outCharHeight;
 	int outDigitsOnly;
@@ -192,14 +194,17 @@ int XLuaGetFontDimensions(lua_State* L)
 	lua_createtable(L, 0, 3); // 0 array slots and 3 key-value pairs
 
 	lua_pushstring(L, "outCharWidth");
+
 	lua_pushinteger(L, outCharWidth);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outCharHeight");
+
 	lua_pushinteger(L, outCharHeight);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outDigitsOnly");
+
 	lua_pushinteger(L, outDigitsOnly);
 	lua_settable(L, -3);
 
@@ -208,9 +213,9 @@ int XLuaGetFontDimensions(lua_State* L)
 
 int XLuaMeasureString(lua_State* L)
 {
-	XPLMFontID inFontID = luaL_checkinteger(L, 1);
-	const char * inChar = luaL_checkstring(L, 2);
-	int inNumChars = luaL_checkinteger(L, 3);
+	XPLMFontID inFontID = xlua_checkinteger(L, 1);
+	const char * inChar = xlua_checkstring(L, 2);
+	int inNumChars = xlua_checkinteger(L, 3);
 
 	float res = XPLMMeasureString(inFontID, inChar, inNumChars);
 	lua_pushnumber(L, res);

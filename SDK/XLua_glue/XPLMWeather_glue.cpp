@@ -10,7 +10,7 @@
 /***************************************************************************
  * XPLMWeather
  ***************************************************************************/
-
+#include <optional>
 #include "XPLMDefs.h"
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
@@ -564,16 +564,14 @@ int MakeXPLMWeatherInfo_t(lua_State* L)
 
 int XLuaGetWeatherAtLocation(lua_State* L)
 {
-	double latitude = luaL_checknumber(L, 1);
-	double longitude = luaL_checknumber(L, 2);
-	double altitude_m = luaL_checknumber(L, 3);
+	double latitude = xlua_checknumber(L, 1);
+	double longitude = xlua_checknumber(L, 2);
+	double altitude_m = xlua_checknumber(L, 3);
 	XPLMWeatherInfo_t out_info;
 	out_info.structSize = sizeof(XPLMWeatherInfo_t);
 
 	int res = XPLMGetWeatherAtLocation(latitude, longitude, altitude_m, &out_info);
 	lua_pushboolean(L, res);
-
-	lua_createtable(L, 0, 1); // 0 array slots and 1 key-value pairs
 	XPLMWeatherInfo_t_to_table(L, out_info);
 
 	return 2;
@@ -598,9 +596,9 @@ int XLuaEndWeatherUpdate(lua_State* L)
 
 int XLuaSetWeatherAtLocation(lua_State* L)
 {
-	double latitude = luaL_checknumber(L, 1);
-	double longitude = luaL_checknumber(L, 2);
-	double altitude_m = luaL_checknumber(L, 3);
+	double latitude = xlua_checknumber(L, 1);
+	double longitude = xlua_checknumber(L, 2);
+	double altitude_m = xlua_checknumber(L, 3);
 	XPLMWeatherInfo_t in_info = XPLMWeatherInfo_t_from_table(L, 4);
 
 	XPLMSetWeatherAtLocation(latitude, longitude, altitude_m, &in_info);
@@ -610,8 +608,8 @@ int XLuaSetWeatherAtLocation(lua_State* L)
 
 int XLuaEraseWeatherAtLocation(lua_State* L)
 {
-	double latitude = luaL_checknumber(L, 1);
-	double longitude = luaL_checknumber(L, 2);
+	double latitude = xlua_checknumber(L, 1);
+	double longitude = xlua_checknumber(L, 2);
 
 	XPLMEraseWeatherAtLocation(latitude, longitude);
 
@@ -620,7 +618,7 @@ int XLuaEraseWeatherAtLocation(lua_State* L)
 
 int XLuaSetWeatherAtAirport(lua_State* L)
 {
-	const char * airport_id = luaL_checkstring(L, 1);
+	const char * airport_id = xlua_checkstring(L, 1);
 	XPLMWeatherInfo_t in_info = XPLMWeatherInfo_t_from_table(L, 2);
 
 	XPLMSetWeatherAtAirport(airport_id, &in_info);
@@ -630,7 +628,7 @@ int XLuaSetWeatherAtAirport(lua_State* L)
 
 int XLuaEraseWeatherAtAirport(lua_State* L)
 {
-	const char * airport_id = luaL_checkstring(L, 1);
+	const char * airport_id = xlua_checkstring(L, 1);
 
 	XPLMEraseWeatherAtAirport(airport_id);
 
