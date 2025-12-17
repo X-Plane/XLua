@@ -16,6 +16,7 @@
 #include <XPLMProcessing.h>
 #include <assert.h>
 #include <string>
+#include <memory>
 
 #include "log.h"
 
@@ -29,14 +30,14 @@ struct xlua_cmd {
 	XPLMCommandRef		m_cmd				= nullptr;
 	int					m_ours				= 0;
 	xlua_cmd_handler_f	m_pre_handler		= nullptr;
-	notify_cb_t*		m_pre_ref			= nullptr;
+	std::shared_ptr<notify_cb_t> m_pre_ref	= nullptr;
 	xlua_cmd_handler_f	m_main_handler		= nullptr;
-	notify_cb_t*		m_main_ref			= nullptr;
+	std::shared_ptr<notify_cb_t> m_main_ref	= nullptr;
 	xlua_cmd_handler_f	m_post_handler		= nullptr;
-	notify_cb_t*		m_post_ref			= nullptr;
+	std::shared_ptr<notify_cb_t> m_post_ref	= nullptr;
 	float				m_down_time			= 0;
 	xlua_cmd_handler_f	m_filter_handler	= nullptr;
-	notify_cb_t*		m_filter_ref		= nullptr;
+	std::shared_ptr<notify_cb_t> m_filter_ref = nullptr;
 	bool				m_filter_inited		= false;
 	bool				m_filter_allow		= true;
 	bool				m_filter_allow_release = false;
@@ -199,7 +200,7 @@ xlua_cmd * xlua_create_cmd(lua_State* L, const char * name, const char * desc)
 	return nc;
 }
 
-void xlua_cmd_install_handler(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, notify_cb_t* ref)
+void xlua_cmd_install_handler(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, std::shared_ptr<notify_cb_t> ref)
 {
 	if(cmd->m_main_handler != NULL)
 	{
@@ -229,7 +230,7 @@ void xlua_cmd_install_handler(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f h
 	}
 }
 
-void xlua_cmd_install_filter(lua_State* L, xlua_cmd* cmd, xlua_cmd_handler_f handler, notify_cb_t* ref)
+void xlua_cmd_install_filter(lua_State* L, xlua_cmd* cmd, xlua_cmd_handler_f handler, std::shared_ptr<notify_cb_t> ref)
 {
 	if (cmd->m_filter_handler != nullptr)
 	{
@@ -243,7 +244,7 @@ void xlua_cmd_install_filter(lua_State* L, xlua_cmd* cmd, xlua_cmd_handler_f han
 	XPLMRegisterCommandHandler(cmd->m_cmd, xlua_std_pre_filter, 1, static_cast<void*>(cmd));
 }
 
-void xlua_cmd_install_pre_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, notify_cb_t* ref)
+void xlua_cmd_install_pre_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, std::shared_ptr<notify_cb_t> ref)
 {
 	if(cmd->m_pre_handler != NULL)
 	{
@@ -256,7 +257,7 @@ void xlua_cmd_install_pre_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler
 	XPLMRegisterCommandHandler(cmd->m_cmd, xlua_std_pre_handler, 1, static_cast<void*>(cmd));
 }
 
-void xlua_cmd_install_post_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, notify_cb_t* ref)
+void xlua_cmd_install_post_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, std::shared_ptr<notify_cb_t> ref)
 {
 	if(cmd->m_post_handler != NULL)
 	{

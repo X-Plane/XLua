@@ -9,47 +9,88 @@
 //	See LICENSE.txt for the full terms of the license.
 
 #include <cstdio>
-#include "xptimers.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <list>
 #include <XPLMProcessing.h>
 #include <XPLMDataAccess.h>
+#include <memory>
 
+#include "xptimers.h"
+#include "module.h"
 #include "log.h"
+#include "xpfuncs.h"
 
-struct xlua_timer {
-	xlua_timer *	m_next = nullptr;
-	xlua_timer_f 	m_func;
-	void *			m_ref;
-	
-	double			m_next_fire_time;
-	double			m_repeat_interval;	// -1 to stop after 1
-};
-
-static xlua_timer * s_timers = nullptr;
-
-xlua_timer * xlua_create_timer(lua_State *L, xlua_timer_f func, void * ref)
+#pragma optimize("", off)
+class notify_cb_t;
+class xlua_timer
 {
-	for(xlua_timer * t = s_timers; t; t = t->m_next)
-	if(t->m_func == func && t->m_ref == ref)
+public:
+	xlua_timer() = delete;
+	xlua_timer(xlua_timer_f fn, std::shared_ptr<notify_cb_t> cb) : m_func(fn), m_ref(cb) {}
+
+	xlua_timer_f 	m_func = nullptr;
+	std::shared_ptr<notify_cb_t>	m_ref = nullptr;
+	
+	double			m_next_fire_time = -1;
+	double			m_repeat_interval = -1;	// -1 to stop after 1 timeout
+};
+#pragma optimize("", on)
+static std::list<xlua_timer*> s_timers;
+
+xlua_timer* xlua_find_timer(lua_State* L, xlua_timer_f func, std::shared_ptr<notify_cb_t> ref)
+{
+	if (!ref)
 	{
-		log_message(L, "ERROR: timer already exists.");
-		return NULL;
+		return nullptr;
 	}
 
-	xlua_timer * nt = new xlua_timer;
-	nt->m_next = s_timers;
-	s_timers = nt;
-	nt->m_next_fire_time = -1.0;
-	nt->m_repeat_interval = -1.0;
-	nt->m_func = func;
-	nt->m_ref = ref;
+	for (auto& t : s_timers)
+	{
+		if (t->m_func == func)
+		{
+			lua_rawgeti(L, LUA_REGISTRYINDEX, ref->get_slot());
+			lua_rawgeti(L, LUA_REGISTRYINDEX, t->m_ref->get_slot());
+			bool match = lua_equal(L, -1, -2);
+			lua_pop(L, 2);
+
+			if (match)
+			{
+				return t;
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+xlua_timer* xlua_create_timer(lua_State *L, xlua_timer_f func, std::shared_ptr<notify_cb_t> ref)
+{
+	if (xlua_find_timer(L, func, ref) != nullptr)
+	{
+		log_message(L, "ERROR: timer already exists.");
+		return nullptr;
+	}
+
+	xlua_timer* nt = s_timers.emplace_back(new xlua_timer(func, ref));
+
+	if (s_timers.size() > 1000)
+	{
+		luaL_error(L, "%s has created more than 1000 timers. Something appears to be wrong.",
+				   module::module_from_interp(L)->get_script_path().c_str());
+	}
 	return nt;
 }
 
-void xlua_run_timer(xlua_timer * t, double delay, double repeat)
+void xlua_run_timer(lua_State* L, xlua_timer * t, double delay, double repeat)
 {
+	if (std::find(s_timers.cbegin(), s_timers.cend(), t) == s_timers.cend())
+	{
+		log_message(L, "ERROR: unknown timer was requested to run.");
+		return;
+	}
+
 	t->m_repeat_interval = repeat;
 	if(delay == -1.0)
 		t->m_next_fire_time = delay;
@@ -57,18 +98,37 @@ void xlua_run_timer(xlua_timer * t, double delay, double repeat)
 		t->m_next_fire_time = xlua_get_simulated_time() + delay;
 }
 
-int xlua_is_timer_scheduled(xlua_timer * t)
+int xlua_is_timer_scheduled(lua_State* L, xlua_timer* t)
 {
-	if(t == NULL)
+	if(t == nullptr)
 		return 0;
-	if(t->m_next_fire_time == -1.0)
+
+	if (std::find(s_timers.cbegin(), s_timers.cend(), t) == s_timers.cend())
+	{
+		log_message(L, "ERROR: unknown timer schedule was queried.");
 		return 0;
-	return 1;	
+	}
+
+	if (t->m_next_fire_time == -1.0)
+		return 0;
+
+	return 1;
 }
 
-double xlua_get_timer_remaining(xlua_timer* t)
+double xlua_get_timer_remaining(lua_State* L, xlua_timer* t)
 {
 	if (t == nullptr || t->m_next_fire_time < 0)
+	{
+		return -1.0;
+	}
+
+	if (std::find(s_timers.cbegin(), s_timers.cend(), t) == s_timers.cend())
+	{
+		log_message(L, "ERROR: unknown timer remaining was queried.");
+		return -1.0;
+	}
+
+	if (t->m_next_fire_time < 0)
 	{
 		return -1.0;
 	}
@@ -78,29 +138,41 @@ double xlua_get_timer_remaining(xlua_timer* t)
 
 void xlua_do_timers_for_time(double now)
 {
-	for(xlua_timer * t = s_timers; t; t = t->m_next)
-	if(t->m_next_fire_time != -1.0 && t->m_next_fire_time <= now)
+	for (auto ti = s_timers.begin(); ti != s_timers.end();)
 	{
-		if(t->m_repeat_interval == -1.0)
-			t->m_next_fire_time = -1.0;
-		else
-			t->m_next_fire_time += t->m_repeat_interval;
+		xlua_timer* t = *ti;
 
-		// Clear the timer details _before_ the callback so that subsequent checks on expiry time or scheduling are more appropriate.
-		t->m_func(t->m_ref);
+		if (t->m_next_fire_time >= 0 && t->m_next_fire_time <= now)
+		{
+			// Clear the timer details _before_ the callback so that subsequent checks on expiry time or scheduling are more appropriate.
+			if (t->m_repeat_interval < 0)
+				t->m_next_fire_time = -1.0;
+			else
+				t->m_next_fire_time += t->m_repeat_interval;
+
+			t->m_func(t->m_ref);
+		}
+
+		if (t->m_next_fire_time < 0)
+		{
+			// We're not being run again so unwrap the function, allowing lua to garbage collect.
+			delete t;
+			ti = s_timers.erase(ti);
+		}
+		else
+		{
+			++ti;
+		}
 	}
 }
 
 void xlua_timer_cleanup()
 {
-	while(s_timers)
+	while (!s_timers.empty())
 	{
-		xlua_timer * k = s_timers;
-		s_timers = s_timers->m_next;
-		delete k;
+		delete s_timers.back();
+		s_timers.pop_back();
 	}
-
-	assert(s_timers == nullptr);
 }
 
 

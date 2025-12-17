@@ -11,15 +11,22 @@
 #ifndef xptimers_h
 #define xptimers_h
 
+extern "C" {
 #include "lua.h"
+}
 
-typedef void (* xlua_timer_f)(void * ref);
-struct xlua_timer;
+#include <memory>
 
-xlua_timer *		xlua_create_timer(lua_State* L, xlua_timer_f func, void * ref);
-void				xlua_run_timer(xlua_timer * t, double delay, double repeat);
-int					xlua_is_timer_scheduled(xlua_timer * t);
-double				xlua_get_timer_remaining(xlua_timer* t);
+class xlua_timer;
+class notify_cb_t;
+
+typedef void (* xlua_timer_f)(std::shared_ptr<notify_cb_t> ref);
+
+xlua_timer*			xlua_find_timer(lua_State* L, xlua_timer_f func, std::shared_ptr<notify_cb_t> ref);
+xlua_timer*			xlua_create_timer(lua_State* L, xlua_timer_f func, std::shared_ptr<notify_cb_t> ref);
+void				xlua_run_timer(lua_State* L, xlua_timer* t, double delay, double repeat);
+int					xlua_is_timer_scheduled(lua_State* L, xlua_timer* t);
+double				xlua_get_timer_remaining(lua_State* L, xlua_timer* t);
 
 void xlua_do_timers_for_time(double now);
 void xlua_timer_cleanup();

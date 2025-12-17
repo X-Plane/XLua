@@ -18,6 +18,7 @@
 #include <assert.h>
 #include <algorithm>
 #include <iterator>
+#include <memory>
 
 #include "log.h"
 
@@ -33,6 +34,7 @@ using std::vector;
 //#define TRACE_DATAREFS log_message(L,__VA_ARGS__)
 #define TRACE_DATAREFS(...)
 
+class notify_cb_t;
 
 struct	xlua_dref {
 	xlua_dref *				m_next;
@@ -42,7 +44,7 @@ struct	xlua_dref {
 	XPLMDataTypeID			m_types;
 	int						m_ours;		// 1 if we made, 0 if system
 	xlua_dref_notify_f		m_notify_func;
-	void *					m_notify_ref;
+	std::shared_ptr<notify_cb_t> m_notify_ref;
 	
 	// IF we made the dataref, this is where our storage is!
 	double					m_number_storage;
@@ -313,7 +315,7 @@ xlua_dref *		xlua_find_dref(const char * name)
 	return d;
 }
 
-xlua_dref *		xlua_create_dref(lua_State* L, const char * name, xlua_dref_type type, int dim, int writable, xlua_dref_notify_f func, void * ref)
+xlua_dref* xlua_create_dref(lua_State* L, const char * name, xlua_dref_type type, int dim, int writable, xlua_dref_notify_f func, std::shared_ptr<notify_cb_t> ref)
 {
 	assert(type != xlua_none);
 	assert(name);

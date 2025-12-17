@@ -41,4 +41,18 @@ void xlua_pushuserdata(lua_State * state, T data)
 void InitScripts(void);
 void CleanupScripts(void);
 
+class notify_cb_t
+{
+public:
+	notify_cb_t() = delete;
+	notify_cb_t(lua_State* inL, int s) : L(inL), slot(s) {}
+	~notify_cb_t();
+
+	int get_slot(void) const { return slot; }
+	lua_State* L = nullptr;
+
+private:
+	int				slot = 0;
+};
+
 #endif /* xpfuncs_h */
