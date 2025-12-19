@@ -27,6 +27,9 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
+//
+// Struct C/Lua conversion helpers
+//
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
 XPLMWeatherInfoClouds_t XPLMWeatherInfoClouds_t_from_table(lua_State* L, int stackpos);
@@ -35,6 +38,12 @@ XPLMWeatherInfoWinds_t XPLMWeatherInfoWinds_t_from_table(lua_State* L, int stack
 void XPLMWeatherInfoWinds_t_to_table(lua_State* L, XPLMWeatherInfoWinds_t const& src);
 XPLMWeatherInfo_t XPLMWeatherInfo_t_from_table(lua_State* L, int stackpos);
 void XPLMWeatherInfo_t_to_table(lua_State* L, XPLMWeatherInfo_t const& src);
+
+//
+// Typedefs
+//
+XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
+
 /*
  * XPLMWeatherInfoWinds_t
  * 
@@ -561,6 +570,17 @@ int MakeXPLMWeatherInfo_t(lua_State* L)
  * END Creation and transfer between C struct and Lua table
  *
  */
+
+int XLuaGetMETARForAirport(lua_State* L)
+{
+	const char * airport_id = xlua_checkstring(L, 1);
+	XPLMFixedString150_t outMETAR;
+
+	XPLMGetMETARForAirport(airport_id, &outMETAR);
+	XPLMFixedString150_t_to_table(L, outMETAR);
+
+	return 1;
+}
 
 int XLuaGetWeatherAtLocation(lua_State* L)
 {

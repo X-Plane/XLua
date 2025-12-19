@@ -27,10 +27,20 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
+//
+// Struct C/Lua conversion helpers
+//
 XPLMDataRefInfo_t XPLMDataRefInfo_t_from_table(lua_State* L, int stackpos);
 void XPLMDataRefInfo_t_to_table(lua_State* L, XPLMDataRefInfo_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+
+//
+// Typedefs
+//
+XPLMDataRef* Make_XPLMDataRef(lua_State* L, XPLMDataRef const& init);
+XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
+
 
 XPLMDataRef* Make_XPLMDataRef(lua_State* L, XPLMDataRef const& init)
 {
@@ -85,6 +95,54 @@ int XLuaCountDataRefs(lua_State* L)
 	lua_pushinteger(L, res);
 
 	return 1;
+}
+
+int XLuaGetDataRefsByIndex(lua_State* L)
+{
+	int offset = xlua_checkinteger(L, 1);
+	int count = xlua_checkinteger(L, 2);
+
+	luaL_checktype(L, 3, LUA_TTABLE);
+	size_t const outDataRefs_len = lua_objlen(L, 3);
+	if (outDataRefs_len == 0)
+	{
+		return luaL_error(L, "Table outDataRefs must not be empty.");
+	}
+
+	if (offset < 0)
+	{
+		return luaL_error(L, "Table outDataRefs offset (offset) must be at least 0.");
+	}
+	if (count > outDataRefs_len)
+	{
+		return luaL_error(L, "Table outDataRefs must be at least %d elements.", count);
+	}
+
+	XPLMDataRef* outDataRefs = (count > 0 ? new XPLMDataRef[count] : nullptr);
+	if (outDataRefs != nullptr)
+	{
+		for (size_t i = 0; i < count; ++i)
+		{
+			lua_rawgeti(L, 3, i + 1);
+			outDataRefs[i] = xlua_checkuserdata<XPLMDataRef>(L, -1, "Expected XPLMDataRef.");
+			lua_pop(L, 1);
+		}
+	}
+
+	XPLMGetDataRefsByIndex(offset, count, outDataRefs);
+
+	if (outDataRefs != nullptr)
+	{
+		for (size_t i = 0; i < count; ++i)
+		{
+			xlua_pushuserdata<XPLMDataRef>(L, outDataRefs[i]);
+			lua_rawseti(L, 3, i + 1);
+		}
+
+		delete[] outDataRefs;
+	}
+
+	return 0;
 }
 /*
  * XPLMDataRefInfo_t
@@ -331,16 +389,90 @@ int XLuaGetDatavi(lua_State* L)
 	{
 		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
 	}
-	int outValues;
-	int inOffset = xlua_checkinteger(L, 2);
-	int inMax = xlua_checkinteger(L, 3);
 
-	int res = XPLMGetDatavi(inDataRef, &outValues, inOffset, inMax);
+	luaL_checktype(L, 2, LUA_TTABLE);
+	size_t const outValues_len = lua_objlen(L, 2);
+	if (outValues_len == 0)
+	{
+		return luaL_error(L, "Table outValues must not be empty.");
+	}
+	int inOffset = xlua_checkinteger(L, 3);
+	int inMax = xlua_checkinteger(L, 4);
+
+	if (inOffset < 0)
+	{
+		return luaL_error(L, "Table outValues offset (inOffset) must be at least 0.");
+	}
+	if (inMax > outValues_len)
+	{
+		return luaL_error(L, "Table outValues must be at least %d elements.", inMax);
+	}
+
+	int* outValues = (inMax > 0 ? new int[inMax] : nullptr);
+	if (outValues != nullptr)
+	{
+		for (size_t i = 0; i < inMax; ++i)
+		{
+			lua_rawgeti(L, 2, i + 1);
+			outValues[i] = xlua_checkinteger(L, -1);
+			lua_pop(L, 1);
+		}
+	}
+
+	int res = XPLMGetDatavi(inDataRef, outValues, inOffset, inMax);
 	lua_pushinteger(L, res);
 
-	lua_pushinteger(L, outValues);
+	if (outValues != nullptr)
+	{
+		for (size_t i = 0; i < inMax; ++i)
+		{
+			xlua_pushinteger(L, outValues[i]);
+			lua_rawseti(L, 2, i + 1);
+		}
 
-	return 2;
+		delete[] outValues;
+	}
+
+	return 1;
+}
+
+int XLuaSetDatavi(lua_State* L)
+{
+	XPLMDataRef inDataRef = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+	}
+	luaL_checktype(L, 2, LUA_TTABLE);
+	size_t const inValues_len = lua_objlen(L, 2);
+	if (inValues_len == 0)
+	{
+		luaL_argerror(L, 2, "Array 'inValues' must have at least one element.\n");
+		return 0;
+	}
+	int* inValues = new int[inValues_len];
+	for (size_t i = 0; i < inValues_len; ++i)
+	{
+		lua_rawgeti(L, 2, i + 1);
+		inValues[i] = xlua_checkinteger(L, -1);
+		lua_pop(L, 1);
+	}
+	int inoffset = xlua_checkinteger(L, 3);
+	int inCount = xlua_checkinteger(L, 4);
+
+	if (inoffset < 0)
+	{
+		return luaL_error(L, "Table inValues offset (inoffset) must be at least 0.");
+	}
+	if (inCount > inValues_len)
+	{
+		return luaL_error(L, "Table inValues must be at least %d elements.", inCount);
+	}
+
+	XPLMSetDatavi(inDataRef, inValues, inoffset, inCount);
+	delete[] inValues;
+
+	return 0;
 }
 
 int XLuaGetDatavf(lua_State* L)
@@ -350,16 +482,183 @@ int XLuaGetDatavf(lua_State* L)
 	{
 		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
 	}
-	float outValues;
-	int inOffset = xlua_checkinteger(L, 2);
-	int inMax = xlua_checkinteger(L, 3);
 
-	int res = XPLMGetDatavf(inDataRef, &outValues, inOffset, inMax);
+	luaL_checktype(L, 2, LUA_TTABLE);
+	size_t const outValues_len = lua_objlen(L, 2);
+	if (outValues_len == 0)
+	{
+		return luaL_error(L, "Table outValues must not be empty.");
+	}
+	int inOffset = xlua_checkinteger(L, 3);
+	int inMax = xlua_checkinteger(L, 4);
+
+	if (inOffset < 0)
+	{
+		return luaL_error(L, "Table outValues offset (inOffset) must be at least 0.");
+	}
+	if (inMax > outValues_len)
+	{
+		return luaL_error(L, "Table outValues must be at least %d elements.", inMax);
+	}
+
+	float* outValues = (inMax > 0 ? new float[inMax] : nullptr);
+	if (outValues != nullptr)
+	{
+		for (size_t i = 0; i < inMax; ++i)
+		{
+			lua_rawgeti(L, 2, i + 1);
+			outValues[i] = xlua_checknumber(L, -1);
+			lua_pop(L, 1);
+		}
+	}
+
+	int res = XPLMGetDatavf(inDataRef, outValues, inOffset, inMax);
 	lua_pushinteger(L, res);
 
-	lua_pushnumber(L, outValues);
+	if (outValues != nullptr)
+	{
+		for (size_t i = 0; i < inMax; ++i)
+		{
+			xlua_pushnumber(L, outValues[i]);
+			lua_rawseti(L, 2, i + 1);
+		}
 
-	return 2;
+		delete[] outValues;
+	}
+
+	return 1;
+}
+
+int XLuaSetDatavf(lua_State* L)
+{
+	XPLMDataRef inDataRef = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+	}
+	luaL_checktype(L, 2, LUA_TTABLE);
+	size_t const inValues_len = lua_objlen(L, 2);
+	if (inValues_len == 0)
+	{
+		luaL_argerror(L, 2, "Array 'inValues' must have at least one element.\n");
+		return 0;
+	}
+	float* inValues = new float[inValues_len];
+	for (size_t i = 0; i < inValues_len; ++i)
+	{
+		lua_rawgeti(L, 2, i + 1);
+		inValues[i] = xlua_checknumber(L, -1);
+		lua_pop(L, 1);
+	}
+	int inoffset = xlua_checkinteger(L, 3);
+	int inCount = xlua_checkinteger(L, 4);
+
+	if (inoffset < 0)
+	{
+		return luaL_error(L, "Table inValues offset (inoffset) must be at least 0.");
+	}
+	if (inCount > inValues_len)
+	{
+		return luaL_error(L, "Table inValues must be at least %d elements.", inCount);
+	}
+
+	XPLMSetDatavf(inDataRef, inValues, inoffset, inCount);
+	delete[] inValues;
+
+	return 0;
+}
+
+int XLuaGetDatab(lua_State* L)
+{
+	XPLMDataRef inDataRef = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+	}
+
+	luaL_checktype(L, 2, LUA_TTABLE);
+	size_t const outValue_len = lua_objlen(L, 2);
+	if (outValue_len == 0)
+	{
+		return luaL_error(L, "Table outValue must not be empty.");
+	}
+	int inOffset = xlua_checkinteger(L, 3);
+	int inMaxBytes = xlua_checkinteger(L, 4);
+
+	if (inOffset < 0)
+	{
+		return luaL_error(L, "Table outValue offset (inOffset) must be at least 0.");
+	}
+	if (inMaxBytes > outValue_len)
+	{
+		return luaL_error(L, "Table outValue must be at least %d elements.", inMaxBytes);
+	}
+
+	uint8_t* outValue = (inMaxBytes > 0 ? new uint8_t[inMaxBytes] : nullptr);
+	if (outValue != nullptr)
+	{
+		for (size_t i = 0; i < inMaxBytes; ++i)
+		{
+			lua_rawgeti(L, 2, i + 1);
+			outValue[i] = xlua_checkbyte(L, -1);
+			lua_pop(L, 1);
+		}
+	}
+
+	int res = XPLMGetDatab(inDataRef, outValue, inOffset, inMaxBytes);
+	lua_pushinteger(L, res);
+
+	if (outValue != nullptr)
+	{
+		for (size_t i = 0; i < inMaxBytes; ++i)
+		{
+			xlua_pushbyte(L, outValue[i]);
+			lua_rawseti(L, 2, i + 1);
+		}
+
+		delete[] outValue;
+	}
+
+	return 1;
+}
+
+int XLuaSetDatab(lua_State* L)
+{
+	XPLMDataRef inDataRef = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+	}
+	luaL_checktype(L, 2, LUA_TTABLE);
+	size_t const inValue_len = lua_objlen(L, 2);
+	if (inValue_len == 0)
+	{
+		luaL_argerror(L, 2, "Array 'inValue' must have at least one element.\n");
+		return 0;
+	}
+	uint8_t* inValue = new uint8_t[inValue_len];
+	for (size_t i = 0; i < inValue_len; ++i)
+	{
+		lua_rawgeti(L, 2, i + 1);
+		inValue[i] = xlua_checkbyte(L, -1);
+		lua_pop(L, 1);
+	}
+	int inOffset = xlua_checkinteger(L, 3);
+	int inLength = xlua_checkinteger(L, 4);
+
+	if (inOffset < 0)
+	{
+		return luaL_error(L, "Table inValue offset (inOffset) must be at least 0.");
+	}
+	if (inLength > inValue_len)
+	{
+		return luaL_error(L, "Table inValue must be at least %d elements.", inLength);
+	}
+
+	XPLMSetDatab(inDataRef, inValue, inOffset, inLength);
+	delete[] inValue;
+
+	return 0;
 }
 
 static int cb_XPLMGetDatai_f(void* inRefcon)

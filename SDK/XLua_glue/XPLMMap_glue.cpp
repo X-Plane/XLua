@@ -27,10 +27,21 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
+//
+// Struct C/Lua conversion helpers
+//
 XPLMCreateMapLayer_t XPLMCreateMapLayer_t_from_table(lua_State* L, int stackpos);
 void XPLMCreateMapLayer_t_to_table(lua_State* L, XPLMCreateMapLayer_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+
+//
+// Typedefs
+//
+XPLMMapLayerID* Make_XPLMMapLayerID(lua_State* L, XPLMMapLayerID const& init);
+XPLMMapProjectionID* Make_XPLMMapProjectionID(lua_State* L, XPLMMapProjectionID const& init);
+XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
+
 
 XPLMMapLayerID* Make_XPLMMapLayerID(lua_State* L, XPLMMapLayerID const& init)
 {

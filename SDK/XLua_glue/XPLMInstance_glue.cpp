@@ -28,6 +28,9 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
+//
+// Struct C/Lua conversion helpers
+//
 XPLMDrawInfoDouble_t XPLMDrawInfoDouble_t_from_table(lua_State* L, int stackpos);
 void XPLMDrawInfoDouble_t_to_table(lua_State* L, XPLMDrawInfoDouble_t const& src);
 XPLMDrawInfo_t XPLMDrawInfo_t_from_table(lua_State* L, int stackpos);
@@ -36,6 +39,15 @@ XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos)
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
 XPLMProbeInfo_t XPLMProbeInfo_t_from_table(lua_State* L, int stackpos);
 void XPLMProbeInfo_t_to_table(lua_State* L, XPLMProbeInfo_t const& src);
+
+//
+// Typedefs
+//
+XPLMInstanceRef* Make_XPLMInstanceRef(lua_State* L, XPLMInstanceRef const& init);
+XPLMObjectRef* Make_XPLMObjectRef(lua_State* L, XPLMObjectRef const& init);
+XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
+XPLMProbeRef* Make_XPLMProbeRef(lua_State* L, XPLMProbeRef const& init);
+
 
 XPLMInstanceRef* Make_XPLMInstanceRef(lua_State* L, XPLMInstanceRef const& init)
 {
@@ -119,20 +131,19 @@ int XLuaInstanceSetPosition(lua_State* L)
 	}
 	XPLMDrawInfo_t new_position = XPLMDrawInfo_t_from_table(L, 2);
 	luaL_checktype(L, 3, LUA_TTABLE);
-	size_t data_len = lua_objlen(L, 3);
+	size_t const data_len = lua_objlen(L, 3);
 	if (data_len == 0)
 	{
 		luaL_argerror(L, 3, "Array 'data' must have at least one element.\n");
 		return 0;
 	}
 	float* data = new float[data_len];
-	for (size_t i = 1; i <= data_len; ++i)
+	for (size_t i = 0; i < data_len; ++i)
 	{
-		lua_rawgeti(L, 3, i);
-		data[i] = lua_tonumber(L, -1);
+		lua_rawgeti(L, 3, i + 1);
+		data[i] = xlua_checknumber(L, -1);
 		lua_pop(L, 1);
 	}
-
 
 	XPLMInstanceSetPosition(instance, &new_position, data);
 	delete[] data;
@@ -149,20 +160,19 @@ int XLuaInstanceSetPositionDouble(lua_State* L)
 	}
 	XPLMDrawInfoDouble_t new_position = XPLMDrawInfoDouble_t_from_table(L, 2);
 	luaL_checktype(L, 3, LUA_TTABLE);
-	size_t data_len = lua_objlen(L, 3);
+	size_t const data_len = lua_objlen(L, 3);
 	if (data_len == 0)
 	{
 		luaL_argerror(L, 3, "Array 'data' must have at least one element.\n");
 		return 0;
 	}
 	float* data = new float[data_len];
-	for (size_t i = 1; i <= data_len; ++i)
+	for (size_t i = 0; i < data_len; ++i)
 	{
-		lua_rawgeti(L, 3, i);
-		data[i] = lua_tonumber(L, -1);
+		lua_rawgeti(L, 3, i + 1);
+		data[i] = xlua_checknumber(L, -1);
 		lua_pop(L, 1);
 	}
-
 
 	XPLMInstanceSetPositionDouble(instance, &new_position, data);
 	delete[] data;

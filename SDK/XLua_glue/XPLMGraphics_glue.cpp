@@ -27,8 +27,17 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
+//
+// Struct C/Lua conversion helpers
+//
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+
+//
+// Typedefs
+//
+XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
+
 
 int XLuaSetGraphicsState(lua_State* L)
 {
@@ -151,23 +160,50 @@ int XLuaDrawTranslucentDarkBox(lua_State* L)
 	return 0;
 }
 
-int XLuaDrawNumber(lua_State* L)
+int XLuaDrawString(lua_State* L)
 {
 	luaL_checktype(L, 1, LUA_TTABLE);
-	size_t inColorRGB_len = lua_objlen(L, 1);
+	size_t const inColorRGB_len = lua_objlen(L, 1);
 	if (inColorRGB_len != 3)
 	{
 		luaL_argerror(L, 1, "Array 'inColorRGB' must have 3 elements.\n");
 		return 0;
 	}
 	float* inColorRGB = new float[inColorRGB_len];
-	for (size_t i = 1; i <= inColorRGB_len; ++i)
+	for (size_t i = 0; i < inColorRGB_len; ++i)
 	{
-		lua_rawgeti(L, 1, i);
-		inColorRGB[i] = lua_tonumber(L, -1);
+		lua_rawgeti(L, 1, i + 1);
+		inColorRGB[i] = xlua_checknumber(L, -1);
 		lua_pop(L, 1);
 	}
+	int inXOffset = xlua_checkinteger(L, 2);
+	int inYOffset = xlua_checkinteger(L, 3);
+	const char * inChar = xlua_checkstring(L, 4);
+	std::optional<int> inWordWrapWidth = xlua_checkoptint(L, 5);
+	XPLMFontID inFontID = xlua_checkinteger(L, 6);
 
+	XPLMDrawString(inColorRGB, inXOffset, inYOffset, inChar, (inWordWrapWidth ? &*inWordWrapWidth : nullptr), inFontID);
+	delete[] inColorRGB;
+
+	return 0;
+}
+
+int XLuaDrawNumber(lua_State* L)
+{
+	luaL_checktype(L, 1, LUA_TTABLE);
+	size_t const inColorRGB_len = lua_objlen(L, 1);
+	if (inColorRGB_len != 3)
+	{
+		luaL_argerror(L, 1, "Array 'inColorRGB' must have 3 elements.\n");
+		return 0;
+	}
+	float* inColorRGB = new float[inColorRGB_len];
+	for (size_t i = 0; i < inColorRGB_len; ++i)
+	{
+		lua_rawgeti(L, 1, i + 1);
+		inColorRGB[i] = xlua_checknumber(L, -1);
+		lua_pop(L, 1);
+	}
 	int inXOffset = xlua_checkinteger(L, 2);
 	int inYOffset = xlua_checkinteger(L, 3);
 	double inValue = xlua_checknumber(L, 4);

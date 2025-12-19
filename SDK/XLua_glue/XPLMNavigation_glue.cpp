@@ -27,8 +27,18 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
+//
+// Struct C/Lua conversion helpers
+//
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+
+//
+// Typedefs
+//
+XPLMNavRef* Make_XPLMNavRef(lua_State* L, XPLMNavRef const& init);
+XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
+
 
 XPLMNavRef* Make_XPLMNavRef(lua_State* L, XPLMNavRef const& init)
 {
@@ -306,9 +316,9 @@ int XLuaSetFMSEntryInfo(lua_State* L)
 	{
 		inRef = xlua_checkuserdata<XPLMNavRef>(L, 2, "Expected userdata<XPLMNavRef>");
 	}
-	int inAltitude = xlua_checkinteger(L, 3);
+	int inAltitudeFt = xlua_checkinteger(L, 3);
 
-	XPLMSetFMSEntryInfo(inIndex, inRef, inAltitude);
+	XPLMSetFMSEntryInfo(inIndex, inRef, inAltitudeFt);
 
 	return 0;
 }
@@ -318,9 +328,9 @@ int XLuaSetFMSEntryLatLon(lua_State* L)
 	int inIndex = xlua_checkinteger(L, 1);
 	float inLat = xlua_checknumber(L, 2);
 	float inLon = xlua_checknumber(L, 3);
-	int inAltitude = xlua_checkinteger(L, 4);
+	int inAltitudeFt = xlua_checkinteger(L, 4);
 
-	XPLMSetFMSEntryLatLon(inIndex, inLat, inLon, inAltitude);
+	XPLMSetFMSEntryLatLon(inIndex, inLat, inLon, inAltitudeFt);
 
 	return 0;
 }
@@ -451,9 +461,9 @@ int XLuaSetFMSFlightPlanEntryInfo(lua_State* L)
 	{
 		inRef = xlua_checkuserdata<XPLMNavRef>(L, 3, "Expected userdata<XPLMNavRef>");
 	}
-	int inAltitude = xlua_checkinteger(L, 4);
+	int inAltitudeFt = xlua_checkinteger(L, 4);
 
-	XPLMSetFMSFlightPlanEntryInfo(inFlightPlan, inIndex, inRef, inAltitude);
+	XPLMSetFMSFlightPlanEntryInfo(inFlightPlan, inIndex, inRef, inAltitudeFt);
 
 	return 0;
 }
@@ -464,9 +474,9 @@ int XLuaSetFMSFlightPlanEntryLatLon(lua_State* L)
 	int inIndex = xlua_checkinteger(L, 2);
 	float inLat = xlua_checknumber(L, 3);
 	float inLon = xlua_checknumber(L, 4);
-	int inAltitude = xlua_checkinteger(L, 5);
+	int inAltitudeFt = xlua_checkinteger(L, 5);
 
-	XPLMSetFMSFlightPlanEntryLatLon(inFlightPlan, inIndex, inLat, inLon, inAltitude);
+	XPLMSetFMSFlightPlanEntryLatLon(inFlightPlan, inIndex, inLat, inLon, inAltitudeFt);
 
 	return 0;
 }
@@ -477,11 +487,11 @@ int XLuaSetFMSFlightPlanEntryLatLonWithId(lua_State* L)
 	int inIndex = xlua_checkinteger(L, 2);
 	float inLat = xlua_checknumber(L, 3);
 	float inLon = xlua_checknumber(L, 4);
-	int inAltitude = xlua_checkinteger(L, 5);
+	int inAltitudeFt = xlua_checkinteger(L, 5);
 	const char* inId = xlua_checkstring(L, 6);
 	unsigned int inIdLength = xlua_checkinteger(L, 7);
 
-	XPLMSetFMSFlightPlanEntryLatLonWithId(inFlightPlan, inIndex, inLat, inLon, inAltitude, inId, inIdLength);
+	XPLMSetFMSFlightPlanEntryLatLonWithId(inFlightPlan, inIndex, inLat, inLon, inAltitudeFt, inId, inIdLength);
 
 	return 0;
 }

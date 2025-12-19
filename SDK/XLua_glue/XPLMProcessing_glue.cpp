@@ -27,10 +27,20 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
+//
+// Struct C/Lua conversion helpers
+//
 XPLMCreateFlightLoop_t XPLMCreateFlightLoop_t_from_table(lua_State* L, int stackpos);
 void XPLMCreateFlightLoop_t_to_table(lua_State* L, XPLMCreateFlightLoop_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+
+//
+// Typedefs
+//
+XPLMFlightLoopID* Make_XPLMFlightLoopID(lua_State* L, XPLMFlightLoopID const& init);
+XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
+
 
 XPLMFlightLoopID* Make_XPLMFlightLoopID(lua_State* L, XPLMFlightLoopID const& init)
 {

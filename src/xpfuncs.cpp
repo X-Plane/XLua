@@ -877,27 +877,6 @@ void CleanupStoredCallbacks(lua_State* L, int keyIndexInRegistry)
 	}
 }
 
-bool xlua_checkboolean(lua_State* L, int narg)
-{
-	luaL_checktype(L, narg, LUA_TBOOLEAN);
-	return lua_toboolean(L, narg);
-}
-
-int xlua_checkinteger(lua_State* L, int narg)
-{
-	return luaL_checkinteger(L, narg);
-}
-
-lua_Number xlua_checknumber(lua_State* L, int narg)
-{ 
-	return luaL_checknumber(L, narg);
-}
-
-char const* xlua_checkstring(lua_State* L, int narg)
-{
-	return luaL_checkstring(L, narg);
-}
-
 std::optional<std::string> xlua_checkoptstring(lua_State* L, int narg)
 {
 	if (lua_isnil(L, narg))

@@ -27,6 +27,9 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
+//
+// Struct C/Lua conversion helpers
+//
 XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos);
 void XPLMCreateAvionics_t_to_table(lua_State* L, XPLMCreateAvionics_t const& src);
 XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos);
@@ -35,6 +38,15 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 void XPLMCustomizeAvionics_t_to_table(lua_State* L, XPLMCustomizeAvionics_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+
+//
+// Typedefs
+//
+XPLMAvionicsID* Make_XPLMAvionicsID(lua_State* L, XPLMAvionicsID const& init);
+XPLMHotKeyID* Make_XPLMHotKeyID(lua_State* L, XPLMHotKeyID const& init);
+XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
+XPLMWindowID* Make_XPLMWindowID(lua_State* L, XPLMWindowID const& init);
+
 
 static int cb_XPLMDrawCallback_f(XPLMDrawingPhase inPhase, int inIsBefore, void* inRefcon)
 {

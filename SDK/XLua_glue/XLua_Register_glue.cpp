@@ -81,6 +81,7 @@ extern "C"
 	int XLuaDrawMapLabel(lua_State* L);
 	int XLuaDrawNumber(lua_State* L);
 	int XLuaDrawObjects(lua_State* L);
+	int XLuaDrawString(lua_State* L);
 	int XLuaDrawTranslucentDarkBox(lua_State* L);
 	int XLuaEnableFeature(lua_State* L);
 	int XLuaEnableMenuItem(lua_State* L);
@@ -110,6 +111,8 @@ extern "C"
 	int XLuaGetCycleNumber(lua_State* L);
 	int XLuaGetDataRefInfo(lua_State* L);
 	int XLuaGetDataRefTypes(lua_State* L);
+	int XLuaGetDataRefsByIndex(lua_State* L);
+	int XLuaGetDatab(lua_State* L);
 	int XLuaGetDatad(lua_State* L);
 	int XLuaGetDataf(lua_State* L);
 	int XLuaGetDatai(lua_State* L);
@@ -129,6 +132,7 @@ extern "C"
 	int XLuaGetGPSDestinationType(lua_State* L);
 	int XLuaGetHotKeyInfo(lua_State* L);
 	int XLuaGetLanguage(lua_State* L);
+	int XLuaGetMETARForAirport(lua_State* L);
 	int XLuaGetMagneticVariation(lua_State* L);
 	int XLuaGetMouseLocation(lua_State* L);
 	int XLuaGetMouseLocationGlobal(lua_State* L);
@@ -210,9 +214,12 @@ extern "C"
 	int XLuaSetAvionicsGeometry(lua_State* L);
 	int XLuaSetAvionicsGeometryOS(lua_State* L);
 	int XLuaSetAvionicsPopupVisible(lua_State* L);
+	int XLuaSetDatab(lua_State* L);
 	int XLuaSetDatad(lua_State* L);
 	int XLuaSetDataf(lua_State* L);
 	int XLuaSetDatai(lua_State* L);
+	int XLuaSetDatavf(lua_State* L);
+	int XLuaSetDatavi(lua_State* L);
 	int XLuaSetDestinationFMSEntry(lua_State* L);
 	int XLuaSetDestinationFMSFlightPlanEntry(lua_State* L);
 	int XLuaSetDirectToFMSFlightPlanEntry(lua_State* L);
@@ -356,6 +363,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMDrawMapLabel", XLuaDrawMapLabel);
 	lua_register(L, "XPLMDrawNumber", XLuaDrawNumber);
 	lua_register(L, "XPLMDrawObjects", XLuaDrawObjects);
+	lua_register(L, "XPLMDrawString", XLuaDrawString);
 	lua_register(L, "XPLMDrawTranslucentDarkBox", XLuaDrawTranslucentDarkBox);
 	lua_register(L, "XPLMEnableFeature", XLuaEnableFeature);
 	lua_register(L, "XPLMEnableMenuItem", XLuaEnableMenuItem);
@@ -385,6 +393,8 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMGetCycleNumber", XLuaGetCycleNumber);
 	lua_register(L, "XPLMGetDataRefInfo", XLuaGetDataRefInfo);
 	lua_register(L, "XPLMGetDataRefTypes", XLuaGetDataRefTypes);
+	lua_register(L, "XPLMGetDataRefsByIndex", XLuaGetDataRefsByIndex);
+	lua_register(L, "XPLMGetDatab", XLuaGetDatab);
 	lua_register(L, "XPLMGetDatad", XLuaGetDatad);
 	lua_register(L, "XPLMGetDataf", XLuaGetDataf);
 	lua_register(L, "XPLMGetDatai", XLuaGetDatai);
@@ -404,6 +414,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMGetGPSDestinationType", XLuaGetGPSDestinationType);
 	lua_register(L, "XPLMGetHotKeyInfo", XLuaGetHotKeyInfo);
 	lua_register(L, "XPLMGetLanguage", XLuaGetLanguage);
+	lua_register(L, "XPLMGetMETARForAirport", XLuaGetMETARForAirport);
 	lua_register(L, "XPLMGetMagneticVariation", XLuaGetMagneticVariation);
 	lua_register(L, "XPLMGetMouseLocation", XLuaGetMouseLocation);
 	lua_register(L, "XPLMGetMouseLocationGlobal", XLuaGetMouseLocationGlobal);
@@ -485,9 +496,12 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMSetAvionicsGeometry", XLuaSetAvionicsGeometry);
 	lua_register(L, "XPLMSetAvionicsGeometryOS", XLuaSetAvionicsGeometryOS);
 	lua_register(L, "XPLMSetAvionicsPopupVisible", XLuaSetAvionicsPopupVisible);
+	lua_register(L, "XPLMSetDatab", XLuaSetDatab);
 	lua_register(L, "XPLMSetDatad", XLuaSetDatad);
 	lua_register(L, "XPLMSetDataf", XLuaSetDataf);
 	lua_register(L, "XPLMSetDatai", XLuaSetDatai);
+	lua_register(L, "XPLMSetDatavf", XLuaSetDatavf);
+	lua_register(L, "XPLMSetDatavi", XLuaSetDatavi);
 	lua_register(L, "XPLMSetDestinationFMSEntry", XLuaSetDestinationFMSEntry);
 	lua_register(L, "XPLMSetDestinationFMSFlightPlanEntry", XLuaSetDestinationFMSFlightPlanEntry);
 	lua_register(L, "XPLMSetDirectToFMSFlightPlanEntry", XLuaSetDirectToFMSFlightPlanEntry);
