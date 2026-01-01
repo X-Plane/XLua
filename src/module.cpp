@@ -19,14 +19,19 @@
 #include <lua.h>
 extern "C"
 {
+#if MOBILE
+    #include "luajit.h"
+#else
 	#include "../luajit/src/luajit.h"
+#endif
 }
 
 #if !MOBILE
 #include "FLWIntegration.h"
-#endif
 
 void add_xplm_to_interp(lua_State* L);
+#endif
+
 
 static const char * shorten_to_file(const char * path)
 {
@@ -202,7 +207,10 @@ module::module(
 	lua_setglobal(m_interp, "__module_ptr");
 
 	add_xlua_funcs_to_interp(m_interp);
+
+#if !MOBILE
 	add_xplm_to_interp(m_interp);
+#endif
 
 	lua_getfield(m_interp, LUA_GLOBALSINDEX, "package");
 	lua_getfield(m_interp, -1, "path");
