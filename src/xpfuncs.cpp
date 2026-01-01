@@ -851,7 +851,7 @@ void	add_xlua_funcs_to_interp(lua_State * L)
 	lua_pop(L, 1);
 }
 
-static std::map<void*, notify_cb_t*> allRegisteredCallbacks;
+std::map<void*, notify_cb_t*> allRegisteredCallbacks;
 
 void CleanupStoredCallbacks(lua_State* L, int keyIndexInRegistry)
 {
