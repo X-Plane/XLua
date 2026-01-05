@@ -12,6 +12,7 @@
 #include <memory>
 #include <algorithm>
 #include <array>
+#include <filesystem>
 
 #ifndef XPLM200
 #define XPLM200
@@ -53,6 +54,7 @@ XPLMDataRef				g_replay_active = NULL;
 XPLMDataRef				g_sim_period = NULL;
 XPLMCommandRef			reset_cmd = nullptr;
 XPLMMenuID				PluginMenu = 0;
+bool					g_bIsAircraftPlugin = true;
 
 static string plugin_base_path;
 
@@ -522,56 +524,73 @@ PLUGIN_API int XPluginStart(
 		}
 	}
 	plugin_base_path += XPLMGetDirectorySeparator();
+	std::string ac_base_path(plugin_base_path);
 
-	// Do we want to add a "reset" menu item? Only for the user's plane.
-	XPLMGetNthAircraftModel(XPLM_USER_AIRCRAFT, pName, pPath);
-	char *PDest = strrchr(pPath, *XPLMGetDirectorySeparator());
-	if (PDest != nullptr)
+	char const* menuName = nullptr;
+	char sysPath[512];
+	XPLMGetSystemPath(sysPath);
+	auto relpath = std::filesystem::relative(std::filesystem::path(myPath), std::filesystem::path(sysPath) / "Aircraft");
+	g_bIsAircraftPlugin = !relpath.string().starts_with("..");
+
+	if (g_bIsAircraftPlugin)
 	{
-		*PDest = 0;
-		const size_t acPathLen = strlen(pPath);
-		std::string ac_base_path(plugin_base_path);
-		string::size_type lp = std::string::npos;
-
-		do
+		// Do we want to add a "reset" menu item? Only for the user's plane.
+		XPLMGetNthAircraftModel(XPLM_USER_AIRCRAFT, pName, sysPath);
+		char* PDest = strrchr(sysPath, *XPLMGetDirectorySeparator());
+		if (PDest != nullptr)
 		{
-			lp = ac_base_path.find_last_of(XPLMGetDirectorySeparator());
-			if (lp != std::string::npos)
-			{
-				ac_base_path.erase(lp);
-			}
+			*PDest = 0;
+			const size_t acPathLen = strlen(sysPath);
+			string::size_type lp = std::string::npos;
 
-			if (ac_base_path.compare(pPath) == 0)
+			do
 			{
-				const char* menuName;
 				lp = ac_base_path.find_last_of(XPLMGetDirectorySeparator());
 				if (lp != std::string::npos)
 				{
-					menuName = ac_base_path.c_str() + lp + 1;
-				}
-				else
-				{
-					menuName = outName;
+					ac_base_path.erase(lp);
 				}
 
-				int item = XPLMAppendMenuItem(XPLMFindPluginsMenu(), menuName, nullptr, 0);
-				PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), item, MenuHandler, nullptr);
-				XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, 0);
+				if (ac_base_path.compare(sysPath) == 0)
+				{
+					lp = ac_base_path.find_last_of(XPLMGetDirectorySeparator());
+					if (lp != std::string::npos)
+					{
+						menuName = ac_base_path.c_str() + lp + 1;
+					}
+					else
+					{
+						menuName = outName;
+					}
+
+					break;
+				}
+			} while (lp != std::string::npos && ac_base_path.size() >= acPathLen);
+		}
+
+		reset_cmd = XPLMCreateCommand("laminar/xlua/reload_all_scripts", "Reload scripts and state for this aircraft");
+		if (reset_cmd != nullptr)
+		{
+			XPLMRegisterCommandHandler(reset_cmd, ResetState, 1, nullptr);
+		}
+	}
+	else
+	{
+		strcpy(outSig, "com.x-plane.xlua-sys." VERSION);
+		menuName = "System XLua";
+	}
+
+	if (menuName != nullptr)
+	{
+		int item = XPLMAppendMenuItem(XPLMFindPluginsMenu(), menuName, nullptr, 0);
+		PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), item, MenuHandler, nullptr);
+		XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, 0);
 #if !MOBILE
-				XPLMAppendMenuItem(PluginMenu, "Show Profiler", (void*)MI_ShowProfiler, 1);
+		XPLMAppendMenuItem(PluginMenu, "Show Profiler", (void*)MI_ShowProfiler, 1);
 #endif
-				break;
-			}
-		} while (lp != std::string::npos && ac_base_path.size() >= acPathLen);
 	}
 
 	InitScripts();
-
-	reset_cmd = XPLMCreateCommand("laminar/xlua/reload_all_scripts", "Reload scripts and state for this aircraft");
-	if (reset_cmd != nullptr)
-	{
-		XPLMRegisterCommandHandler(reset_cmd, ResetState, 1, nullptr);
-	}
 
 	return 1;
 }
