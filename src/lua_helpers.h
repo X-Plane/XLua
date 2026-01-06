@@ -58,4 +58,6 @@ int fmt_pcall_stdvars(lua_State* L, int dbg, B expects_returnval, const char* fm
 
 int lua_pushtraceback(lua_State* L);
 
+void clear_table(lua_State* L, int idx);
+
 #endif /* lua_helpers_h */

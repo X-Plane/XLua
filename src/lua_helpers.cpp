@@ -165,3 +165,19 @@ int vfmt_pcall(lua_State* L, int dbg, B expects_returnval, const char* fmt, va_l
 	}
 	return e;
 }
+
+void clear_table(lua_State* L, int idx)
+{
+	if (idx > 0)
+	{
+		lua_pushnil(L);  // First key
+
+		while (lua_next(L, idx) != 0)
+		{
+			lua_pop(L, 1);           // Remove value, keep key
+			lua_pushvalue(L, -1);    // Duplicate key
+			lua_pushnil(L);          // Push nil as new value
+			lua_settable(L, idx);	 // table[key] = nil
+		}
+	}
+}
