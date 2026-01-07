@@ -193,11 +193,11 @@ int XLuaSendMessageToPlugin(lua_State* L)
 
 static void cb_XPLMFeatureEnumerator_f(const char * inFeature, void* inRef)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRef);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRef);
 	lua_State* L = setup_lua_callback(cb, "XPLMFeatureEnumerator_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFeature, cb->origRefconRegIndex))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFeature, cb->get_capture()))
 		{
 		}
 	}
@@ -238,9 +238,9 @@ int XLuaEnumerateFeatures(lua_State* L)
 	int refcon_regindex = capture_lua_value(L, 2);
 	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 1, "XPLMFeatureEnumerator_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 1, "XPLMFeatureEnumerator_f", refcon_regindex);
 
-	XPLMEnumerateFeatures(cb_XPLMFeatureEnumerator_f, cb_capture_0);
+	XPLMEnumerateFeatures(cb_XPLMFeatureEnumerator_f, cb_capture_0.get());
 
 	return 0;
 }

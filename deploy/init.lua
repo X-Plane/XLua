@@ -267,25 +267,23 @@ end
 --------------------------------------------------------------------------------
 -- TIMER UTILITIES
 --------------------------------------------------------------------------------
-
 function run_timer(func,delay,rep)
-	tobj = all_timers[func]
+	tobj = XLuaFindTimer(func)
 	if tobj == nil then
 		tobj = XLuaCreateTimer(func)
-		all_timers[func] = tobj
 	end
 	XLuaRunTimer(tobj,delay,rep)
 end
 
 function stop_timer(func)
-	tobj = all_timers[func]
+	tobj = XLuaFindTimer(func)
 	if tobj ~= nil then
 		XLuaRunTimer(tobj, -1.0, -1.0)
 	end
 end
 
 function is_timer_scheduled(func)
-	tobj = all_timers[func]
+	tobj = XLuaFindTimer(func)
 	if tobj == nil then
 		return false
 	end
@@ -293,9 +291,9 @@ function is_timer_scheduled(func)
 end
 
 function get_timer_remaining(func)
-	tobj = all_timers[func]
+	tobj = XLuaFindTimer(func)
 	if tobj == nil then
-		return false
+		return 0
 	end
 	return XLuaGetTimerRemaining(tobj)
 end

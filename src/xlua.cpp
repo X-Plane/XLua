@@ -3,7 +3,7 @@
 //	See LICENSE.txt for the full terms of the license.
 
 
-#define VERSION "1.5.0r1"
+#define VERSION "1.5.1r1"
 
 #include <stdio.h>
 #include <string.h>
@@ -225,13 +225,14 @@ void CleanupScripts(void)
 		g_is_acf_inited = false;
 	}
 
-	for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-		delete (*m);
-	g_modules.clear();
-
+	// Get rid of drefs/cmds/timers first, they may well hold references to the Lua interpreter.
 	xlua_dref_cleanup();
 	xlua_cmd_cleanup();
 	xlua_timer_cleanup();
+
+	for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+		delete (*m);
+	g_modules.clear();
 }
 
 int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)

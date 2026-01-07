@@ -92,11 +92,11 @@ void RegType_XPLMFlightLoopID(lua_State* L)
 static float cb_XPLMFlightLoop_f(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void* inRefcon)
 {
 	float res = {};
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMFlightLoop_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "ddir", inElapsedSinceLastCall, inElapsedTimeSinceLastFlightLoop, inCounter, cb->origRefconRegIndex))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "ddir", inElapsedSinceLastCall, inElapsedTimeSinceLastFlightLoop, inCounter, cb->get_capture()))
 		{
 			res = luaL_checknumber(L, -1);
 			lua_pop(L, 1);
@@ -132,7 +132,7 @@ XPLMCreateFlightLoop_t XPLMCreateFlightLoop_t_from_table(lua_State* L, int stack
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "callbackFunc");
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, -1, "XPLMFlightLoop_f", refcon_0_regindex);
+	 std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, -1, "XPLMFlightLoop_f", refcon_0_regindex);
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "refcon");
@@ -191,10 +191,10 @@ int XLuaRegisterFlightLoopCallback(lua_State* L)
 	int refcon_regindex = capture_lua_value(L, 3);
 	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 1, "XPLMFlightLoop_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 1, "XPLMFlightLoop_f", refcon_regindex);
 	float inInterval = xlua_checknumber(L, 2);
 
-	XPLMRegisterFlightLoopCallback(cb_XPLMFlightLoop_f, inInterval, cb_capture_0);
+	XPLMRegisterFlightLoopCallback(cb_XPLMFlightLoop_f, inInterval, cb_capture_0.get());
 
 	return 0;
 }
@@ -204,9 +204,9 @@ int XLuaUnregisterFlightLoopCallback(lua_State* L)
 	int refcon_regindex = capture_lua_value(L, 2);
 	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 1, "XPLMFlightLoop_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 1, "XPLMFlightLoop_f", refcon_regindex);
 
-	XPLMUnregisterFlightLoopCallback(cb_XPLMFlightLoop_f, cb_capture_0);
+	XPLMUnregisterFlightLoopCallback(cb_XPLMFlightLoop_f, cb_capture_0.get());
 
 	return 0;
 }
@@ -216,11 +216,11 @@ int XLuaSetFlightLoopCallbackInterval(lua_State* L)
 	int refcon_regindex = capture_lua_value(L, 4);
 	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 1, "XPLMFlightLoop_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 1, "XPLMFlightLoop_f", refcon_regindex);
 	float inInterval = xlua_checknumber(L, 2);
 	bool inRelativeToNow = xlua_checkboolean(L, 3);
 
-	XPLMSetFlightLoopCallbackInterval(cb_XPLMFlightLoop_f, inInterval, inRelativeToNow, cb_capture_0);
+	XPLMSetFlightLoopCallbackInterval(cb_XPLMFlightLoop_f, inInterval, inRelativeToNow, cb_capture_0.get());
 
 	return 0;
 }

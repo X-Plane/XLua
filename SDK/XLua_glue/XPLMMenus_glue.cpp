@@ -91,11 +91,11 @@ void RegType_XPLMMenuID(lua_State* L)
 
 static void cb_XPLMMenuHandler_f(void* inMenuRef, void* inItemRef)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inMenuRef);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inMenuRef);
 	lua_State* L = setup_lua_callback(cb, "XPLMMenuHandler_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rr", cb->origRefconRegIndex, inItemRef))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rr", cb->get_capture(), inItemRef))
 		{
 		}
 	}
@@ -143,9 +143,9 @@ int XLuaCreateMenu(lua_State* L)
 	int refcon_regindex = capture_lua_value(L, 5);
 	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 4, "XPLMMenuHandler_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 4, "XPLMMenuHandler_f", refcon_regindex);
 
-	XPLMMenuID res = XPLMCreateMenu(inName, inParentMenu, inParentItem, cb_XPLMMenuHandler_f, cb_capture_0);
+	XPLMMenuID res = XPLMCreateMenu(inName, inParentMenu, inParentItem, cb_XPLMMenuHandler_f, cb_capture_0.get());
 	if (res == nullptr)
 	{
 		lua_pushnil(L);

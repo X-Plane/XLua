@@ -567,11 +567,11 @@ int MakeXPLMDrawInfoDouble_t(lua_State* L)
 
 static void cb_XPLMObjectLoaded_f(XPLMObjectRef inObject, void* inRefcon)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMObjectLoaded_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ur", inObject, cb->origRefconRegIndex))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ur", inObject, cb->get_capture()))
 		{
 		}
 	}
@@ -600,9 +600,9 @@ int XLuaLoadObjectAsync(lua_State* L)
 	int refcon_regindex = capture_lua_value(L, 3);
 	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 2, "XPLMObjectLoaded_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 2, "XPLMObjectLoaded_f", refcon_regindex);
 
-	XPLMLoadObjectAsync(inPath, cb_XPLMObjectLoaded_f, cb_capture_0);
+	XPLMLoadObjectAsync(inPath, cb_XPLMObjectLoaded_f, cb_capture_0.get());
 
 	return 0;
 }
@@ -639,11 +639,11 @@ int XLuaUnloadObject(lua_State* L)
 
 static void cb_XPLMLibraryEnumerator_f(const char * inFilePath, void* inRef)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRef);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRef);
 	lua_State* L = setup_lua_callback(cb, "XPLMLibraryEnumerator_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFilePath, cb->origRefconRegIndex))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFilePath, cb->get_capture()))
 		{
 		}
 	}
@@ -657,9 +657,9 @@ int XLuaLookupObjects(lua_State* L)
 	int refcon_regindex = capture_lua_value(L, 5);
 	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 4, "XPLMLibraryEnumerator_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 4, "XPLMLibraryEnumerator_f", refcon_regindex);
 
-	int res = XPLMLookupObjects(inPath, inLatitude, inLongitude, cb_XPLMLibraryEnumerator_f, cb_capture_0);
+	int res = XPLMLookupObjects(inPath, inLatitude, inLongitude, cb_XPLMLibraryEnumerator_f, cb_capture_0.get());
 	lua_pushinteger(L, res);
 
 	return 1;

@@ -18,6 +18,7 @@
 #include <map>
 #include <optional>
 #include <algorithm>
+#include <memory>
 
 extern "C" {
 #include <lua.h>
@@ -32,29 +33,30 @@ std::string get_log_prefix(char l='I');
 // the stack - since this is type agnostic and takes a strong reference it (1) prevents the closure from being 
 // garbage collected and (2) works with closures.
 
-struct notify_cb_t
+class notify_cb_t
 {
-    notify_cb_t() = delete;
-    notify_cb_t(lua_State* inL)
-    {
-        L = inL;
-    }
+public:
+	notify_cb_t() = delete;
+	notify_cb_t(lua_State* inL, int s) : L(inL), origRefconRegIndex(s) {}
+	~notify_cb_t();
 
-    lua_State*  L;
-    int origRefconRegIndex;                     // Registry index for the captured original refcon value.
-    std::map<std::string, int> callbacks;       // Map from function definition to registry index for the callback;
+	int get_capture(void) const { return origRefconRegIndex; }
+	lua_State* L = nullptr;
+	std::map<std::string, int> callbacks;       // Map from function definition to registry index for the callback;
+
+private:
+	int origRefconRegIndex = 0;
 };
 
 extern std::map<void*, notify_cb_t*> allRegisteredCallbacks;
 
-notify_cb_t* wrap_lua_func_nil(lua_State* L, int idx, std::string const callbackKey);
-notify_cb_t* wrap_lua_func(lua_State* L, int idx, std::string const callbackKey);
-lua_State* setup_lua_callback(void* ref, std::string const callbackKey);
+std::shared_ptr<notify_cb_t> wrap_lua_func_nil(lua_State* L, int idx, std::string const callbackKey);
+lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackKey);
 int capture_lua_value(lua_State* L, int idx);
 
 void CleanupStoredCallbacks(lua_State* L, int keyIndexInRegistry);
-notify_cb_t* wrap_first_lua_func(lua_State* L, int func_stack_idx, std::string const cb_typename, int refcon_reg_index);
-bool wrap_next_lua_func(notify_cb_t* cb_record, int func_stack_idx, std::string const cb_typename);
+std::shared_ptr<notify_cb_t> wrap_first_lua_func(lua_State* L, int func_stack_idx, std::string const cb_typename, int refcon_reg_index);
+bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb, int func_stack_idx, std::string const cb_typename);
 
 // Syntactic sugar to make the code-generation simpler.
 inline bool         xlua_checkboolean(lua_State* L, int narg)   { luaL_checktype(L, narg, LUA_TBOOLEAN); return lua_toboolean(L, narg); }

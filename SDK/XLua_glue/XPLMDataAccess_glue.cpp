@@ -664,11 +664,11 @@ int XLuaSetDatab(lua_State* L)
 static int cb_XPLMGetDatai_f(void* inRefcon)
 {
 	int res = {};
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMGetDatai_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r", cb->origRefconRegIndex))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r", cb->get_capture()))
 		{
 			res = luaL_checkinteger(L, -1);
 			lua_pop(L, 1);
@@ -680,11 +680,11 @@ static int cb_XPLMGetDatai_f(void* inRefcon)
 
 static void cb_XPLMSetDatai_f(void* inRefcon, int inValue)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMSetDatai_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ri", cb->origRefconRegIndex, inValue))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ri", cb->get_capture(), inValue))
 		{
 		}
 	}
@@ -693,11 +693,11 @@ static void cb_XPLMSetDatai_f(void* inRefcon, int inValue)
 static float cb_XPLMGetDataf_f(void* inRefcon)
 {
 	float res = {};
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMGetDataf_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r", cb->origRefconRegIndex))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r", cb->get_capture()))
 		{
 			res = luaL_checknumber(L, -1);
 			lua_pop(L, 1);
@@ -709,11 +709,11 @@ static float cb_XPLMGetDataf_f(void* inRefcon)
 
 static void cb_XPLMSetDataf_f(void* inRefcon, float inValue)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMSetDataf_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rd", cb->origRefconRegIndex, inValue))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rd", cb->get_capture(), inValue))
 		{
 		}
 	}
@@ -722,11 +722,11 @@ static void cb_XPLMSetDataf_f(void* inRefcon, float inValue)
 static double cb_XPLMGetDatad_f(void* inRefcon)
 {
 	double res = {};
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMGetDatad_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r", cb->origRefconRegIndex))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r", cb->get_capture()))
 		{
 			res = luaL_checknumber(L, -1);
 			lua_pop(L, 1);
@@ -738,11 +738,11 @@ static double cb_XPLMGetDatad_f(void* inRefcon)
 
 static void cb_XPLMSetDatad_f(void* inRefcon, double inValue)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMSetDatad_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rd", cb->origRefconRegIndex, inValue))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rd", cb->get_capture(), inValue))
 		{
 		}
 	}
@@ -751,11 +751,11 @@ static void cb_XPLMSetDatad_f(void* inRefcon, double inValue)
 static int cb_XPLMGetDatavi_f(void* inRefcon, int * outValues, int inOffset, int inMax)
 {
 	int res = {};
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMGetDatavi_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r?ii", cb->origRefconRegIndex, outValues, inOffset, inMax))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r?ii", cb->get_capture(), outValues, inOffset, inMax))
 		{
 			res = luaL_checkinteger(L, -1);
 			lua_pop(L, 1);
@@ -767,11 +767,11 @@ static int cb_XPLMGetDatavi_f(void* inRefcon, int * outValues, int inOffset, int
 
 static void cb_XPLMSetDatavi_f(void* inRefcon, int * inValues, int inOffset, int inCount)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMSetDatavi_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r?ii", cb->origRefconRegIndex, inValues, inOffset, inCount))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r?ii", cb->get_capture(), inValues, inOffset, inCount))
 		{
 		}
 	}
@@ -780,11 +780,11 @@ static void cb_XPLMSetDatavi_f(void* inRefcon, int * inValues, int inOffset, int
 static int cb_XPLMGetDatavf_f(void* inRefcon, float * outValues, int inOffset, int inMax)
 {
 	int res = {};
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMGetDatavf_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r?ii", cb->origRefconRegIndex, outValues, inOffset, inMax))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r?ii", cb->get_capture(), outValues, inOffset, inMax))
 		{
 			res = luaL_checkinteger(L, -1);
 			lua_pop(L, 1);
@@ -796,11 +796,11 @@ static int cb_XPLMGetDatavf_f(void* inRefcon, float * outValues, int inOffset, i
 
 static void cb_XPLMSetDatavf_f(void* inRefcon, float * inValues, int inOffset, int inCount)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMSetDatavf_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r?ii", cb->origRefconRegIndex, inValues, inOffset, inCount))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r?ii", cb->get_capture(), inValues, inOffset, inCount))
 		{
 		}
 	}
@@ -809,11 +809,11 @@ static void cb_XPLMSetDatavf_f(void* inRefcon, float * inValues, int inOffset, i
 static int cb_XPLMGetDatab_f(void* inRefcon, void * outValue, int inOffset, int inMaxLength)
 {
 	int res = {};
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMGetDatab_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "ruii", cb->origRefconRegIndex, outValue, inOffset, inMaxLength))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "ruii", cb->get_capture(), outValue, inOffset, inMaxLength))
 		{
 			res = luaL_checkinteger(L, -1);
 			lua_pop(L, 1);
@@ -825,11 +825,11 @@ static int cb_XPLMGetDatab_f(void* inRefcon, void * outValue, int inOffset, int 
 
 static void cb_XPLMSetDatab_f(void* inRefcon, void * inValue, int inOffset, int inLength)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMSetDatab_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ruii", cb->origRefconRegIndex, inValue, inOffset, inLength))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ruii", cb->get_capture(), inValue, inOffset, inLength))
 		{
 		}
 	}
@@ -843,11 +843,11 @@ int XLuaRegisterDataAccessor(lua_State* L)
 	int refcon_regindex = capture_lua_value(L, 16);
 	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 4, "XPLMGetDatai_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 4, "XPLMGetDatai_f", refcon_regindex);
 	refcon_regindex = capture_lua_value(L, 17);
 	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_1 = wrap_first_lua_func(L, 5, "XPLMSetDatai_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_1 = wrap_first_lua_func(L, 5, "XPLMSetDatai_f", refcon_regindex);
 	wrap_next_lua_func(cb_capture_0, 6, "XPLMGetDataf_f");
 	wrap_next_lua_func(cb_capture_1, 7, "XPLMSetDataf_f");
 	wrap_next_lua_func(cb_capture_0, 8, "XPLMGetDatad_f");
@@ -859,7 +859,7 @@ int XLuaRegisterDataAccessor(lua_State* L)
 	wrap_next_lua_func(cb_capture_0, 14, "XPLMGetDatab_f");
 	wrap_next_lua_func(cb_capture_1, 15, "XPLMSetDatab_f");
 
-	XPLMDataRef res = XPLMRegisterDataAccessor(inDataName, inDataType, inIsWritable, cb_XPLMGetDatai_f, cb_XPLMSetDatai_f, cb_XPLMGetDataf_f, cb_XPLMSetDataf_f, cb_XPLMGetDatad_f, cb_XPLMSetDatad_f, cb_XPLMGetDatavi_f, cb_XPLMSetDatavi_f, cb_XPLMGetDatavf_f, cb_XPLMSetDatavf_f, cb_XPLMGetDatab_f, cb_XPLMSetDatab_f, cb_capture_0, cb_capture_1);
+	XPLMDataRef res = XPLMRegisterDataAccessor(inDataName, inDataType, inIsWritable, cb_XPLMGetDatai_f, cb_XPLMSetDatai_f, cb_XPLMGetDataf_f, cb_XPLMSetDataf_f, cb_XPLMGetDatad_f, cb_XPLMSetDatad_f, cb_XPLMGetDatavi_f, cb_XPLMSetDatavi_f, cb_XPLMGetDatavf_f, cb_XPLMSetDatavf_f, cb_XPLMGetDatab_f, cb_XPLMSetDatab_f, cb_capture_0.get(), cb_capture_1.get());
 	if (res == nullptr)
 	{
 		lua_pushnil(L);
@@ -887,11 +887,11 @@ int XLuaUnregisterDataAccessor(lua_State* L)
 
 static void cb_XPLMDataChanged_f(void* inRefcon)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
+	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
 	lua_State* L = setup_lua_callback(cb, "XPLMDataChanged_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r", cb->origRefconRegIndex))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r", cb->get_capture()))
 		{
 		}
 	}
@@ -904,9 +904,9 @@ int XLuaShareData(lua_State* L)
 	int refcon_regindex = capture_lua_value(L, 4);
 	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 3, "XPLMDataChanged_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 3, "XPLMDataChanged_f", refcon_regindex);
 
-	int res = XPLMShareData(inDataName, inDataType, cb_XPLMDataChanged_f, cb_capture_0);
+	int res = XPLMShareData(inDataName, inDataType, cb_XPLMDataChanged_f, cb_capture_0.get());
 	lua_pushboolean(L, res);
 
 	return 1;
@@ -919,9 +919,9 @@ int XLuaUnshareData(lua_State* L)
 	int refcon_regindex = capture_lua_value(L, 4);
 	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 3, "XPLMDataChanged_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 3, "XPLMDataChanged_f", refcon_regindex);
 
-	int res = XPLMUnshareData(inDataName, inDataType, cb_XPLMDataChanged_f, cb_capture_0);
+	int res = XPLMUnshareData(inDataName, inDataType, cb_XPLMDataChanged_f, cb_capture_0.get());
 	lua_pushboolean(L, res);
 
 	return 1;

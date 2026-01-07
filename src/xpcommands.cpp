@@ -16,34 +16,52 @@
 #include <XPLMProcessing.h>
 #include <assert.h>
 #include <string>
+#include <memory>
+#include <list>
 
 #include "log.h"
 
 using std::string;
 
 int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon);
+static int xlua_std_pre_handler(XPLMCommandRef c, XPLMCommandPhase phase, void* ref);
+static int xlua_std_main_handler(XPLMCommandRef c, XPLMCommandPhase phase, void* ref);
+static int xlua_std_post_handler(XPLMCommandRef c, XPLMCommandPhase phase, void* ref);
 
 struct xlua_cmd {
-	xlua_cmd *			m_next				= nullptr;
+public:
+	xlua_cmd() = delete;
+	xlua_cmd(std::string const& name, XPLMCommandRef cmd) : m_name(name), m_cmd(cmd) {}
+
+	~xlua_cmd()
+	{
+		if (m_pre_handler)
+			XPLMUnregisterCommandHandler(m_cmd, xlua_std_pre_handler, 1, this);
+		if (m_main_handler)
+			XPLMUnregisterCommandHandler(m_cmd, xlua_std_main_handler, 1, this);
+		if (m_post_handler)
+			XPLMUnregisterCommandHandler(m_cmd, xlua_std_post_handler, 0, this);
+	}
+
 	string				m_name;
 	XPLMCommandRef		m_cmd				= nullptr;
-	int					m_ours				= 0;
+	bool				m_ours				= false;
 	xlua_cmd_handler_f	m_pre_handler		= nullptr;
-	notify_cb_t*		m_pre_ref			= nullptr;
+	std::shared_ptr<notify_cb_t> m_pre_ref	= nullptr;
 	xlua_cmd_handler_f	m_main_handler		= nullptr;
-	notify_cb_t*		m_main_ref			= nullptr;
+	std::shared_ptr<notify_cb_t> m_main_ref	= nullptr;
 	xlua_cmd_handler_f	m_post_handler		= nullptr;
-	notify_cb_t*		m_post_ref			= nullptr;
+	std::shared_ptr<notify_cb_t> m_post_ref	= nullptr;
 	float				m_down_time			= 0;
 	xlua_cmd_handler_f	m_filter_handler	= nullptr;
-	notify_cb_t*		m_filter_ref		= nullptr;
+	std::shared_ptr<notify_cb_t> m_filter_ref = nullptr;
 	bool				m_filter_inited		= false;
 	bool				m_filter_allow		= true;
 	bool				m_filter_allow_release = false;
 	bool				m_filter_sent_fake_end = false;
 };
 
-static xlua_cmd *		s_cmds = NULL;
+static std::list<xlua_cmd> s_cmds;
 
 static int xlua_std_pre_filter(XPLMCommandRef c, XPLMCommandPhase phase, void* ref)
 {
@@ -148,35 +166,35 @@ static int xlua_std_post_handler(XPLMCommandRef c, XPLMCommandPhase phase, void*
 	return 1;
 }
 
-xlua_cmd * xlua_find_cmd(const char * name)
+xlua_cmd* xlua_find_cmd(const char* name)
 {
-	for(xlua_cmd * i = s_cmds; i; i = i->m_next)
-	if(i->m_name == name)
-		return i;
-		
-	XPLMCommandRef c = XPLMFindCommand(name);	
-	if(c == NULL) return NULL;	
-		
-	xlua_cmd * nc = new xlua_cmd;
-	nc->m_next = s_cmds;
-	s_cmds = nc;
-	nc->m_name = name;
-	nc->m_cmd = c;
-	return nc;
+	for (auto& i : s_cmds)
+	{
+		if (i.m_name == name)
+			return &i;
+	}
+
+	XPLMCommandRef c = XPLMFindCommand(name);
+	if (c == NULL) return NULL;
+
+	return &s_cmds.emplace_back(name, c);
 }
 
-xlua_cmd * xlua_create_cmd(lua_State* L, const char * name, const char * desc)
+xlua_cmd* xlua_create_cmd(lua_State* L, const char * name, const char * desc)
 {
-	for(xlua_cmd * i = s_cmds; i; i = i->m_next)
-	if(i->m_name == name)
+	for (auto& i : s_cmds)
 	{
-		if(i->m_ours)
+		if (i.m_name == name)
 		{
-			log_message(L, "ERROR: command already exists: %s\n", name);
-			return NULL;
+			if (i.m_ours)
+			{
+				log_message(L, "ERROR: command already exists: %s\n", name);
+				return nullptr;
+			}
+
+			i.m_ours = true;
+			return &i;
 		}
-		i->m_ours = 1;
-		return i;
 	}
 
 	// Ben says: we used to try to barf on commands taken over from other plugins but
@@ -190,16 +208,13 @@ xlua_cmd * xlua_create_cmd(lua_State* L, const char * name, const char * desc)
 //		return NULL;
 //	}
 
-	xlua_cmd * nc = new xlua_cmd;
-	nc->m_next = s_cmds;
-	s_cmds = nc;
-	nc->m_name = name;
-	nc->m_cmd = XPLMCreateCommand(name,desc);
-	nc->m_ours = 1;
+	xlua_cmd* nc = &s_cmds.emplace_back(name, XPLMCreateCommand(name, desc));
+	nc->m_ours = true;
+
 	return nc;
 }
 
-void xlua_cmd_install_handler(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, notify_cb_t* ref)
+void xlua_cmd_install_handler(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, std::shared_ptr<notify_cb_t> ref)
 {
 	if(cmd->m_main_handler != NULL)
 	{
@@ -229,7 +244,7 @@ void xlua_cmd_install_handler(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f h
 	}
 }
 
-void xlua_cmd_install_filter(lua_State* L, xlua_cmd* cmd, xlua_cmd_handler_f handler, notify_cb_t* ref)
+void xlua_cmd_install_filter(lua_State* L, xlua_cmd* cmd, xlua_cmd_handler_f handler, std::shared_ptr<notify_cb_t> ref)
 {
 	if (cmd->m_filter_handler != nullptr)
 	{
@@ -243,7 +258,7 @@ void xlua_cmd_install_filter(lua_State* L, xlua_cmd* cmd, xlua_cmd_handler_f han
 	XPLMRegisterCommandHandler(cmd->m_cmd, xlua_std_pre_filter, 1, static_cast<void*>(cmd));
 }
 
-void xlua_cmd_install_pre_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, notify_cb_t* ref)
+void xlua_cmd_install_pre_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, std::shared_ptr<notify_cb_t> ref)
 {
 	if(cmd->m_pre_handler != NULL)
 	{
@@ -256,7 +271,7 @@ void xlua_cmd_install_pre_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler
 	XPLMRegisterCommandHandler(cmd->m_cmd, xlua_std_pre_handler, 1, static_cast<void*>(cmd));
 }
 
-void xlua_cmd_install_post_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, notify_cb_t* ref)
+void xlua_cmd_install_post_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, std::shared_ptr<notify_cb_t> ref)
 {
 	if(cmd->m_post_handler != NULL)
 	{
@@ -284,20 +299,7 @@ void xlua_cmd_once(xlua_cmd * cmd)
 
 void xlua_cmd_cleanup()
 {
-	while(s_cmds)
-	{
-		xlua_cmd * k = s_cmds;
-		if(k->m_pre_handler)
-			XPLMUnregisterCommandHandler(k->m_cmd, xlua_std_pre_handler, 1, k);
-		if(k->m_main_handler)
-			XPLMUnregisterCommandHandler(k->m_cmd, xlua_std_main_handler, 1, k);
-		if(k->m_post_handler)
-			XPLMUnregisterCommandHandler(k->m_cmd, xlua_std_post_handler, 0, k);
-		s_cmds = s_cmds->m_next;
-		delete k;
-	}
-
-	assert(s_cmds == nullptr);
+	s_cmds.clear();
 }
 
 void xlua_cmd_mark_reload_on_change()
