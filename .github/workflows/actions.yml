@@ -40,7 +40,7 @@ jobs:
         if-no-files-found: error
           
   build-mac:
-    runs-on: macos-13
+    runs-on: macos-14
     env:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
