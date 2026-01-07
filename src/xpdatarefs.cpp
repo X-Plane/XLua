@@ -278,9 +278,9 @@ void			xlua_validate_drefs()
 {
 #if MOBILE
 	bool dref_missing = false;
-	for(xlua_dref * f = s_drefs; f; f = f->m_next)
+	for (xlua_dref const& f : s_drefs)
 	{
-		if(f->m_dref == NULL)
+		if (f.m_dref == nullptr)
 		{
 			dref_missing = true;
 			log_message(nullptr, "WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
@@ -288,11 +288,10 @@ void			xlua_validate_drefs()
 	}
 	
 	assert(!dref_missing);
-	
 #else
 	for (xlua_dref const& f : s_drefs)
 	{
-		if (f.m_dref == NULL)
+		if (f.m_dref == nullptr)
 		{
 			log_message(nullptr, "WARNING: dataref %s is used but not defined.\n", f.m_name.c_str());
 		}
@@ -651,13 +650,13 @@ void			xlua_relink_all_drefs()
 {
 #if !MOBILE
 	XPLMPluginID dre = XPLMFindPluginBySignature(STAT_PLUGIN_SIG);
-	if(dre != XPLM_NO_PLUGIN_ID)
-	if(!XPLMIsPluginEnabled(dre))
+	if(dre != XPLM_NO_PLUGIN_ID && !XPLMIsPluginEnabled(dre))
 	{
 		log_message(nullptr, "WARNING: can't register drefs - DRE is not enabled.\n");
 		dre = XPLM_NO_PLUGIN_ID;
 	}
 #endif
+
 	for (xlua_dref& d : s_drefs)
 	{
 		if (d.m_dref == nullptr)
@@ -666,7 +665,7 @@ void			xlua_relink_all_drefs()
 			resolve_dref(&d);
 		}
 #if !MOBILE
-		if(d.m_ours && dre != XPLM_NO_PLUGIN_ID)
+		if (d.m_ours && dre != XPLM_NO_PLUGIN_ID)
 		{
 //			TRACE_DATAREFS("registered: %s\n", d->m_name.c_str());
 			XPLMSendMessageToPlugin(dre, MSG_ADD_DATAREF, (void *)d.m_name.c_str());
