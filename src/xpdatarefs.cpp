@@ -19,12 +19,12 @@
 #include <algorithm>
 #include <iterator>
 #include <memory>
+#include <list>
 
 #include "log.h"
 
 using std::min;
 using std::max;
-using std::vector;
 
 #define MSG_ADD_DATAREF 0x01000000
 #if !MOBILE
@@ -36,23 +36,35 @@ using std::vector;
 
 class notify_cb_t;
 
-struct	xlua_dref {
-	xlua_dref *				m_next;
+struct xlua_dref
+{
+public:
+	xlua_dref() = delete;
+	xlua_dref(std::string const& name) : m_name(name) {}
+	
+	~xlua_dref()
+	{
+		if (m_dref != nullptr && m_ours)
+		{
+			XPLMUnregisterDataAccessor(m_dref);
+		}
+	}
+
 	string					m_name;
-	XPLMDataRef				m_dref;
-	int						m_index;	// -1 if index is NOT bound.
-	XPLMDataTypeID			m_types;
-	int						m_ours;		// 1 if we made, 0 if system
-	xlua_dref_notify_f		m_notify_func;
+	XPLMDataRef				m_dref			= nullptr;
+	int						m_index			= -1;					// -1 if index is NOT bound.
+	XPLMDataTypeID			m_types			= xplmType_Unknown;
+	bool					m_ours			= false;				// 1 if we made, 0 if system
+	xlua_dref_notify_f		m_notify_func	= nullptr;
 	std::shared_ptr<notify_cb_t> m_notify_ref;
 	
 	// IF we made the dataref, this is where our storage is!
-	double					m_number_storage;
-	vector<double>			m_array_storage;
+	double					m_number_storage = 0;
+	std::vector<double>		m_array_storage;
 	string					m_string_storage;
 };
 
-static xlua_dref *		s_drefs = NULL;
+static std::list<xlua_dref>		s_drefs;
 
 // For numbers
 static int	xlua_geti(void * ref)
@@ -278,39 +290,32 @@ void			xlua_validate_drefs()
 	assert(!dref_missing);
 	
 #else
-	for(xlua_dref * f = s_drefs; f; f = f->m_next)
+	for (xlua_dref const& f : s_drefs)
 	{
-		if (f->m_dref == NULL) {
-			log_message(nullptr, "WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
+		if (f.m_dref == NULL)
+		{
+			log_message(nullptr, "WARNING: dataref %s is used but not defined.\n", f.m_name.c_str());
 		}
 	}
 #endif
 }
 
-xlua_dref *		xlua_find_dref(const char * name)
+xlua_dref* xlua_find_dref(const char* name)
 {
-	for(xlua_dref * f = s_drefs; f; f = f->m_next)
-	if(f->m_name == name)
+	for (xlua_dref& f : s_drefs)
 	{
-		TRACE_DATAREFS("Found %s as %p\n", name,f);
-		return f;
+		if (f.m_name == name)
+		{
+			TRACE_DATAREFS("Found %s as %p\n", name, &f);
+			return &f;
+		}
 	}
+
 	// We have never tried to find this dref before - make a new record
-	xlua_dref * d = new xlua_dref;
-	d->m_next = s_drefs;
-	s_drefs = d;
-	d->m_name = name;
-	d->m_dref = NULL;
-	d->m_index = -1;
-	d->m_types = 0;
-	d->m_ours = 0;
-	d->m_notify_func = NULL;
-	d->m_notify_ref = NULL;
-	d->m_number_storage = 0;
-	
+	xlua_dref* d = &s_drefs.emplace_back(name);
 	resolve_dref(d);
 
-	TRACE_DATAREFS("Speculating %s as %p\n", name,d);
+	TRACE_DATAREFS("Speculating %s as %p\n", name, d);
 
 	return d;
 }
@@ -341,47 +346,45 @@ xlua_dref* xlua_create_dref(lua_State* L, const char * name, xlua_dref_type type
 	}
 
 	string n(name);
-	xlua_dref * f;
-	for(f = s_drefs; f; f = f->m_next)
-	if(f->m_name == n)
+	xlua_dref* d = nullptr;
+	for (xlua_dref& f : s_drefs)
 	{
-		if (f->m_ours || f->m_dref)
+		if (f.m_name == n)
 		{
-			log_message(L, "ERROR: %s is already a dataref.\n", name);
-			return NULL;
-		}
+			if (f.m_ours || f.m_dref)
+			{
+				log_message(L, "ERROR: %s is already a dataref.\n", name);
+				return NULL;
+			}
 
-		TRACE_DATAREFS("Reusing %s as %p\n", name, f);
-		break;
+			d = &f;
+			TRACE_DATAREFS("Reusing %s as %p\n", name, d);
+			break;
+		}
 	}
-	
-	if(n.find('[') != n.npos)
+
+	if (n.find('[') != n.npos)
 	{
 		log_message(L, "ERROR: %s contains brackets in its name.\n", name);
 		return NULL;
 	}
 	
 	XPLMDataRef other = XPLMFindDataRef(name);
-	if(other && XPLMIsDataRefGood(other))
+	if (other && XPLMIsDataRefGood(other))
 	{
 		log_message(L, "ERROR: %s is used by another plugin.\n", name);
 		return NULL;
 	}
 	
-	xlua_dref * d = f;
-	if(!d)
+	if (d == nullptr)
 	{
-		d = new xlua_dref;
-		d->m_next = s_drefs;
-		s_drefs = d;
-		TRACE_DATAREFS("Creating %s as %p\n", name,d);
+		d = &s_drefs.emplace_back(name);
+		TRACE_DATAREFS("Creating %s as %p\n", name, d);
 	}
-	d->m_name = name;
-	d->m_index = -1;
-	d->m_ours = 1;
+
+	d->m_ours = true;
 	d->m_notify_func = func;
 	d->m_notify_ref = ref;
-	d->m_number_storage = 0;
 	d->m_types = type_mask;
 
 	switch(type) {
@@ -612,7 +615,7 @@ string			xlua_dref_get_string(xlua_dref * d)
 		int l = XPLMGetDatab(d->m_dref, NULL, 0, 0);
 		if(l > 0)
 		{
-			vector<char>	buf(l);
+			std::vector<char> buf(l);
 			l = XPLMGetDatab(d->m_dref, &buf[0], 0, l);
 			assert(l <= buf.size());
 			if(l == buf.size())
@@ -655,41 +658,24 @@ void			xlua_relink_all_drefs()
 		dre = XPLM_NO_PLUGIN_ID;
 	}
 #endif
-	for(xlua_dref * d = s_drefs; d; d = d->m_next)
+	for (xlua_dref& d : s_drefs)
 	{
-		if(d->m_dref == NULL)
+		if (d.m_dref == nullptr)
 		{
-			assert(!d->m_ours);
-			resolve_dref(d);
+			assert(!d.m_ours);
+			resolve_dref(&d);
 		}
 #if !MOBILE
-		if(d->m_ours)
-		if(dre != XPLM_NO_PLUGIN_ID)
+		if(d.m_ours && dre != XPLM_NO_PLUGIN_ID)
 		{
 //			TRACE_DATAREFS("registered: %s\n", d->m_name.c_str());
-			XPLMSendMessageToPlugin(dre, MSG_ADD_DATAREF, (void *)d->m_name.c_str());
-		}		
+			XPLMSendMessageToPlugin(dre, MSG_ADD_DATAREF, (void *)d.m_name.c_str());
+		}
 #endif
 	}
 }
 
-void			xlua_dref_cleanup()
+void xlua_dref_cleanup()
 {
-	while(s_drefs)
-	{
-		xlua_dref *	kill = s_drefs;
-		s_drefs = s_drefs->m_next;
-		
-		if(kill->m_dref && kill->m_ours)
-		{
-			XPLMUnregisterDataAccessor(kill->m_dref);
-		}
-		
-		delete kill;
-	}
-
-	assert(s_drefs == nullptr);
+	s_drefs.clear();
 }
-
-
-
