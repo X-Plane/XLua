@@ -28,6 +28,11 @@ extern "C" {
 void	add_xlua_funcs_to_interp(lua_State * interp);
 std::string get_log_prefix(char l='I');
 
+extern std::string const kTimerCallbackSig;
+extern std::string const kDatarefCallbackSig;
+extern std::string const kFilterCallbackSig;
+extern std::string const kCommandCallbackSig;
+
 // This is kind of a mess - Lua [annoyingly] doesn't give you a way to store a closure/Lua interpreter function
 // in C space.  The hack is to use luaL_ref to fill a new key in the registry table with a copy of ANY value from
 // the stack - since this is type agnostic and takes a strong reference it (1) prevents the closure from being 
@@ -47,8 +52,6 @@ public:
 private:
 	int origRefconRegIndex = 0;
 };
-
-extern std::map<void*, notify_cb_t*> allRegisteredCallbacks;
 
 std::shared_ptr<notify_cb_t> wrap_lua_func_nil(lua_State* L, int idx, std::string const callbackKey);
 lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackKey);

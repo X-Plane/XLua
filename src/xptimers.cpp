@@ -47,10 +47,13 @@ xlua_timer* xlua_find_timer(lua_State* L, xlua_timer_f func, std::shared_ptr<not
 
 	for (auto& t : s_timers)
 	{
-		if (t.m_func == func)
+		if (t.m_func == func &&
+			    ref->callbacks.contains(kTimerCallbackSig) &&
+			t.m_ref->callbacks.contains(kTimerCallbackSig)
+			)
 		{
-			lua_rawgeti(L, LUA_REGISTRYINDEX, ref->get_capture());
-			lua_rawgeti(L, LUA_REGISTRYINDEX, t.m_ref->get_capture());
+			lua_rawgeti(L, LUA_REGISTRYINDEX, ref->callbacks.at(kTimerCallbackSig));
+			lua_rawgeti(L, LUA_REGISTRYINDEX, t.m_ref->callbacks.at(kTimerCallbackSig));
 			bool match = lua_equal(L, -1, -2);
 			lua_pop(L, 2);
 

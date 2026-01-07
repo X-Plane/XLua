@@ -37,17 +37,26 @@
 
 notify_cb_t::~notify_cb_t()
 {
-	if (L != nullptr && origRefconRegIndex != 0)
+	if (L != nullptr)
 	{
-		luaL_unref(L, LUA_REGISTRYINDEX, origRefconRegIndex);
+		if (origRefconRegIndex != 0)
+		{
+			luaL_unref(L, LUA_REGISTRYINDEX, origRefconRegIndex);
+		}
+
+		// Un-pin all functions.
+		for (auto const& [name, regidx] : callbacks)
+		{
+			luaL_unref(L, LUA_REGISTRYINDEX, regidx);
+		}
 	}
 }
 
 static XPLMDataRef drSimRealTime = nullptr;
-static const std::string kTimerCallbackSig("TimerCallback");
-static const std::string kDatarefCallbackSig("DatarefCallback");
-static const std::string kFilterCallbackSig("FilterCallback");
-static const std::string kCommandCallbackSig("CmdCallback");
+std::string const kTimerCallbackSig("TimerCallback");
+std::string const kDatarefCallbackSig("DatarefCallback");
+std::string const kFilterCallbackSig("FilterCallback");
+std::string const kCommandCallbackSig("CmdCallback");
 
 static int l_my_print(lua_State* L);
 
@@ -58,8 +67,7 @@ static int l_my_print(lua_State* L);
 // reconstruct the closure from C land.
 //
 // If the closure is actually nil, we return NULL and allocate nothing.
-// The memory is tracked by the interp's module and is collected for us
-// at shutdown.
+
 std::shared_ptr<notify_cb_t> wrap_first_lua_func(lua_State* L, int func_stack_idx, std::string const cb_typename, int refcon_reg_index)
 {
 	if (lua_isnil(L, func_stack_idx))
@@ -68,7 +76,7 @@ std::shared_ptr<notify_cb_t> wrap_first_lua_func(lua_State* L, int func_stack_id
 		return nullptr;
 	}
 
-	auto cb = std::make_shared<notify_cb_t>(L, luaL_ref(L, LUA_REGISTRYINDEX));
+	auto cb = std::make_shared<notify_cb_t>(L, refcon_reg_index);
 	wrap_next_lua_func(cb, func_stack_idx, cb_typename);
 
 	return cb;
@@ -894,30 +902,19 @@ void	add_xlua_funcs_to_interp(lua_State * L)
 	lua_pop(L, 1);
 }
 
-static std::map<void*, notify_cb_t*> allRegisteredCallbacks;
+static std::map<void*, std::shared_ptr<notify_cb_t>> allRegisteredCallbacks;
 
 void CleanupStoredCallbacks(lua_State* L, int keyIndexInRegistry)
 {
-	// Get the value. Could be any type but most likely void*.
+	// TODO: Get the value. Could be any type but most likely void*.
 	// If it isn't a void* then convert it somehow; straight cast for numbers, maybe a hash for strings?
 	// Can't assume that we get the same value from lua - could be a string, for example.
-	void* key;
+	lua_rawgeti(L, LUA_REGISTRYINDEX, keyIndexInRegistry);
+	void* key =
+#error Something
+	lua_pop(L, 1);
 
-	module* me = module::module_from_interp(L);
-
-	auto exists = allRegisteredCallbacks.find(key);
-	if (exists != allRegisteredCallbacks.end())
-	{
-		// Un-pin all functions.
-		for (auto const& [name, regidx] : exists->second->callbacks)
-		{
-			luaL_unref(L, LUA_REGISTRYINDEX, regidx);
-		}
-
-		luaL_unref(L, LUA_REGISTRYINDEX, exists->second->get_capture());
-
-		// me->module_free_tracked(*exists);		// Hah! A dealloc function? Yeah, right.
-	}
+	allRegisteredCallbacks[key] = cb;
 }
 
 std::optional<std::string> xlua_checkoptstring(lua_State* L, int narg)
