@@ -86,18 +86,19 @@ std::shared_ptr<notify_cb_t> wrap_lua_func_nil(lua_State * L, int idx)
 // pushes the lua function onto the stack (so that we can then push 
 // args and pcall) or returns 0 if we should not call because the CB is
 // nil or borked.
-lua_State * setup_lua_callback(std::shared_ptr<notify_cb_t> cb)
+lua_State* setup_lua_callback(std::shared_ptr<notify_cb_t> cb)
 {
-	if (!cb) 
-		return NULL;
+	if (!cb)
+		return nullptr;
 
 	lua_rawgeti(cb->L, LUA_REGISTRYINDEX, cb->get_slot());
 	if(!lua_isfunction(cb->L, -1))
 	{
 		log_message(cb->L, "ERROR: we did not persist a closure?!?");
 		lua_pop(cb->L, 1);
-		return 0;
+		return nullptr;
 	}
+
 	return cb->L;
 }
 
@@ -323,15 +324,17 @@ static int XLuaSetString(lua_State * L)
 static int XLuaFindCommand(lua_State * L)
 {
 	const char * name = luaL_checkstring(L, 1);
-	xlua_cmd * r = xlua_find_cmd(name);
-	if(!r)
+
+	xlua_cmd* r = xlua_find_cmd(name);
+	if (r == nullptr)
 	{
 		lua_pushnil(L);
-		return 1;
 	}
-	assert(r);
-	
-    xlua_pushuserdata(L, r);
+	else
+	{
+		xlua_pushuserdata(L, r);
+	}
+
 	return 1;
 }
 
@@ -341,10 +344,16 @@ static int XLuaCreateCommand(lua_State * L)
 	const char * name = luaL_checkstring(L, 1);
 	const char * desc = luaL_checkstring(L, 2);
 
-	xlua_cmd * r = xlua_create_cmd(L,name,desc);
-	assert(r);
-	
-    xlua_pushuserdata(L, r);
+	xlua_cmd* r = xlua_create_cmd(L,name,desc);
+	if (r == nullptr)
+	{
+		lua_pushnil(L);
+	}
+	else
+	{
+		xlua_pushuserdata(L, r);
+	}
+
 	return 1;
 }
 

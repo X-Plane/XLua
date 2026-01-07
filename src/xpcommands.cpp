@@ -189,7 +189,7 @@ xlua_cmd* xlua_create_cmd(lua_State* L, const char * name, const char * desc)
 			if (i.m_ours)
 			{
 				log_message(L, "ERROR: command already exists: %s\n", name);
-				return NULL;
+				return nullptr;
 			}
 
 			i.m_ours = true;
