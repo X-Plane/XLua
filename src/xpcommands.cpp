@@ -28,38 +28,15 @@ static int xlua_std_pre_handler(XPLMCommandRef c, XPLMCommandPhase phase, void* 
 static int xlua_std_main_handler(XPLMCommandRef c, XPLMCommandPhase phase, void* ref);
 static int xlua_std_post_handler(XPLMCommandRef c, XPLMCommandPhase phase, void* ref);
 
-struct xlua_cmd {
-public:
-	xlua_cmd() = delete;
-	xlua_cmd(std::string const& name, XPLMCommandRef cmd) : m_name(name), m_cmd(cmd) {}
-
-	~xlua_cmd()
-	{
-		if (m_pre_handler)
-			XPLMUnregisterCommandHandler(m_cmd, xlua_std_pre_handler, 1, this);
-		if (m_main_handler)
-			XPLMUnregisterCommandHandler(m_cmd, xlua_std_main_handler, 1, this);
-		if (m_post_handler)
-			XPLMUnregisterCommandHandler(m_cmd, xlua_std_post_handler, 0, this);
-	}
-
-	string				m_name;
-	XPLMCommandRef		m_cmd				= nullptr;
-	bool				m_ours				= false;
-	xlua_cmd_handler_f	m_pre_handler		= nullptr;
-	std::shared_ptr<notify_cb_t> m_pre_ref	= nullptr;
-	xlua_cmd_handler_f	m_main_handler		= nullptr;
-	std::shared_ptr<notify_cb_t> m_main_ref	= nullptr;
-	xlua_cmd_handler_f	m_post_handler		= nullptr;
-	std::shared_ptr<notify_cb_t> m_post_ref	= nullptr;
-	float				m_down_time			= 0;
-	xlua_cmd_handler_f	m_filter_handler	= nullptr;
-	std::shared_ptr<notify_cb_t> m_filter_ref = nullptr;
-	bool				m_filter_inited		= false;
-	bool				m_filter_allow		= true;
-	bool				m_filter_allow_release = false;
-	bool				m_filter_sent_fake_end = false;
-};
+xlua_cmd::~xlua_cmd()
+{
+	if (m_pre_handler)
+		XPLMUnregisterCommandHandler(m_cmd, xlua_std_pre_handler, 1, this);
+	if (m_main_handler)
+		XPLMUnregisterCommandHandler(m_cmd, xlua_std_main_handler, 1, this);
+	if (m_post_handler)
+		XPLMUnregisterCommandHandler(m_cmd, xlua_std_post_handler, 0, this);
+}
 
 static std::list<xlua_cmd> s_cmds;
 
