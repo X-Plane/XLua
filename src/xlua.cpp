@@ -54,7 +54,8 @@ static bool				g_is_acf_inited = false;
 XPLMDataRef				g_replay_active = NULL;
 XPLMDataRef				g_sim_period = NULL;
 XPLMCommandRef			reset_cmd = nullptr;
-XPLMMenuID				PluginMenu = 0;
+XPLMMenuID				PluginMenu = 0;					// Our sub-menu
+int						PluginMenuItem = 0;				// Our sub-menu's item number on the Plugins menu
 bool					g_bIsAircraftPlugin = true;
 int						JITMenuItem = 0;
 
@@ -520,24 +521,10 @@ PLUGIN_API int XPluginStart(
 	g_replay_active = XPLMFindDataRef("sim/time/is_in_replay");
 	g_sim_period = XPLMFindDataRef("sim/operation/misc/frame_rate_period");
 	
-	XPLMCreateFlightLoop_t pre = { 0 };
-	XPLMCreateFlightLoop_t post = { 0 };
-	pre.structSize = sizeof(pre);
-	post.structSize = sizeof(post);
-	pre.phase = xplm_FlightLoop_Phase_BeforeFlightModel;
-	post.phase = xplm_FlightLoop_Phase_AfterFlightModel;
-	pre.callbackFunc = xlua_pre_timer_master_cb;
-	post.callbackFunc = xlua_post_timer_master_cb;
-
-	g_pre_loop = XPLMCreateFlightLoop(&pre);
-	g_post_loop = XPLMCreateFlightLoop(&post);
-	XPLMScheduleFlightLoop(g_pre_loop, -1, 0);
-	XPLMScheduleFlightLoop(g_post_loop, -1, 0);
-	
 	XPLMEnableFeature("XPLM_USE_NATIVE_PATHS", 1);
 	
 	// Plugin base path: pop off two dirs from the plugin name to get the base path for scripts, *not* the owning aircraft's base path.
-	char pName[256], pPath[512] = { 0 }, myPath[512] = { 0 };
+	char pPath[512] = { 0 }, myPath[512] = { 0 };
 	XPLMGetPluginInfo(XPLMGetMyID(), nullptr, myPath, nullptr, nullptr);
 	plugin_base_path = myPath;
 	for (int s = 0; s < 2; ++s)
@@ -549,9 +536,7 @@ PLUGIN_API int XPluginStart(
 		}
 	}
 	plugin_base_path += XPLMGetDirectorySeparator();
-	std::string ac_base_path(plugin_base_path);
 
-	char const* menuName = nullptr;
 	char sysPath[512];
 	XPLMGetSystemPath(sysPath);
 	auto relpath = std::filesystem::relative(std::filesystem::path(myPath), std::filesystem::path(sysPath) / "Aircraft");
@@ -559,7 +544,63 @@ PLUGIN_API int XPluginStart(
 
 	if (g_bIsAircraftPlugin)
 	{
+		strcpy(outSig, "com.x-plane.xlua-sys." VERSION);
+	}
+
+	return 1;
+}
+
+PLUGIN_API void	XPluginStop(void)
+{
+}
+
+PLUGIN_API void XPluginDisable(void)
+{
+	if (PluginMenu != nullptr)
+	{
+		XPLMRemoveMenuItem(XPLMFindPluginsMenu(), PluginMenuItem);
+		XPLMDestroyMenu(PluginMenu);
+		PluginMenu = nullptr;
+	}
+
+	CleanupScripts();
+
+	XPLMDestroyFlightLoop(g_pre_loop);
+	XPLMDestroyFlightLoop(g_post_loop);
+	g_pre_loop = nullptr;
+	g_post_loop = nullptr;
+	g_is_acf_inited = false;
+}
+
+PLUGIN_API int XPluginEnable(void)
+{
+	XPLMCreateFlightLoop_t pre =
+	{
+		.structSize = sizeof(XPLMCreateFlightLoop_t),
+		.phase = xplm_FlightLoop_Phase_BeforeFlightModel,
+		.callbackFunc = xlua_pre_timer_master_cb
+	};
+	g_pre_loop = XPLMCreateFlightLoop(&pre);
+	XPLMScheduleFlightLoop(g_pre_loop, -1, 0);
+
+	XPLMCreateFlightLoop_t post =
+	{
+		.structSize = sizeof(XPLMCreateFlightLoop_t),
+		.phase = xplm_FlightLoop_Phase_AfterFlightModel,
+		.callbackFunc = xlua_post_timer_master_cb
+	};
+	g_post_loop = XPLMCreateFlightLoop(&post);
+	XPLMScheduleFlightLoop(g_post_loop, -1, 0);
+
+	char const* menuName = nullptr;
+	std::string ac_base_path(plugin_base_path);
+
+	if (g_bIsAircraftPlugin)
+	{
 		// Do we want to add a "reset" menu item? Only for the user's plane.
+		char pName[256], sysPath[512];
+
+		XPLMGetSystemPath(sysPath);
 		XPLMGetNthAircraftModel(XPLM_USER_AIRCRAFT, pName, sysPath);
 		char* PDest = strrchr(sysPath, *XPLMGetDirectorySeparator());
 		if (PDest != nullptr)
@@ -585,7 +626,7 @@ PLUGIN_API int XPluginStart(
 					}
 					else
 					{
-						menuName = outName;
+						menuName = "XLua " VERSION;
 					}
 
 					break;
@@ -601,14 +642,13 @@ PLUGIN_API int XPluginStart(
 	}
 	else
 	{
-		strcpy(outSig, "com.x-plane.xlua-sys." VERSION);
 		menuName = "System XLua";
 	}
 
 	if (menuName != nullptr)
 	{
-		int item = XPLMAppendMenuItem(XPLMFindPluginsMenu(), menuName, nullptr, 0);
-		PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), item, MenuHandler, nullptr);
+		PluginMenuItem = XPLMAppendMenuItem(XPLMFindPluginsMenu(), menuName, nullptr, 0);
+		PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), PluginMenuItem, MenuHandler, nullptr);
 		XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, 0);
 #if !MOBILE
 		XPLMAppendMenuItem(PluginMenu, "Show Profiler", (void*)MI_ShowProfiler, 1);
@@ -618,32 +658,6 @@ PLUGIN_API int XPluginStart(
 
 	InitScripts();
 
-	return 1;
-}
-
-PLUGIN_API void	XPluginStop(void)
-{
-	if (PluginMenu != nullptr)
-	{
-		XPLMDestroyMenu(PluginMenu);
-		PluginMenu = nullptr;
-	}
-
-	CleanupScripts();
-	
-	XPLMDestroyFlightLoop(g_pre_loop);
-	XPLMDestroyFlightLoop(g_post_loop);
-	g_pre_loop = NULL;
-	g_post_loop = NULL;	
-	g_is_acf_inited = false;
-}
-
-PLUGIN_API void XPluginDisable(void)
-{
-}
-
-PLUGIN_API int XPluginEnable(void)
-{
 	xlua_relink_all_drefs();
 	return 1;
 }
