@@ -66,6 +66,9 @@ public:
 			void		dump_profile() const;
 			void		clear_profile(void) { m_profile.clear(); }
 
+			void		set_jit_mode(bool enable);
+			bool		get_jit_mode(void);
+
 			struct prof_data
 			{
 				ssize_t cumulative = 0;

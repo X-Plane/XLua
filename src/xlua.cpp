@@ -55,6 +55,7 @@ XPLMDataRef				g_sim_period = NULL;
 XPLMCommandRef			reset_cmd = nullptr;
 XPLMMenuID				PluginMenu = 0;
 bool					g_bIsAircraftPlugin = true;
+int						JITMenuItem = 0;
 
 static string plugin_base_path;
 
@@ -70,6 +71,7 @@ enum eMenuItems : int
 	MI_ResetState,
 #if !MOBILE
 	MI_ShowProfiler,
+	MI_ToggleJIT
 #endif
 };
 
@@ -159,6 +161,11 @@ static float xlua_post_timer_master_cb(
 			profilerWnd->reportClose();
 			profilerWnd.reset();
 		}
+	}
+	if (!g_modules.empty())
+	{
+		bool is_enabled = g_modules.front()->get_jit_mode();
+		XPLMCheckMenuItem(PluginMenu, JITMenuItem, is_enabled ? xplm_Menu_Checked : xplm_Menu_Unchecked);
 	}
 #endif
 	return -1;
@@ -480,6 +487,21 @@ static void MenuHandler(void* menuRef, void* itemRef)
 		case MI_ShowProfiler:
 			ShowProfiler();
 			break;
+
+		case MI_ToggleJIT:
+		{
+			if (!g_modules.empty())
+			{
+				XPLMMenuCheck curState;
+				XPLMCheckMenuItemState(PluginMenu, JITMenuItem, &curState);
+
+				for (auto const& m : g_modules)
+				{
+					m->set_jit_mode(curState != xplm_Menu_Checked);
+				}
+			}
+			break;
+		}
 #endif
 	}
 }
@@ -588,6 +610,7 @@ PLUGIN_API int XPluginStart(
 		XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, 0);
 #if !MOBILE
 		XPLMAppendMenuItem(PluginMenu, "Show Profiler", (void*)MI_ShowProfiler, 1);
+		JITMenuItem = XPLMAppendMenuItem(PluginMenu, "Toggle JIT", (void*)MI_ToggleJIT, 2);
 #endif
 	}
 

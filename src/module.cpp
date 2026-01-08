@@ -175,6 +175,24 @@ void module::dump_profile(void) const
 	log_message(m_interp, "========================\n");
 }
 
+void module::set_jit_mode(bool enable)
+{
+	luaJIT_setmode(m_interp, 0, LUAJIT_MODE_ENGINE | (enable ? LUAJIT_MODE_ON : LUAJIT_MODE_OFF));
+	luaJIT_setmode(m_interp, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_FLUSH);
+}
+
+bool module::get_jit_mode(void)
+{
+	// There's no C equivalent to _get_ the JIT mode...
+	bool is_enabled = false;
+	if (m_interp != nullptr && 0 == luaL_dostring(m_interp, "return jit and jit.status() or false"))
+	{
+		is_enabled = lua_toboolean(m_interp, -1);
+		lua_pop(m_interp, 1);
+	}
+	return is_enabled;
+}
+
 module::module(
 							const char *		in_module_path,
 							const char *		in_init_script,
