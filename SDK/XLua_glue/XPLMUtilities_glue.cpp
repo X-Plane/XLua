@@ -224,11 +224,11 @@ void RegType_XPLMCommandRef(lua_State* L)
 static int cb_XPLMCommandCallback_f(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
 {
 	int res = {};
-	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
-	lua_State* L = setup_lua_callback(cb, "XPLMCommandCallback_f");
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMCommandCallback_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uir", inCommand, inPhase, cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uir", inCommand, inPhase, inRefcon_cb->get_capture()))
 		{
 			res = xlua_checkboolean(L, -1) ? 1 : 0;
 			lua_pop(L, 1);
@@ -319,10 +319,10 @@ int XLuaRegisterCommandHandler(lua_State* L)
 	{
 		inComand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected userdata<XPLMCommandRef>");
 	}
-	int refcon_regindex = capture_lua_value(L, 4);
-	CleanupStoredCallbacks(L, refcon_regindex);
 
-	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 2, "XPLMCommandCallback_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 4);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 2, false, "XPLMCommandCallback_f");
 	bool inBefore = xlua_checkboolean(L, 3);
 
 	XPLMRegisterCommandHandler(inComand, cb_XPLMCommandCallback_f, inBefore, cb_capture_0.get());
@@ -337,10 +337,10 @@ int XLuaUnregisterCommandHandler(lua_State* L)
 	{
 		inComand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected userdata<XPLMCommandRef>");
 	}
-	int refcon_regindex = capture_lua_value(L, 4);
-	CleanupStoredCallbacks(L, refcon_regindex);
 
-	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 2, "XPLMCommandCallback_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 4);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 2, false, "XPLMCommandCallback_f");
 	bool inBefore = xlua_checkboolean(L, 3);
 
 	XPLMUnregisterCommandHandler(inComand, cb_XPLMCommandCallback_f, inBefore, cb_capture_0.get());

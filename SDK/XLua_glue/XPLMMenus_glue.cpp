@@ -91,11 +91,12 @@ void RegType_XPLMMenuID(lua_State* L)
 
 static void cb_XPLMMenuHandler_f(void* inMenuRef, void* inItemRef)
 {
-	notify_cb_t const* cb = static_cast<notify_cb_t*>(inMenuRef);
-	lua_State* L = setup_lua_callback(cb, "XPLMMenuHandler_f");
+	notify_cb_t const* inMenuRef_cb = static_cast<notify_cb_t*>(inMenuRef);
+	notify_cb_t const* inItemRef_cb = static_cast<notify_cb_t*>(inItemRef);
+	lua_State* L = setup_lua_callback(inMenuRef_cb, "XPLMMenuHandler_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rr", cb->get_capture(), inItemRef))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rr", inMenuRef_cb->get_capture(), inItemRef_cb->get_capture()))
 		{
 		}
 	}
@@ -140,12 +141,12 @@ int XLuaCreateMenu(lua_State* L)
 		inParentMenu = xlua_checkuserdata<XPLMMenuID>(L, 2, "Expected userdata<XPLMMenuID>");
 	}
 	int inParentItem = xlua_checkinteger(L, 3);
-	int refcon_regindex = capture_lua_value(L, 5);
-	CleanupStoredCallbacks(L, refcon_regindex);
 
-	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 4, "XPLMMenuHandler_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 5);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 4, true, "XPLMMenuHandler_f");
 
-	XPLMMenuID res = XPLMCreateMenu(inName, inParentMenu, inParentItem, cb_XPLMMenuHandler_f, cb_capture_0.get());
+	XPLMMenuID res = XPLMCreateMenu(inName, inParentMenu, inParentItem, (cb_capture_0 ? cb_XPLMMenuHandler_f : nullptr), cb_capture_0.get());
 	if (res == nullptr)
 	{
 		lua_pushnil(L);
@@ -192,10 +193,12 @@ int XLuaAppendMenuItem(lua_State* L)
 		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected userdata<XPLMMenuID>");
 	}
 	const char * inItemName = xlua_checkstring(L, 2);
-	int inItemRef_regindex = capture_lua_value(L, 3);
+
+	std::shared_ptr<notify_cb_t> inItemRef_cb = capture_lua_value(L, 3);
+	xlua_persist_userref(L, inItemRef_cb);
 	int inDeprecatedAndIgnored = xlua_checkinteger(L, 4);
 
-	int res = XPLMAppendMenuItem(inMenu, inItemName, reinterpret_cast<void*>(static_cast<intptr_t>(inItemRef_regindex)), inDeprecatedAndIgnored);
+	int res = XPLMAppendMenuItem(inMenu, inItemName, inItemRef_cb.get(), inDeprecatedAndIgnored);
 	lua_pushinteger(L, res);
 
 	return 1;

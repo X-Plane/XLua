@@ -152,11 +152,11 @@ int MakeXPLMCameraPosition_t(lua_State* L)
 static int cb_XPLMCameraControl_f(XPLMCameraPosition_t * outCameraPosition, int inIsLosingControl, void* inRefcon)
 {
 	int res = {};
-	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
-	lua_State* L = setup_lua_callback(cb, "XPLMCameraControl_f");
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMCameraControl_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "?br", outCameraPosition, static_cast<bool>(inIsLosingControl), cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "?br", outCameraPosition, static_cast<bool>(inIsLosingControl), inRefcon_cb->get_capture()))
 		{
 			res = xlua_checkboolean(L, -1) ? 1 : 0;
 			lua_pop(L, 1);
@@ -169,10 +169,10 @@ static int cb_XPLMCameraControl_f(XPLMCameraPosition_t * outCameraPosition, int 
 int XLuaControlCamera(lua_State* L)
 {
 	XPLMCameraControlDuration inHowLong = xlua_checkinteger(L, 1);
-	int refcon_regindex = capture_lua_value(L, 3);
-	CleanupStoredCallbacks(L, refcon_regindex);
 
-	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 2, "XPLMCameraControl_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 3);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 2, false, "XPLMCameraControl_f");
 
 	XPLMControlCamera(inHowLong, cb_XPLMCameraControl_f, cb_capture_0.get());
 

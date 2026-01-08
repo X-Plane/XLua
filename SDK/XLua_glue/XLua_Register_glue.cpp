@@ -259,7 +259,6 @@ extern "C"
 	int XLuaUnregisterFlightLoopCallback(lua_State* L);
 	int XLuaUnregisterHotKey(lua_State* L);
 	int XLuaUnregisterKeySniffer(lua_State* L);
-	int XLuaUnshareData(lua_State* L);
 	int XLuaUpdateFlight(lua_State* L);
 	int MakeXPLMWeatherInfoClouds_t(lua_State* L);
 	int MakeXPLMWeatherInfoWinds_t(lua_State* L);
@@ -541,7 +540,6 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMUnregisterFlightLoopCallback", XLuaUnregisterFlightLoopCallback);
 	lua_register(L, "XPLMUnregisterHotKey", XLuaUnregisterHotKey);
 	lua_register(L, "XPLMUnregisterKeySniffer", XLuaUnregisterKeySniffer);
-	lua_register(L, "XPLMUnshareData", XLuaUnshareData);
 	lua_register(L, "XPLMUpdateFlight", XLuaUpdateFlight);
 	lua_register(L, "XPLMWeatherInfoClouds_t", MakeXPLMWeatherInfoClouds_t);
 	lua_register(L, "XPLMWeatherInfoWinds_t", MakeXPLMWeatherInfoWinds_t);

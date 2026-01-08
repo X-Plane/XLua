@@ -567,11 +567,11 @@ int MakeXPLMDrawInfoDouble_t(lua_State* L)
 
 static void cb_XPLMObjectLoaded_f(XPLMObjectRef inObject, void* inRefcon)
 {
-	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
-	lua_State* L = setup_lua_callback(cb, "XPLMObjectLoaded_f");
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMObjectLoaded_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ur", inObject, cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ur", inObject, inRefcon_cb->get_capture()))
 		{
 		}
 	}
@@ -597,10 +597,10 @@ int XLuaLoadObject(lua_State* L)
 int XLuaLoadObjectAsync(lua_State* L)
 {
 	const char * inPath = xlua_checkstring(L, 1);
-	int refcon_regindex = capture_lua_value(L, 3);
-	CleanupStoredCallbacks(L, refcon_regindex);
 
-	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 2, "XPLMObjectLoaded_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 3);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 2, false, "XPLMObjectLoaded_f");
 
 	XPLMLoadObjectAsync(inPath, cb_XPLMObjectLoaded_f, cb_capture_0.get());
 
@@ -639,11 +639,11 @@ int XLuaUnloadObject(lua_State* L)
 
 static void cb_XPLMLibraryEnumerator_f(const char * inFilePath, void* inRef)
 {
-	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRef);
-	lua_State* L = setup_lua_callback(cb, "XPLMLibraryEnumerator_f");
+	notify_cb_t const* inRef_cb = static_cast<notify_cb_t*>(inRef);
+	lua_State* L = setup_lua_callback(inRef_cb, "XPLMLibraryEnumerator_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFilePath, cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFilePath, inRef_cb->get_capture()))
 		{
 		}
 	}
@@ -654,10 +654,10 @@ int XLuaLookupObjects(lua_State* L)
 	const char * inPath = xlua_checkstring(L, 1);
 	float inLatitude = xlua_checknumber(L, 2);
 	float inLongitude = xlua_checknumber(L, 3);
-	int refcon_regindex = capture_lua_value(L, 5);
-	CleanupStoredCallbacks(L, refcon_regindex);
 
-	std::shared_ptr<notify_cb_t> cb_capture_0 = wrap_first_lua_func(L, 4, "XPLMLibraryEnumerator_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 5);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 4, false, "XPLMLibraryEnumerator_f");
 
 	int res = XPLMLookupObjects(inPath, inLatitude, inLongitude, cb_XPLMLibraryEnumerator_f, cb_capture_0.get());
 	lua_pushinteger(L, res);

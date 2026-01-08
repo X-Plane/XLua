@@ -137,7 +137,7 @@ int XLuaInstanceSetPosition(lua_State* L)
 		luaL_argerror(L, 3, "Array 'data' must have at least one element.\n");
 		return 0;
 	}
-	float* data = new float[data_len];
+	float* data = new float[data_len]{};
 	for (size_t i = 0; i < data_len; ++i)
 	{
 		lua_rawgeti(L, 3, i + 1);
@@ -166,7 +166,7 @@ int XLuaInstanceSetPositionDouble(lua_State* L)
 		luaL_argerror(L, 3, "Array 'data' must have at least one element.\n");
 		return 0;
 	}
-	float* data = new float[data_len];
+	float* data = new float[data_len]{};
 	for (size_t i = 0; i < data_len; ++i)
 	{
 		lua_rawgeti(L, 3, i + 1);

@@ -288,11 +288,11 @@ int XLuaGetNthAircraftModel(lua_State* L)
 
 static void cb_XPLMPlanesAvailable_f(void* inRefcon)
 {
-	notify_cb_t const* cb = static_cast<notify_cb_t*>(inRefcon);
-	lua_State* L = setup_lua_callback(cb, "XPLMPlanesAvailable_f");
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMPlanesAvailable_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r", cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r", inRefcon_cb->get_capture()))
 		{
 		}
 	}

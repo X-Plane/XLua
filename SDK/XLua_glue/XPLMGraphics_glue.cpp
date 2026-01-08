@@ -169,7 +169,7 @@ int XLuaDrawString(lua_State* L)
 		luaL_argerror(L, 1, "Array 'inColorRGB' must have 3 elements.\n");
 		return 0;
 	}
-	float* inColorRGB = new float[inColorRGB_len];
+	float* inColorRGB = new float[inColorRGB_len]{};
 	for (size_t i = 0; i < inColorRGB_len; ++i)
 	{
 		lua_rawgeti(L, 1, i + 1);
@@ -197,7 +197,7 @@ int XLuaDrawNumber(lua_State* L)
 		luaL_argerror(L, 1, "Array 'inColorRGB' must have 3 elements.\n");
 		return 0;
 	}
-	float* inColorRGB = new float[inColorRGB_len];
+	float* inColorRGB = new float[inColorRGB_len]{};
 	for (size_t i = 0; i < inColorRGB_len; ++i)
 	{
 		lua_rawgeti(L, 1, i + 1);
