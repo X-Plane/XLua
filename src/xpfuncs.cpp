@@ -68,29 +68,27 @@ static int l_my_print(lua_State* L);
 //
 // If the closure is actually nil, we return NULL and allocate nothing.
 
-std::shared_ptr<notify_cb_t> wrap_first_lua_func(lua_State* L, int func_stack_idx, std::string const cb_typename, int refcon_reg_index)
+std::shared_ptr<notify_cb_t> wrap_lua_func(lua_State* L, int func_stack_idx, bool optional, std::string const cb_typename)
 {
-	if (lua_isnil(L, func_stack_idx))
-	{
-		luaL_argerror(L, func_stack_idx, "nil not allowed for callback");
-		return nullptr;
-	}
-
-	auto cb = std::make_shared<notify_cb_t>(L, refcon_reg_index);
-	wrap_next_lua_func(cb, func_stack_idx, cb_typename);
+	auto cb = std::make_shared<notify_cb_t>(L, 0);
+	wrap_next_lua_func(cb, func_stack_idx, optional, cb_typename);
 
 	return cb;
 }
 
-bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb_record, int func_stack_idx, std::string const cb_typename)
+bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb_record, int func_stack_idx, bool optional, std::string const cb_typename)
 {
-	if (lua_isnil(cb_record->L, func_stack_idx))
+	if (!lua_isfunction(cb_record->L, func_stack_idx) && !lua_isnil(cb_record->L, func_stack_idx))
 	{
-		luaL_argerror(cb_record->L, func_stack_idx, "nil not allowed for callback");
+		luaL_argerror(cb_record->L, func_stack_idx, "Callback must be a function or nil");
 		return false;
 	}
 
-	luaL_checktype(cb_record->L, func_stack_idx, LUA_TFUNCTION);
+	if (!optional && lua_isnil(cb_record->L, func_stack_idx))
+	{
+		luaL_argerror(cb_record->L, func_stack_idx, "Callback must be a function");
+		return false;
+	}
 
 	// Now store the registry reference index into the callback array, in the given position.
 	lua_pushvalue(cb_record->L, func_stack_idx);
@@ -106,14 +104,16 @@ std::shared_ptr<notify_cb_t> wrap_lua_func_nil(lua_State * L, int idx, std::stri
 		return nullptr;
 	}
 
-	return wrap_first_lua_func(L, idx, callbackKey, 0);
+	auto cb = std::make_shared<notify_cb_t>(L, 0);
+	wrap_next_lua_func(cb, idx, false, callbackKey);
+	return cb;
 }
 
 // Similar idea to above, but capture a value and just return the index into the registry.
-int capture_lua_value(lua_State* L, int idx)
+std::shared_ptr<notify_cb_t> capture_lua_value(lua_State* L, int idx)
 {
 	lua_pushvalue(L, idx);
-	return luaL_ref(L, LUA_REGISTRYINDEX);
+	return std::make_shared<notify_cb_t>(L, luaL_ref(L, LUA_REGISTRYINDEX));
 }
 
 // Given a void * that is really a CB struct, this routine either
@@ -127,25 +127,31 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 
 	if (callbackKey.empty())
 	{
-		log_message(cb->L, "ERROR: Anonymous closure specified.");
+		log_message(cb->L, "ERROR: Anonymous closure specified.\n");
 		return nullptr;
 	}
 
 	auto storedKey = cb->callbacks.find(callbackKey);
 	if (storedKey != cb->callbacks.end())
 	{
+		if (storedKey->second == LUA_REFNIL)
+		{
+			// The stored function was a nil - an optional function. Return nullptr but don't raise an error.
+			return nullptr;
+		}
+
 		lua_rawgeti(cb->L, LUA_REGISTRYINDEX, storedKey->second);
 		if (lua_isfunction(cb->L, -1))
 		{
 			return cb->L;
 		}
 
-		log_message(cb->L, "ERROR: we did not persist a closure?!?");
+		log_message(cb->L, "ERROR: we did not persist a closure?!?\n");
 		lua_pop(cb->L, 1);
 	}
 	else
 	{
-		log_message(cb->L, "ERROR: Callback %s is not recognised!", callbackKey.c_str());
+		log_message(cb->L, "ERROR: Callback %s is not recognised!\n", callbackKey.c_str());
 	}
 
 	return nullptr;
@@ -444,9 +450,12 @@ static int cmd_cb_helper(xlua_cmd * cmd, int phase, float elapsed, std::shared_p
 static int XLuaFilterCommand(lua_State* L)
 {
 	xlua_cmd* cmd = xlua_checkuserdata<xlua_cmd*>(L, 1, "expected command");
-	std::shared_ptr<notify_cb_t> cb_filter = wrap_first_lua_func(L, 2, kFilterCallbackSig, 0);
 
-	xlua_cmd_install_filter(L, cmd, cmd_filter_cb_helper, cb_filter);
+	std::shared_ptr<notify_cb_t> cb_filter = std::make_shared<notify_cb_t>(L, 0);
+	if (wrap_next_lua_func(cb_filter, 2, false, kFilterCallbackSig))
+	{
+		xlua_cmd_install_filter(L, cmd, cmd_filter_cb_helper, cb_filter);
+	}
 
 	return 0;
 }
@@ -454,23 +463,32 @@ static int XLuaFilterCommand(lua_State* L)
 // XPLMReplaceCommand cmd handler
 static int XLuaReplaceCommand(lua_State * L)
 {
-	xlua_cmd * d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
-	std::shared_ptr<notify_cb_t> cb = wrap_first_lua_func(L, 2, kCommandCallbackSig, 0);
-	
-	xlua_cmd_install_handler(L, d, cmd_cb_helper, cb);
+	xlua_cmd* d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
+
+	std::shared_ptr<notify_cb_t> cb_command = std::make_shared<notify_cb_t>(L, 0);
+	if (wrap_next_lua_func(cb_command, 2, false, kCommandCallbackSig))
+	{
+		xlua_cmd_install_handler(L, d, cmd_cb_helper, cb_command);
+	}
+
 	return 0;
 }
 
 // XPLMWrapCommand cmd handler1 handler2
 static int XLuaWrapCommand(lua_State * L)
 {
-	xlua_cmd * d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
-	std::shared_ptr<notify_cb_t> cb1 = wrap_first_lua_func(L, 2, kCommandCallbackSig, 0);
-	std::shared_ptr<notify_cb_t> cb2 = wrap_first_lua_func(L, 3, kCommandCallbackSig, 0);
-	
-	xlua_cmd_install_pre_wrapper(L, d, cmd_cb_helper, cb1);
-	xlua_cmd_install_post_wrapper(L, d, cmd_cb_helper, cb2);
-	return 0;	
+	xlua_cmd* d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
+
+	std::shared_ptr<notify_cb_t> cb1 = std::make_shared<notify_cb_t>(L, 0);
+	std::shared_ptr<notify_cb_t> cb2 = std::make_shared<notify_cb_t>(L, 0);
+	if (wrap_next_lua_func(cb1, 2, false, kCommandCallbackSig) &&
+		wrap_next_lua_func(cb2, 3, false, kCommandCallbackSig))
+	{
+		xlua_cmd_install_pre_wrapper(L, d, cmd_cb_helper, cb1);
+		xlua_cmd_install_post_wrapper(L, d, cmd_cb_helper, cb2);
+	}
+
+	return 0;
 }
 
 // XPLMCommandStart cmd
@@ -501,7 +519,7 @@ static int XLuaCommandOnce(lua_State * L)
 // TIMERS
 //----------------------------------------------------------------
 
-static void timer_cb(std::shared_ptr<notify_cb_t> ref)
+static void timer_callback(std::shared_ptr<notify_cb_t> ref)
 {
 	lua_State * L = setup_lua_callback(ref.get(), kTimerCallbackSig);
 	if (L)
@@ -513,11 +531,13 @@ static void timer_cb(std::shared_ptr<notify_cb_t> ref)
 // XPLMCreateTimer func -> ptr
 static int XLuaCreateTimer(lua_State * L)
 {
-	std::shared_ptr<notify_cb_t> helper = wrap_first_lua_func(L, -1, kTimerCallbackSig, 0);
-	if (!helper)
+	std::shared_ptr<notify_cb_t> timer_cb = std::make_shared<notify_cb_t>(L, 0);
+	if (!wrap_next_lua_func(timer_cb, -1, false, kTimerCallbackSig))
+	{
 		return 0;
-	
-	xlua_timer* t = xlua_create_timer(L, timer_cb, helper);
+	}
+
+	xlua_timer* t = xlua_create_timer(L, timer_callback, timer_cb);
 	assert(t);
 
     xlua_pushuserdata(L, t);
@@ -536,7 +556,10 @@ static int XLuaCreateTimer(lua_State * L)
 */
 static int XLuaFindTimer(lua_State* L)
 {
-	xlua_timer* timer = xlua_find_timer(L, timer_cb, wrap_first_lua_func(L, -1, kTimerCallbackSig, 0));
+	std::shared_ptr<notify_cb_t> timer_cb = std::make_shared<notify_cb_t>(L, 0);
+	wrap_next_lua_func(timer_cb, -1, false, kTimerCallbackSig);
+
+	xlua_timer* timer = xlua_find_timer(L, timer_callback, timer_cb);
 	if (timer == nullptr)
 	{
 		lua_pushnil(L);
@@ -902,19 +925,30 @@ void	add_xlua_funcs_to_interp(lua_State * L)
 	lua_pop(L, 1);
 }
 
-static std::map<void*, std::shared_ptr<notify_cb_t>> allRegisteredCallbacks;
+static std::map<int, std::shared_ptr<notify_cb_t>> s_RegisteredCallbacks;
 
-void CleanupStoredCallbacks(lua_State* L, int keyIndexInRegistry)
+void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb)
 {
-	// TODO: Get the value. Could be any type but most likely void*.
-	// If it isn't a void* then convert it somehow; straight cast for numbers, maybe a hash for strings?
-	// Can't assume that we get the same value from lua - could be a string, for example.
-	lua_rawgeti(L, LUA_REGISTRYINDEX, keyIndexInRegistry);
-	void* key =
-#error Something
-	lua_pop(L, 1);
+	s_RegisteredCallbacks[cb->get_capture()] = cb;
 
-	allRegisteredCallbacks[key] = cb;
+	if (s_RegisteredCallbacks.size() > 500)
+	{
+		luaL_error(L, "%s has persisted more than 500 callbacks. Something appears to be wrong.",
+				   module::module_from_interp(L)->get_script_path().c_str());
+	}
+}
+
+void xlua_callback_cleanup()
+{
+	s_RegisteredCallbacks.clear();
+}
+
+void xlua_remove_callback(std::shared_ptr<notify_cb_t> cb)
+{
+	assert(cb->get_capture() != 0);
+	assert(s_RegisteredCallbacks.contains(cb->get_capture()));
+
+	s_RegisteredCallbacks.erase(cb->get_capture());
 }
 
 std::optional<std::string> xlua_checkoptstring(lua_State* L, int narg)

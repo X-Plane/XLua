@@ -55,11 +55,13 @@ private:
 
 std::shared_ptr<notify_cb_t> wrap_lua_func_nil(lua_State* L, int idx, std::string const callbackKey);
 lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackKey);
-int capture_lua_value(lua_State* L, int idx);
+std::shared_ptr<notify_cb_t> capture_lua_value(lua_State* L, int idx);
 
-void CleanupStoredCallbacks(lua_State* L, int keyIndexInRegistry);
-std::shared_ptr<notify_cb_t> wrap_first_lua_func(lua_State* L, int func_stack_idx, std::string const cb_typename, int refcon_reg_index);
-bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb, int func_stack_idx, std::string const cb_typename);
+void xlua_callback_cleanup();
+void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb);
+std::shared_ptr<notify_cb_t> wrap_lua_func(lua_State* L, int func_stack_idx, bool optional, std::string const cb_typename);
+bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb, int func_stack_idx, bool optional, std::string const cb_typename);
+void xlua_remove_callback(std::shared_ptr<notify_cb_t> cb);
 
 // Syntactic sugar to make the code-generation simpler.
 inline bool         xlua_checkboolean(lua_State* L, int narg)   { luaL_checktype(L, narg, LUA_TBOOLEAN); return lua_toboolean(L, narg); }

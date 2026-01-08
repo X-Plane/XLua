@@ -22,6 +22,7 @@
 #include <list>
 
 #include "log.h"
+#include "xpfuncs.h"
 
 using std::min;
 using std::max;
@@ -44,9 +45,12 @@ public:
 	
 	~xlua_dref()
 	{
-		if (m_dref != nullptr && m_ours)
+		if (m_ours)
 		{
-			XPLMUnregisterDataAccessor(m_dref);
+			if (m_dref != nullptr)
+			{
+				XPLMUnregisterDataAccessor(m_dref);
+			}
 		}
 	}
 
