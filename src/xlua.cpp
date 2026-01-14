@@ -371,12 +371,12 @@ void ShowProfiler(void)
 
 										  ImGui::SameLine(0, 20);
 										  ImGui::BeginDisabled(selected_module == nullptr || selected_module->m_profile.empty());
-										  if (ImGui::Button("Dump to Log"))
+										  if (selected_module != nullptr && ImGui::Button("Dump to Log"))
 										  {
 											  selected_module->dump_profile();
 										  }
 										  ImGui::SameLine();
-										  if (ImGui::Button("Clear"))
+										  if (selected_module != nullptr && ImGui::Button("Clear"))
 										  {
 											  selected_module->clear_profile();
 										  }
