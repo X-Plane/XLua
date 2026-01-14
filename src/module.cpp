@@ -51,10 +51,10 @@ static int length_of_dir(const char * p)
 class	xmap_class {
 public:
 	xmap_class(const string& in_file_name);
-	~xmap_class() { free(m_buffer); }
-	bool exists() const { return m_buffer != NULL; }
-	const char * begin() const { return m_buffer; }
-	size_t size() const { return m_size; }
+	~xmap_class()				{ if (m_buffer != nullptr) free(m_buffer); }
+	bool exists() const			{ return m_buffer != nullptr; }
+	char const* begin() const	{ return m_buffer; }
+	size_t size() const			{ return m_size; }
 private:
 	char *		 m_buffer;
 	size_t		 m_size;
@@ -429,17 +429,21 @@ xmap_class::xmap_class(const string& in_file_name) :
 #else
 	FILE * fi = fopen(in_file_name.c_str(), "rb");
 #endif
-	if(fi)
+	if (fi)
 	{
 		fseek(fi,0,SEEK_END);
 		m_size = ftell(fi);
-		fseek(fi,0,SEEK_SET);
-		m_buffer = (char *) malloc(m_size);
-		size_t bytes = fread(m_buffer,1,m_size,fi);
-		(void) bytes;
+		fseek(fi, 0, SEEK_SET);
+
+		m_buffer = static_cast<char *>(malloc(m_size + 1));
+		if (m_buffer != nullptr)
+		{
+			fread(m_buffer, 1, m_size, fi);
+			m_buffer[m_size] = 0;
+		}
+
 		fclose(fi);
 	}
 }
-
 
 #endif
