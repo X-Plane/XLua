@@ -42,9 +42,9 @@ XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 int XLuaGetSystemPath(lua_State* L)
 {
-	char outSystemPath[512];
-	XPLMGetSystemPath(outSystemPath);
+	char outSystemPath[512] = {};
 
+	XPLMGetSystemPath(outSystemPath);
 	lua_pushstring(L, outSystemPath);
 
 	return 1;
@@ -52,9 +52,9 @@ int XLuaGetSystemPath(lua_State* L)
 
 int XLuaGetPrefsPath(lua_State* L)
 {
-	char outPrefsPath[512];
-	XPLMGetPrefsPath(outPrefsPath);
+	char outPrefsPath[512] = {};
 
+	XPLMGetPrefsPath(outPrefsPath);
 	lua_pushstring(L, outPrefsPath);
 
 	return 1;
@@ -100,25 +100,22 @@ int XLuaInitialized(lua_State* L)
 
 int XLuaGetVersions(lua_State* L)
 {
-	int outXPlaneVersion;
-	int outXPLMVersion;
-	XPLMHostApplicationID outHostID;
+	int outXPlaneVersion = {};
+	int outXPLMVersion = {};
+	XPLMHostApplicationID outHostID = {};
 	XPLMGetVersions(&outXPlaneVersion, &outXPLMVersion, &outHostID);
 
-	lua_createtable(L, 0, 3); // 0 array slots and 3 key-value pairs
+	lua_createtable(L, 0, 3);
 
 	lua_pushstring(L, "outXPlaneVersion");
-
 	lua_pushinteger(L, outXPlaneVersion);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outXPLMVersion");
-
 	lua_pushinteger(L, outXPLMVersion);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outHostID");
-
 	lua_pushinteger(L, outHostID);
 	lua_settable(L, -3);
 
@@ -156,7 +153,7 @@ int XLuaGetVirtualKeyDescription(lua_State* L)
 	std::string inVirtualKey_s = luaL_checkstring(L, 1);
 	if (inVirtualKey_s.size() != 1)
 	{
-		luaL_argerror(L, 1, "inVirtualKey must be exactly one character");
+		luaL_argerror(L, 1, "inVirtualKey must be exactly one character");				// Never returns.
 		return 0;
 	}
 	char inVirtualKey = inVirtualKey_s[0];
@@ -225,9 +222,11 @@ static int cb_XPLMCommandCallback_f(XPLMCommandRef inCommand, XPLMCommandPhase i
 {
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
 	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMCommandCallback_f");
 	if (L)
 	{
+
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uir", inCommand, inPhase, inRefcon_cb->get_capture()))
 		{
 			res = xlua_checkboolean(L, -1) ? 1 : 0;

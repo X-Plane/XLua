@@ -11,6 +11,8 @@
 #ifndef module_h
 #define module_h
 
+#define NOMINMAX
+
 #include <stddef.h>
 #include <sys/types.h>
 #include <stdint.h>

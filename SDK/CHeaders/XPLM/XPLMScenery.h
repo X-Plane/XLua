@@ -303,7 +303,7 @@ typedef struct {
  */
 typedef void (* XPLMObjectLoaded_f)(
                          XPLMObjectRef        inObject,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM210 */
 #if defined(XPLM200)
 /*
@@ -353,7 +353,7 @@ XPLM_API XPLMObjectRef XPLMLoadObject(
 XPLM_API void       XPLMLoadObjectAsync(
                          const char *         inPath,
                          XPLMObjectLoaded_f   inCallback,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM210 */
 #if defined(XPLM_DEPRECATED)
 /*
@@ -369,17 +369,18 @@ XPLM_API void       XPLMLoadObjectAsync(
  * X-Plane will attempt to cull the objects based on LOD and visibility, and
  * will pick the appropriate LOD.
  * 
- * Lighting is a boolean; pass 1 to show the night version of object with
- * night-only lights lit up. Pass 0 to show the daytime version of the object.
+ * Lighting is a boolean; pass true to show the night version of object with
+ * night-only lights lit up. Pass false to show the daytime version of the
+ * object.
  * 
- * earth_relative controls the coordinate system. If this is 1, the rotations
- * you specify are applied to the object after its coordinate system is
- * transformed from local to earth-relative coordinates -- that is, an object
- * with no rotations will point toward true north and the Y axis will be up
- * against gravity. If this is 0, the object is drawn with your rotations from
- * local coordanates -- that is, an object with no rotations is drawn pointing
- * down the -Z axis and the Y axis of the object matches the local coordinate
- * Y axis.
+ * earth_relative controls the coordinate system. If this is true, the
+ * rotations you specify are applied to the object after its coordinate system
+ * is transformed from local to earth-relative coordinates -- that is, an
+ * object with no rotations will point toward true north and the Y axis will
+ * be up against gravity. If this is false, the object is drawn with your
+ * rotations from local coordanates -- that is, an object with no rotations is
+ * drawn pointing down the -Z axis and the Y axis of the object matches the
+ * local coordinate Y axis.
  *
  */
 XPLM_API void       XPLMDrawObjects(
@@ -424,7 +425,7 @@ XPLM_API void       XPLMUnloadObject(
  */
 typedef void (* XPLMLibraryEnumerator_f)(
                          const char *         inFilePath,
-                         void *               inRef);
+                         void*                inRef);
 /*
  * XPLMLookupObjects
  * 
@@ -444,7 +445,7 @@ XPLM_API int        XPLMLookupObjects(
                          float                inLatitude,
                          float                inLongitude,
                          XPLMLibraryEnumerator_f enumerator,
-                         void *               ref);
+                         void*                ref);
 #endif /* XPLM200 */
 #ifdef __cplusplus
 }

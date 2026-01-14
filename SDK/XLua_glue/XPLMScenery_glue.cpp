@@ -106,72 +106,71 @@ XPLMProbeInfo_t XPLMProbeInfo_t_from_table(lua_State* L, int stackpos)
 
 	luaL_checktype(L, stackpos, LUA_TTABLE);
 	out.structSize = sizeof(out);
-	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "locationX");
+	lua_getfield(L, stackpos, "locationX");
 	if (!lua_isnil(L, -1))
 	{
 		out.locationX = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "locationY");
+	lua_getfield(L, stackpos, "locationY");
 	if (!lua_isnil(L, -1))
 	{
 		out.locationY = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "locationZ");
+	lua_getfield(L, stackpos, "locationZ");
 	if (!lua_isnil(L, -1))
 	{
 		out.locationZ = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "normalX");
+	lua_getfield(L, stackpos, "normalX");
 	if (!lua_isnil(L, -1))
 	{
 		out.normalX = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "normalY");
+	lua_getfield(L, stackpos, "normalY");
 	if (!lua_isnil(L, -1))
 	{
 		out.normalY = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "normalZ");
+	lua_getfield(L, stackpos, "normalZ");
 	if (!lua_isnil(L, -1))
 	{
 		out.normalZ = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "velocityX");
+	lua_getfield(L, stackpos, "velocityX");
 	if (!lua_isnil(L, -1))
 	{
 		out.velocityX = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "velocityY");
+	lua_getfield(L, stackpos, "velocityY");
 	if (!lua_isnil(L, -1))
 	{
 		out.velocityY = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "velocityZ");
+	lua_getfield(L, stackpos, "velocityZ");
 	if (!lua_isnil(L, -1))
 	{
 		out.velocityZ = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "is_wet");
+	lua_getfield(L, stackpos, "is_wet");
 	if (!lua_isnil(L, -1))
 	{
 		out.is_wet = static_cast<int>(xlua_checkboolean(L, -1));
@@ -222,7 +221,7 @@ void XPLMProbeInfo_t_to_table(lua_State* L, XPLMProbeInfo_t const& src)
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "is_wet");
-	lua_pushinteger(L, src.is_wet);
+	lua_pushboolean(L, src.is_wet);
 	lua_settable(L, -3);
 }
 
@@ -377,44 +376,43 @@ XPLMDrawInfo_t XPLMDrawInfo_t_from_table(lua_State* L, int stackpos)
 
 	luaL_checktype(L, stackpos, LUA_TTABLE);
 	out.structSize = sizeof(out);
-	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "x");
+	lua_getfield(L, stackpos, "x");
 	if (!lua_isnil(L, -1))
 	{
 		out.x = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "y");
+	lua_getfield(L, stackpos, "y");
 	if (!lua_isnil(L, -1))
 	{
 		out.y = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "z");
+	lua_getfield(L, stackpos, "z");
 	if (!lua_isnil(L, -1))
 	{
 		out.z = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "pitch");
+	lua_getfield(L, stackpos, "pitch");
 	if (!lua_isnil(L, -1))
 	{
 		out.pitch = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "heading");
+	lua_getfield(L, stackpos, "heading");
 	if (!lua_isnil(L, -1))
 	{
 		out.heading = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "roll");
+	lua_getfield(L, stackpos, "roll");
 	if (!lua_isnil(L, -1))
 	{
 		out.roll = static_cast<float>(luaL_checknumber(L, -1));
@@ -477,44 +475,43 @@ XPLMDrawInfoDouble_t XPLMDrawInfoDouble_t_from_table(lua_State* L, int stackpos)
 
 	luaL_checktype(L, stackpos, LUA_TTABLE);
 	out.structSize = sizeof(out);
-	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "x");
+	lua_getfield(L, stackpos, "x");
 	if (!lua_isnil(L, -1))
 	{
 		out.x = static_cast<double>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "y");
+	lua_getfield(L, stackpos, "y");
 	if (!lua_isnil(L, -1))
 	{
 		out.y = static_cast<double>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "z");
+	lua_getfield(L, stackpos, "z");
 	if (!lua_isnil(L, -1))
 	{
 		out.z = static_cast<double>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "pitch");
+	lua_getfield(L, stackpos, "pitch");
 	if (!lua_isnil(L, -1))
 	{
 		out.pitch = static_cast<double>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "heading");
+	lua_getfield(L, stackpos, "heading");
 	if (!lua_isnil(L, -1))
 	{
 		out.heading = static_cast<double>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "roll");
+	lua_getfield(L, stackpos, "roll");
 	if (!lua_isnil(L, -1))
 	{
 		out.roll = static_cast<double>(luaL_checknumber(L, -1));
@@ -568,9 +565,11 @@ int MakeXPLMDrawInfoDouble_t(lua_State* L)
 static void cb_XPLMObjectLoaded_f(XPLMObjectRef inObject, void* inRefcon)
 {
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
 	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMObjectLoaded_f");
 	if (L)
 	{
+
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ur", inObject, inRefcon_cb->get_capture()))
 		{
 		}
@@ -607,23 +606,6 @@ int XLuaLoadObjectAsync(lua_State* L)
 	return 0;
 }
 
-int XLuaDrawObjects(lua_State* L)
-{
-	XPLMObjectRef inObject = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inObject = xlua_checkuserdata<XPLMObjectRef>(L, 1, "Expected userdata<XPLMObjectRef>");
-	}
-	int inCount = xlua_checkinteger(L, 2);
-	XPLMDrawInfo_t inLocations = XPLMDrawInfo_t_from_table(L, 3);
-	bool lighting = xlua_checkboolean(L, 4);
-	bool earth_relative = xlua_checkboolean(L, 5);
-
-	XPLMDrawObjects(inObject, inCount, &inLocations, lighting, earth_relative);
-
-	return 0;
-}
-
 int XLuaUnloadObject(lua_State* L)
 {
 	XPLMObjectRef inObject = {};
@@ -640,9 +622,11 @@ int XLuaUnloadObject(lua_State* L)
 static void cb_XPLMLibraryEnumerator_f(const char * inFilePath, void* inRef)
 {
 	notify_cb_t const* inRef_cb = static_cast<notify_cb_t*>(inRef);
+
 	lua_State* L = setup_lua_callback(inRef_cb, "XPLMLibraryEnumerator_f");
 	if (L)
 	{
+
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFilePath, inRef_cb->get_capture()))
 		{
 		}

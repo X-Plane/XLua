@@ -49,6 +49,52 @@ extern "C" {
 #endif
 
 /***************************************************************************
+ * X-PLANE COORDINATES
+ ***************************************************************************/
+/*
+ *             These routines allow you to use OpenGL with X-Plane.
+ *
+ */
+
+/*
+ * XPLMWorldToLocal
+ * 
+ *                 This routine translates coordinates from latitude,
+ *                 longitude, and altitude to local scene coordinates.
+ *                 Latitude and longitude are in decimal degrees, and altitude
+ *                 is in meters MSL (mean sea level).  The XYZ coordinates are
+ *                 in meters in the local OpenGL coordinate system.
+ *
+ */
+XPLM_API void       XPLMWorldToLocal(
+                         double               inLatitude,
+                         double               inLongitude,
+                         double               inAltitude,
+                         double *             outX,
+                         double *             outY,
+                         double *             outZ);
+/*
+ * XPLMLocalToWorld
+ * 
+ *                 This routine translates a local coordinate triplet back
+ *                 into latitude, longitude, and altitude.  Latitude and
+ *                 longitude are in decimal degrees, and altitude is in meters
+ *                 MSL (mean sea level).  The XYZ coordinates are in meters in
+ *                 the local OpenGL coordinate system.
+ * 
+ *                 NOTE: world coordinates are less precise than local
+ *                 coordinates; you should try to avoid round tripping from
+ *                 local to world and back.
+ *
+ */
+XPLM_API void       XPLMLocalToWorld(
+                         double               inX,
+                         double               inY,
+                         double               inZ,
+                         double *             outLatitude,
+                         double *             outLongitude,
+                         double *             outAltitude);
+/***************************************************************************
  * X-PLANE GRAPHICS
  ***************************************************************************/
 /*
@@ -91,16 +137,6 @@ enum {
     /*         The weather radar instrument texture as controlled by the          *
      *         copilot-side radar controls                                        */
     xplm_Tex_Radar_Copilot                   = 4,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /*           The SVT instrument texture as seend by pilot-side isntruments    */
-    xplm_Tex_SVT_Pilot                       = 5,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /*           The SVT instrument texture as seend by copilot-side isntruments  */
-    xplm_Tex_SVT_Copilot                     = 6,
 
 #endif /* XPLM420 */
 
@@ -204,41 +240,6 @@ XPLM_API void       XPLMGenerateTextureNumbers(
  */
 XPLM_API int        XPLMGetTexture(
                          XPLMTextureID        inTexture);
-/*
- * XPLMWorldToLocal
- * 
- * This routine translates coordinates from latitude, longitude, and altitude
- * to local scene coordinates. Latitude and longitude are in decimal degrees,
- * and altitude is in meters MSL (mean sea level).  The XYZ coordinates are in
- * meters in the local OpenGL coordinate system.
- *
- */
-XPLM_API void       XPLMWorldToLocal(
-                         double               inLatitude,
-                         double               inLongitude,
-                         double               inAltitude,
-                         double *             outX,
-                         double *             outY,
-                         double *             outZ);
-/*
- * XPLMLocalToWorld
- * 
- * This routine translates a local coordinate triplet back into latitude,
- * longitude, and altitude.  Latitude and longitude are in decimal degrees,
- * and altitude is in meters MSL (mean sea level).  The XYZ coordinates are in
- * meters in the local OpenGL coordinate system.
- * 
- * NOTE: world coordinates are less precise than local coordinates; you should
- * try to avoid round tripping from local to world and back.
- *
- */
-XPLM_API void       XPLMLocalToWorld(
-                         double               inX,
-                         double               inY,
-                         double               inZ,
-                         double *             outLatitude,
-                         double *             outLongitude,
-                         double *             outAltitude);
 /*
  * XPLMDrawTranslucentDarkBox
  * 
@@ -380,7 +381,7 @@ typedef int XPLMFontID;
  *
  */
 XPLM_API void       XPLMDrawString(
-                         float *              inColorRGB,
+                         float                inColorRGB[3],
                          int                  inXOffset,
                          int                  inYOffset,
                          const char *         inChar,
@@ -398,7 +399,7 @@ XPLM_API void       XPLMDrawString(
  *
  */
 XPLM_API void       XPLMDrawNumber(
-                         float *              inColorRGB,
+                         float                inColorRGB[3],
                          int                  inXOffset,
                          int                  inYOffset,
                          double               inValue,

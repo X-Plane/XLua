@@ -93,7 +93,7 @@ typedef int XPLMDataFileType;
  *
  */
 XPLM_API void       XPLMGetSystemPath(
-                         char *               outSystemPath);
+                         char                 outSystemPath[512]);
 /*
  * XPLMGetPrefsPath
  * 
@@ -107,7 +107,7 @@ XPLM_API void       XPLMGetSystemPath(
  *
  */
 XPLM_API void       XPLMGetPrefsPath(
-                         char *               outPrefsPath);
+                         char                 outPrefsPath[512]);
 /*
  * XPLMGetDirectorySeparator
  * 
@@ -137,8 +137,9 @@ XPLM_API char *     XPLMExtractFileAndPath(
  * path, no trailing : or / ). The output is returned as a list of NULL
  * terminated strings. An index array (if specified) is filled with pointers
  * into the strings. The last file is indicated by a zero-length string (and
- * NULL in the indices). This routine will return 1 if you had capacity for
- * all files or 0 if you did not. You can also skip a given number of files.
+ * NULL in the indices). This routine will return true if you had capacity for
+ * all files or false if you did not. You can also skip a given number of
+ * files.
  * 
  *  * inDirectoryPath - a null terminated C string containing the full path to
  *    the directory with no trailing directory char.
@@ -177,7 +178,7 @@ XPLM_API int        XPLMGetDirectoryContents(
                          int                  inFirstReturn,
                          char *               outFileNames,
                          int                  inFileNameBufSize,
-                         char **              outIndices,             /* Can be NULL */
+                         char *               outIndices[],           /* Can be NULL */
                          int                  inIndexCount,
                          int *                outTotalFiles,          /* Can be NULL */
                          int *                outReturnedFiles);      /* Can be NULL */
@@ -336,13 +337,13 @@ typedef void (* XPLMError_f)(
 /*
  * XPLMInitialized
  * 
- * Deprecated: This function returns 1 if X-Plane has properly initialized the
- * plug-in system. If this routine returns 0, many XPLM functions will not
- * work.
+ * Deprecated: This function returns true if X-Plane has properly initialized
+ * the plug-in system. If this routine returns false, many XPLM functions will
+ * not work.
  * 
  * NOTE: because plugins are always called from within the XPLM, there is no
- * need to check for initialization; it will always return 1.  This routine is
- * deprecated - you do not need to check it before continuing within your
+ * need to check for initialization; it will always return true.  This routine
+ * is deprecated - you do not need to check it before continuing within your
  * plugin.
  *
  */
@@ -567,15 +568,15 @@ typedef void * XPLMCommandRef;
  * particular command, the phase of the command that is executing, and a
  * reference pointer that you specify when registering the callback.
  * 
- * Your command handler should return 1 to let processing of the command
- * continue to other plugins and X-Plane, or 0 to halt processing, potentially
- * bypassing X-Plane code.
+ * Your command handler should return true to let processing of the command
+ * continue to other plugins and X-Plane, or false to halt processing,
+ * potentially bypassing X-Plane code.
  *
  */
 typedef int (* XPLMCommandCallback_f)(
                          XPLMCommandRef       inCommand,
                          XPLMCommandPhase     inPhase,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMFindCommand
  * 
@@ -645,7 +646,7 @@ XPLM_API void       XPLMRegisterCommandHandler(
                          XPLMCommandRef       inComand,
                          XPLMCommandCallback_f inHandler,
                          int                  inBefore,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMUnregisterCommandHandler
  * 
@@ -657,7 +658,7 @@ XPLM_API void       XPLMUnregisterCommandHandler(
                          XPLMCommandRef       inComand,
                          XPLMCommandCallback_f inHandler,
                          int                  inBefore,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM200 */
 #if defined(XPLM_DEPRECATED)
 /***************************************************************************

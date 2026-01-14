@@ -165,6 +165,30 @@ enum {
 typedef int XPLMDataTypeID;
 #if defined(XPLM400)
 /*
+ * XPLMDataRefInfo_t
+ * 
+ *                 The XPLMDataRefInfo_t structure contains all of the
+ *                 information about a single data ref. The structure can be
+ *                 expanded in future SDK APIs to include more features.
+ *                 Always set the structSize member to the size of your struct
+ *                 in bytes!
+ *
+ */
+typedef struct {
+    /* Used to inform XPLMGetDatarefInfo() of the SDK version you compiled        *
+     * against; should always be set to sizeof(XPLMDataRefInfo_t)                 */
+     int                       structSize;
+    /* The full name/path of the data ref                                         */
+     const char *              name;
+     XPLMDataTypeID            type;
+    /* TRUE if the data ref permits writing to it. FALSE if it's read-only.       */
+     int                       writable;
+    /* The handle to the plugin that registered this dataref.                     */
+     XPLMPluginID              owner;
+} XPLMDataRefInfo_t;
+#endif /* XPLM400 */
+#if defined(XPLM400)
+/*
  * XPLMCountDataRefs
  * 
  * Returns the total number of datarefs that have been registered in X-Plane.
@@ -184,30 +208,7 @@ XPLM_API int        XPLMCountDataRefs(void);
 XPLM_API void       XPLMGetDataRefsByIndex(
                          int                  offset,
                          int                  count,
-                         XPLMDataRef *        outDataRefs);
-#endif /* XPLM400 */
-#if defined(XPLM400)
-/*
- * XPLMDataRefInfo_t
- * 
- * The XPLMDataRefInfo_t structure contains all of the information about a
- * single data ref.  The structure can be expanded in future SDK APIs to
- * include more features. Always set the structSize member to the size of 
- * your struct in bytes!
- *
- */
-typedef struct {
-    /* Used to inform XPLMGetDatarefInfo() of the SDK version you compiled        *
-     * against; should always be set to sizeof(XPLMDataRefInfo_t)                 */
-     int                       structSize;
-    /* The full name/path of the data ref                                         */
-     const char *              name;
-     XPLMDataTypeID            type;
-    /* TRUE if the data ref permits writing to it. FALSE if it's read-only.       */
-     int                       writable;
-    /* The handle to the plugin that registered this dataref.                     */
-     XPLMPluginID              owner;
-} XPLMDataRefInfo_t;
+                         XPLMDataRef          outDataRefs[]);
 #endif /* XPLM400 */
 #if defined(XPLM400)
 /*
@@ -219,7 +220,7 @@ typedef struct {
  */
 XPLM_API void       XPLMGetDataRefInfo(
                          XPLMDataRef          inDataRef,
-                         XPLMDataRefInfo_t *  outInfo);
+                         XPLMDataRefInfo_t *  outInfo);               /* Can be NULL */
 #endif /* XPLM400 */
 /*
  * XPLMFindDataRef
@@ -263,7 +264,7 @@ XPLM_API int        XPLMCanWriteDataRef(
  * Orphaned datarefs can be safely read and return 0. Therefore you never need
  * to call XPLMIsDataRefGood to 'check' the safety of a dataref.
  * (XPLMIsDataRefGood performs some slow checking of the handle validity, so
- * it has a perormance cost.)
+ * it has a performance cost.)
  *
  */
 XPLM_API int        XPLMIsDataRefGood(
@@ -383,7 +384,7 @@ XPLM_API void       XPLMSetDatad(
  */
 XPLM_API int        XPLMGetDatavi(
                          XPLMDataRef          inDataRef,
-                         int *                outValues,              /* Can be NULL */
+                         int                  outValues[],            /* Can be NULL */
                          int                  inOffset,
                          int                  inMax);
 /*
@@ -402,7 +403,7 @@ XPLM_API int        XPLMGetDatavi(
  */
 XPLM_API void       XPLMSetDatavi(
                          XPLMDataRef          inDataRef,
-                         int *                inValues,
+                         int                  inValues[],
                          int                  inoffset,
                          int                  inCount);
 /*
@@ -425,7 +426,7 @@ XPLM_API void       XPLMSetDatavi(
  */
 XPLM_API int        XPLMGetDatavf(
                          XPLMDataRef          inDataRef,
-                         float *              outValues,              /* Can be NULL */
+                         float                outValues[],            /* Can be NULL */
                          int                  inOffset,
                          int                  inMax);
 /*
@@ -444,7 +445,7 @@ XPLM_API int        XPLMGetDatavf(
  */
 XPLM_API void       XPLMSetDatavf(
                          XPLMDataRef          inDataRef,
-                         float *              inValues,
+                         float                inValues[],
                          int                  inoffset,
                          int                  inCount);
 /*
@@ -466,7 +467,7 @@ XPLM_API void       XPLMSetDatavf(
  */
 XPLM_API int        XPLMGetDatab(
                          XPLMDataRef          inDataRef,
-                         void *               outValue,               /* Can be NULL */
+                         void*                outValue,               /* Can be NULL */
                          int                  inOffset,
                          int                  inMaxBytes);
 /*
@@ -485,7 +486,7 @@ XPLM_API int        XPLMGetDatab(
  */
 XPLM_API void       XPLMSetDatab(
                          XPLMDataRef          inDataRef,
-                         void *               inValue,
+                         void*                inValue,
                          int                  inOffset,
                          int                  inLength);
 /***************************************************************************
@@ -528,47 +529,47 @@ XPLM_API void       XPLMSetDatab(
  *
  */
 typedef int (* XPLMGetDatai_f)(
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMSetDatai_f
  *
  */
 typedef void (* XPLMSetDatai_f)(
-                         void *               inRefcon,
+                         void*                inRefcon,
                          int                  inValue);
 /*
  * XPLMGetDataf_f
  *
  */
 typedef float (* XPLMGetDataf_f)(
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMSetDataf_f
  *
  */
 typedef void (* XPLMSetDataf_f)(
-                         void *               inRefcon,
+                         void*                inRefcon,
                          float                inValue);
 /*
  * XPLMGetDatad_f
  *
  */
 typedef double (* XPLMGetDatad_f)(
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMSetDatad_f
  *
  */
 typedef void (* XPLMSetDatad_f)(
-                         void *               inRefcon,
+                         void*                inRefcon,
                          double               inValue);
 /*
  * XPLMGetDatavi_f
  *
  */
 typedef int (* XPLMGetDatavi_f)(
-                         void *               inRefcon,
-                         int *                outValues,              /* Can be NULL */
+                         void*                inRefcon,
+                         int                  outValues[],            /* Can be NULL */
                          int                  inOffset,
                          int                  inMax);
 /*
@@ -576,8 +577,8 @@ typedef int (* XPLMGetDatavi_f)(
  *
  */
 typedef void (* XPLMSetDatavi_f)(
-                         void *               inRefcon,
-                         int *                inValues,
+                         void*                inRefcon,
+                         int                  inValues[],
                          int                  inOffset,
                          int                  inCount);
 /*
@@ -585,8 +586,8 @@ typedef void (* XPLMSetDatavi_f)(
  *
  */
 typedef int (* XPLMGetDatavf_f)(
-                         void *               inRefcon,
-                         float *              outValues,              /* Can be NULL */
+                         void*                inRefcon,
+                         float                outValues[],            /* Can be NULL */
                          int                  inOffset,
                          int                  inMax);
 /*
@@ -594,8 +595,8 @@ typedef int (* XPLMGetDatavf_f)(
  *
  */
 typedef void (* XPLMSetDatavf_f)(
-                         void *               inRefcon,
-                         float *              inValues,
+                         void*                inRefcon,
+                         float                inValues[],
                          int                  inOffset,
                          int                  inCount);
 /*
@@ -603,8 +604,8 @@ typedef void (* XPLMSetDatavf_f)(
  *
  */
 typedef int (* XPLMGetDatab_f)(
-                         void *               inRefcon,
-                         void *               outValue,               /* Can be NULL */
+                         void*                inRefcon,
+                         void*                outValue,               /* Can be NULL */
                          int                  inOffset,
                          int                  inMaxLength);
 /*
@@ -612,8 +613,8 @@ typedef int (* XPLMGetDatab_f)(
  *
  */
 typedef void (* XPLMSetDatab_f)(
-                         void *               inRefcon,
-                         void *               inValue,
+                         void*                inRefcon,
+                         void*                inValue,
                          int                  inOffset,
                          int                  inLength);
 /*
@@ -634,20 +635,20 @@ XPLM_API XPLMDataRef XPLMRegisterDataAccessor(
                          const char *         inDataName,
                          XPLMDataTypeID       inDataType,
                          int                  inIsWritable,
-                         XPLMGetDatai_f       inReadInt,
-                         XPLMSetDatai_f       inWriteInt,
-                         XPLMGetDataf_f       inReadFloat,
-                         XPLMSetDataf_f       inWriteFloat,
-                         XPLMGetDatad_f       inReadDouble,
-                         XPLMSetDatad_f       inWriteDouble,
-                         XPLMGetDatavi_f      inReadIntArray,
-                         XPLMSetDatavi_f      inWriteIntArray,
-                         XPLMGetDatavf_f      inReadFloatArray,
-                         XPLMSetDatavf_f      inWriteFloatArray,
-                         XPLMGetDatab_f       inReadData,
-                         XPLMSetDatab_f       inWriteData,
-                         void *               inReadRefcon,
-                         void *               inWriteRefcon);
+                         XPLMGetDatai_f       inReadInt,              /* Can be NULL */
+                         XPLMSetDatai_f       inWriteInt,             /* Can be NULL */
+                         XPLMGetDataf_f       inReadFloat,            /* Can be NULL */
+                         XPLMSetDataf_f       inWriteFloat,           /* Can be NULL */
+                         XPLMGetDatad_f       inReadDouble,           /* Can be NULL */
+                         XPLMSetDatad_f       inWriteDouble,          /* Can be NULL */
+                         XPLMGetDatavi_f      inReadIntArray,         /* Can be NULL */
+                         XPLMSetDatavi_f      inWriteIntArray,        /* Can be NULL */
+                         XPLMGetDatavf_f      inReadFloatArray,       /* Can be NULL */
+                         XPLMSetDatavf_f      inWriteFloatArray,      /* Can be NULL */
+                         XPLMGetDatab_f       inReadData,             /* Can be NULL */
+                         XPLMSetDatab_f       inWriteData,            /* Can be NULL */
+                         void*                inReadRefcon,
+                         void*                inWriteRefcon);
 /*
  * XPLMUnregisterDataAccessor
  * 
@@ -708,7 +709,7 @@ XPLM_API void       XPLMUnregisterDataAccessor(
  *
  */
 typedef void (* XPLMDataChanged_f)(
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMShareData
  * 
@@ -725,29 +726,31 @@ typedef void (* XPLMDataChanged_f)(
  * data was changed if multiple shared data are handled by one callback, or if
  * the plug-in does not use global variables.
  * 
- * A one is returned for successfully creating or finding the shared data; a
- * zero if the data already exists but is of the wrong type.
+ * True is returned for successfully creating or finding the shared data;
+ * false if the data already exists but is of the wrong type.
  *
  */
 XPLM_API int        XPLMShareData(
                          const char *         inDataName,
                          XPLMDataTypeID       inDataType,
-                         XPLMDataChanged_f    inNotificationFunc,
-                         void *               inNotificationRefcon);
+                         XPLMDataChanged_f    inNotificationFunc,     /* Can be NULL */
+                         void*                inNotificationRefcon);
 /*
  * XPLMUnshareData
  * 
  * This routine removes your notification function for shared data. Call it
  * when done with the data to stop receiving change notifications. Arguments
- * must match XPLMShareData. The actual memory will not necessarily be freed,
- * since other plug-ins could be using it.
+ * must match XPLMShareData. In Lua, this means that you cannot pass a closure
+ * to XPLMShareData as the callback function if you want to unregister it. The
+ * actual memory will not necessarily be freed, since other plug-ins could be
+ * using it. This will return true if data was unshared, false otherwise.
  *
  */
 XPLM_API int        XPLMUnshareData(
                          const char *         inDataName,
                          XPLMDataTypeID       inDataType,
-                         XPLMDataChanged_f    inNotificationFunc,
-                         void *               inNotificationRefcon);
+                         XPLMDataChanged_f    inNotificationFunc,     /* Can be NULL */
+                         void*                inNotificationRefcon);
 #ifdef __cplusplus
 }
 #endif

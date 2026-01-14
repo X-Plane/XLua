@@ -97,10 +97,10 @@ XPLM_API XPLMPluginID XPLMFindPluginBySignature(
  */
 XPLM_API void       XPLMGetPluginInfo(
                          XPLMPluginID         inPlugin,
-                         char *               outName,                /* Can be NULL */
-                         char *               outFilePath,            /* Can be NULL */
-                         char *               outSignature,           /* Can be NULL */
-                         char *               outDescription);        /* Can be NULL */
+                         char                 outName[256],           /* Can be NULL */
+                         char                 outFilePath[256],       /* Can be NULL */
+                         char                 outSignature[256],      /* Can be NULL */
+                         char                 outDescription[256]);    /* Can be NULL */
 /***************************************************************************
  * ENABLING/DISABLING PLUG-INS
  ***************************************************************************/
@@ -121,10 +121,10 @@ XPLM_API int        XPLMIsPluginEnabled(
 /*
  * XPLMEnablePlugin
  * 
- * This routine enables a plug-in if it is not already enabled. It returns 1
- * if the plugin was enabled or successfully enables itself, 0 if it does not.
- * Plugins may fail to enable (for example, if resources cannot be acquired)
- * by returning 0 from their XPluginEnable callback.
+ * This routine enables a plug-in if it is not already enabled. It returns
+ * true if the plugin was enabled or successfully enables itself, false if it
+ * does not.  Plugins may fail to enable (for example, if resources cannot be
+ * acquired) by returning false from their XPluginEnable callback.
  *
  */
 XPLM_API int        XPLMEnablePlugin(
@@ -251,7 +251,8 @@ XPLM_API void       XPLMReloadPlugins(void);
  * plugin ID of the plugin asking for control of the planes now. You can use  *
  * it to find out who is requesting and whether you should yield to them.     *
  * Synthetic traffic providers should always yield to online networks. The    *
- * parameter is unused and should be ignored.                                 */
+ * parameter is unused and should be ignored. Do not send this message        *
+ * directly; always use the XPLMAcquirePlanes() call.                         */
 #define XPLM_MSG_RELEASE_PLANES 111
 #endif /* XPLM303 */
 #if defined(XPLM400)
@@ -373,7 +374,7 @@ XPLM_API void       XPLMSendMessageToPlugin(
  */
 typedef void (* XPLMFeatureEnumerator_f)(
                          const char *         inFeature,
-                         void *               inRef);
+                         void*                inRef);
 /*
  * XPLMHasFeature
  * 
@@ -413,8 +414,8 @@ XPLM_API void       XPLMEnableFeature(
  *
  */
 XPLM_API void       XPLMEnumerateFeatures(
-                         XPLMFeatureEnumerator_f inEnumerator,
-                         void *               inRef);
+                         XPLMFeatureEnumerator_f inEnumerator,           /* Can be NULL */
+                         void*                inRef);
 #endif /* XPLM200 */
 #ifdef __cplusplus
 }

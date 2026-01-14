@@ -98,19 +98,19 @@ typedef struct {
  * 
  * You use an XPLMCameraControl function to provide continuous control over
  * the camera. You are passed a structure in which to put the new camera
- * position; modify it and return 1 to reposition the camera. Return 0 to
- * surrender control of the camera; camera control will be handled by X-Plane
- * on this draw loop. The contents of the structure as you are called are
- * undefined.
+ * position; modify it and return true to reposition the camera. Return false
+ * to surrender control of the camera; camera control will be handled by
+ * X-Plane on this draw loop. The contents of the structure as you are called
+ * are undefined.
  * 
  * If X-Plane is taking camera control away from you, this function will be
- * called with inIsLosingControl set to 1 and ioCameraPosition NULL.
+ * called with inIsLosingControl set to true and ioCameraPosition NULL.
  *
  */
 typedef int (* XPLMCameraControl_f)(
                          XPLMCameraPosition_t * outCameraPosition,      /* Can be NULL */
                          int                  inIsLosingControl,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMControlCamera
  * 
@@ -122,7 +122,7 @@ typedef int (* XPLMCameraControl_f)(
 XPLM_API void       XPLMControlCamera(
                          XPLMCameraControlDuration inHowLong,
                          XPLMCameraControl_f  inControlFunc,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMDontControlCamera
  * 
@@ -138,7 +138,7 @@ XPLM_API void       XPLMDontControlCamera(void);
 /*
  * XPLMIsCameraBeingControlled
  * 
- * This routine returns 1 if the camera is being controlled, zero if it is
+ * This routine returns true if the camera is being controlled, false if it is
  * not. If it is and you pass in a pointer to a camera control duration, the
  * current control duration will be returned.
  *

@@ -30,9 +30,15 @@ extern "C" {
 
 #if IBM
 #define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
+#ifndef WIN32_LEAN_AND_MEAN
+    #define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+    #define NOMINMAX
+#endif
 #include <windows.h>
 #endif
+
 #include <stdint.h>
 /***************************************************************************
  * DLL Definitions
@@ -146,12 +152,6 @@ extern "C" {
  *
  */
 typedef int XPLMPluginID;
-/* No plugin.                                                                 */
-#define XPLM_NO_PLUGIN_ID    (-1)
-/* X-Plane itself                                                             */
-#define XPLM_PLUGIN_XPLANE   (0)
-/* The current XPLM revision is 4.2.1 (421).                                  */
-#define kXPLM_Version        (421)
 /*
  * XPLMKeyFlags
  * 
@@ -188,6 +188,176 @@ enum {
 
 };
 typedef int XPLMKeyFlags;
+#if defined(XPLM200)
+/*
+ * XPLMCursorStatus
+ * 
+ * XPLMCursorStatus describes how you would like X-Plane to manage the cursor.
+ * See XPLMHandleCursor_f for more info.
+ *
+ */
+enum {
+    /* X-Plane manages the cursor normally, plugin does not affect the cusrsor.   */
+    xplm_CursorDefault                       = 0,
+
+    /* X-Plane hides the cursor.                                                  */
+    xplm_CursorHidden                        = 1,
+
+    /* X-Plane shows the cursor as the default arrow.                             */
+    xplm_CursorArrow                         = 2,
+
+    /* X-Plane shows the cursor but lets you select an OS cursor.                 */
+    xplm_CursorCustom                        = 3,
+
+#if defined(XPLM420)
+    /* X-Plane shows a small bi-directional knob-rotating cursor.                 */
+    xplm_CursorRotateSmall                   = 4,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a small counter-clockwise knob-rotating cursor.              */
+    xplm_CursorRotateSmallLeft               = 5,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a small clockwise knob-rotating cursor.                      */
+    xplm_CursorRotateSmallRight              = 6,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a medium bi-directional knob-rotating cursor.                */
+    xplm_CursorRotateMedium                  = 7,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a medium counter-clockwise knob-rotating cursor.             */
+    xplm_CursorRotateMediumLeft              = 8,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a medium clockwise knob-rotating cursor.                     */
+    xplm_CursorRotateMediumRight             = 9,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a large bi-directional knob-rotating cursor.                 */
+    xplm_CursorRotateLarge                   = 10,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a large counter-clockwise knob-rotating cursor.              */
+    xplm_CursorRotateLargeLeft               = 11,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a large clockwise knob-rotating cursor.                      */
+    xplm_CursorRotateLargeRight              = 12,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows an up-and-down arrows cursor.                                */
+    xplm_CursorUpDown                        = 13,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a down arrow cursor.                                         */
+    xplm_CursorDown                          = 14,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows an up arrow cursor.                                          */
+    xplm_CursorUp                            = 15,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a left-right arrow cursor.                                   */
+    xplm_CursorLeftRight                     = 16,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a left arrow cursor.                                         */
+    xplm_CursorLeft                          = 17,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a right arrow cursor.                                        */
+    xplm_CursorRight                         = 18,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a button-pushing cursor.                                     */
+    xplm_CursorButton                        = 19,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a handle-grabbing cursor.                                    */
+    xplm_CursorHandle                        = 20,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a four-arrows cursor.                                        */
+    xplm_CursorFourArrows                    = 21,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a cursor to drag a horizontal splitter bar.                  */
+    xplm_CursorSplitterH                     = 22,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows a cursor to drag a vertical splitter bar.                    */
+    xplm_CursorSplitterV                     = 23,
+
+#endif /* XPLM420 */
+#if defined(XPLM420)
+    /* X-Plane shows an I-Beam cursor for text editing.                           */
+    xplm_CursorText                          = 24,
+
+#endif /* XPLM420 */
+
+};
+typedef int XPLMCursorStatus;
+#endif /* XPLM200 */
+/*
+ * XPLMMouseStatus
+ * 
+ *                 When the mouse is clicked, your mouse click routine is
+ *                 called repeatedly.  It is first called with the mouse down
+ *                 message.  It is then called zero or more times with the
+ *                 mouse-drag message, and finally it is called once with the
+ *                 mouse up message.  All of these messages will be directed
+ *                 to the same window; you are guaranteed to not receive a
+ *                 drag or mouse-up event without first receiving the
+ *                 corresponding mouse-down.
+ *
+ */
+enum {
+    xplm_MouseDown                           = 1,
+
+    xplm_MouseDrag                           = 2,
+
+    xplm_MouseUp                             = 3,
+
+
+};
+typedef int XPLMMouseStatus;
+/* No plugin.                                                                 */
+#define XPLM_NO_PLUGIN_ID    (-1)
+/* X-Plane itself                                                             */
+#define XPLM_PLUGIN_XPLANE   (0)
+/*                 The current XPLM revision is 4.2.1 (421).                  */
+#define kXPLM_Version        (421)
+/*
+ * XPLMFixedString150_t
+ * 
+ *                 A container for a fixed-size string buffer of 150
+ *                 characters.
+ *
+ */
+typedef struct {
+    /* The size of the struct.                                                    */
+     char                      buffer[150];
+} XPLMFixedString150_t;
 /***************************************************************************
  * ASCII CONTROL KEY CODES
  ***************************************************************************/
@@ -369,168 +539,6 @@ typedef int XPLMKeyFlags;
 #define XPLM_VK_ENTER        0xBB
 #define XPLM_VK_NUMPAD_ENT   0xBC
 #define XPLM_VK_NUMPAD_EQ    0xBD
-/*
- * XPLMFixedString150_t
- * 
- * A container for a fixed-size string buffer of 150 characters.
- *
- */
-typedef struct {
-    /* The size of the struct.                                                    */
-     char                      buffer[150];
-} XPLMFixedString150_t;
-#if defined(XPLM200)
-/*
- * XPLMCursorStatus
- * 
- * XPLMCursorStatus describes how you would like X-Plane to manage the cursor.
- * See XPLMHandleCursor_f for more info.
- *
- */
-enum {
-    /* X-Plane manages the cursor normally, plugin does not affect the cusrsor.   */
-    xplm_CursorDefault                       = 0,
-
-    /* X-Plane hides the cursor.                                                  */
-    xplm_CursorHidden                        = 1,
-
-    /* X-Plane shows the cursor as the default arrow.                             */
-    xplm_CursorArrow                         = 2,
-
-    /* X-Plane shows the cursor but lets you select an OS cursor.                 */
-    xplm_CursorCustom                        = 3,
-
-#if defined(XPLM420)
-    /* X-Plane shows a small bi-directional knob-rotating cursor.                 */
-    xplm_CursorRotateSmall                   = 4,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a small counter-clockwise knob-rotating cursor.              */
-    xplm_CursorRotateSmallLeft               = 5,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a small clockwise knob-rotating cursor.                      */
-    xplm_CursorRotateSmallRight              = 6,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a medium bi-directional knob-rotating cursor.                */
-    xplm_CursorRotateMedium                  = 7,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a medium counter-clockwise knob-rotating cursor.             */
-    xplm_CursorRotateMediumLeft              = 8,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a medium clockwise knob-rotating cursor.                     */
-    xplm_CursorRotateMediumRight             = 9,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a large bi-directional knob-rotating cursor.                 */
-    xplm_CursorRotateLarge                   = 10,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a large counter-clockwise knob-rotating cursor.              */
-    xplm_CursorRotateLargeLeft               = 11,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a large clockwise knob-rotating cursor.                      */
-    xplm_CursorRotateLargeRight              = 12,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows an up-and-down arrows cursor.                                */
-    xplm_CursorUpDown                        = 13,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a down arrow cursor.                                         */
-    xplm_CursorDown                          = 14,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows an up arrow cursor.                                          */
-    xplm_CursorUp                            = 15,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a left-right arrow cursor.                                   */
-    xplm_CursorLeftRight                     = 16,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a left arrow cursor.                                         */
-    xplm_CursorLeft                          = 17,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a right arrow cursor.                                        */
-    xplm_CursorRight                         = 18,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a button-pushing cursor.                                     */
-    xplm_CursorButton                        = 19,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a handle-grabbing cursor.                                    */
-    xplm_CursorHandle                        = 20,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a four-arrows cursor.                                        */
-    xplm_CursorFourArrows                    = 21,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a cursor to drag a horizontal splitter bar.                  */
-    xplm_CursorSplitterH                     = 22,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows a cursor to drag a vertical splitter bar.                    */
-    xplm_CursorSplitterV                     = 23,
-
-#endif /* XPLM420 */
-#if defined(XPLM420)
-    /* X-Plane shows an I-Beam cursor for text editing.                           */
-    xplm_CursorText                          = 24,
-
-#endif /* XPLM420 */
-
-};
-typedef int XPLMCursorStatus;
-#endif /* XPLM200 */
-/*
- * XPLMMouseStatus
- * 
- *     When the mouse is clicked, your mouse click routine is called
- *     repeatedly.  It is first called with the mouse down message.  It is
- *     then called zero or more times with the mouse-drag message, and finally
- *     it is called once with the mouse up message.  All of these messages
- *     will be directed to the same window; you are guaranteed to not receive
- *     a drag or mouse-up event without first receiving the corresponding
- *     mouse-down.
- *
- */
-enum {
-    xplm_MouseDown                           = 1,
-
-    xplm_MouseDrag                           = 2,
-
-    xplm_MouseUp                             = 3,
-
-
-};
-typedef int XPLMMouseStatus;
 #ifdef __cplusplus
 }
 #endif

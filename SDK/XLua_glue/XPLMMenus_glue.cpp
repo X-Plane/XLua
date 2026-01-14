@@ -93,9 +93,11 @@ static void cb_XPLMMenuHandler_f(void* inMenuRef, void* inItemRef)
 {
 	notify_cb_t const* inMenuRef_cb = static_cast<notify_cb_t*>(inMenuRef);
 	notify_cb_t const* inItemRef_cb = static_cast<notify_cb_t*>(inItemRef);
+
 	lua_State* L = setup_lua_callback(inMenuRef_cb, "XPLMMenuHandler_f");
 	if (L)
 	{
+
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rr", inMenuRef_cb->get_capture(), inItemRef_cb->get_capture()))
 		{
 		}
@@ -276,10 +278,9 @@ int XLuaCheckMenuItemState(lua_State* L)
 		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected userdata<XPLMMenuID>");
 	}
 	int index = xlua_checkinteger(L, 2);
-	XPLMMenuCheck outCheck;
+	XPLMMenuCheck outCheck = {};
 
 	XPLMCheckMenuItemState(inMenu, index, &outCheck);
-
 	lua_pushinteger(L, outCheck);
 
 	return 1;

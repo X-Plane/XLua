@@ -20,6 +20,8 @@
  */
 
 #include "XPLMDefs.h"
+#include "fmod.hpp"
+#include "fmod_studio.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -161,7 +163,7 @@ typedef void FMOD_CHANNEL;
  *
  */
 typedef void (* XPLMPCMComplete_f)(
-                         void *               inRefcon,
+                         void*                inRefcon,
                          FMOD_RESULT          status);
 /*
  * XPLMPlayPCMOnBus
@@ -189,8 +191,8 @@ XPLM_API FMOD_CHANNEL* XPLMPlayPCMOnBus(
                          int                  numChannels,
                          int                  loop,
                          XPLMAudioBus         audioType,
-                         XPLMPCMComplete_f    inCallback,
-                         void *               inRefcon);              /* Can be NULL */
+                         XPLMPCMComplete_f    inCallback,             /* Can be NULL */
+                         void*                inRefcon);
 /*
  * XPLMStopAudio
  * 

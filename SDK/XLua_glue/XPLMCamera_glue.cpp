@@ -53,49 +53,49 @@ XPLMCameraPosition_t XPLMCameraPosition_t_from_table(lua_State* L, int stackpos)
 
 	luaL_checktype(L, stackpos, LUA_TTABLE);
 
-	lua_getfield(L, -1, "x");
+	lua_getfield(L, stackpos, "x");
 	if (!lua_isnil(L, -1))
 	{
 		out.x = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "y");
+	lua_getfield(L, stackpos, "y");
 	if (!lua_isnil(L, -1))
 	{
 		out.y = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "z");
+	lua_getfield(L, stackpos, "z");
 	if (!lua_isnil(L, -1))
 	{
 		out.z = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "pitch");
+	lua_getfield(L, stackpos, "pitch");
 	if (!lua_isnil(L, -1))
 	{
 		out.pitch = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "heading");
+	lua_getfield(L, stackpos, "heading");
 	if (!lua_isnil(L, -1))
 	{
 		out.heading = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "roll");
+	lua_getfield(L, stackpos, "roll");
 	if (!lua_isnil(L, -1))
 	{
 		out.roll = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "zoom");
+	lua_getfield(L, stackpos, "zoom");
 	if (!lua_isnil(L, -1))
 	{
 		out.zoom = static_cast<float>(luaL_checknumber(L, -1));
@@ -153,14 +153,26 @@ static int cb_XPLMCameraControl_f(XPLMCameraPosition_t * outCameraPosition, int 
 {
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
 	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMCameraControl_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "?br", outCameraPosition, static_cast<bool>(inIsLosingControl), inRefcon_cb->get_capture()))
+		XPLMCameraPosition_t_to_table(L, outCameraPosition != nullptr ? *outCameraPosition : XPLMCameraPosition_t{});
+		int outCameraPosition_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "rbr", outCameraPosition_ref, static_cast<bool>(inIsLosingControl), inRefcon_cb->get_capture()))
 		{
 			res = xlua_checkboolean(L, -1) ? 1 : 0;
 			lua_pop(L, 1);
 		}
+
+		if (outCameraPosition != nullptr)
+		{
+			lua_rawgeti(L, LUA_REGISTRYINDEX, outCameraPosition_ref);
+			*outCameraPosition = XPLMCameraPosition_t_from_table(L, -1);
+			lua_pop(L, 1);
+		}
+		luaL_unref(L, LUA_REGISTRYINDEX, outCameraPosition_ref);
 	}
 
 	return res;
@@ -188,10 +200,9 @@ int XLuaDontControlCamera(lua_State* L)
 
 int XLuaIsCameraBeingControlled(lua_State* L)
 {
-	XPLMCameraControlDuration outCameraControlDuration;
+	XPLMCameraControlDuration outCameraControlDuration = {};
 	int res = XPLMIsCameraBeingControlled(&outCameraControlDuration);
 	lua_pushboolean(L, res);
-
 	lua_pushinteger(L, outCameraControlDuration);
 
 	return 2;
@@ -199,7 +210,7 @@ int XLuaIsCameraBeingControlled(lua_State* L)
 
 int XLuaReadCameraPosition(lua_State* L)
 {
-	XPLMCameraPosition_t outCameraPosition;
+	XPLMCameraPosition_t outCameraPosition = {};
 	XPLMReadCameraPosition(&outCameraPosition);
 	XPLMCameraPosition_t_to_table(L, outCameraPosition);
 

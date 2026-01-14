@@ -96,6 +96,45 @@ void RegType_XPLMInstanceRef(lua_State* L)
 	lua_pop(L, 1);
 }
 
+int XLuaCreateInstance(lua_State* L)
+{
+	XPLMObjectRef obj = {};
+	if (lua_isuserdata(L, 1))
+	{
+		obj = xlua_checkuserdata<XPLMObjectRef>(L, 1, "Expected userdata<XPLMObjectRef>");
+	}
+	luaL_checktype(L, 2, LUA_TTABLE);
+
+
+	int datarefs_len = lua_objlen(L, 2);
+	char const** datarefs = new char const*[datarefs_len + 1]{};		// Some APIs expect null-terminated arrays.
+
+	for (int i = 0; i < datarefs_len; ++i)
+	{
+		lua_rawgeti(L, 2, i + 1);
+		datarefs[i] = xlua_checkstring(L, -1);
+		lua_pop(L, 1);
+	}
+	
+	XPLMInstanceRef res = XPLMCreateInstance(obj, datarefs);
+	if (res == nullptr)
+	{
+		lua_pushnil(L);
+	}
+	else
+	{
+		xlua_pushuserdata<XPLMInstanceRef>(L, res);
+	}
+
+	if (datarefs != nullptr)
+	{
+
+		delete[] datarefs;
+	}
+
+	return 1;
+}
+
 int XLuaInstanceSetAutoShift(lua_State* L)
 {
 	XPLMInstanceRef instance = {};
@@ -131,22 +170,25 @@ int XLuaInstanceSetPosition(lua_State* L)
 	}
 	XPLMDrawInfo_t new_position = XPLMDrawInfo_t_from_table(L, 2);
 	luaL_checktype(L, 3, LUA_TTABLE);
-	size_t const data_len = lua_objlen(L, 3);
-	if (data_len == 0)
-	{
-		luaL_argerror(L, 3, "Array 'data' must have at least one element.\n");
-		return 0;
-	}
-	float* data = new float[data_len]{};
-	for (size_t i = 0; i < data_len; ++i)
+
+
+	int data_len = lua_objlen(L, 3);
+	float* data = new float[data_len + 1]{};		// Some APIs expect null-terminated arrays.
+
+	for (int i = 0; i < data_len; ++i)
 	{
 		lua_rawgeti(L, 3, i + 1);
 		data[i] = xlua_checknumber(L, -1);
 		lua_pop(L, 1);
 	}
-
+	
 	XPLMInstanceSetPosition(instance, &new_position, data);
-	delete[] data;
+
+	if (data != nullptr)
+	{
+
+		delete[] data;
+	}
 
 	return 0;
 }
@@ -160,22 +202,25 @@ int XLuaInstanceSetPositionDouble(lua_State* L)
 	}
 	XPLMDrawInfoDouble_t new_position = XPLMDrawInfoDouble_t_from_table(L, 2);
 	luaL_checktype(L, 3, LUA_TTABLE);
-	size_t const data_len = lua_objlen(L, 3);
-	if (data_len == 0)
-	{
-		luaL_argerror(L, 3, "Array 'data' must have at least one element.\n");
-		return 0;
-	}
-	float* data = new float[data_len]{};
-	for (size_t i = 0; i < data_len; ++i)
+
+
+	int data_len = lua_objlen(L, 3);
+	float* data = new float[data_len + 1]{};		// Some APIs expect null-terminated arrays.
+
+	for (int i = 0; i < data_len; ++i)
 	{
 		lua_rawgeti(L, 3, i + 1);
 		data[i] = xlua_checknumber(L, -1);
 		lua_pop(L, 1);
 	}
-
+	
 	XPLMInstanceSetPositionDouble(instance, &new_position, data);
-	delete[] data;
+
+	if (data != nullptr)
+	{
+
+		delete[] data;
+	}
 
 	return 0;
 }

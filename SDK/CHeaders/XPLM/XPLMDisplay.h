@@ -221,8 +221,8 @@ typedef int XPLMDrawingPhase;
  * 
  * This is the prototype for a low level drawing callback.  You are passed in
  * the phase and whether it is before or after.  If you are before the phase,
- * return 1 to let X-Plane draw or 0 to suppress X-Plane drawing.  If you are
- * after the phase the return value is ignored.
+ * return true to let X-Plane draw or false to suppress X-Plane drawing.  If
+ * you are after the phase the return value is ignored.
  * 
  * Refcon is a unique value that you specify when registering the callback,
  * allowing you to slip a pointer to your own data to the callback.
@@ -235,14 +235,14 @@ typedef int XPLMDrawingPhase;
 typedef int (* XPLMDrawCallback_f)(
                          XPLMDrawingPhase     inPhase,
                          int                  inIsBefore,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMRegisterDrawCallback
  * 
  * This routine registers a low level drawing callback.  Pass in the phase you
  * want to be called for and whether you want to be called before or after. 
- * This routine returns 1 if the registration was successful, or 0 if the
- * phase does not exist in this version of X-Plane.  You may register a
+ * This routine returns true if the registration was successful, or false if
+ * the phase does not exist in this version of X-Plane.  You may register a
  * callback multiple times for the same or different phases as long as the
  * refcon is unique each time.
  * 
@@ -255,14 +255,14 @@ XPLM_API int        XPLMRegisterDrawCallback(
                          XPLMDrawCallback_f   inCallback,
                          XPLMDrawingPhase     inPhase,
                          int                  inWantsBefore,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMUnregisterDrawCallback
  * 
  * This routine unregisters a draw callback.  You must unregister a callback
  * for each time you register a callback if you have registered it multiple
- * times with different refcons.  The routine returns 1 if it can find the
- * callback to unregister, 0 otherwise.
+ * times with different refcons.  The routine returns true if it can find the
+ * callback to unregister, false otherwise.
  * 
  * Note that this function will likely be removed during the X-Plane 11 run as
  * part of the transition to Vulkan/Metal/etc. See the XPLMInstance API for
@@ -273,7 +273,7 @@ XPLM_API int        XPLMUnregisterDrawCallback(
                          XPLMDrawCallback_f   inCallback,
                          XPLMDrawingPhase     inPhase,
                          int                  inWantsBefore,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #if defined(XPLM400)
 /***************************************************************************
  * AVIONICS API
@@ -389,8 +389,8 @@ typedef int XPLMDeviceID;
  * This is the prototype for drawing callbacks for customized built-in device.
  * You are passed in the device you are enhancing/replacing, and (if this is
  * used for a built-in device that you are customizing) whether it is before
- * or after X-Plane drawing. If you are before X-Plane, return 1 to let
- * X-Plane draw or 0 to suppress X-Plane drawing. If you are called after
+ * or after X-Plane drawing. If you are before X-Plane, return true to let
+ * X-Plane draw or false to suppress X-Plane drawing. If you are called after
  * X-Plane, the return value is ignored.
  * 
  * Refcon is a unique value that you specify when registering the callback,
@@ -404,7 +404,7 @@ typedef int XPLMDeviceID;
 typedef int (* XPLMAvionicsCallback_f)(
                          XPLMDeviceID         inDeviceID,
                          int                  inIsBefore,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #if defined(XPLM410)
 /*
  * XPLMAvionicsMouse_f
@@ -412,15 +412,15 @@ typedef int (* XPLMAvionicsCallback_f)(
  * Mouse click callback for clicks into your screen or (2D-popup) bezel,
  * useful if the device you are making simulates a touch-screen the user can
  * click in the 3d cockpit, or if your pop-up's bezel has buttons that the
- * user can click. Return 1 to consume the event, or 0 to let X-Plane process
- * it (for stock avionics devices).
+ * user can click. Return true to consume the event, or false to let X-Plane
+ * process it (for stock avionics devices).
  *
  */
 typedef int (* XPLMAvionicsMouse_f)(
                          int                  x,
                          int                  y,
                          XPLMMouseStatus      inMouse,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM410 */
 #if defined(XPLM410)
 /*
@@ -428,11 +428,11 @@ typedef int (* XPLMAvionicsMouse_f)(
  * 
  * Mouse wheel callback for scroll actions into your screen or (2D-popup)
  * bezel, useful if your bezel has knobs that can be turned using the mouse
- * wheel, or if you want to simulate pinch-to-zoom on a touchscreen. Return 1
- * to consume the event, or 0 to let X-Plane process it (for stock avionics
- * devices). The number of "clicks" indicates how far the wheel was turned
- * since the last callback. The wheel is 0 for the vertical axis or 1 for the
- * horizontal axis (for OS/mouse combinations that support this).
+ * wheel, or if you want to simulate pinch-to-zoom on a touchscreen. Return
+ * true to consume the event, or false to let X-Plane process it (for stock
+ * avionics devices). The number of "clicks" indicates how far the wheel was
+ * turned since the last callback. The wheel is 0 for the vertical axis or 1
+ * for the horizontal axis (for OS/mouse combinations that support this).
  *
  */
 typedef int (* XPLMAvionicsMouseWheel_f)(
@@ -440,7 +440,7 @@ typedef int (* XPLMAvionicsMouseWheel_f)(
                          int                  y,
                          int                  wheel,
                          int                  clicks,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM410 */
 #if defined(XPLM410)
 /*
@@ -455,22 +455,22 @@ typedef int (* XPLMAvionicsMouseWheel_f)(
 typedef XPLMCursorStatus (* XPLMAvionicsCursor_f)(
                          int                  x,
                          int                  y,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM410 */
 #if defined(XPLM410)
 /*
  * XPLMAvionicsKeyboard_f
  * 
  * Key callback called when your device is popped up and you've requested to
- * capture the keyboard.  Return 1 to consume the event, or 0 to let X-Plane
- * process it (for stock avionics devices).
+ * capture the keyboard.  Return true to consume the event, or false to let
+ * X-Plane process it (for stock avionics devices).
  *
  */
 typedef int (* XPLMAvionicsKeyboard_f)(
                          char                 inKey,
                          XPLMKeyFlags         inFlags,
                          char                 inVirtualKey,
-                         void *               inRefCon,
+                         void*                inRefcon,
                          int                  losingFocus);
 #endif /* XPLM410 */
 /*
@@ -550,7 +550,7 @@ typedef struct {
 #endif /* XPLM410 */
     /* A reference which will be passed into each of your draw callbacks. Use this*
      * to pass information to yourself as needed.                                 */
-     void *                    refcon;
+     void*                     refcon;
 } XPLMCustomizeAvionics_t;
 /*
  * XPLMRegisterAvionicsCallbacksEx
@@ -608,7 +608,7 @@ XPLM_API void       XPLMUnregisterAvionicsCallbacks(
  *
  */
 typedef void (* XPLMAvionicsScreenCallback_f)(
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM410 */
 #if defined(XPLM410)
 /*
@@ -630,7 +630,7 @@ typedef void (* XPLMAvionicsBezelCallback_f)(
                          float                inAmbiantR,
                          float                inAmbiantG,
                          float                inAmbiantB,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM410 */
 #if defined(XPLM410)
 /*
@@ -662,7 +662,7 @@ typedef float (* XPLMAvionicsBrightness_f)(
                          float                inRheoValue,
                          float                inAmbiantBrightness,
                          float                inBusVoltsRatio,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM410 */
 #if defined(XPLM410)
 /*
@@ -741,10 +741,10 @@ typedef struct {
      char const*               deviceID;
     /* A null-terminated string to give a user-readable name to your device, which*
      * can be presented in UI dialogs.                                            */
-     char const*               deviceName;
+     char const *              deviceName;
     /* A reference which will be passed into your draw and mouse callbacks. Use   *
      * this to pass information to yourself as needed.                            */
-     void *                    refcon;
+     void*                     refcon;
 } XPLMCreateAvionics_t;
 #endif /* XPLM410 */
 #if defined(XPLM410)
@@ -1056,7 +1056,7 @@ typedef void * XPLMWindowID;
  */
 typedef void (* XPLMDrawWindow_f)(
                          XPLMWindowID         inWindowID,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMHandleKey_f
  * 
@@ -1084,7 +1084,7 @@ typedef void (* XPLMHandleKey_f)(
                          char                 inKey,
                          XPLMKeyFlags         inFlags,
                          char                 inVirtualKey,
-                         void *               inRefcon,
+                         void*                inRefcon,
                          int                  losingFocus);
 /*
  * XPLMHandleMouseClick_f
@@ -1116,7 +1116,7 @@ typedef int (* XPLMHandleMouseClick_f)(
                          int                  x,
                          int                  y,
                          XPLMMouseStatus      inMouse,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #if defined(XPLM200)
 /*
  * XPLMHandleCursor_f
@@ -1152,19 +1152,19 @@ typedef XPLMCursorStatus (* XPLMHandleCursor_f)(
                          XPLMWindowID         inWindowID,
                          int                  x,
                          int                  y,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM200 */
 #if defined(XPLM200)
 /*
  * XPLMHandleMouseWheel_f
  * 
  * The SDK calls your mouse wheel callback when one of the mouse wheels is
- * scrolled within your window.  Return 1 to consume the mouse wheel movement
- * or 0 to pass them on to a lower window.  (If your window appears opaque to
- * the user, you should consume mouse wheel scrolling even if it does
- * nothing.)  The number of "clicks" indicates how far the wheel was turned
- * since the last callback. The wheel is 0 for the vertical axis or 1 for the
- * horizontal axis (for OS/mouse combinations that support this).
+ * scrolled within your window.  Return true to consume the mouse wheel
+ * movement or false to pass them on to a lower window.  (If your window
+ * appears opaque to the user, you should consume mouse wheel scrolling even
+ * if it does nothing.)  The number of "clicks" indicates how far the wheel
+ * was turned since the last callback. The wheel is 0 for the vertical axis or
+ * 1 for the horizontal axis (for OS/mouse combinations that support this).
  * 
  * The units for x and y values match the units used in your window. Thus, for
  * "modern" windows (those created via XPLMCreateWindowEx() and compiled
@@ -1181,7 +1181,7 @@ typedef int (* XPLMHandleMouseWheel_f)(
                          int                  y,
                          int                  wheel,
                          int                  clicks,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM200 */
 #if defined(XPLM300)
 /*
@@ -1314,7 +1314,7 @@ typedef struct {
      XPLMHandleMouseWheel_f    handleMouseWheelFunc;
     /* A reference which will be passed into each of your window callbacks. Use   *
      * this to pass information to yourself as needed.                            */
-     void *                    refcon;
+     void*                     refcon;
 #if defined(XPLM301)
     /* Specifies the type of X-Plane 11-style "wrapper" you want around your      *
      * window, if any                                                             */
@@ -1376,7 +1376,7 @@ XPLM_API XPLMWindowID XPLMCreateWindow(
                          XPLMDrawWindow_f     inDrawCallback,
                          XPLMHandleKey_f      inKeyCallback,
                          XPLMHandleMouseClick_f inMouseCallback,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMDestroyWindow
  * 
@@ -1454,7 +1454,7 @@ typedef void (* XPLMReceiveMonitorBoundsGlobal_f)(
                          int                  inTopBx,
                          int                  inRightBx,
                          int                  inBottomBx,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM300 */
 #if defined(XPLM300)
 /*
@@ -1483,7 +1483,7 @@ typedef void (* XPLMReceiveMonitorBoundsGlobal_f)(
  */
 XPLM_API void       XPLMGetAllMonitorBoundsGlobal(
                          XPLMReceiveMonitorBoundsGlobal_f inMonitorBoundsCallback,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM300 */
 #if defined(XPLM300)
 /*
@@ -1502,7 +1502,7 @@ typedef void (* XPLMReceiveMonitorBoundsOS_f)(
                          int                  inTopPx,
                          int                  inRightPx,
                          int                  inBottomPx,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM300 */
 #if defined(XPLM300)
 /*
@@ -1521,7 +1521,7 @@ typedef void (* XPLMReceiveMonitorBoundsOS_f)(
  */
 XPLM_API void       XPLMGetAllMonitorBoundsOS(
                          XPLMReceiveMonitorBoundsOS_f inMonitorBoundsCallback,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM300 */
 /*
  * XPLMGetMouseLocation
@@ -1966,8 +1966,8 @@ XPLM_API int        XPLMIsWindowInFront(
  * interaction.  For example, the MUI library uses a key sniffer to do pop-up
  * text entry.
  * 
- * Return 1 to pass the key on to the next sniffer, the window manager,
- * X-Plane, or whomever is down stream.  Return 0 to consume the key.
+ * Return true to pass the key on to the next sniffer, the window manager,
+ * X-Plane, or whomever is down stream.  Return false to consume the key.
  * 
  * Warning: this API declares virtual keys as a signed character; however the
  * VKEY #define macros in XPLMDefs.h define the vkeys using unsigned values
@@ -1979,7 +1979,7 @@ typedef int (* XPLMKeySniffer_f)(
                          char                 inChar,
                          XPLMKeyFlags         inFlags,
                          char                 inVirtualKey,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMRegisterKeySniffer
  * 
@@ -1988,26 +1988,26 @@ typedef int (* XPLMKeySniffer_f)(
  * system does not consume.  You should ALMOST ALWAYS sniff non-control keys
  * after the window system.  When the window system consumes a key, it is
  * because the user has "focused" a window.  Consuming the key or taking
- * action based on the key will produce very weird results.  Returns
- * 1 if successful.
+ * action based on the key will produce very weird results.  Returns true if
+ * successful.
  *
  */
 XPLM_API int        XPLMRegisterKeySniffer(
                          XPLMKeySniffer_f     inCallback,
                          int                  inBeforeWindows,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMUnregisterKeySniffer
  * 
  * This routine unregisters a key sniffer.  You must unregister a key sniffer
- * for every time you register one with the exact same signature.  Returns 1
- * if successful.
+ * for every time you register one with the exact same signature.  Returns
+ * true if successful.
  *
  */
 XPLM_API int        XPLMUnregisterKeySniffer(
                          XPLMKeySniffer_f     inCallback,
                          int                  inBeforeWindows,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /***************************************************************************
  * HOT KEYS
  ***************************************************************************/
@@ -2025,7 +2025,7 @@ XPLM_API int        XPLMUnregisterKeySniffer(
  *
  */
 typedef void (* XPLMHotKey_f)(
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMHotKeyID
  * 
@@ -2049,7 +2049,7 @@ XPLM_API XPLMHotKeyID XPLMRegisterHotKey(
                          XPLMKeyFlags         inFlags,
                          const char *         inDescription,
                          XPLMHotKey_f         inCallback,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMUnregisterHotKey
  * 
@@ -2082,9 +2082,9 @@ XPLM_API XPLMHotKeyID XPLMGetNthHotKey(
  */
 XPLM_API void       XPLMGetHotKeyInfo(
                          XPLMHotKeyID         inHotKey,
-                         char *               outVirtualKey,          /* Can be NULL */
+                         char                 outVirtualKey[1],       /* Can be NULL */
                          XPLMKeyFlags *       outFlags,               /* Can be NULL */
-                         char *               outDescription,         /* Can be NULL */
+                         char                 outDescription[512],    /* Can be NULL */
                          XPLMPluginID *       outPlugin);             /* Can be NULL */
 /*
  * XPLMSetHotKeyCombination

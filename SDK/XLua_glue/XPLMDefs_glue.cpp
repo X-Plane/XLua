@@ -103,7 +103,7 @@ XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos)
 
 	luaL_checktype(L, stackpos, LUA_TTABLE);
 
-	lua_getfield(L, -1, "buffer");
+	lua_getfield(L, stackpos, "buffer");
 	strncpy(out.buffer, luaL_checkstring(L, -1), 150);
 	out.buffer[149] = 0;
 	lua_pop(L, 1);

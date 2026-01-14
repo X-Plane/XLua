@@ -196,9 +196,9 @@ typedef struct {
  *
  */
 XPLM_API void       XPLMCountAircraft(
-                         int *                outTotalAircraft,
-                         int *                outActiveAircraft,
-                         XPLMPluginID *       outController);
+                         int *                outTotalAircraft,       /* Can be NULL */
+                         int *                outActiveAircraft,      /* Can be NULL */
+                         XPLMPluginID *       outController);         /* Can be NULL */
 /*
  * XPLMGetNthAircraftModel
  * 
@@ -210,8 +210,8 @@ XPLM_API void       XPLMCountAircraft(
  */
 XPLM_API void       XPLMGetNthAircraftModel(
                          int                  inIndex,
-                         char *               outFileName,
-                         char *               outPath);
+                         char                 outFileName[256],       /* Can be NULL */
+                         char                 outPath[512]);          /* Can be NULL */
 /***************************************************************************
  * EXCLUSIVE AIRCRAFT ACCESS
  ***************************************************************************/
@@ -230,12 +230,12 @@ XPLM_API void       XPLMGetNthAircraftModel(
  *
  */
 typedef void (* XPLMPlanesAvailable_f)(
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMAcquirePlanes
  * 
  * XPLMAcquirePlanes grants your plugin exclusive access to the aircraft.  It
- * returns 1 if you gain access, 0 if you do not.
+ * returns true if you gain access, false if you do not.
  * 
  * inAircraft - pass in an array of pointers to strings specifying the planes
  * you want loaded.  For any plane index you do not want loaded, pass a
@@ -249,9 +249,9 @@ typedef void (* XPLMPlanesAvailable_f)(
  *
  */
 XPLM_API int        XPLMAcquirePlanes(
-                         char **              inAircraft,             /* Can be NULL */
-                         XPLMPlanesAvailable_f inCallback,
-                         void *               inRefcon);
+                         char const*          inAircraft[],           /* Can be NULL */
+                         XPLMPlanesAvailable_f inCallback,             /* Can be NULL */
+                         void*                inRefcon);
 /*
  * XPLMReleasePlanes
  * 
@@ -301,8 +301,8 @@ XPLM_API void       XPLMDisableAIForPlane(
  * 
  * This routine draws an aircraft.  It can only be called from a 3-d drawing
  * callback.  Pass in the position of the plane in OpenGL local coordinates
- * and the orientation of the plane.  A 1 for full drawing indicates that the
- * whole plane must be drawn; a 0 indicates you only need the nav lights
+ * and the orientation of the plane.  True for full drawing indicates that the
+ * whole plane must be drawn; false indicates you only need the nav lights
  * drawn. (This saves rendering time when planes are far away.)
  *
  */

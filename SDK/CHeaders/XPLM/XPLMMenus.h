@@ -88,8 +88,8 @@ typedef void * XPLMMenuID;
  *
  */
 typedef void (* XPLMMenuHandler_f)(
-                         void *               inMenuRef,
-                         void *               inItemRef);
+                         void*                inMenuRef,
+                         void*                inItemRef);
 /*
  * XPLMFindPluginsMenu
  * 
@@ -135,8 +135,8 @@ XPLM_API XPLMMenuID XPLMCreateMenu(
                          const char *         inName,
                          XPLMMenuID           inParentMenu,
                          int                  inParentItem,
-                         XPLMMenuHandler_f    inHandler,
-                         void *               inMenuRef);
+                         XPLMMenuHandler_f    inHandler,              /* Can be NULL */
+                         void*                inMenuRef);
 /*
  * XPLMDestroyMenu
  * 
@@ -177,7 +177,7 @@ XPLM_API void       XPLMClearAllMenuItems(
 XPLM_API int        XPLMAppendMenuItem(
                          XPLMMenuID           inMenu,
                          const char *         inItemName,
-                         void *               inItemRef,
+                         void*                inItemRef,
                          int                  inDeprecatedAndIgnored);
 #if defined(XPLM300)
 /*

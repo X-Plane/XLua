@@ -92,32 +92,28 @@ int XLuaGetPluginInfo(lua_State* L)
 	{
 		inPlugin = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
 	}
-	char outName[256];
-	char outFilePath[256];
-	char outSignature[256];
-	char outDescription[256];
+	char outName[256] = {};
+	char outFilePath[256] = {};
+	char outSignature[256] = {};
+	char outDescription[256] = {};
 
 	XPLMGetPluginInfo(inPlugin, outName, outFilePath, outSignature, outDescription);
 
-	lua_createtable(L, 0, 4); // 0 array slots and 4 key-value pairs
+	lua_createtable(L, 0, 4);
 
 	lua_pushstring(L, "outName");
-
 	lua_pushstring(L, outName);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outFilePath");
-
 	lua_pushstring(L, outFilePath);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outSignature");
-
 	lua_pushstring(L, outSignature);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outDescription");
-
 	lua_pushstring(L, outDescription);
 	lua_settable(L, -3);
 
@@ -194,9 +190,11 @@ int XLuaSendMessageToPlugin(lua_State* L)
 static void cb_XPLMFeatureEnumerator_f(const char * inFeature, void* inRef)
 {
 	notify_cb_t const* inRef_cb = static_cast<notify_cb_t*>(inRef);
+
 	lua_State* L = setup_lua_callback(inRef_cb, "XPLMFeatureEnumerator_f");
 	if (L)
 	{
+
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFeature, inRef_cb->get_capture()))
 		{
 		}

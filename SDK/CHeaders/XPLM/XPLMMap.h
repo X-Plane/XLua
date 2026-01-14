@@ -133,12 +133,12 @@ typedef int XPLMMapStyle;
  */
 typedef void (* XPLMMapDrawingCallback_f)(
                          XPLMMapLayerID       inLayer,
-                         const float *        inMapBoundsLeftTopRightBottom,
+                         const float          inMapBoundsLeftTopRightBottom[4],
                          float                zoomRatio,
                          float                mapUnitsPerUserInterfaceUnit,
                          XPLMMapStyle         mapStyle,
                          XPLMMapProjectionID  projection,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMMapIconDrawingCallback_f
  * 
@@ -158,12 +158,12 @@ typedef void (* XPLMMapDrawingCallback_f)(
  */
 typedef void (* XPLMMapIconDrawingCallback_f)(
                          XPLMMapLayerID       inLayer,
-                         const float *        inMapBoundsLeftTopRightBottom,
+                         const float          inMapBoundsLeftTopRightBottom[4],
                          float                zoomRatio,
                          float                mapUnitsPerUserInterfaceUnit,
                          XPLMMapStyle         mapStyle,
                          XPLMMapProjectionID  projection,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMMapLabelDrawingCallback_f
  * 
@@ -183,12 +183,12 @@ typedef void (* XPLMMapIconDrawingCallback_f)(
  */
 typedef void (* XPLMMapLabelDrawingCallback_f)(
                          XPLMMapLayerID       inLayer,
-                         const float *        inMapBoundsLeftTopRightBottom,
+                         const float          inMapBoundsLeftTopRightBottom[4],
                          float                zoomRatio,
                          float                mapUnitsPerUserInterfaceUnit,
                          XPLMMapStyle         mapStyle,
                          XPLMMapProjectionID  projection,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM300 */
 #if defined(XPLM300)
 /***************************************************************************
@@ -226,9 +226,9 @@ typedef void (* XPLMMapLabelDrawingCallback_f)(
  */
 typedef void (* XPLMMapPrepareCacheCallback_f)(
                          XPLMMapLayerID       inLayer,
-                         const float *        inTotalMapBoundsLeftTopRightBottom,
+                         const float          inTotalMapBoundsLeftTopRightBottom[4],
                          XPLMMapProjectionID  projection,
-                         void *               inRefcon);
+                         void*                inRefcon);
 /*
  * XPLMMapWillBeDeletedCallback_f
  * 
@@ -239,7 +239,7 @@ typedef void (* XPLMMapPrepareCacheCallback_f)(
  */
 typedef void (* XPLMMapWillBeDeletedCallback_f)(
                          XPLMMapLayerID       inLayer,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM300 */
 #if defined(XPLM300)
 /***************************************************************************
@@ -334,7 +334,7 @@ typedef struct {
     /* Short label to use for this layer in the user interface                    */
      const char *              layerName;
     /* A reference to arbitrary data that will be passed to your callbacks        */
-     void *                    refcon;
+     void*                     refcon;
 } XPLMCreateMapLayer_t;
 /*
  * XPLMCreateMapLayer
@@ -375,7 +375,7 @@ XPLM_API int        XPLMDestroyMapLayer(
  */
 typedef void (* XPLMMapCreatedCallback_f)(
                          const char *         mapIdentifier,
-                         void *               refcon);
+                         void*                inRefcon);
 /*
  * XPLMRegisterMapCreationHook
  * 
@@ -388,12 +388,12 @@ typedef void (* XPLMMapCreatedCallback_f)(
  *
  */
 XPLM_API void       XPLMRegisterMapCreationHook(
-                         XPLMMapCreatedCallback_f callback,
-                         void *               refcon);
+                         XPLMMapCreatedCallback_f callback,               /* Can be NULL */
+                         void*                inRefcon);
 /*
  * XPLMMapExists
  * 
- * Returns 1 if the map with the specified identifier already exists in
+ * Returns true if the map with the specified identifier already exists in
  * X-Plane. In that case, you can safely call XPLMCreateMapLayer() specifying
  * that your layer should be added to that map.
  *

@@ -83,7 +83,7 @@ typedef void * XPLMInstanceRef;
  */
 XPLM_API XPLMInstanceRef XPLMCreateInstance(
                          XPLMObjectRef        obj,
-                         const char **        datarefs);
+                         const char*          datarefs[]);
 #if defined(XPLM420)
 /*
  * XPLMInstanceSetAutoShift
@@ -138,7 +138,7 @@ XPLM_API void       XPLMDestroyInstance(
 XPLM_API void       XPLMInstanceSetPosition(
                          XPLMInstanceRef      instance,
                          const XPLMDrawInfo_t * new_position,
-                         const float *        data);
+                         const float          data[]);
 #if defined(XPLM420)
 /*
  * XPLMInstanceSetPositionDouble
@@ -159,7 +159,7 @@ XPLM_API void       XPLMInstanceSetPosition(
 XPLM_API void       XPLMInstanceSetPositionDouble(
                          XPLMInstanceRef      instance,
                          const XPLMDrawInfoDouble_t * new_position,
-                         const float *        data);
+                         const float          data[]);
 #endif /* XPLM420 */
 #ifdef __cplusplus
 }

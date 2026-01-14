@@ -39,78 +39,28 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 
-int XLuaSetGraphicsState(lua_State* L)
-{
-	bool inEnableFog = xlua_checkboolean(L, 1);
-	int inNumberTexUnits = xlua_checkinteger(L, 2);
-	bool inEnableLighting = xlua_checkboolean(L, 3);
-	bool inEnableAlphaTesting = xlua_checkboolean(L, 4);
-	bool inEnableAlphaBlending = xlua_checkboolean(L, 5);
-	bool inEnableDepthTesting = xlua_checkboolean(L, 6);
-	bool inEnableDepthWriting = xlua_checkboolean(L, 7);
-
-	XPLMSetGraphicsState(inEnableFog, inNumberTexUnits, inEnableLighting, inEnableAlphaTesting, inEnableAlphaBlending, inEnableDepthTesting, inEnableDepthWriting);
-
-	return 0;
-}
-
-int XLuaBindTexture2d(lua_State* L)
-{
-	int inTextureNum = xlua_checkinteger(L, 1);
-	int inTextureUnit = xlua_checkinteger(L, 2);
-
-	XPLMBindTexture2d(inTextureNum, inTextureUnit);
-
-	return 0;
-}
-
-int XLuaGenerateTextureNumbers(lua_State* L)
-{
-	int outTextureIDs;
-	int inCount = xlua_checkinteger(L, 1);
-
-	XPLMGenerateTextureNumbers(&outTextureIDs, inCount);
-
-	lua_pushinteger(L, outTextureIDs);
-
-	return 1;
-}
-
-int XLuaGetTexture(lua_State* L)
-{
-	XPLMTextureID inTexture = xlua_checkinteger(L, 1);
-
-	int res = XPLMGetTexture(inTexture);
-	lua_pushinteger(L, res);
-
-	return 1;
-}
-
 int XLuaWorldToLocal(lua_State* L)
 {
 	double inLatitude = xlua_checknumber(L, 1);
 	double inLongitude = xlua_checknumber(L, 2);
 	double inAltitude = xlua_checknumber(L, 3);
-	double outX;
-	double outY;
-	double outZ;
+	double outX = {};
+	double outY = {};
+	double outZ = {};
 
 	XPLMWorldToLocal(inLatitude, inLongitude, inAltitude, &outX, &outY, &outZ);
 
-	lua_createtable(L, 0, 3); // 0 array slots and 3 key-value pairs
+	lua_createtable(L, 0, 3);
 
 	lua_pushstring(L, "outX");
-
 	lua_pushnumber(L, outX);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outY");
-
 	lua_pushnumber(L, outY);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outZ");
-
 	lua_pushnumber(L, outZ);
 	lua_settable(L, -3);
 
@@ -122,88 +72,60 @@ int XLuaLocalToWorld(lua_State* L)
 	double inX = xlua_checknumber(L, 1);
 	double inY = xlua_checknumber(L, 2);
 	double inZ = xlua_checknumber(L, 3);
-	double outLatitude;
-	double outLongitude;
-	double outAltitude;
+	double outLatitude = {};
+	double outLongitude = {};
+	double outAltitude = {};
 
 	XPLMLocalToWorld(inX, inY, inZ, &outLatitude, &outLongitude, &outAltitude);
 
-	lua_createtable(L, 0, 3); // 0 array slots and 3 key-value pairs
+	lua_createtable(L, 0, 3);
 
 	lua_pushstring(L, "outLatitude");
-
 	lua_pushnumber(L, outLatitude);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLongitude");
-
 	lua_pushnumber(L, outLongitude);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outAltitude");
-
 	lua_pushnumber(L, outAltitude);
 	lua_settable(L, -3);
 
 	return 1;
 }
 
-int XLuaDrawTranslucentDarkBox(lua_State* L)
-{
-	int inLeft = xlua_checkinteger(L, 1);
-	int inTop = xlua_checkinteger(L, 2);
-	int inRight = xlua_checkinteger(L, 3);
-	int inBottom = xlua_checkinteger(L, 4);
-
-	XPLMDrawTranslucentDarkBox(inLeft, inTop, inRight, inBottom);
-
-	return 0;
-}
-
 int XLuaDrawString(lua_State* L)
 {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	size_t const inColorRGB_len = lua_objlen(L, 1);
-	if (inColorRGB_len != 3)
-	{
-		luaL_argerror(L, 1, "Array 'inColorRGB' must have 3 elements.\n");
-		return 0;
-	}
-	float* inColorRGB = new float[inColorRGB_len]{};
-	for (size_t i = 0; i < inColorRGB_len; ++i)
-	{
-		lua_rawgeti(L, 1, i + 1);
-		inColorRGB[i] = xlua_checknumber(L, -1);
-		lua_pop(L, 1);
-	}
+	float inColorRGB[3] = {};
 	int inXOffset = xlua_checkinteger(L, 2);
 	int inYOffset = xlua_checkinteger(L, 3);
 	const char * inChar = xlua_checkstring(L, 4);
 	std::optional<int> inWordWrapWidth = xlua_checkoptint(L, 5);
 	XPLMFontID inFontID = xlua_checkinteger(L, 6);
 
+	int inColorRGB_len = lua_objlen(L, 1);
+	if (inColorRGB_len != 3)
+	{
+		luaL_argerror(L, 1, "Array 'inColorRGB' must have 3 elements.\\n");				// Never returns.
+		return{};
+	}
+
+	for (int i = 0; i < inColorRGB_len; ++i)
+	{
+		lua_rawgeti(L, 1, i + 1);
+		inColorRGB[i] = xlua_checknumber(L, -1);
+		lua_pop(L, 1);
+	}
+	
 	XPLMDrawString(inColorRGB, inXOffset, inYOffset, inChar, (inWordWrapWidth ? &*inWordWrapWidth : nullptr), inFontID);
-	delete[] inColorRGB;
 
 	return 0;
 }
 
 int XLuaDrawNumber(lua_State* L)
 {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	size_t const inColorRGB_len = lua_objlen(L, 1);
-	if (inColorRGB_len != 3)
-	{
-		luaL_argerror(L, 1, "Array 'inColorRGB' must have 3 elements.\n");
-		return 0;
-	}
-	float* inColorRGB = new float[inColorRGB_len]{};
-	for (size_t i = 0; i < inColorRGB_len; ++i)
-	{
-		lua_rawgeti(L, 1, i + 1);
-		inColorRGB[i] = xlua_checknumber(L, -1);
-		lua_pop(L, 1);
-	}
+	float inColorRGB[3] = {};
 	int inXOffset = xlua_checkinteger(L, 2);
 	int inYOffset = xlua_checkinteger(L, 3);
 	double inValue = xlua_checknumber(L, 4);
@@ -212,8 +134,21 @@ int XLuaDrawNumber(lua_State* L)
 	bool inShowSign = xlua_checkboolean(L, 7);
 	XPLMFontID inFontID = xlua_checkinteger(L, 8);
 
+	int inColorRGB_len = lua_objlen(L, 1);
+	if (inColorRGB_len != 3)
+	{
+		luaL_argerror(L, 1, "Array 'inColorRGB' must have 3 elements.\\n");				// Never returns.
+		return{};
+	}
+
+	for (int i = 0; i < inColorRGB_len; ++i)
+	{
+		lua_rawgeti(L, 1, i + 1);
+		inColorRGB[i] = xlua_checknumber(L, -1);
+		lua_pop(L, 1);
+	}
+	
 	XPLMDrawNumber(inColorRGB, inXOffset, inYOffset, inValue, inDigits, inDecimals, inShowSign, inFontID);
-	delete[] inColorRGB;
 
 	return 0;
 }
@@ -221,27 +156,24 @@ int XLuaDrawNumber(lua_State* L)
 int XLuaGetFontDimensions(lua_State* L)
 {
 	XPLMFontID inFontID = xlua_checkinteger(L, 1);
-	int outCharWidth;
-	int outCharHeight;
-	int outDigitsOnly;
+	int outCharWidth = {};
+	int outCharHeight = {};
+	int outDigitsOnly = {};
 
 	XPLMGetFontDimensions(inFontID, &outCharWidth, &outCharHeight, &outDigitsOnly);
 
-	lua_createtable(L, 0, 3); // 0 array slots and 3 key-value pairs
+	lua_createtable(L, 0, 3);
 
 	lua_pushstring(L, "outCharWidth");
-
 	lua_pushinteger(L, outCharWidth);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outCharHeight");
-
 	lua_pushinteger(L, outCharHeight);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outDigitsOnly");
-
-	lua_pushinteger(L, outDigitsOnly);
+	lua_pushboolean(L, static_cast<bool>(outDigitsOnly));
 	lua_settable(L, -3);
 
 	return 1;

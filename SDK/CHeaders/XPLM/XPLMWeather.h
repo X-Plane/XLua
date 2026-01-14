@@ -192,9 +192,9 @@ XPLM_API void       XPLMGetMETARForAirport(
  * XPLMGetWeatherAtLocation
  * 
  * Get the current weather conditions at a given location. Note that this does
- * not work world-wide, only within the surrounding region. Return 1 if
- * detailed weather (i.e. an airport-specific METAR) was found, 0 if not. In
- * both cases, the structure will contain the best data available.
+ * not work world-wide, only within the surrounding region. Return true if
+ * detailed weather (i.e. an airport-specific METAR) was found, false if not.
+ * In both cases, the structure will contain the best data available.
  * 
  * This call is not intended to be used per-frame. It should be called only
  * during the pre-flight loop callback.
