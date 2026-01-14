@@ -78,8 +78,11 @@ template <typename T>
 T xlua_checkuserdata(lua_State * L, int narg, const char * msg)
 {
     T* ret = static_cast<T*>(lua_touserdata(L, narg));
-    if(ret == NULL)
-        luaL_argerror(L, narg, msg);
+	if (ret == NULL)
+	{
+		luaL_argerror(L, narg, msg);			// never returns
+		return T{};								// Keeps compiler happy
+	}
     return *ret;
 }
 
