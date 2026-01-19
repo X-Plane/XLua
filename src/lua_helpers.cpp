@@ -16,6 +16,7 @@
 
 
 #include "log.h"
+#include "xpfuncs.h"
 
 extern XPLMDataRef				g_replay_active;
 extern XPLMDataRef				g_sim_period;
@@ -142,10 +143,10 @@ int vfmt_pcall(lua_State* L, int dbg, B expects_returnval, const char* fmt, va_l
 			lua_rawgeti(L, LUA_REGISTRYINDEX, va_arg(va, int));
 			break;
 		case 'u':		// userdata
-			lua_pushlightuserdata(L, va_arg(va, void*));
+			xlua_pushuserdata<void*>(L, va_arg(va, void*));
 			break;
 		default:
-			lua_pushlightuserdata(L, va_arg(va, void*));
+			xlua_pushuserdata<void*>(L, va_arg(va, void*));
 			break;
 		}
 
