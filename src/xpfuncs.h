@@ -42,7 +42,7 @@ class notify_cb_t
 {
 public:
 	notify_cb_t() = delete;
-	notify_cb_t(lua_State* inL, int s) : L(inL), origRefconRegIndex(s) {}
+	notify_cb_t(lua_State* inL, int s);
 	~notify_cb_t();
 
 	int get_capture(void) const { return origRefconRegIndex; }
@@ -51,6 +51,7 @@ public:
 
 private:
 	int origRefconRegIndex = 0;
+	static int nilRefCount;
 };
 
 std::shared_ptr<notify_cb_t> wrap_lua_func_nil(lua_State* L, int idx, std::string const callbackKey);

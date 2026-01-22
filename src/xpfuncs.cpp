@@ -94,7 +94,7 @@ bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb_record, int func_stack_i
 	lua_pushvalue(cb_record->L, func_stack_idx);
 	cb_record->callbacks[cb_typename] = luaL_ref(cb_record->L, LUA_REGISTRYINDEX);
 
-	return true;
+	return (cb_record->callbacks[cb_typename] != LUA_REFNIL);
 }
 
 std::shared_ptr<notify_cb_t> wrap_lua_func_nil(lua_State * L, int idx, std::string const callbackKey)
@@ -107,6 +107,18 @@ std::shared_ptr<notify_cb_t> wrap_lua_func_nil(lua_State * L, int idx, std::stri
 	auto cb = std::make_shared<notify_cb_t>(L, 0);
 	wrap_next_lua_func(cb, idx, false, callbackKey);
 	return cb;
+}
+
+int notify_cb_t::nilRefCount = -1;
+
+notify_cb_t::notify_cb_t(lua_State* inL, int s) : L(inL), origRefconRegIndex(s)
+{
+	// This will normally be a return from a luaL_ref call, always 0 or higher. However, if the refcon is nil then
+	// luaL_ref returns LUA_REFNIL. We can't have all these mapping onto each other.
+	if (origRefconRegIndex < 0)
+	{
+		origRefconRegIndex = --nilRefCount;
+	}
 }
 
 // Similar idea to above, but capture a value and just return the index into the registry.
