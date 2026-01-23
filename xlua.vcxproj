@@ -40,6 +40,7 @@
     <ClCompile Include="SDK\XLua_glue\XPLMPlugin_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMProcessing_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMScenery_glue.cpp" />
+    <ClCompile Include="SDK\XLua_glue\XPLMSound_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMUtilities_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMWeather_glue.cpp" />
     <ClCompile Include="src\FloatingWindows\FloatingWindow.cpp" />
@@ -110,26 +111,25 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
-    <UseDynamicDebugging>true</UseDynamicDebugging>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -166,7 +166,7 @@
     <TargetExt>.xpl</TargetExt>
     <GenerateManifest>false</GenerateManifest>
     <TargetName>xlua</TargetName>
-    <IncludePath>$(ProjectDir)\src\FloatingWindows;$(ProjectDir)\src\FloatingWindows\GL;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\src\FloatingWindows;$(ProjectDir)\src\FloatingWindows\GL;$(ProjectDir)\fmod\win\core\inc;$(ProjectDir)\fmod\win\studio\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>.\Debug\plugins\$(TargetName)\32\</OutDir>
@@ -183,7 +183,7 @@
     <TargetExt>.xpl</TargetExt>
     <GenerateManifest>false</GenerateManifest>
     <TargetName>xlua</TargetName>
-    <IncludePath>$(ProjectDir)\src\FloatingWindows;$(ProjectDir)\src\FloatingWindows\GL;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\src\FloatingWindows;$(ProjectDir)\src\FloatingWindows\GL;$(ProjectDir)\fmod\win\core\inc;$(ProjectDir)\fmod\win\studio\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

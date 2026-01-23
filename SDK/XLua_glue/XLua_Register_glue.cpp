@@ -17,6 +17,7 @@ extern "C"
 	#include "XPLMPlanes.h"
 	#include "XPLMProcessing.h"
 	#include "XPLMScenery.h"
+	#include "XPLMSound.h"
 	#include "XPLMUtilities.h"
 	#include "XPLMWeather.h"
 
@@ -114,6 +115,8 @@ extern "C"
 	int XLuaGetDisplayedFMSEntry(lua_State* L);
 	int XLuaGetDisplayedFMSFlightPlanEntry(lua_State* L);
 	int XLuaGetElapsedTime(lua_State* L);
+	int XLuaGetFMODChannelGroup(lua_State* L);
+	int XLuaGetFMODStudio(lua_State* L);
 	int XLuaGetFMSEntryInfo(lua_State* L);
 	int XLuaGetFMSFlightPlanEntryInfo(lua_State* L);
 	int XLuaGetFirstNavAid(lua_State* L);
@@ -166,6 +169,7 @@ extern "C"
 	int XLuaPlaceUserAtAirport(lua_State* L);
 	int XLuaPlaceUserAtLocation(lua_State* L);
 	int MakeXPLMPlaneDrawState_t(lua_State* L);
+	int XLuaPlayPCMOnBus(lua_State* L);
 	int XLuaPopOutAvionics(lua_State* L);
 	int MakeXPLMProbeInfo_t(lua_State* L);
 	int XLuaProbeTerrainXYZ(lua_State* L);
@@ -184,6 +188,11 @@ extern "C"
 	int XLuaSendMessageToPlugin(lua_State* L);
 	int XLuaSetActiveAircraftCount(lua_State* L);
 	int XLuaSetAircraftModel(lua_State* L);
+	int XLuaSetAudioCone(lua_State* L);
+	int XLuaSetAudioFadeDistance(lua_State* L);
+	int XLuaSetAudioPitch(lua_State* L);
+	int XLuaSetAudioPosition(lua_State* L);
+	int XLuaSetAudioVolume(lua_State* L);
 	int XLuaSetAvionicsBrightnessRheo(lua_State* L);
 	int XLuaSetAvionicsGeometry(lua_State* L);
 	int XLuaSetAvionicsGeometryOS(lua_State* L);
@@ -211,6 +220,7 @@ extern "C"
 	int XLuaSetWeatherAtLocation(lua_State* L);
 	int XLuaSimulateKeyPress(lua_State* L);
 	int XLuaSpeakString(lua_State* L);
+	int XLuaStopAudio(lua_State* L);
 	int XLuaTakeAvionicsKeyboardFocus(lua_State* L);
 	int XLuaUnloadObject(lua_State* L);
 	int XLuaUnregisterAvionicsCallbacks(lua_State* L);
@@ -349,6 +359,8 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMGetDisplayedFMSEntry", XLuaGetDisplayedFMSEntry);
 	lua_register(L, "XPLMGetDisplayedFMSFlightPlanEntry", XLuaGetDisplayedFMSFlightPlanEntry);
 	lua_register(L, "XPLMGetElapsedTime", XLuaGetElapsedTime);
+	lua_register(L, "XPLMGetFMODChannelGroup", XLuaGetFMODChannelGroup);
+	lua_register(L, "XPLMGetFMODStudio", XLuaGetFMODStudio);
 	lua_register(L, "XPLMGetFMSEntryInfo", XLuaGetFMSEntryInfo);
 	lua_register(L, "XPLMGetFMSFlightPlanEntryInfo", XLuaGetFMSFlightPlanEntryInfo);
 	lua_register(L, "XPLMGetFirstNavAid", XLuaGetFirstNavAid);
@@ -401,6 +413,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMPlaceUserAtAirport", XLuaPlaceUserAtAirport);
 	lua_register(L, "XPLMPlaceUserAtLocation", XLuaPlaceUserAtLocation);
 	lua_register(L, "XPLMPlaneDrawState_t", MakeXPLMPlaneDrawState_t);
+	lua_register(L, "XPLMPlayPCMOnBus", XLuaPlayPCMOnBus);
 	lua_register(L, "XPLMPopOutAvionics", XLuaPopOutAvionics);
 	lua_register(L, "XPLMProbeInfo_t", MakeXPLMProbeInfo_t);
 	lua_register(L, "XPLMProbeTerrainXYZ", XLuaProbeTerrainXYZ);
@@ -419,6 +432,11 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMSendMessageToPlugin", XLuaSendMessageToPlugin);
 	lua_register(L, "XPLMSetActiveAircraftCount", XLuaSetActiveAircraftCount);
 	lua_register(L, "XPLMSetAircraftModel", XLuaSetAircraftModel);
+	lua_register(L, "XPLMSetAudioCone", XLuaSetAudioCone);
+	lua_register(L, "XPLMSetAudioFadeDistance", XLuaSetAudioFadeDistance);
+	lua_register(L, "XPLMSetAudioPitch", XLuaSetAudioPitch);
+	lua_register(L, "XPLMSetAudioPosition", XLuaSetAudioPosition);
+	lua_register(L, "XPLMSetAudioVolume", XLuaSetAudioVolume);
 	lua_register(L, "XPLMSetAvionicsBrightnessRheo", XLuaSetAvionicsBrightnessRheo);
 	lua_register(L, "XPLMSetAvionicsGeometry", XLuaSetAvionicsGeometry);
 	lua_register(L, "XPLMSetAvionicsGeometryOS", XLuaSetAvionicsGeometryOS);
@@ -446,6 +464,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMSetWeatherAtLocation", XLuaSetWeatherAtLocation);
 	lua_register(L, "XPLMSimulateKeyPress", XLuaSimulateKeyPress);
 	lua_register(L, "XPLMSpeakString", XLuaSpeakString);
+	lua_register(L, "XPLMStopAudio", XLuaStopAudio);
 	lua_register(L, "XPLMTakeAvionicsKeyboardFocus", XLuaTakeAvionicsKeyboardFocus);
 	lua_register(L, "XPLMUnloadObject", XLuaUnloadObject);
 	lua_register(L, "XPLMUnregisterAvionicsCallbacks", XLuaUnregisterAvionicsCallbacks);
