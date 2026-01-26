@@ -667,50 +667,58 @@ PLUGIN_API void XPluginReceiveMessage(
 					int				inMessage,
 					void *			inParam)
 {
-	if(inFromWho != XPLM_PLUGIN_XPLANE)
-		return;
-		
-	switch(inMessage) {
-	case XPLM_MSG_PLANE_LOADED:
-		if(inParam == 0)
-			g_is_acf_inited = false;
-		break;
-
-	case XPLM_MSG_PLANE_UNLOADED:
-		if(g_is_acf_inited)
-		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)		
-			(*m)->acf_unload();
-		g_is_acf_inited = false;
-		break;
-
-	case XPLM_MSG_AIRPORT_LOADED:
-		if (g_bReloadOnFlightChange && g_is_acf_inited)
+	if (inFromWho == XPLM_PLUGIN_XPLANE)
+	{
+		switch (inMessage)
 		{
-			ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)1);
+			case XPLM_MSG_PLANE_LOADED:
+				if (inParam == 0)
+					g_is_acf_inited = false;
+				break;
+
+			case XPLM_MSG_PLANE_UNLOADED:
+				if (g_is_acf_inited)
+					for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+						(*m)->acf_unload();
+
+				g_is_acf_inited = false;
+				break;
+
+			case XPLM_MSG_AIRPORT_LOADED:
+				if (g_bReloadOnFlightChange && g_is_acf_inited)
+				{
+					ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)1);
+				}
+
+				if (!g_is_acf_inited)
+				{
+					// Pick up any last stragglers from out-of-order load and then validate our datarefs!
+					xlua_relink_all_drefs();
+					xlua_validate_drefs();
+
+					for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+						(*m)->acf_load();
+
+					g_is_acf_inited = true;
+				}
+
+				for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+					(*m)->flight_start();
+
+				break;
+
+			case XPLM_MSG_PLANE_CRASHED:
+				assert(g_is_acf_inited);
+				for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+					(*m)->flight_crash();
+				break;
 		}
+	}
 
-		if (!g_is_acf_inited)
-		{
-			// Pick up any last stragglers from out-of-order load and then validate our datarefs!
-			xlua_relink_all_drefs();
-			xlua_validate_drefs();
-			
-			for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-				(*m)->acf_load();
-
-			g_is_acf_inited = true;
-		}
-
-		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-			(*m)->flight_start();
-
-		break;
-
-	case XPLM_MSG_PLANE_CRASHED:
-		assert(g_is_acf_inited);
-		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-			(*m)->flight_crash();		
-		break;
+	// Either way, send the full details through so that Lua can now deal with arbitrary messages.
+	for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+	{
+		(*m)->forward_notification(inFromWho, inMessage, inParam);
 	}
 }
 

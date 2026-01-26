@@ -385,6 +385,19 @@ void module::do_callout(const char * f)
 	}
 }
 
+void module::forward_notification(XPLMPluginID inFromWho, int inMessage, void* inParam)
+{
+	// TODO: Stub!
+
+	/*
+	* Try to allow messages received via XPluginReceiveMessage to be sent. The problem is that the inParam is void* and
+	* messages can be defined arbitrarily by plugins, so there's no way of knowing what datatype to make available.
+	* 
+	* One option would be to translate _known_ messages to the correct type and leave all others as either null or userdata with a pointer
+	* which could at least be used as a unique ID.
+	*/
+}
+
 module::~module()
 {
 	if (m_interp)

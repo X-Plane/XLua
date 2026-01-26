@@ -71,6 +71,8 @@ public:
 			void		set_jit_mode(bool enable);
 			bool		get_jit_mode(void);
 
+			void		forward_notification(XPLMPluginID inFromWho, int inMessage, void* inParam);
+
 			struct prof_data
 			{
 				ssize_t cumulative = 0;
