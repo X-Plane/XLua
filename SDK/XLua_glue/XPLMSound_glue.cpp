@@ -24,9 +24,9 @@
 #include "XPLMSound.h"
 #undef XPLM_DEPRECATED
 
-#include "../xpfuncs.h"
-#include "../module.h"
-#include "../lua_helpers.h"
+#include "xpfuncs.h"
+#include "module.h"
+#include "lua_helpers.h"
 
 extern "C" {
 

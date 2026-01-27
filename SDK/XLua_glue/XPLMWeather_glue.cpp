@@ -18,9 +18,9 @@
 #include "XPLMWeather.h"
 #undef XPLM_DEPRECATED
 
-#include "../xpfuncs.h"
-#include "../module.h"
-#include "../lua_helpers.h"
+#include "xpfuncs.h"
+#include "module.h"
+#include "lua_helpers.h"
 
 extern "C" {
 
@@ -32,6 +32,12 @@ extern "C" {
 //
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+XPLMWeatherInfoClouds_t XPLMWeatherInfoClouds_t_from_table(lua_State* L, int stackpos);
+void XPLMWeatherInfoClouds_t_to_table(lua_State* L, XPLMWeatherInfoClouds_t const& src);
+XPLMWeatherInfoWinds_t XPLMWeatherInfoWinds_t_from_table(lua_State* L, int stackpos);
+void XPLMWeatherInfoWinds_t_to_table(lua_State* L, XPLMWeatherInfoWinds_t const& src);
+XPLMWeatherInfo_t XPLMWeatherInfo_t_from_table(lua_State* L, int stackpos);
+void XPLMWeatherInfo_t_to_table(lua_State* L, XPLMWeatherInfo_t const& src);
 
 //
 // Typedefs

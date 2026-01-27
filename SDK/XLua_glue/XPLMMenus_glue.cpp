@@ -19,9 +19,9 @@
 #include "XPLMMenus.h"
 #undef XPLM_DEPRECATED
 
-#include "../xpfuncs.h"
-#include "../module.h"
-#include "../lua_helpers.h"
+#include "xpfuncs.h"
+#include "module.h"
+#include "lua_helpers.h"
 
 extern "C" {
 
@@ -38,6 +38,7 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 // Typedefs
 //
 XPLMCommandRef* Make_XPLMCommandRef(lua_State* L, XPLMCommandRef const& init);
+XPLMMenuID* Make_XPLMMenuID(lua_State* L, XPLMMenuID const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 

@@ -18,9 +18,9 @@
 #include "XPLMScenery.h"
 #undef XPLM_DEPRECATED
 
-#include "../xpfuncs.h"
-#include "../module.h"
-#include "../lua_helpers.h"
+#include "xpfuncs.h"
+#include "module.h"
+#include "lua_helpers.h"
 
 extern "C" {
 
@@ -30,13 +30,21 @@ extern "C" {
 //
 // Struct C/Lua conversion helpers
 //
+XPLMDrawInfoDouble_t XPLMDrawInfoDouble_t_from_table(lua_State* L, int stackpos);
+void XPLMDrawInfoDouble_t_to_table(lua_State* L, XPLMDrawInfoDouble_t const& src);
+XPLMDrawInfo_t XPLMDrawInfo_t_from_table(lua_State* L, int stackpos);
+void XPLMDrawInfo_t_to_table(lua_State* L, XPLMDrawInfo_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+XPLMProbeInfo_t XPLMProbeInfo_t_from_table(lua_State* L, int stackpos);
+void XPLMProbeInfo_t_to_table(lua_State* L, XPLMProbeInfo_t const& src);
 
 //
 // Typedefs
 //
+XPLMObjectRef* Make_XPLMObjectRef(lua_State* L, XPLMObjectRef const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
+XPLMProbeRef* Make_XPLMProbeRef(lua_State* L, XPLMProbeRef const& init);
 
 
 XPLMProbeRef* Make_XPLMProbeRef(lua_State* L, XPLMProbeRef const& init)

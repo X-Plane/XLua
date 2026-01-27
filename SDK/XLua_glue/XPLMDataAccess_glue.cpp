@@ -18,9 +18,9 @@
 #include "XPLMDataAccess.h"
 #undef XPLM_DEPRECATED
 
-#include "../xpfuncs.h"
-#include "../module.h"
-#include "../lua_helpers.h"
+#include "xpfuncs.h"
+#include "module.h"
+#include "lua_helpers.h"
 
 extern "C" {
 
@@ -30,12 +30,15 @@ extern "C" {
 //
 // Struct C/Lua conversion helpers
 //
+XPLMDataRefInfo_t XPLMDataRefInfo_t_from_table(lua_State* L, int stackpos);
+void XPLMDataRefInfo_t_to_table(lua_State* L, XPLMDataRefInfo_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
 
 //
 // Typedefs
 //
+XPLMDataRef* Make_XPLMDataRef(lua_State* L, XPLMDataRef const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 
