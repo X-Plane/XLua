@@ -18,12 +18,32 @@ SOURCES = \
 	imgui/imgui_widgets.cpp \
 	src/FloatingWindows/FloatingWindow.cpp \
 	src/FloatingWindows/FLWIntegration.cpp \
-	src/FloatingWindows/ImGUIIntegration.cpp
+	src/FloatingWindows/ImGUIIntegration.cpp \
+	SDK/XLua_glue/XLua_Register_glue.cpp \
+	SDK/XLua_glue/XPLMCamera_glue.cpp \
+	SDK/XLua_glue/XPLMDataAccess_glue.cpp \
+	SDK/XLua_glue/XPLMDefs_glue.cpp \
+	SDK/XLua_glue/XPLMDisplay_glue.cpp \
+	SDK/XLua_glue/XPLMGraphics_glue.cpp \
+	SDK/XLua_glue/XPLMInstance_glue.cpp \
+	SDK/XLua_glue/XPLMMap_glue.cpp \
+	SDK/XLua_glue/XPLMMenus_glue.cpp \
+	SDK/XLua_glue/XPLMNavigation_glue.cpp \
+	SDK/XLua_glue/XPLMPlanes_glue.cpp \
+	SDK/XLua_glue/XPLMPlugin_glue.cpp \
+	SDK/XLua_glue/XPLMProcessing_glue.cpp \
+	SDK/XLua_glue/XPLMScenery_glue.cpp \
+	SDK/XLua_glue/XPLMSound_glue.cpp \
+	SDK/XLua_glue/XPLMUtilities_glue.cpp \
+	SDK/XLua_glue/XPLMWeather_glue.cpp
 	
 
 LIBS = -lluajit
 
 INCLUDES = \
+	-I$(SRC_BASE)/src \
+	-I$(SRC_BASE)/fmod/mac/studio/inc \
+	-I$(SRC_BASE)/fmod/mac/core/inc \
 	-I$(SRC_BASE)/lua_sdk \
 	-I$(SRC_BASE)/SDK/CHeaders/XPLM \
 	-I$(SRC_BASE)/SDK/CHeaders/Widgets \
