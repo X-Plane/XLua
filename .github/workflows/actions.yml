@@ -72,8 +72,8 @@ jobs:
           
   build-linux:
     runs-on: ubuntu-latest
-    container:
-        image: ghcr.io/x-plane/xlua_builder:latest
+#    container:
+#        image: ghcr.io/x-plane/xlua_builder:latest
 
     steps:
       - uses: actions/checkout@v4
