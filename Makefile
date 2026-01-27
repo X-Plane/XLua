@@ -68,7 +68,7 @@ ALL_DEPS64		:= $(sort $(CDEPS64) $(CXXDEPS64))
 ALL_OBJECTS64	:= $(sort $(COBJECTS64) $(CXXOBJECTS64))
 
 CFLAGS := $(DEFINES) $(INCLUDES) -fPIC -fvisibility=hidden
-CPPFLAGS := -std=c++20
+CPPFLAGS := -std=c++2a
 
 # Phony directive tells make that these are "virtual" targets, even if a file named "clean" exists.
 .PHONY: all clean $(TARGET)
