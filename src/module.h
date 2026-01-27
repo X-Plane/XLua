@@ -29,6 +29,8 @@ extern "C" {
 #include <string>
 #include <map>
 
+#include "XPLMDefs.h"
+
 using std::string;
 
 struct module_alloc_block;

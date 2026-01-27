@@ -30,18 +30,12 @@ extern "C" {
 //
 // Struct C/Lua conversion helpers
 //
-XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos);
-void XPLMCreateAvionics_t_to_table(lua_State* L, XPLMCreateAvionics_t const& src);
-XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int stackpos);
-void XPLMCustomizeAvionics_t_to_table(lua_State* L, XPLMCustomizeAvionics_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
 
 //
 // Typedefs
 //
-XPLMAvionicsID* Make_XPLMAvionicsID(lua_State* L, XPLMAvionicsID const& init);
-XPLMHotKeyID* Make_XPLMHotKeyID(lua_State* L, XPLMHotKeyID const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 
@@ -500,7 +494,7 @@ int XLuaRegisterAvionicsCallbacksEx(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMAvionicsID>(L, res);
+		Make_XPLMAvionicsID(L, res);
 	}
 
 	return 1;
@@ -517,7 +511,7 @@ int XLuaGetAvionicsHandle(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMAvionicsID>(L, res);
+		Make_XPLMAvionicsID(L, res);
 	}
 
 	return 1;
@@ -528,7 +522,7 @@ int XLuaUnregisterAvionicsCallbacks(lua_State* L)
 	XPLMAvionicsID inAvionicsId = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inAvionicsId = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inAvionicsId = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 
 	XPLMUnregisterAvionicsCallbacks(inAvionicsId);
@@ -965,7 +959,7 @@ int XLuaCreateAvionicsEx(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMAvionicsID>(L, res);
+		Make_XPLMAvionicsID(L, res);
 	}
 
 	return 1;
@@ -976,7 +970,7 @@ int XLuaDestroyAvionics(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 
 	XPLMDestroyAvionics(inHandle);
@@ -989,7 +983,7 @@ int XLuaIsAvionicsBound(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 
 	int res = XPLMIsAvionicsBound(inHandle);
@@ -1003,7 +997,7 @@ int XLuaSetAvionicsBrightnessRheo(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 	float brightness = xlua_checknumber(L, 2);
 
@@ -1017,7 +1011,7 @@ int XLuaGetAvionicsBrightnessRheo(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 
 	float res = XPLMGetAvionicsBrightnessRheo(inHandle);
@@ -1031,7 +1025,7 @@ int XLuaGetAvionicsBusVoltsRatio(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 
 	float res = XPLMGetAvionicsBusVoltsRatio(inHandle);
@@ -1045,7 +1039,7 @@ int XLuaIsCursorOverAvionics(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 	int outX = {};
 	int outY = {};
@@ -1071,7 +1065,7 @@ int XLuaAvionicsNeedsDrawing(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 
 	XPLMAvionicsNeedsDrawing(inHandle);
@@ -1084,7 +1078,7 @@ int XLuaSetAvionicsPopupVisible(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 	bool inVisible = xlua_checkboolean(L, 2);
 
@@ -1098,7 +1092,7 @@ int XLuaIsAvionicsPopupVisible(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 
 	int res = XPLMIsAvionicsPopupVisible(inHandle);
@@ -1112,7 +1106,7 @@ int XLuaPopOutAvionics(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 
 	XPLMPopOutAvionics(inHandle);
@@ -1125,7 +1119,7 @@ int XLuaIsAvionicsPoppedOut(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 
 	int res = XPLMIsAvionicsPoppedOut(inHandle);
@@ -1139,7 +1133,7 @@ int XLuaTakeAvionicsKeyboardFocus(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 
 	XPLMTakeAvionicsKeyboardFocus(inHandle);
@@ -1152,7 +1146,7 @@ int XLuaHasAvionicsKeyboardFocus(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 
 	int res = XPLMHasAvionicsKeyboardFocus(inHandle);
@@ -1166,7 +1160,7 @@ int XLuaGetAvionicsGeometry(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 	int outLeft = {};
 	int outTop = {};
@@ -1201,7 +1195,7 @@ int XLuaSetAvionicsGeometry(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 	int inLeft = xlua_checkinteger(L, 2);
 	int inTop = xlua_checkinteger(L, 3);
@@ -1218,7 +1212,7 @@ int XLuaGetAvionicsGeometryOS(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 	int outLeft = {};
 	int outTop = {};
@@ -1253,7 +1247,7 @@ int XLuaSetAvionicsGeometryOS(lua_State* L)
 	XPLMAvionicsID inHandle = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected userdata<XPLMAvionicsID>");
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
 	}
 	int inLeft = xlua_checkinteger(L, 2);
 	int inTop = xlua_checkinteger(L, 3);
@@ -1349,7 +1343,7 @@ int XLuaRegisterHotKey(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMHotKeyID>(L, res);
+		Make_XPLMHotKeyID(L, res);
 	}
 
 	return 1;
@@ -1360,7 +1354,7 @@ int XLuaUnregisterHotKey(lua_State* L)
 	XPLMHotKeyID inHotKey = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHotKey = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected userdata<XPLMHotKeyID>");
+		inHotKey = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected XPLMHotKeyID");
 	}
 
 	XPLMUnregisterHotKey(inHotKey);
@@ -1387,7 +1381,7 @@ int XLuaGetNthHotKey(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMHotKeyID>(L, res);
+		Make_XPLMHotKeyID(L, res);
 	}
 
 	return 1;
@@ -1398,7 +1392,7 @@ int XLuaGetHotKeyInfo(lua_State* L)
 	XPLMHotKeyID inHotKey = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHotKey = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected userdata<XPLMHotKeyID>");
+		inHotKey = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected XPLMHotKeyID");
 	}
 	char outVirtualKey[1] = {};
 	XPLMKeyFlags outFlags = {};
@@ -1433,7 +1427,7 @@ int XLuaSetHotKeyCombination(lua_State* L)
 	XPLMHotKeyID inHotKey = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inHotKey = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected userdata<XPLMHotKeyID>");
+		inHotKey = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected XPLMHotKeyID");
 	}
 	std::string inVirtualKey_s = luaL_checkstring(L, 2);
 	if (inVirtualKey_s.size() != 1)

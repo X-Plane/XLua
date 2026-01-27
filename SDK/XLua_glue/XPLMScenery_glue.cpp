@@ -30,21 +30,13 @@ extern "C" {
 //
 // Struct C/Lua conversion helpers
 //
-XPLMDrawInfoDouble_t XPLMDrawInfoDouble_t_from_table(lua_State* L, int stackpos);
-void XPLMDrawInfoDouble_t_to_table(lua_State* L, XPLMDrawInfoDouble_t const& src);
-XPLMDrawInfo_t XPLMDrawInfo_t_from_table(lua_State* L, int stackpos);
-void XPLMDrawInfo_t_to_table(lua_State* L, XPLMDrawInfo_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
-XPLMProbeInfo_t XPLMProbeInfo_t_from_table(lua_State* L, int stackpos);
-void XPLMProbeInfo_t_to_table(lua_State* L, XPLMProbeInfo_t const& src);
 
 //
 // Typedefs
 //
-XPLMObjectRef* Make_XPLMObjectRef(lua_State* L, XPLMObjectRef const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
-XPLMProbeRef* Make_XPLMProbeRef(lua_State* L, XPLMProbeRef const& init);
 
 
 XPLMProbeRef* Make_XPLMProbeRef(lua_State* L, XPLMProbeRef const& init)
@@ -248,7 +240,7 @@ int XLuaCreateProbe(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMProbeRef>(L, res);
+		Make_XPLMProbeRef(L, res);
 	}
 
 	return 1;
@@ -259,7 +251,7 @@ int XLuaDestroyProbe(lua_State* L)
 	XPLMProbeRef inProbe = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inProbe = xlua_checkuserdata<XPLMProbeRef>(L, 1, "Expected userdata<XPLMProbeRef>");
+		inProbe = xlua_checkuserdata<XPLMProbeRef>(L, 1, "Expected XPLMProbeRef");
 	}
 
 	XPLMDestroyProbe(inProbe);
@@ -272,7 +264,7 @@ int XLuaProbeTerrainXYZ(lua_State* L)
 	XPLMProbeRef inProbe = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inProbe = xlua_checkuserdata<XPLMProbeRef>(L, 1, "Expected userdata<XPLMProbeRef>");
+		inProbe = xlua_checkuserdata<XPLMProbeRef>(L, 1, "Expected XPLMProbeRef");
 	}
 	float inX = xlua_checknumber(L, 2);
 	float inY = xlua_checknumber(L, 3);
@@ -587,7 +579,7 @@ int XLuaLoadObject(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMObjectRef>(L, res);
+		Make_XPLMObjectRef(L, res);
 	}
 
 	return 1;
@@ -611,7 +603,7 @@ int XLuaUnloadObject(lua_State* L)
 	XPLMObjectRef inObject = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inObject = xlua_checkuserdata<XPLMObjectRef>(L, 1, "Expected userdata<XPLMObjectRef>");
+		inObject = xlua_checkuserdata<XPLMObjectRef>(L, 1, "Expected XPLMObjectRef");
 	}
 
 	XPLMUnloadObject(inObject);

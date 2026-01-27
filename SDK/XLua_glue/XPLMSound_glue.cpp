@@ -12,8 +12,12 @@
  ***************************************************************************/
 #include <optional>
 #include "XPLMDefs.h"
+#if defined(XPLM) || defined(SIM)
 #include "fmod.hpp"
+#endif				// XPLM|SIM
+#if defined(XPLM) || defined(SIM)
 #include "fmod_studio.hpp"
+#endif				// XPLM|SIM
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
 #define XPLM_DEPRECATED
@@ -40,132 +44,6 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 //
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
-
-int XLuaGetFMODStudio(lua_State* L)
-{
-	FMOD_STUDIO_SYSTEM* res = XPLMGetFMODStudio();
-	lua_pushFMOD_STUDIO_SYSTEM*(L, res);
-
-	return 1;
-}
-
-int XLuaGetFMODChannelGroup(lua_State* L)
-{
-	XPLMAudioBus audioType = xlua_checkinteger(L, 1);
-
-	FMOD_CHANNELGROUP* res = XPLMGetFMODChannelGroup(audioType);
-	lua_pushFMOD_CHANNELGROUP*(L, res);
-
-	return 1;
-}
-
-static void cb_XPLMPCMComplete_f(void* inRefcon, FMOD_RESULT status)
-{
-	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
-
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMPCMComplete_f");
-	if (L)
-	{
-
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r?", inRefcon_cb->get_capture(), status))
-		{
-		}
-	}
-}
-
-int XLuaPlayPCMOnBus(lua_State* L)
-{
-	void * audioBuffer = {};
-	if (lua_isuserdata(L, 1))
-	{
-		audioBuffer = xlua_checkuserdata<void*>(L, 1, "Expected userdata<void*>");
-	}
-	uint32_t bufferSize = xlua_checkinteger(L, 2);
-	FMOD_SOUND_FORMAT soundFormat = xlua_checkFMOD_SOUND_FORMAT(L, 3);
-	int freqHz = xlua_checkinteger(L, 4);
-	int numChannels = xlua_checkinteger(L, 5);
-	bool loop = xlua_checkboolean(L, 6);
-	XPLMAudioBus audioType = xlua_checkinteger(L, 7);
-
-	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 9);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 8, true, "XPLMPCMComplete_f");
-
-	FMOD_CHANNEL* res = XPLMPlayPCMOnBus(audioBuffer, bufferSize, soundFormat, freqHz, numChannels, loop, audioType, (cb_capture_0 ? cb_XPLMPCMComplete_f : nullptr), cb_capture_0.get());
-	lua_pushFMOD_CHANNEL*(L, res);
-
-	return 1;
-}
-
-int XLuaStopAudio(lua_State* L)
-{
-	FMOD_CHANNEL* fmod_channel = xlua_checkFMOD_CHANNEL*(L, 1);
-
-	FMOD_RESULT res = XPLMStopAudio(fmod_channel);
-	lua_pushFMOD_RESULT(L, res);
-
-	return 1;
-}
-
-int XLuaSetAudioPosition(lua_State* L)
-{
-	FMOD_CHANNEL* fmod_channel = xlua_checkFMOD_CHANNEL*(L, 1);
-	FMOD_VECTOR* position = xlua_checkFMOD_VECTOR*(L, 2);
-	FMOD_VECTOR* velocity = xlua_checkFMOD_VECTOR*(L, 3);
-
-	FMOD_RESULT res = XPLMSetAudioPosition(fmod_channel, position, velocity);
-	lua_pushFMOD_RESULT(L, res);
-
-	return 1;
-}
-
-int XLuaSetAudioFadeDistance(lua_State* L)
-{
-	FMOD_CHANNEL* fmod_channel = xlua_checkFMOD_CHANNEL*(L, 1);
-	float min_fade_distance = xlua_checknumber(L, 2);
-	float max_fade_distance = xlua_checknumber(L, 3);
-
-	FMOD_RESULT res = XPLMSetAudioFadeDistance(fmod_channel, min_fade_distance, max_fade_distance);
-	lua_pushFMOD_RESULT(L, res);
-
-	return 1;
-}
-
-int XLuaSetAudioVolume(lua_State* L)
-{
-	FMOD_CHANNEL* fmod_channel = xlua_checkFMOD_CHANNEL*(L, 1);
-	float source_volume = xlua_checknumber(L, 2);
-
-	FMOD_RESULT res = XPLMSetAudioVolume(fmod_channel, source_volume);
-	lua_pushFMOD_RESULT(L, res);
-
-	return 1;
-}
-
-int XLuaSetAudioPitch(lua_State* L)
-{
-	FMOD_CHANNEL* fmod_channel = xlua_checkFMOD_CHANNEL*(L, 1);
-	float audio_pitch_hz = xlua_checknumber(L, 2);
-
-	FMOD_RESULT res = XPLMSetAudioPitch(fmod_channel, audio_pitch_hz);
-	lua_pushFMOD_RESULT(L, res);
-
-	return 1;
-}
-
-int XLuaSetAudioCone(lua_State* L)
-{
-	FMOD_CHANNEL* fmod_channel = xlua_checkFMOD_CHANNEL*(L, 1);
-	float inside_angle = xlua_checknumber(L, 2);
-	float outside_angle = xlua_checknumber(L, 3);
-	float outside_volume = xlua_checknumber(L, 4);
-	FMOD_VECTOR* orientation = xlua_checkFMOD_VECTOR*(L, 5);
-
-	FMOD_RESULT res = XPLMSetAudioCone(fmod_channel, inside_angle, outside_angle, outside_volume, orientation);
-	lua_pushFMOD_RESULT(L, res);
-
-	return 1;
-}
 
 #ifdef __cplusplus
 }

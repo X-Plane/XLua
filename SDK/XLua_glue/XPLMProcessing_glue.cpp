@@ -30,15 +30,12 @@ extern "C" {
 //
 // Struct C/Lua conversion helpers
 //
-XPLMCreateFlightLoop_t XPLMCreateFlightLoop_t_from_table(lua_State* L, int stackpos);
-void XPLMCreateFlightLoop_t_to_table(lua_State* L, XPLMCreateFlightLoop_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
 
 //
 // Typedefs
 //
-XPLMFlightLoopID* Make_XPLMFlightLoopID(lua_State* L, XPLMFlightLoopID const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 
@@ -197,7 +194,7 @@ int XLuaCreateFlightLoop(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMFlightLoopID>(L, res);
+		Make_XPLMFlightLoopID(L, res);
 	}
 
 	return 1;
@@ -208,7 +205,7 @@ int XLuaDestroyFlightLoop(lua_State* L)
 	XPLMFlightLoopID inFlightLoopID = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inFlightLoopID = xlua_checkuserdata<XPLMFlightLoopID>(L, 1, "Expected userdata<XPLMFlightLoopID>");
+		inFlightLoopID = xlua_checkuserdata<XPLMFlightLoopID>(L, 1, "Expected XPLMFlightLoopID");
 	}
 
 	XPLMDestroyFlightLoop(inFlightLoopID);
@@ -221,7 +218,7 @@ int XLuaScheduleFlightLoop(lua_State* L)
 	XPLMFlightLoopID inFlightLoopID = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inFlightLoopID = xlua_checkuserdata<XPLMFlightLoopID>(L, 1, "Expected userdata<XPLMFlightLoopID>");
+		inFlightLoopID = xlua_checkuserdata<XPLMFlightLoopID>(L, 1, "Expected XPLMFlightLoopID");
 	}
 	float inInterval = xlua_checknumber(L, 2);
 	bool inRelativeToNow = xlua_checkboolean(L, 3);

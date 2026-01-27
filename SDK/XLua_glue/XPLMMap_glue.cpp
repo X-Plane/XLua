@@ -30,16 +30,12 @@ extern "C" {
 //
 // Struct C/Lua conversion helpers
 //
-XPLMCreateMapLayer_t XPLMCreateMapLayer_t_from_table(lua_State* L, int stackpos);
-void XPLMCreateMapLayer_t_to_table(lua_State* L, XPLMCreateMapLayer_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
 
 //
 // Typedefs
 //
-XPLMMapLayerID* Make_XPLMMapLayerID(lua_State* L, XPLMMapLayerID const& init);
-XPLMMapProjectionID* Make_XPLMMapProjectionID(lua_State* L, XPLMMapProjectionID const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 
@@ -413,7 +409,7 @@ int XLuaCreateMapLayer(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMMapLayerID>(L, res);
+		Make_XPLMMapLayerID(L, res);
 	}
 
 	return 1;
@@ -424,7 +420,7 @@ int XLuaDestroyMapLayer(lua_State* L)
 	XPLMMapLayerID inLayer = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inLayer = xlua_checkuserdata<XPLMMapLayerID>(L, 1, "Expected userdata<XPLMMapLayerID>");
+		inLayer = xlua_checkuserdata<XPLMMapLayerID>(L, 1, "Expected XPLMMapLayerID");
 	}
 
 	int res = XPLMDestroyMapLayer(inLayer);
@@ -474,7 +470,7 @@ int XLuaDrawMapIconFromSheet(lua_State* L)
 	XPLMMapLayerID layer = {};
 	if (lua_isuserdata(L, 1))
 	{
-		layer = xlua_checkuserdata<XPLMMapLayerID>(L, 1, "Expected userdata<XPLMMapLayerID>");
+		layer = xlua_checkuserdata<XPLMMapLayerID>(L, 1, "Expected XPLMMapLayerID");
 	}
 	const char * inPngPath = xlua_checkstring(L, 2);
 	int s = xlua_checkinteger(L, 3);
@@ -497,7 +493,7 @@ int XLuaDrawMapLabel(lua_State* L)
 	XPLMMapLayerID layer = {};
 	if (lua_isuserdata(L, 1))
 	{
-		layer = xlua_checkuserdata<XPLMMapLayerID>(L, 1, "Expected userdata<XPLMMapLayerID>");
+		layer = xlua_checkuserdata<XPLMMapLayerID>(L, 1, "Expected XPLMMapLayerID");
 	}
 	const char * inText = xlua_checkstring(L, 2);
 	float mapX = xlua_checknumber(L, 3);
@@ -515,7 +511,7 @@ int XLuaMapProject(lua_State* L)
 	XPLMMapProjectionID projection = {};
 	if (lua_isuserdata(L, 1))
 	{
-		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected userdata<XPLMMapProjectionID>");
+		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected XPLMMapProjectionID");
 	}
 	double latitude = xlua_checknumber(L, 2);
 	double longitude = xlua_checknumber(L, 3);
@@ -542,7 +538,7 @@ int XLuaMapUnproject(lua_State* L)
 	XPLMMapProjectionID projection = {};
 	if (lua_isuserdata(L, 1))
 	{
-		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected userdata<XPLMMapProjectionID>");
+		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected XPLMMapProjectionID");
 	}
 	float mapX = xlua_checknumber(L, 2);
 	float mapY = xlua_checknumber(L, 3);
@@ -569,7 +565,7 @@ int XLuaMapScaleMeter(lua_State* L)
 	XPLMMapProjectionID projection = {};
 	if (lua_isuserdata(L, 1))
 	{
-		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected userdata<XPLMMapProjectionID>");
+		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected XPLMMapProjectionID");
 	}
 	float mapX = xlua_checknumber(L, 2);
 	float mapY = xlua_checknumber(L, 3);
@@ -585,7 +581,7 @@ int XLuaMapGetNorthHeading(lua_State* L)
 	XPLMMapProjectionID projection = {};
 	if (lua_isuserdata(L, 1))
 	{
-		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected userdata<XPLMMapProjectionID>");
+		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected XPLMMapProjectionID");
 	}
 	float mapX = xlua_checknumber(L, 2);
 	float mapY = xlua_checknumber(L, 3);

@@ -36,7 +36,6 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 //
 // Typedefs
 //
-XPLMCommandRef* Make_XPLMCommandRef(lua_State* L, XPLMCommandRef const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 
@@ -248,7 +247,7 @@ int XLuaFindCommand(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMCommandRef>(L, res);
+		Make_XPLMCommandRef(L, res);
 	}
 
 	return 1;
@@ -259,7 +258,7 @@ int XLuaCommandBegin(lua_State* L)
 	XPLMCommandRef inCommand = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inCommand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected userdata<XPLMCommandRef>");
+		inCommand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected XPLMCommandRef");
 	}
 
 	XPLMCommandBegin(inCommand);
@@ -272,7 +271,7 @@ int XLuaCommandEnd(lua_State* L)
 	XPLMCommandRef inCommand = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inCommand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected userdata<XPLMCommandRef>");
+		inCommand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected XPLMCommandRef");
 	}
 
 	XPLMCommandEnd(inCommand);
@@ -285,7 +284,7 @@ int XLuaCommandOnce(lua_State* L)
 	XPLMCommandRef inCommand = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inCommand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected userdata<XPLMCommandRef>");
+		inCommand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected XPLMCommandRef");
 	}
 
 	XPLMCommandOnce(inCommand);
@@ -305,7 +304,7 @@ int XLuaCreateCommand(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMCommandRef>(L, res);
+		Make_XPLMCommandRef(L, res);
 	}
 
 	return 1;
@@ -316,7 +315,7 @@ int XLuaRegisterCommandHandler(lua_State* L)
 	XPLMCommandRef inComand = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inComand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected userdata<XPLMCommandRef>");
+		inComand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected XPLMCommandRef");
 	}
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 4);
@@ -334,7 +333,7 @@ int XLuaUnregisterCommandHandler(lua_State* L)
 	XPLMCommandRef inComand = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inComand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected userdata<XPLMCommandRef>");
+		inComand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected XPLMCommandRef");
 	}
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 4);

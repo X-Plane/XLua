@@ -36,7 +36,6 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 //
 // Typedefs
 //
-XPLMNavRef* Make_XPLMNavRef(lua_State* L, XPLMNavRef const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 
@@ -106,7 +105,7 @@ int XLuaGetNextNavAid(lua_State* L)
 	XPLMNavRef inNavAidRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inNavAidRef = xlua_checkuserdata<XPLMNavRef>(L, 1, "Expected userdata<XPLMNavRef>");
+		inNavAidRef = xlua_checkuserdata<XPLMNavRef>(L, 1, "Expected XPLMNavRef");
 	}
 
 	XPLMNavRef res = XPLMGetNextNavAid(inNavAidRef);
@@ -155,7 +154,7 @@ int XLuaGetNavAidInfo(lua_State* L)
 	XPLMNavRef inRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inRef = xlua_checkuserdata<XPLMNavRef>(L, 1, "Expected userdata<XPLMNavRef>");
+		inRef = xlua_checkuserdata<XPLMNavRef>(L, 1, "Expected XPLMNavRef");
 	}
 	XPLMNavType outType = {};
 	float outLatitude = {};
@@ -299,7 +298,7 @@ int XLuaSetFMSEntryInfo(lua_State* L)
 	XPLMNavRef inRef = {};
 	if (lua_isuserdata(L, 2))
 	{
-		inRef = xlua_checkuserdata<XPLMNavRef>(L, 2, "Expected userdata<XPLMNavRef>");
+		inRef = xlua_checkuserdata<XPLMNavRef>(L, 2, "Expected XPLMNavRef");
 	}
 	int inAltitudeFt = xlua_checkinteger(L, 3);
 
@@ -438,7 +437,7 @@ int XLuaSetFMSFlightPlanEntryInfo(lua_State* L)
 	XPLMNavRef inRef = {};
 	if (lua_isuserdata(L, 3))
 	{
-		inRef = xlua_checkuserdata<XPLMNavRef>(L, 3, "Expected userdata<XPLMNavRef>");
+		inRef = xlua_checkuserdata<XPLMNavRef>(L, 3, "Expected XPLMNavRef");
 	}
 	int inAltitudeFt = xlua_checkinteger(L, 4);
 

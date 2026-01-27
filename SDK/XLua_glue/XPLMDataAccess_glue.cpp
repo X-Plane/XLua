@@ -30,15 +30,12 @@ extern "C" {
 //
 // Struct C/Lua conversion helpers
 //
-XPLMDataRefInfo_t XPLMDataRefInfo_t_from_table(lua_State* L, int stackpos);
-void XPLMDataRefInfo_t_to_table(lua_State* L, XPLMDataRefInfo_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
 
 //
 // Typedefs
 //
-XPLMDataRef* Make_XPLMDataRef(lua_State* L, XPLMDataRef const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 
@@ -126,7 +123,7 @@ XPLMDataRefInfo_t XPLMDataRefInfo_t_from_table(lua_State* L, int stackpos)
 	lua_getfield(L, stackpos, "owner");
 	if (!lua_isnil(L, -1))
 	{
-		out.owner = static_cast<XPLMPluginID>(xlua_checkuserdata<XPLMPluginID>(L, -1, "Expected userdata<XPLMPluginID>"));
+		out.owner = static_cast<XPLMPluginID>(xlua_checkuserdata<XPLMPluginID>(L, -1, "Expected XPLMPluginID"));
 	}
 	lua_pop(L, 1);
 
@@ -210,7 +207,7 @@ int XLuaGetDataRefInfo(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 	XPLMDataRefInfo_t outInfo = {};
 	outInfo.structSize = sizeof(XPLMDataRefInfo_t);
@@ -232,7 +229,7 @@ int XLuaFindDataRef(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMDataRef>(L, res);
+		Make_XPLMDataRef(L, res);
 	}
 
 	return 1;
@@ -243,7 +240,7 @@ int XLuaCanWriteDataRef(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 
 	int res = XPLMCanWriteDataRef(inDataRef);
@@ -257,7 +254,7 @@ int XLuaIsDataRefGood(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 
 	int res = XPLMIsDataRefGood(inDataRef);
@@ -271,7 +268,7 @@ int XLuaGetDataRefTypes(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 
 	XPLMDataTypeID res = XPLMGetDataRefTypes(inDataRef);
@@ -285,7 +282,7 @@ int XLuaGetDatai(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 
 	int res = XPLMGetDatai(inDataRef);
@@ -299,7 +296,7 @@ int XLuaSetDatai(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 	int inValue = xlua_checkinteger(L, 2);
 
@@ -313,7 +310,7 @@ int XLuaGetDataf(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 
 	float res = XPLMGetDataf(inDataRef);
@@ -327,7 +324,7 @@ int XLuaSetDataf(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 	float inValue = xlua_checknumber(L, 2);
 
@@ -341,7 +338,7 @@ int XLuaGetDatad(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 
 	double res = XPLMGetDatad(inDataRef);
@@ -355,7 +352,7 @@ int XLuaSetDatad(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 	double inValue = xlua_checknumber(L, 2);
 
@@ -369,7 +366,7 @@ int XLuaGetDatavi(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 	if (!lua_isnil(L, 2))
 	{
@@ -409,7 +406,7 @@ int XLuaSetDatavi(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 	luaL_checktype(L, 2, LUA_TTABLE);
 
@@ -436,7 +433,6 @@ int XLuaSetDatavi(lua_State* L)
 
 	if (inValues != nullptr)
 	{
-
 		delete[] inValues;
 	}
 
@@ -448,7 +444,7 @@ int XLuaGetDatavf(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 	if (!lua_isnil(L, 2))
 	{
@@ -488,7 +484,7 @@ int XLuaSetDatavf(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 	luaL_checktype(L, 2, LUA_TTABLE);
 
@@ -515,7 +511,6 @@ int XLuaSetDatavf(lua_State* L)
 
 	if (inValues != nullptr)
 	{
-
 		delete[] inValues;
 	}
 
@@ -527,7 +522,7 @@ int XLuaGetDatab(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 	if (!lua_isnil(L, 2))
 	{
@@ -567,7 +562,7 @@ int XLuaSetDatab(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 	luaL_checktype(L, 2, LUA_TTABLE);
 
@@ -594,7 +589,6 @@ int XLuaSetDatab(lua_State* L)
 
 	if (inValue != nullptr)
 	{
-
 		delete[] inValue;
 	}
 
@@ -977,7 +971,7 @@ int XLuaRegisterDataAccessor(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMDataRef>(L, res);
+		Make_XPLMDataRef(L, res);
 	}
 
 	return 1;
@@ -988,7 +982,7 @@ int XLuaUnregisterDataAccessor(lua_State* L)
 	XPLMDataRef inDataRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected userdata<XPLMDataRef>");
+		inDataRef = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
 	}
 
 	XPLMUnregisterDataAccessor(inDataRef);

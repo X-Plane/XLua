@@ -43,7 +43,6 @@ void XPLMProbeInfo_t_to_table(lua_State* L, XPLMProbeInfo_t const& src);
 //
 // Typedefs
 //
-XPLMInstanceRef* Make_XPLMInstanceRef(lua_State* L, XPLMInstanceRef const& init);
 XPLMObjectRef* Make_XPLMObjectRef(lua_State* L, XPLMObjectRef const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 XPLMProbeRef* Make_XPLMProbeRef(lua_State* L, XPLMProbeRef const& init);
@@ -101,7 +100,7 @@ int XLuaCreateInstance(lua_State* L)
 	XPLMObjectRef obj = {};
 	if (lua_isuserdata(L, 1))
 	{
-		obj = xlua_checkuserdata<XPLMObjectRef>(L, 1, "Expected userdata<XPLMObjectRef>");
+		obj = xlua_checkuserdata<XPLMObjectRef>(L, 1, "Expected XPLMObjectRef");
 	}
 	luaL_checktype(L, 2, LUA_TTABLE);
 
@@ -123,12 +122,11 @@ int XLuaCreateInstance(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMInstanceRef>(L, res);
+		Make_XPLMInstanceRef(L, res);
 	}
 
 	if (datarefs != nullptr)
 	{
-
 		delete[] datarefs;
 	}
 
@@ -140,7 +138,7 @@ int XLuaInstanceSetAutoShift(lua_State* L)
 	XPLMInstanceRef instance = {};
 	if (lua_isuserdata(L, 1))
 	{
-		instance = xlua_checkuserdata<XPLMInstanceRef>(L, 1, "Expected userdata<XPLMInstanceRef>");
+		instance = xlua_checkuserdata<XPLMInstanceRef>(L, 1, "Expected XPLMInstanceRef");
 	}
 
 	XPLMInstanceSetAutoShift(instance);
@@ -153,7 +151,7 @@ int XLuaDestroyInstance(lua_State* L)
 	XPLMInstanceRef instance = {};
 	if (lua_isuserdata(L, 1))
 	{
-		instance = xlua_checkuserdata<XPLMInstanceRef>(L, 1, "Expected userdata<XPLMInstanceRef>");
+		instance = xlua_checkuserdata<XPLMInstanceRef>(L, 1, "Expected XPLMInstanceRef");
 	}
 
 	XPLMDestroyInstance(instance);
@@ -166,7 +164,7 @@ int XLuaInstanceSetPosition(lua_State* L)
 	XPLMInstanceRef instance = {};
 	if (lua_isuserdata(L, 1))
 	{
-		instance = xlua_checkuserdata<XPLMInstanceRef>(L, 1, "Expected userdata<XPLMInstanceRef>");
+		instance = xlua_checkuserdata<XPLMInstanceRef>(L, 1, "Expected XPLMInstanceRef");
 	}
 	XPLMDrawInfo_t new_position = XPLMDrawInfo_t_from_table(L, 2);
 	luaL_checktype(L, 3, LUA_TTABLE);
@@ -186,7 +184,6 @@ int XLuaInstanceSetPosition(lua_State* L)
 
 	if (data != nullptr)
 	{
-
 		delete[] data;
 	}
 
@@ -198,7 +195,7 @@ int XLuaInstanceSetPositionDouble(lua_State* L)
 	XPLMInstanceRef instance = {};
 	if (lua_isuserdata(L, 1))
 	{
-		instance = xlua_checkuserdata<XPLMInstanceRef>(L, 1, "Expected userdata<XPLMInstanceRef>");
+		instance = xlua_checkuserdata<XPLMInstanceRef>(L, 1, "Expected XPLMInstanceRef");
 	}
 	XPLMDrawInfoDouble_t new_position = XPLMDrawInfoDouble_t_from_table(L, 2);
 	luaL_checktype(L, 3, LUA_TTABLE);
@@ -218,7 +215,6 @@ int XLuaInstanceSetPositionDouble(lua_State* L)
 
 	if (data != nullptr)
 	{
-
 		delete[] data;
 	}
 

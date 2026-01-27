@@ -90,7 +90,7 @@ int XLuaGetPluginInfo(lua_State* L)
 	XPLMPluginID inPlugin = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inPlugin = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
+		inPlugin = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
 	}
 	char outName[256] = {};
 	char outFilePath[256] = {};
@@ -125,7 +125,7 @@ int XLuaIsPluginEnabled(lua_State* L)
 	XPLMPluginID inPluginID = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
+		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
 	}
 
 	int res = XPLMIsPluginEnabled(inPluginID);
@@ -139,7 +139,7 @@ int XLuaEnablePlugin(lua_State* L)
 	XPLMPluginID inPluginID = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
+		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
 	}
 
 	int res = XPLMEnablePlugin(inPluginID);
@@ -153,7 +153,7 @@ int XLuaDisablePlugin(lua_State* L)
 	XPLMPluginID inPluginID = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
+		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
 	}
 
 	XPLMDisablePlugin(inPluginID);
@@ -173,13 +173,13 @@ int XLuaSendMessageToPlugin(lua_State* L)
 	XPLMPluginID inPlugin = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inPlugin = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
+		inPlugin = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
 	}
 	int inMessage = xlua_checkinteger(L, 2);
 	void * inParam = {};
 	if (lua_isuserdata(L, 3))
 	{
-		inParam = xlua_checkuserdata<void*>(L, 3, "Expected userdata<void*>");
+		inParam = xlua_checkuserdata<void*>(L, 3, "Expected void*");
 	}
 
 	XPLMSendMessageToPlugin(inPlugin, inMessage, inParam);

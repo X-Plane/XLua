@@ -66,7 +66,7 @@ void xlua_remove_callback(std::shared_ptr<notify_cb_t> cb);
 
 // Syntactic sugar to make the code-generation simpler.
 inline bool         xlua_checkboolean(lua_State* L, int narg)   { luaL_checktype(L, narg, LUA_TBOOLEAN); return lua_toboolean(L, narg); }
-inline int          xlua_checkinteger(lua_State* L, int narg)   { return luaL_checkinteger(L, narg); }
+inline int          xlua_checkinteger(lua_State* L, int narg)   { return static_cast<int>(luaL_checkinteger(L, narg)); }
 inline lua_Number   xlua_checknumber (lua_State* L, int narg)   { return luaL_checknumber(L, narg); }
 inline char const*  xlua_checkstring (lua_State* L, int narg)   { return luaL_checkstring(L, narg); }
 inline uint8_t      xlua_checkbyte   (lua_State* L, int narg)   { return static_cast<uint8_t>(std::clamp(luaL_checkinteger(L, narg), static_cast<lua_Integer>(0), static_cast<lua_Integer>(255))); }
