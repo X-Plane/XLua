@@ -50,7 +50,7 @@ INCLUDES = \
 	-I$(SRC_BASE)/imgui \
 	-I$(SRC_BASE)/src/FloatingWindows
 
-DEFINES = -DAPL=0 -DIBM=0 -DLIN=1 -DXPLM200 -DXPLM210-D -DXPLM300 -DXPLM301 -DXPLM302 -DXPLM303 -DXPLM400 -DLUA_BINDINGS_LOCAL_STATE
+DEFINES = -DAPL=0 -DIBM=0 -DLIN=1 -DXPLM200 -DXPLM210-D -DXPLM300 -DXPLM301 -DXPLM302 -DXPLM303 -DXPLM400 -DXPLM410 -DXPLM420 -DXPLM430 -DLUA_BINDINGS_LOCAL_STATE
 
 ############################################################################
 
@@ -68,7 +68,7 @@ ALL_DEPS64		:= $(sort $(CDEPS64) $(CXXDEPS64))
 ALL_OBJECTS64	:= $(sort $(COBJECTS64) $(CXXOBJECTS64))
 
 CFLAGS := $(DEFINES) $(INCLUDES) -fPIC -fvisibility=hidden
-CPPFLAGS := -std=c++2a
+CPPFLAGS := -std=c++20
 
 # Phony directive tells make that these are "virtual" targets, even if a file named "clean" exists.
 .PHONY: all clean $(TARGET)
