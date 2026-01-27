@@ -12,7 +12,6 @@
 #define lua_helpers_h
 
 #include <stdarg.h>
-#include <concepts>
 #include <type_traits>
 
 extern "C" {
