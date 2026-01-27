@@ -101,6 +101,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install g++-12
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-12
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
+
       - name: Gather Artifacts
         uses: actions/download-artifact@v4
         with:
