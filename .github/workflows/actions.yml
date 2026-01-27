@@ -81,6 +81,9 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      - name: Install OpenGL development headers
+        run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev
+  
       - name: Build
         run: |
           ./jenkins_driver.sh
