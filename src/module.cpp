@@ -10,6 +10,7 @@
 
 #include "module.h"
 #include <XPLMUtilities.h>
+#include <XPLMPlugin.h>
 #include "xpfuncs.h"
 #include <stdlib.h>
 #include <assert.h>
@@ -385,17 +386,49 @@ void module::do_callout(const char * f)
 	}
 }
 
+extern "C"
+{
+	XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
+}
+
 void module::forward_notification(XPLMPluginID inFromWho, int inMessage, void* inParam)
 {
-	// TODO: Stub!
+	if (m_interp == NULL)
+		return;
 
-	/*
-	* Try to allow messages received via XPluginReceiveMessage to be sent. The problem is that the inParam is void* and
-	* messages can be defined arbitrarily by plugins, so there's no way of knowing what datatype to make available.
-	* 
-	* One option would be to translate _known_ messages to the correct type and leave all others as either null or userdata with a pointer
-	* which could at least be used as a unique ID.
-	*/
+	lua_getfield(m_interp, LUA_GLOBALSINDEX, "receive_message");
+	if (!lua_isfunction(m_interp, -1))
+	{
+		lua_pop(m_interp, 1);
+	}
+	else
+	{
+		/*
+		* Try to allow messages received via XPluginReceiveMessage to be sent. The problem is that the inParam is void* and
+		* messages can be defined arbitrarily by plugins, so there's no way of knowing what datatype to make available.
+		*
+		* One option would be to translate _known_ messages to the correct type and leave all others as either null or userdata with a pointer
+		* which could at least be used as a unique ID.
+		*/
+
+		std::string ptype = "n";
+		auto known_msg = gXPMessageParamTypes.find(inMessage);
+		if (known_msg != gXPMessageParamTypes.end())
+		{
+			ptype = known_msg->second;
+		}
+
+		if (ptype.front() == '*')
+		{
+			inParam = *(void**)inParam;
+			ptype.erase(0);
+		}
+
+		Make_XPLMPluginID(m_interp, inFromWho);
+		int ref = luaL_ref(m_interp, LUA_REGISTRYINDEX);
+		fmt_pcall_stdvars(m_interp, m_debug_proc, false, ("ri" + ptype).c_str(), ref, inMessage, inParam);
+		luaL_unref(m_interp, LUA_REGISTRYINDEX, ref);
+	}
 }
 
 module::~module()

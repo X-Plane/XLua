@@ -47,6 +47,8 @@ extern "C" {
 #include "lauxlib.h"
 }
 
+std::map<int, char const*> gXPMessageParamTypes;
+
 static vector<module *>g_modules;
 static XPLMFlightLoopID	g_pre_loop = NULL;
 static XPLMFlightLoopID	g_post_loop = NULL;
@@ -722,3 +724,7 @@ PLUGIN_API void XPluginReceiveMessage(
 	}
 }
 
+void xlua_register_event(int EventID, char const* EventParamtype)
+{
+	gXPMessageParamTypes[EventID] = EventParamtype;
+}

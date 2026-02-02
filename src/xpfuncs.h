@@ -27,6 +27,7 @@ extern "C" {
 
 void	add_xlua_funcs_to_interp(lua_State * interp);
 std::string get_log_prefix(char l='I');
+extern std::map<int, char const*> gXPMessageParamTypes;
 
 extern std::string const kTimerCallbackSig;
 extern std::string const kDatarefCallbackSig;
