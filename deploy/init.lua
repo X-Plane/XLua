@@ -555,6 +555,13 @@ function do_callout(fname)
 	end
 end
 
+function receive_message(inFromWho, inMessage, inParam)
+	func=n["receive_message"]
+	if func ~= nil then
+		func(inFromWho, inMessage, inParam)
+	end
+end
+
 function isnan(x)
     return type(x) == "number" and x == x+1
 end

@@ -66,11 +66,15 @@ XPLMCameraControlDuration = {
    pass a non-null control function. Specify in inHowLong how long you'd like
    control (indefinitely or until a new view mode is set by the user).
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inHowLong (integer)
---   inControlFunc (XPLMCameraControl_f)
---   inRefcon (Any reference value)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inHowLong                              (XPLMCameraControlDuration)
+     inControlFunc                          (XPLMCameraControl_f)
+     inRefcon                               (Any reference value)
+
+]]--
 
 --[[
    XLuaDontControlCamera
@@ -82,9 +86,12 @@ XPLMCameraControlDuration = {
    For maximum compatibility you should not use this routine unless you are in
    posession of the camera.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   None.
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaIsCameraBeingControlled
@@ -93,16 +100,26 @@ XPLMCameraControlDuration = {
    not. If it is and you pass in a pointer to a camera control duration, the
    current control duration will be returned.
 ]]--
--- Returns   : boolean,  Table { ["outCameraControlDuration"] }
--- Parameters:
---   None.
+--[[
+    Returns   : boolean, Table {
+          ["outCameraControlDuration"]      (integer)
+    }
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaReadCameraPosition
    
    This function reads the current camera position.
 ]]--
--- Returns   :  Table { ["outCameraPosition"] }
--- Parameters:
---   None.
+--[[
+    Returns   : Table {
+          ["outCameraPosition"]             (XPLMCameraPosition_t)
+    }
+
+    Parameters:
+      None.
+]]--
 

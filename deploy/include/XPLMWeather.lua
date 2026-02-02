@@ -35,9 +35,15 @@ require("XPLMDefs")
    This call is not intended to be used per-frame. It should be called only
    during the pre-flight loop callback.
 ]]--
--- Returns   :  Table { ["outMETAR"] }
--- Parameters:
---   airport_id (string)
+--[[
+    Returns   : Table {
+          ["outMETAR"]                      (XPLMFixedString150_t)
+    }
+
+    Parameters:
+     airport_id                             (string)
+
+]]--
 
 --[[
    XLuaGetWeatherAtLocation
@@ -50,11 +56,17 @@ require("XPLMDefs")
    This call is not intended to be used per-frame. It should be called only
    during the pre-flight loop callback.
 ]]--
--- Returns   : boolean,  Table { ["out_info"] }
--- Parameters:
---   latitude (number)
---   longitude (number)
---   altitude_m (number)
+--[[
+    Returns   : boolean, Table {
+          ["out_info"]                      (XPLMWeatherInfo_t)
+    }
+
+    Parameters:
+     latitude                               (number)
+     longitude                              (number)
+     altitude_m                             (number)
+
+]]--
 
 --[[
    XLuaBeginWeatherUpdate
@@ -70,9 +82,12 @@ require("XPLMDefs")
    and XPLMEndWeatherUpdate in a later callback, even within the same frame,
    is not permitted.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   None.
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaEndWeatherUpdate
@@ -100,10 +115,14 @@ require("XPLMDefs")
    This call is not intended to be used per-frame. It should be called only
    during the pre-flight loop callback.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   isIncremental (boolean)
---   updateImmediately (boolean)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     isIncremental                          (boolean)
+     updateImmediately                      (boolean)
+
+]]--
 
 --[[
    XLuaSetWeatherAtLocation
@@ -115,12 +134,16 @@ require("XPLMDefs")
    This call is not intended to be used per-frame. It should be called only
    during the pre-flight loop callback.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   latitude (number)
---   longitude (number)
---   altitude_m (number)
---   in_info (XPLMWeatherInfo_t)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     latitude                               (number)
+     longitude                              (number)
+     altitude_m                             (number)
+     in_info                                (XPLMWeatherInfo_t)
+
+]]--
 
 --[[
    XLuaEraseWeatherAtLocation
@@ -132,10 +155,14 @@ require("XPLMDefs")
    This call is not intended to be used per-frame. It should be called only
    during the pre-flight loop callback.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   latitude (number)
---   longitude (number)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     latitude                               (number)
+     longitude                              (number)
+
+]]--
 
 --[[
    XLuaSetWeatherAtAirport
@@ -178,10 +205,14 @@ require("XPLMDefs")
    This call is not intended to be used per-frame. It should be called only
    during the pre-flight loop callback.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   airport_id (string)
---   in_info (XPLMWeatherInfo_t)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     airport_id                             (string)
+     in_info                                (XPLMWeatherInfo_t)
+
+]]--
 
 --[[
    XLuaEraseWeatherAtAirport
@@ -193,7 +224,11 @@ require("XPLMDefs")
    This call is not intended to be used per-frame. It should be called only
    during the pre-flight loop callback.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   airport_id (string)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     airport_id                             (string)
+
+]]--
 

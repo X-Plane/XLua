@@ -133,9 +133,12 @@ XPLMDataTypeID = {
    
    Returns the total number of datarefs that have been registered in X-Plane.
 ]]--
--- Returns   : integer
--- Parameters:
---   None.
+--[[
+    Returns   : integer
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaGetDataRefsByIndex
@@ -144,10 +147,16 @@ XPLMDataTypeID = {
    XPLMDataRefs in that range.  The offset/count idiom is useful for things
    like pagination.
 ]]--
--- Returns   :  Table { ["outDataRefs"] }
--- Parameters:
---   offset (integer)
---   count (integer)
+--[[
+    Returns   : Table {
+          ["outDataRefs"]                   (array[] of userdata<XPLMDataRef>)
+    }
+
+    Parameters:
+     offset                                 (integer)
+     count                                  (integer)
+
+]]--
 
 --[[
    XLuaGetDataRefInfo
@@ -155,9 +164,15 @@ XPLMDataTypeID = {
    Give a data ref, this routine returns a populated struct containing the
    available information about the dataref.
 ]]--
--- Returns   :  Table { ["outInfo"] }
--- Parameters:
---   inDataRef (XPLMDataRef)
+--[[
+    Returns   : Table {
+          ["outInfo"]                       (XPLMDataRefInfo_t)
+    }
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+
+]]--
 
 --[[
    XLuaFindDataRef
@@ -172,9 +187,13 @@ XPLMDataTypeID = {
    function returns for future use. Do not look up your dataref by string
    every time you need to read or write it.
 ]]--
--- Returns   : userdata<XPLMDataRef>
--- Parameters:
---   inDataRefName (string)
+--[[
+    Returns   : userdata<XPLMDataRef>
+
+    Parameters:
+     inDataRefName                          (string)
+
+]]--
 
 --[[
    XLuaCanWriteDataRef
@@ -187,9 +206,13 @@ XPLMDataTypeID = {
    simulation.  In some cases, the dataref is writable but you have to set a
    separate "override" dataref to 1 to stop X-Plane from writing it.
 ]]--
--- Returns   : boolean
--- Parameters:
---   inDataRef (XPLMDataRef)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+
+]]--
 
 --[[
    XLuaIsDataRefGood
@@ -205,9 +228,13 @@ XPLMDataTypeID = {
    (XPLMIsDataRefGood performs some slow checking of the handle validity, so
    it has a performance cost.)
 ]]--
--- Returns   : boolean
--- Parameters:
---   inDataRef (XPLMDataRef)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+
+]]--
 
 --[[
    XLuaGetDataRefTypes
@@ -216,9 +243,13 @@ XPLMDataTypeID = {
    dataref is available in multiple data types, the bit-wise OR of these types
    will be returned.
 ]]--
--- Returns   : integer
--- Parameters:
---   inDataRef (XPLMDataRef)
+--[[
+    Returns   : integer
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+
+]]--
 
 --[[
    XLuaGetDatai
@@ -226,9 +257,13 @@ XPLMDataTypeID = {
    Read an integer dataref and return its value. The return value is the
    dataref value or 0 if the dataref is NULL or the plugin is disabled.
 ]]--
--- Returns   : integer
--- Parameters:
---   inDataRef (XPLMDataRef)
+--[[
+    Returns   : integer
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+
+]]--
 
 --[[
    XLuaSetDatai
@@ -237,10 +272,14 @@ XPLMDataTypeID = {
    plugin publishing the dataref is disabled, the dataref is NULL, or the
    dataref is not writable.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inDataRef (XPLMDataRef)
---   inValue (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+     inValue                                (integer)
+
+]]--
 
 --[[
    XLuaGetDataf
@@ -249,9 +288,13 @@ XPLMDataTypeID = {
    return value is the dataref value or 0.0 if the dataref is NULL or the
    plugin is disabled.
 ]]--
--- Returns   : number
--- Parameters:
---   inDataRef (XPLMDataRef)
+--[[
+    Returns   : number
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+
+]]--
 
 --[[
    XLuaSetDataf
@@ -260,10 +303,14 @@ XPLMDataTypeID = {
    routine is a no-op if the plugin publishing the dataref is disabled, the
    dataref is NULL, or the dataref is not writable.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inDataRef (XPLMDataRef)
---   inValue (number)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+     inValue                                (number)
+
+]]--
 
 --[[
    XLuaGetDatad
@@ -272,9 +319,13 @@ XPLMDataTypeID = {
    return value is the dataref value or 0.0 if the dataref is NULL or the
    plugin is disabled.
 ]]--
--- Returns   : number
--- Parameters:
---   inDataRef (XPLMDataRef)
+--[[
+    Returns   : number
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+
+]]--
 
 --[[
    XLuaSetDatad
@@ -283,10 +334,14 @@ XPLMDataTypeID = {
    routine is a no-op if the plugin publishing the dataref is disabled, the
    dataref is NULL, or the dataref is not writable.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inDataRef (XPLMDataRef)
---   inValue (number)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+     inValue                                (number)
+
+]]--
 
 --[[
    XLuaGetDatavi
@@ -304,11 +359,17 @@ XPLMDataTypeID = {
    above description is how these datarefs are intended to work, but a rogue
    plugin may have different behavior.
 ]]--
--- Returns   : integer,  Table { ["outValues"] }
--- Parameters:
---   inDataRef (XPLMDataRef)
---   inOffset (integer)
---   inMax (integer)
+--[[
+    Returns   : integer, Table {
+          ["outValues"]                     (array[] of integer)
+    }
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+     inOffset                               (integer)
+     inMax                                  (integer)
+
+]]--
 
 --[[
    XLuaSetDatavi
@@ -323,12 +384,16 @@ XPLMDataTypeID = {
    above description is how these datarefs are intended to work, but a rogue
    plugin may have different behavior.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inDataRef (XPLMDataRef)
---   inValues (array<integer|int>[])
---   inoffset (integer)
---   inCount (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+     inValues                               (array<integer|int>[])
+     inoffset                               (integer)
+     inCount                                (integer)
+
+]]--
 
 --[[
    XLuaGetDatavf
@@ -347,11 +412,17 @@ XPLMDataTypeID = {
    above description is how these datarefs are intended to work, but a rogue
    plugin may have different behavior.
 ]]--
--- Returns   : integer,  Table { ["outValues"] }
--- Parameters:
---   inDataRef (XPLMDataRef)
---   inOffset (integer)
---   inMax (integer)
+--[[
+    Returns   : integer, Table {
+          ["outValues"]                     (array[] of number)
+    }
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+     inOffset                               (integer)
+     inMax                                  (integer)
+
+]]--
 
 --[[
    XLuaSetDatavf
@@ -366,12 +437,16 @@ XPLMDataTypeID = {
    above description is how these datarefs are intended to work, but a rogue
    plugin may have different behavior.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inDataRef (XPLMDataRef)
---   inValues (array<number|float>[])
---   inoffset (integer)
---   inCount (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+     inValues                               (array<number|float>[])
+     inoffset                               (integer)
+     inCount                                (integer)
+
+]]--
 
 --[[
    XLuaGetDatab
@@ -389,11 +464,17 @@ XPLMDataTypeID = {
    above description is how these datarefs are intended to work, but a rogue
    plugin may have different behavior.
 ]]--
--- Returns   : integer,  Table { ["outValue"] }
--- Parameters:
---   inDataRef (XPLMDataRef)
---   inOffset (integer)
---   inMaxBytes (integer)
+--[[
+    Returns   : integer, Table {
+          ["outValue"]                      (array[] of byte)
+    }
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+     inOffset                               (integer)
+     inMaxBytes                             (integer)
+
+]]--
 
 --[[
    XLuaSetDatab
@@ -408,12 +489,16 @@ XPLMDataTypeID = {
    above description is how these datarefs are intended to work, but a rogue
    plugin may have different behavior.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inDataRef (XPLMDataRef)
---   inValue (array<byte|byte>[])
---   inOffset (integer)
---   inLength (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+     inValue                                (array<byte|byte>[])
+     inOffset                               (integer)
+     inLength                               (integer)
+
+]]--
 
 --[[
    XLuaRegisterDataAccessor
@@ -428,25 +513,29 @@ XPLMDataTypeID = {
    You are returned a dataref for the new item of data created. You can use
    this dataref to unregister your data later or read or write from it.
 ]]--
--- Returns   : userdata<XPLMDataRef>
--- Parameters:
---   inDataName (string)
---   inDataType (integer)
---   inIsWritable (boolean)
---   inReadInt (XPLMGetDatai_f)
---   inWriteInt (XPLMSetDatai_f)
---   inReadFloat (XPLMGetDataf_f)
---   inWriteFloat (XPLMSetDataf_f)
---   inReadDouble (XPLMGetDatad_f)
---   inWriteDouble (XPLMSetDatad_f)
---   inReadIntArray (XPLMGetDatavi_f)
---   inWriteIntArray (XPLMSetDatavi_f)
---   inReadFloatArray (XPLMGetDatavf_f)
---   inWriteFloatArray (XPLMSetDatavf_f)
---   inReadData (XPLMGetDatab_f)
---   inWriteData (XPLMSetDatab_f)
---   inReadRefcon (Any reference value)
---   inWriteRefcon (Any reference value)
+--[[
+    Returns   : userdata<XPLMDataRef>
+
+    Parameters:
+     inDataName                             (string)
+     inDataType                             (XPLMDataTypeID)
+     inIsWritable                           (boolean)
+     inReadInt                              (XPLMGetDatai_f)
+     inWriteInt                             (XPLMSetDatai_f)
+     inReadFloat                            (XPLMGetDataf_f)
+     inWriteFloat                           (XPLMSetDataf_f)
+     inReadDouble                           (XPLMGetDatad_f)
+     inWriteDouble                          (XPLMSetDatad_f)
+     inReadIntArray                         (XPLMGetDatavi_f)
+     inWriteIntArray                        (XPLMSetDatavi_f)
+     inReadFloatArray                       (XPLMGetDatavf_f)
+     inWriteFloatArray                      (XPLMSetDatavf_f)
+     inReadData                             (XPLMGetDatab_f)
+     inWriteData                            (XPLMSetDatab_f)
+     inReadRefcon                           (Any reference value)
+     inWriteRefcon                          (Any reference value)
+
+]]--
 
 --[[
    XLuaUnregisterDataAccessor
@@ -456,7 +545,11 @@ XPLMDataTypeID = {
    Once you unregister a dataref, your function pointer will not be called
    anymore.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inDataRef (XPLMDataRef)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inDataRef                              (XPLMDataRef)
+
+]]--
 

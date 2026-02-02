@@ -69,9 +69,12 @@ XPLMFlightLoopPhaseType = {
    precision in both its data type and its source.  Do not attempt to use it
    for timing critical applications like network multiplayer.
 ]]--
--- Returns   : number
--- Parameters:
---   None.
+--[[
+    Returns   : number
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaGetCycleNumber
@@ -79,9 +82,12 @@ XPLMFlightLoopPhaseType = {
    This routine returns a counter starting at zero for each sim cycle
    computed/video frame rendered.
 ]]--
--- Returns   : integer
--- Parameters:
---   None.
+--[[
+    Returns   : integer
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaCreateFlightLoop
@@ -90,9 +96,13 @@ XPLMFlightLoopPhaseType = {
    loop callback is created using the input param struct, and is inited to be
    unscheduled. Use XPLMScheduleFlightLoop to schedule it.
 ]]--
--- Returns   : userdata<XPLMFlightLoopID>
--- Parameters:
---   inParams (XPLMCreateFlightLoop_t)
+--[[
+    Returns   : userdata<XPLMFlightLoopID>
+
+    Parameters:
+     inParams                               (XPLMCreateFlightLoop_t)
+
+]]--
 
 --[[
    XLuaDestroyFlightLoop
@@ -100,9 +110,13 @@ XPLMFlightLoopPhaseType = {
    This routine destroys a flight loop callback by ID. Only call it on flight
    loops created with the newer XPLMCreateFlightLoop API.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inFlightLoopID (XPLMFlightLoopID)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inFlightLoopID                         (XPLMFlightLoopID)
+
+]]--
 
 --[[
    XLuaScheduleFlightLoop
@@ -116,9 +130,13 @@ XPLMFlightLoopPhaseType = {
    routine is called; otherwise they are relative to the last call time or the
    time the flight loop was registered (if never called).
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inFlightLoopID (XPLMFlightLoopID)
---   inInterval (number)
---   inRelativeToNow (boolean)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inFlightLoopID                         (XPLMFlightLoopID)
+     inInterval                             (number)
+     inRelativeToNow                        (boolean)
+
+]]--
 

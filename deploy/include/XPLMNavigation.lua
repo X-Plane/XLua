@@ -58,9 +58,12 @@ XPLMNavType = {
    the entire database.  Returns XPLM_NAV_NOT_FOUND if the nav database is
    empty.
 ]]--
--- Returns   : userdata<XPLMNavRef>
--- Parameters:
---   None.
+--[[
+    Returns   : userdata<XPLMNavRef>
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaGetNextNavAid
@@ -70,9 +73,13 @@ XPLMNavType = {
    passed in was the last one in the database.  Use this routine to iterate
    across all like-typed navaids or the entire database.
 ]]--
--- Returns   : userdata<XPLMNavRef>
--- Parameters:
---   inNavAidRef (XPLMNavRef)
+--[[
+    Returns   : userdata<XPLMNavRef>
+
+    Parameters:
+     inNavAidRef                            (XPLMNavRef)
+
+]]--
 
 --[[
    XLuaFindFirstNavAidOfType
@@ -81,9 +88,13 @@ XPLMNavType = {
    database or XPLM_NAV_NOT_FOUND if there are no navaids of that type in the
    database.  You must pass exactly one navaid type to this routine.
 ]]--
--- Returns   : userdata<XPLMNavRef>
--- Parameters:
---   inType (integer)
+--[[
+    Returns   : userdata<XPLMNavRef>
+
+    Parameters:
+     inType                                 (XPLMNavType)
+
+]]--
 
 --[[
    XLuaFindLastNavAidOfType
@@ -92,9 +103,13 @@ XPLMNavType = {
    database or XPLM_NAV_NOT_FOUND if there are no navaids of that type in the
    database.  You must pass exactly one navaid type to this routine.
 ]]--
--- Returns   : userdata<XPLMNavRef>
--- Parameters:
---   inType (integer)
+--[[
+    Returns   : userdata<XPLMNavRef>
+
+    Parameters:
+     inType                                 (XPLMNavType)
+
+]]--
 
 --[[
    XLuaFindNavAid
@@ -123,14 +138,18 @@ XPLMNavType = {
    * Find the VOR whose ID is "BOS".
    * Find the nearest airport whose name contains "Chicago".
 ]]--
--- Returns   : userdata<XPLMNavRef>
--- Parameters:
---   inNameFragment (string)
---   inIDFragment (string)
---   inLat (number)
---   inLon (number)
---   inFrequency (integer)
---   inType (integer)
+--[[
+    Returns   : userdata<XPLMNavRef>
+
+    Parameters:
+     inNameFragment                         (string)
+     inIDFragment                           (string)
+     inLat                                  (number)
+     inLon                                  (number)
+     inFrequency                            (integer)
+     inType                                 (XPLMNavType)
+
+]]--
 
 --[[
    XLuaGetNavAidInfo
@@ -151,45 +170,72 @@ XPLMNavType = {
    The parameter is a single byte value 1 for true or 0 for false, not a C
    string.
 ]]--
--- Returns   :  Table { ["outType"], ["outLatitude"], ["outLongitude"], ["outHeight"], ["outFrequency"], ["outHeading"], ["outID"], ["outName"], ["outReg"] }
--- Parameters:
---   inRef (XPLMNavRef)
+--[[
+    Returns   : Table {
+          ["outType"]                       (integer),
+          ["outLatitude"]                   (number),
+          ["outLongitude"]                  (number),
+          ["outHeight"]                     (number),
+          ["outFrequency"]                  (integer),
+          ["outHeading"]                    (number),
+          ["outID"]                         (array[32] of string),
+          ["outName"]                       (array[256] of string),
+          ["outReg"]                        (array[1] of string)
+    }
+
+    Parameters:
+     inRef                                  (XPLMNavRef)
+
+]]--
 
 --[[
    XLuaCountFMSEntries
    
    This routine returns the number of entries in the FMS.
 ]]--
--- Returns   : integer
--- Parameters:
---   None.
+--[[
+    Returns   : integer
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaGetDisplayedFMSEntry
    
    This routine returns the index of the entry the pilot is viewing.
 ]]--
--- Returns   : integer
--- Parameters:
---   None.
+--[[
+    Returns   : integer
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaGetDestinationFMSEntry
    
    This routine returns the index of the entry the FMS is flying to.
 ]]--
--- Returns   : integer
--- Parameters:
---   None.
+--[[
+    Returns   : integer
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaSetDisplayedFMSEntry
    
    This routine changes which entry the FMS is showing to the index specified.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inIndex (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inIndex                                (integer)
+
+]]--
 
 --[[
    XLuaSetDestinationFMSEntry
@@ -197,9 +243,13 @@ XPLMNavType = {
    This routine changes which entry the FMS is flying the aircraft toward. The
    track is from the n-1'th point to the n'th point. 
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inIndex (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inIndex                                (integer)
+
+]]--
 
 --[[
    XLuaGetFMSEntryInfo
@@ -221,9 +271,20 @@ XPLMNavType = {
    Therefore, always initialize the variable to XPLM_NAV_NOT_FOUND before
    passing the pointer to this function.
 ]]--
--- Returns   :  Table { ["outType"], ["outID"], ["outRef"], ["outAltitude"], ["outLat"], ["outLon"] }
--- Parameters:
---   inIndex (integer)
+--[[
+    Returns   : Table {
+          ["outType"]                       (integer),
+          ["outID"]                         (array[256] of string),
+          ["outRef"]                        (XPLMNavRef),
+          ["outAltitude"]                   (integer),
+          ["outLat"]                        (number),
+          ["outLon"]                        (number)
+    }
+
+    Parameters:
+     inIndex                                (integer)
+
+]]--
 
 --[[
    XLuaSetFMSEntryInfo
@@ -233,11 +294,15 @@ XPLMNavType = {
    and radio-beacon navaids.  Currently of radio beacons, the FMS can only
    support VORs and NDBs. Use the routines below to clear or fly to a lat/lon.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inIndex (integer)
---   inRef (XPLMNavRef)
---   inAltitudeFt (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inIndex                                (integer)
+     inRef                                  (XPLMNavRef)
+     inAltitudeFt                           (integer)
+
+]]--
 
 --[[
    XLuaSetFMSEntryLatLon
@@ -245,12 +310,16 @@ XPLMNavType = {
    This routine changes the entry in the FMS to a lat/lon entry with the given
    coordinates.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inIndex (integer)
---   inLat (number)
---   inLon (number)
---   inAltitudeFt (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inIndex                                (integer)
+     inLat                                  (number)
+     inLon                                  (number)
+     inAltitudeFt                           (integer)
+
+]]--
 
 --[[
    XLuaClearFMSEntry
@@ -258,9 +327,13 @@ XPLMNavType = {
    This routine clears the given entry, potentially shortening the flight
    plan.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inIndex (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inIndex                                (integer)
+
+]]--
 
 --[[
 These enumerations defines the flightplan you are accesing using the FMSFlightPlan functions.
@@ -284,37 +357,53 @@ XPLMNavFlightPlan = {
    
    This routine returns the number of entries in the FMS.
 ]]--
--- Returns   : integer
--- Parameters:
---   inFlightPlan (integer)
+--[[
+    Returns   : integer
+
+    Parameters:
+     inFlightPlan                           (XPLMNavFlightPlan)
+
+]]--
 
 --[[
    XLuaGetDisplayedFMSFlightPlanEntry
    
    This routine returns the index of the entry the pilot is viewing.
 ]]--
--- Returns   : integer
--- Parameters:
---   inFlightPlan (integer)
+--[[
+    Returns   : integer
+
+    Parameters:
+     inFlightPlan                           (XPLMNavFlightPlan)
+
+]]--
 
 --[[
    XLuaGetDestinationFMSFlightPlanEntry
    
    This routine returns the index of the entry the FMS is flying to.
 ]]--
--- Returns   : integer
--- Parameters:
---   inFlightPlan (integer)
+--[[
+    Returns   : integer
+
+    Parameters:
+     inFlightPlan                           (XPLMNavFlightPlan)
+
+]]--
 
 --[[
    XLuaSetDisplayedFMSFlightPlanEntry
    
    This routine changes which entry the FMS is showing to the index specified.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inFlightPlan (integer)
---   inIndex (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inFlightPlan                           (XPLMNavFlightPlan)
+     inIndex                                (integer)
+
+]]--
 
 --[[
    XLuaSetDestinationFMSFlightPlanEntry
@@ -322,10 +411,14 @@ XPLMNavFlightPlan = {
    This routine changes which entry the FMS is flying the aircraft toward. The
    track is from the n-1'th point to the n'th point.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inFlightPlan (integer)
---   inIndex (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inFlightPlan                           (XPLMNavFlightPlan)
+     inIndex                                (integer)
+
+]]--
 
 --[[
    XLuaSetDirectToFMSFlightPlanEntry
@@ -334,10 +427,14 @@ XPLMNavFlightPlan = {
    track is from the current position of the aircraft directly to the n'th
    point, ignoring the point before it.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inFlightPlan (integer)
---   inIndex (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inFlightPlan                           (XPLMNavFlightPlan)
+     inIndex                                (integer)
+
+]]--
 
 --[[
    XLuaGetFMSFlightPlanEntryInfo
@@ -359,10 +456,21 @@ XPLMNavFlightPlan = {
    Therefore, always initialize the variable to XPLM_NAV_NOT_FOUND before
    passing the pointer to this function.
 ]]--
--- Returns   :  Table { ["outType"], ["outID"], ["outRef"], ["outAltitude"], ["outLat"], ["outLon"] }
--- Parameters:
---   inFlightPlan (integer)
---   inIndex (integer)
+--[[
+    Returns   : Table {
+          ["outType"]                       (integer),
+          ["outID"]                         (array[256] of string),
+          ["outRef"]                        (XPLMNavRef),
+          ["outAltitude"]                   (integer),
+          ["outLat"]                        (number),
+          ["outLon"]                        (number)
+    }
+
+    Parameters:
+     inFlightPlan                           (XPLMNavFlightPlan)
+     inIndex                                (integer)
+
+]]--
 
 --[[
    XLuaSetFMSFlightPlanEntryInfo
@@ -373,12 +481,16 @@ XPLMNavFlightPlan = {
    support VORs, NDBs and TACANs. Use the routines below to clear or fly to a
    lat/lon.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inFlightPlan (integer)
---   inIndex (integer)
---   inRef (XPLMNavRef)
---   inAltitudeFt (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inFlightPlan                           (XPLMNavFlightPlan)
+     inIndex                                (integer)
+     inRef                                  (XPLMNavRef)
+     inAltitudeFt                           (integer)
+
+]]--
 
 --[[
    XLuaSetFMSFlightPlanEntryLatLon
@@ -386,13 +498,17 @@ XPLMNavFlightPlan = {
    This routine changes the entry in the FMS to a lat/lon entry with the given
    coordinates.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inFlightPlan (integer)
---   inIndex (integer)
---   inLat (number)
---   inLon (number)
---   inAltitudeFt (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inFlightPlan                           (XPLMNavFlightPlan)
+     inIndex                                (integer)
+     inLat                                  (number)
+     inLon                                  (number)
+     inAltitudeFt                           (integer)
+
+]]--
 
 --[[
    XLuaSetFMSFlightPlanEntryLatLonWithId
@@ -400,15 +516,19 @@ XPLMNavFlightPlan = {
    This routine changes the entry in the FMS to a lat/lon entry with the given
    coordinates. You can specify the display ID of the waypoint.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inFlightPlan (integer)
---   inIndex (integer)
---   inLat (number)
---   inLon (number)
---   inAltitudeFt (integer)
---   inId (string)
---   inIdLength (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inFlightPlan                           (XPLMNavFlightPlan)
+     inIndex                                (integer)
+     inLat                                  (number)
+     inLon                                  (number)
+     inAltitudeFt                           (integer)
+     inId                                   (string)
+     inIdLength                             (integer)
+
+]]--
 
 --[[
    XLuaClearFMSFlightPlanEntry
@@ -416,10 +536,14 @@ XPLMNavFlightPlan = {
    This routine clears the given entry, potentially shortening the flight
    plan.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inFlightPlan (integer)
---   inIndex (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inFlightPlan                           (XPLMNavFlightPlan)
+     inIndex                                (integer)
+
+]]--
 
 --[[
    XLuaLoadFMSFlightPlan
@@ -428,11 +552,15 @@ XPLMNavFlightPlan = {
    FMS or GPS, including instrument procedures. Use device index 0 for the
    pilot-side and device index 1 for the co-pilot side unit.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inDevice (integer)
---   inBuffer (string)
---   inBufferLen (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inDevice                               (integer)
+     inBuffer                               (string)
+     inBufferLen                            (integer)
+
+]]--
 
 --[[
    XLuaGetGPSDestinationType
@@ -440,16 +568,22 @@ XPLMNavFlightPlan = {
    This routine returns the type of the currently selected GPS destination,
    one of fix, airport, VOR or NDB.
 ]]--
--- Returns   : integer
--- Parameters:
---   None.
+--[[
+    Returns   : integer
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaGetGPSDestination
    
    This routine returns the current GPS destination.
 ]]--
--- Returns   : userdata<XPLMNavRef>
--- Parameters:
---   None.
+--[[
+    Returns   : userdata<XPLMNavRef>
+
+    Parameters:
+      None.
+]]--
 

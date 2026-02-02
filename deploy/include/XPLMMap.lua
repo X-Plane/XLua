@@ -102,9 +102,13 @@ XPLMMapLayerType = {
    XPLMRegisterMapCreationHook() to get a notification each time a new map is
    opened in X-Plane, at which time you can create layers in it.
 ]]--
--- Returns   : userdata<XPLMMapLayerID>
--- Parameters:
---   inParams (XPLMCreateMapLayer_t)
+--[[
+    Returns   : userdata<XPLMMapLayerID>
+
+    Parameters:
+     inParams                               (XPLMCreateMapLayer_t)
+
+]]--
 
 --[[
    XLuaDestroyMapLayer
@@ -113,9 +117,13 @@ XPLMMapLayerType = {
    XPLMMapWillBeDeletedCallback_f if applicable). Returns true if a deletion
    took place.
 ]]--
--- Returns   : boolean
--- Parameters:
---   inLayer (XPLMMapLayerID)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inLayer                                (XPLMMapLayerID)
+
+]]--
 
 --[[
    XLuaRegisterMapCreationHook
@@ -127,10 +135,14 @@ XPLMMapLayerType = {
    Note that you will not be notified about any maps that already exist---you
    can use XPLMMapExists() to check for maps that were created previously.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   callback (XPLMMapCreatedCallback_f)
---   inRefcon (Any reference value)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     callback                               (XPLMMapCreatedCallback_f)
+     inRefcon                               (Any reference value)
+
+]]--
 
 --[[
    XLuaMapExists
@@ -139,9 +151,13 @@ XPLMMapLayerType = {
    X-Plane. In that case, you can safely call XPLMCreateMapLayer() specifying
    that your layer should be added to that map.
 ]]--
--- Returns   : boolean
--- Parameters:
---   mapIdentifier (string)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     mapIdentifier                          (string)
+
+]]--
 
 --[[
 Indicates whether a map element should be match its rotation to the map itself, or to the user interface.
@@ -189,19 +205,23 @@ XPLMMapOrientation = {
    you can request an arbitrary number of icons to be drawn from within your
    callback).
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   layer (XPLMMapLayerID)
---   inPngPath (string)
---   s (integer)
---   t (integer)
---   ds (integer)
---   dt (integer)
---   mapX (number)
---   mapY (number)
---   orientation (integer)
---   rotationDegrees (number)
---   mapWidth (number)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     layer                                  (XPLMMapLayerID)
+     inPngPath                              (string)
+     s                                      (integer)
+     t                                      (integer)
+     ds                                     (integer)
+     dt                                     (integer)
+     mapX                                   (number)
+     mapY                                   (number)
+     orientation                            (XPLMMapOrientation)
+     rotationDegrees                        (number)
+     mapWidth                               (number)
+
+]]--
 
 --[[
    XLuaDrawMapLabel
@@ -211,14 +231,18 @@ XPLMMapOrientation = {
    XPLMMapLabelDrawingCallback_f (but you can request an arbitrary number of
    text labels to be drawn from within your callback).
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   layer (XPLMMapLayerID)
---   inText (string)
---   mapX (number)
---   mapY (number)
---   orientation (integer)
---   rotationDegrees (number)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     layer                                  (XPLMMapLayerID)
+     inText                                 (string)
+     mapX                                   (number)
+     mapY                                   (number)
+     orientation                            (XPLMMapOrientation)
+     rotationDegrees                        (number)
+
+]]--
 
 --[[
    XLuaMapProject
@@ -230,11 +254,18 @@ XPLMMapOrientation = {
    XPLMMapPrepareCacheCallback_f, XPLMMapDrawingCallback_f,
    XPLMMapIconDrawingCallback_f, or XPLMMapLabelDrawingCallback_f.)
 ]]--
--- Returns   :  Table { ["outX"], ["outY"] }
--- Parameters:
---   projection (XPLMMapProjectionID)
---   latitude (number)
---   longitude (number)
+--[[
+    Returns   : Table {
+          ["outX"]                          (number),
+          ["outY"]                          (number)
+    }
+
+    Parameters:
+     projection                             (XPLMMapProjectionID)
+     latitude                               (number)
+     longitude                              (number)
+
+]]--
 
 --[[
    XLuaMapUnproject
@@ -246,11 +277,18 @@ XPLMMapOrientation = {
    XPLMMapPrepareCacheCallback_f, XPLMMapDrawingCallback_f,
    XPLMMapIconDrawingCallback_f, or XPLMMapLabelDrawingCallback_f.)
 ]]--
--- Returns   :  Table { ["outLatitude"], ["outLongitude"] }
--- Parameters:
---   projection (XPLMMapProjectionID)
---   mapX (number)
---   mapY (number)
+--[[
+    Returns   : Table {
+          ["outLatitude"]                   (number),
+          ["outLongitude"]                  (number)
+    }
+
+    Parameters:
+     projection                             (XPLMMapProjectionID)
+     mapX                                   (number)
+     mapY                                   (number)
+
+]]--
 
 --[[
    XLuaMapScaleMeter
@@ -262,11 +300,15 @@ XPLMMapOrientation = {
    XPLMMapPrepareCacheCallback_f, XPLMMapDrawingCallback_f,
    XPLMMapIconDrawingCallback_f, or XPLMMapLabelDrawingCallback_f.)
 ]]--
--- Returns   : number
--- Parameters:
---   projection (XPLMMapProjectionID)
---   mapX (number)
---   mapY (number)
+--[[
+    Returns   : number
+
+    Parameters:
+     projection                             (XPLMMapProjectionID)
+     mapX                                   (number)
+     mapY                                   (number)
+
+]]--
 
 --[[
    XLuaMapGetNorthHeading
@@ -281,9 +323,13 @@ XPLMMapOrientation = {
    XPLMMapPrepareCacheCallback_f, XPLMMapDrawingCallback_f,
    XPLMMapIconDrawingCallback_f, or XPLMMapLabelDrawingCallback_f.)
 ]]--
--- Returns   : number
--- Parameters:
---   projection (XPLMMapProjectionID)
---   mapX (number)
---   mapY (number)
+--[[
+    Returns   : number
+
+    Parameters:
+     projection                             (XPLMMapProjectionID)
+     mapX                                   (number)
+     mapY                                   (number)
+
+]]--
 

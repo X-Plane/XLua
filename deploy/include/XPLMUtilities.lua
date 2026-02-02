@@ -34,9 +34,14 @@ XPLMDataFileType = {
    The buffer you pass should be at least 512 characters long.  The path is
    returned using the current native or OS path conventions.
 ]]--
--- Returns   :  Table { ["outSystemPath"] }
--- Parameters:
---   None.
+--[[
+    Returns   : Table {
+          ["outSystemPath"]                 (array[512] of string)
+    }
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaGetPrefsPath
@@ -49,9 +54,14 @@ XPLMDataFileType = {
    The buffer you pass should be at least 512 characters long.  The path is
    returned using the current native or OS path conventions.
 ]]--
--- Returns   :  Table { ["outPrefsPath"] }
--- Parameters:
---   None.
+--[[
+    Returns   : Table {
+          ["outPrefsPath"]                  (array[512] of string)
+    }
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaGetDirectorySeparator
@@ -61,9 +71,12 @@ XPLMDataFileType = {
    code that concatenates directory paths without having to #ifdef for
    platform. The character returned will reflect the current file path mode.
 ]]--
--- Returns   : string
--- Parameters:
---   None.
+--[[
+    Returns   : string
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaLoadDataFile
@@ -72,10 +85,14 @@ XPLMDataFileType = {
    folder. To clear the replay, pass a NULL file name (this is only valid with
    replay movies, not sit files).
 ]]--
--- Returns   : boolean
--- Parameters:
---   inFileType (integer)
---   inFilePath (string)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inFileType                             (XPLMDataFileType)
+     inFilePath                             (string)
+
+]]--
 
 --[[
    XLuaSaveDataFile
@@ -83,10 +100,14 @@ XPLMDataFileType = {
    Saves the current situation or replay; paths are relative to the X-System
    folder.
 ]]--
--- Returns   : boolean
--- Parameters:
---   inFileType (integer)
---   inFilePath (string)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inFileType                             (XPLMDataFileType)
+     inFilePath                             (string)
+
+]]--
 
 --[[
 While the plug-in SDK is only accessible to plugins running inside X-Plane, the
@@ -143,9 +164,12 @@ XPLMLanguageCode = {
    is deprecated - you do not need to check it before continuing within your
    plugin.
 ]]--
--- Returns   : boolean
--- Parameters:
---   None.
+--[[
+    Returns   : boolean
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaGetVersions
@@ -158,18 +182,28 @@ XPLMLanguageCode = {
    The most common use of this routine is to special-case around X-Plane
    version-specific behavior.
 ]]--
--- Returns   :  Table { ["outXPlaneVersion"], ["outXPLMVersion"], ["outHostID"] }
--- Parameters:
---   None.
+--[[
+    Returns   : Table {
+          ["outXPlaneVersion"]              (integer),
+          ["outXPLMVersion"]                (integer),
+          ["outHostID"]                     (integer)
+    }
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaGetLanguage
    
    This routine returns the langauge the sim is running in.
 ]]--
--- Returns   : integer
--- Parameters:
---   None.
+--[[
+    Returns   : integer
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaDebugString
@@ -184,9 +218,13 @@ XPLMLanguageCode = {
    output make it difficult for developers to find error conditions from other
    parts of the system.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inString (string)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inString                               (string)
+
+]]--
 
 --[[
    XLuaSpeakString
@@ -196,9 +234,13 @@ XPLMLanguageCode = {
    is spoken asynchronously, this function returns immediately. This function
    may not speak or print depending on user preferences.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inString (string)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inString                               (string)
+
+]]--
 
 --[[
    XLuaGetVirtualKeyDescription
@@ -208,9 +250,13 @@ XPLMLanguageCode = {
    for showing users what keyboard mappings they have set up. The string may
    read 'unknown' or be a blank or NULL string if the virtual key is unknown.
 ]]--
--- Returns   : string
--- Parameters:
---   inVirtualKey (string)
+--[[
+    Returns   : string
+
+    Parameters:
+     inVirtualKey                           (string)
+
+]]--
 
 --[[
    XLuaReloadScenery
@@ -222,9 +268,12 @@ XPLMLanguageCode = {
    scenery environment.  This routine is equivalent to picking "reload
    scenery" from the developer menu.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   None.
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+      None.
+]]--
 
 --[[
 The phases of a command.
@@ -245,9 +294,13 @@ XPLMCommandPhase = {
    XPLMFindCommand looks up a command by name, and returns its command
    reference or NULL if the command does not exist.
 ]]--
--- Returns   : userdata<XPLMCommandRef>
--- Parameters:
---   inName (string)
+--[[
+    Returns   : userdata<XPLMCommandRef>
+
+    Parameters:
+     inName                                 (string)
+
+]]--
 
 --[[
    XLuaCommandBegin
@@ -257,9 +310,13 @@ XPLMCommandPhase = {
    called.  You must balance each XPLMCommandBegin call with an XPLMCommandEnd
    call.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inCommand (XPLMCommandRef)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inCommand                              (XPLMCommandRef)
+
+]]--
 
 --[[
    XLuaCommandEnd
@@ -268,9 +325,13 @@ XPLMCommandPhase = {
    XPLMCommandBegin.  You must not issue XPLMCommandEnd for a command you did
    not begin.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inCommand (XPLMCommandRef)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inCommand                              (XPLMCommandRef)
+
+]]--
 
 --[[
    XLuaCommandOnce
@@ -279,9 +340,13 @@ XPLMCommandPhase = {
    ends immediately. This is the equivalent of calling XPLMCommandBegin() and
    XPLMCommandEnd() back to back.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inCommand (XPLMCommandRef)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inCommand                              (XPLMCommandRef)
+
+]]--
 
 --[[
    XLuaCreateCommand
@@ -291,10 +356,14 @@ XPLMCommandPhase = {
    may appear in user interface contexts, such as the joystick configuration
    screen.
 ]]--
--- Returns   : userdata<XPLMCommandRef>
--- Parameters:
---   inName (string)
---   inDescription (string)
+--[[
+    Returns   : userdata<XPLMCommandRef>
+
+    Parameters:
+     inName                                 (string)
+     inDescription                          (string)
+
+]]--
 
 --[[
    XLuaRegisterCommandHandler
@@ -308,12 +377,16 @@ XPLMCommandPhase = {
    callback will run after X-Plane. (You can register a single callback both
    before and after a command.)
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inComand (XPLMCommandRef)
---   inHandler (XPLMCommandCallback_f)
---   inBefore (boolean)
---   inRefcon (Any reference value)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inComand                               (XPLMCommandRef)
+     inHandler                              (XPLMCommandCallback_f)
+     inBefore                               (boolean)
+     inRefcon                               (Any reference value)
+
+]]--
 
 --[[
    XLuaUnregisterCommandHandler
@@ -321,12 +394,16 @@ XPLMCommandPhase = {
    XPLMUnregisterCommandHandler removes a command callback registered with
    XPLMRegisterCommandHandler.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inComand (XPLMCommandRef)
---   inHandler (XPLMCommandCallback_f)
---   inBefore (boolean)
---   inRefcon (Any reference value)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inComand                               (XPLMCommandRef)
+     inHandler                              (XPLMCommandCallback_f)
+     inBefore                               (boolean)
+     inRefcon                               (Any reference value)
+
+]]--
 
 --[[
    XPLMCommandKeyID
@@ -549,10 +626,14 @@ XPLMCommandButtonID = {
    
    Deprecated: use XPLMCommandOnce
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inKeyType (integer)
---   inKey (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inKeyType                              (integer)
+     inKey                                  (integer)
+
+]]--
 
 --[[
    XLuaCommandKeyStroke    <<< DEPRECATED. DO NOT USE IN NEW CODE. >>>
@@ -564,9 +645,13 @@ XPLMCommandButtonID = {
    
    Deprecated: use XPLMCommandOnce
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inKey (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inKey                                  (XPLMCommandKeyID)
+
+]]--
 
 --[[
    XLuaCommandButtonPress    <<< DEPRECATED. DO NOT USE IN NEW CODE. >>>
@@ -579,9 +664,13 @@ XPLMCommandButtonID = {
    
    Deprecated: use XPLMCommandBegin.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inButton (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inButton                               (XPLMCommandButtonID)
+
+]]--
 
 --[[
    XLuaCommandButtonRelease    <<< DEPRECATED. DO NOT USE IN NEW CODE. >>>
@@ -591,7 +680,11 @@ XPLMCommandButtonID = {
    
    Deprecated: use XPLMCommandEnd.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inButton (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inButton                               (XPLMCommandButtonID)
+
+]]--
 

@@ -52,11 +52,19 @@ require("XPLMDefs")
                    is in meters MSL (mean sea level).  The XYZ coordinates are
                    in meters in the local OpenGL coordinate system.
 ]]--
--- Returns   :  Table { ["outX"], ["outY"], ["outZ"] }
--- Parameters:
---   inLatitude (number)
---   inLongitude (number)
---   inAltitude (number)
+--[[
+    Returns   : Table {
+          ["outX"]                          (number),
+          ["outY"]                          (number),
+          ["outZ"]                          (number)
+    }
+
+    Parameters:
+     inLatitude                             (number)
+     inLongitude                            (number)
+     inAltitude                             (number)
+
+]]--
 
 --[[
    XLuaLocalToWorld
@@ -71,11 +79,19 @@ require("XPLMDefs")
                    coordinates; you should try to avoid round tripping from
                    local to world and back.
 ]]--
--- Returns   :  Table { ["outLatitude"], ["outLongitude"], ["outAltitude"] }
--- Parameters:
---   inX (number)
---   inY (number)
---   inZ (number)
+--[[
+    Returns   : Table {
+          ["outLatitude"]                   (number),
+          ["outLongitude"]                  (number),
+          ["outAltitude"]                   (number)
+    }
+
+    Parameters:
+     inX                                    (number)
+     inY                                    (number)
+     inZ                                    (number)
+
+]]--
 
 --[[
 X-Plane features some fixed-character fonts.  Each font may have its own metrics.
@@ -139,14 +155,18 @@ XPLMFontID = {
    array of three floating point colors, representing RGB intensities from 0.0
    to 1.0.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inColorRGB (array<number|float>[3])
---   inXOffset (integer)
---   inYOffset (integer)
---   inChar (string)
---   inWordWrapWidth (integer)
---   inFontID (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inColorRGB                             (array<number|float>[3])
+     inXOffset                              (integer)
+     inYOffset                              (integer)
+     inChar                                 (string)
+     inWordWrapWidth                        (integer)
+     inFontID                               (XPLMFontID)
+
+]]--
 
 --[[
    XLuaDrawNumber
@@ -158,16 +178,20 @@ XPLMFontID = {
    well as a character set. This routine returns the xOffset plus width of the
    string drawn.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inColorRGB (array<number|float>[3])
---   inXOffset (integer)
---   inYOffset (integer)
---   inValue (number)
---   inDigits (integer)
---   inDecimals (integer)
---   inShowSign (boolean)
---   inFontID (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inColorRGB                             (array<number|float>[3])
+     inXOffset                              (integer)
+     inYOffset                              (integer)
+     inValue                                (number)
+     inDigits                               (integer)
+     inDecimals                             (integer)
+     inShowSign                             (boolean)
+     inFontID                               (XPLMFontID)
+
+]]--
 
 --[[
    XLuaGetFontDimensions
@@ -177,9 +201,17 @@ XPLMFontID = {
    you don't need a given field.  Note that for a proportional font the width
    will be an arbitrary, hopefully average width.
 ]]--
--- Returns   :  Table { ["outCharWidth"], ["outCharHeight"], ["outDigitsOnly"] }
--- Parameters:
---   inFontID (integer)
+--[[
+    Returns   : Table {
+          ["outCharWidth"]                  (integer),
+          ["outCharHeight"]                 (integer),
+          ["outDigitsOnly"]                 (boolean)
+    }
+
+    Parameters:
+     inFontID                               (XPLMFontID)
+
+]]--
 
 --[[
    XLuaMeasureString
@@ -190,9 +222,13 @@ XPLMFontID = {
    value is floating point; it is possible that future font drawing may allow
    for fractional pixels.
 ]]--
--- Returns   : number
--- Parameters:
---   inFontID (integer)
---   inChar (string)
---   inNumChars (integer)
+--[[
+    Returns   : number
+
+    Parameters:
+     inFontID                               (XPLMFontID)
+     inChar                                 (string)
+     inNumChars                             (integer)
+
+]]--
 

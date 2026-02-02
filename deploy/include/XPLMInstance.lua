@@ -61,10 +61,14 @@ require("XPLMScenery")
      to a one-element array containing a null item.  You cannot pass null for
      the array itself.
 ]]--
--- Returns   : userdata<XPLMInstanceRef>
--- Parameters:
---   obj (XPLMObjectRef)
---   datarefs (array<string|char const*>[])
+--[[
+    Returns   : userdata<XPLMInstanceRef>
+
+    Parameters:
+     obj                                    (XPLMObjectRef)
+     datarefs                               (array<string|char const*>[])
+
+]]--
 
 --[[
    XLuaInstanceSetAutoShift
@@ -76,9 +80,13 @@ require("XPLMScenery")
    system shifts. Use this for static instances that you would not otherwise
    have to move.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   instance (XPLMInstanceRef)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     instance                               (XPLMInstanceRef)
+
+]]--
 
 --[[
    XLuaDestroyInstance
@@ -90,9 +98,13 @@ require("XPLMScenery")
    as you never use it again; the instance will maintain its own reference to
    the OBJ and the object OBJ be deallocated when the instance is destroyed.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   instance (XPLMInstanceRef)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     instance                               (XPLMInstanceRef)
+
+]]--
 
 --[[
    XLuaInstanceSetPosition
@@ -112,11 +124,15 @@ require("XPLMScenery")
    BUG: before X-Plane 11.50, if you have no dataref registered, you must
    still pass a valid pointer for data and not null.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   instance (XPLMInstanceRef)
---   new_position (XPLMDrawInfo_t)
---   data (array<number|float>[])
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     instance                               (XPLMInstanceRef)
+     new_position                           (XPLMDrawInfo_t)
+     data                                   (array<number|float>[])
+
+]]--
 
 --[[
    XLuaInstanceSetPositionDouble
@@ -133,9 +149,13 @@ require("XPLMScenery")
    float for every dataref you have registered, and must contain valid
    floating point data.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   instance (XPLMInstanceRef)
---   new_position (XPLMDrawInfoDouble_t)
---   data (array<number|float>[])
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     instance                               (XPLMInstanceRef)
+     new_position                           (XPLMDrawInfoDouble_t)
+     data                                   (array<number|float>[])
+
+]]--
 

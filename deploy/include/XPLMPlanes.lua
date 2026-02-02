@@ -81,9 +81,13 @@ XPLMInitResult = {
    specification. Returns a XPLMInitResult enum value specifying whether the
    initalization succeeeded (and if not, what caused it to fail).
 ]]--
--- Returns   : integer
--- Parameters:
---   inJsonData (string)
+--[[
+    Returns   : integer
+
+    Parameters:
+     inJsonData                             (string)
+
+]]--
 
 --[[
    XLuaUpdateFlight
@@ -94,9 +98,13 @@ XPLMInitResult = {
    specifying whether hte update suceeeded (and if not, what caused it to
    fail).
 ]]--
--- Returns   : integer
--- Parameters:
---   inJsonData (string)
+--[[
+    Returns   : integer
+
+    Parameters:
+     inJsonData                             (string)
+
+]]--
 
 --[[
    XLuaSetUsersAircraft
@@ -109,9 +117,13 @@ XPLMInitResult = {
    
    **WARNING**: this API takes a full, not relative aicraft path.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inAircraftPath (string)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inAircraftPath                         (string)
+
+]]--
 
 --[[
    XLuaPlaceUserAtAirport
@@ -121,9 +133,13 @@ XPLMInitResult = {
    
    Use XPLMInitFlight for complete control over initialization.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inAirportCode (string)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inAirportCode                          (string)
+
+]]--
 
 --[[
    XLuaPlaceUserAtLocation
@@ -138,13 +154,17 @@ XPLMInitResult = {
    
    Use XPLMInitFlight for complete control over initialization.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   latitudeDegrees (number)
---   longitudeDegrees (number)
---   elevationMetersMSL (number)
---   headingDegreesTrue (number)
---   speedMetersPerSecond (number)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     latitudeDegrees                        (number)
+     longitudeDegrees                       (number)
+     elevationMetersMSL                     (number)
+     headingDegreesTrue                     (number)
+     speedMetersPerSecond                   (number)
+
+]]--
 
 --[[
    XLuaCountAircraft
@@ -155,9 +175,16 @@ XPLMInitResult = {
    controlling aircraft.  In X-Plane 7, this routine reflects the number of
    aircraft the user has enabled in the rendering options window.
 ]]--
--- Returns   :  Table { ["outTotalAircraft"], ["outActiveAircraft"], ["outController"] }
--- Parameters:
---   None.
+--[[
+    Returns   : Table {
+          ["outTotalAircraft"]              (integer),
+          ["outActiveAircraft"]             (integer),
+          ["outController"]                 (XPLMPluginID)
+    }
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaGetNthAircraftModel
@@ -167,9 +194,16 @@ XPLMInitResult = {
    at least 256 chars in length; the path should be at least 512 chars in
    length.
 ]]--
--- Returns   :  Table { ["outFileName"], ["outPath"] }
--- Parameters:
---   inIndex (integer)
+--[[
+    Returns   : Table {
+          ["outFileName"]                   (array[256] of string),
+          ["outPath"]                       (array[512] of string)
+    }
+
+    Parameters:
+     inIndex                                (integer)
+
+]]--
 
 --[[
    XLuaAcquirePlanes
@@ -189,11 +223,15 @@ XPLMInitResult = {
    callback will be called when the airplanes are available. If you do receive
    airplane access, your callback will not be called.
 ]]--
--- Returns   : boolean
--- Parameters:
---   inAircraft (array<string|char const*>[])
---   inCallback (XPLMPlanesAvailable_f)
---   inRefcon (Any reference value)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inAircraft                             (array<string|char const*>[])
+     inCallback                             (XPLMPlanesAvailable_f)
+     inRefcon                               (Any reference value)
+
+]]--
 
 --[[
    XLuaReleasePlanes
@@ -201,9 +239,12 @@ XPLMInitResult = {
    Call this function to release access to the planes.  Note that if you are
    disabled, access to planes is released for you and you must reacquire it.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   None.
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaSetActiveAircraftCount
@@ -212,9 +253,13 @@ XPLMInitResult = {
    higher than the total number of planes availables, only the total number of
    planes available is actually used.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inCount (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inCount                                (integer)
+
+]]--
 
 --[[
    XLuaSetAircraftModel
@@ -226,10 +271,14 @@ XPLMInitResult = {
    
    This API takes a full aircraft path.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inIndex (integer)
---   inAircraftPath (string)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inIndex                                (integer)
+     inAircraftPath                         (string)
+
+]]--
 
 --[[
    XLuaDisableAIForPlane
@@ -237,7 +286,11 @@ XPLMInitResult = {
    This routine turns off X-Plane's AI for a given plane.  The plane will
    continue to draw and be a real plane in X-Plane, but will not move itself.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inPlaneIndex (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inPlaneIndex                           (integer)
+
+]]--
 

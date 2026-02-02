@@ -152,9 +152,13 @@ XPLMDeviceID = {
    built-in one (for example a device that you have created, or a device
    another plugin has created).
 ]]--
--- Returns   : userdata<XPLMAvionicsID>
--- Parameters:
---   inParams (XPLMCustomizeAvionics_t)
+--[[
+    Returns   : userdata<XPLMAvionicsID>
+
+    Parameters:
+     inParams                               (XPLMCustomizeAvionics_t)
+
+]]--
 
 --[[
    XLuaGetAvionicsHandle
@@ -166,9 +170,13 @@ XPLMDeviceID = {
    programmatically. This is equivalent to calling
    XPLMRegisterAvionicsCallbackEx() with NULL for all callbacks.
 ]]--
--- Returns   : userdata<XPLMAvionicsID>
--- Parameters:
---   inDeviceID (integer)
+--[[
+    Returns   : userdata<XPLMAvionicsID>
+
+    Parameters:
+     inDeviceID                             (XPLMDeviceID)
+
+]]--
 
 --[[
    XLuaUnregisterAvionicsCallbacks
@@ -177,9 +185,13 @@ XPLMDeviceID = {
    only call this for handles you acquired from
    XPLMRegisterAvionicsCallbacksEx(). They will no longer be called.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inAvionicsId (XPLMAvionicsID)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inAvionicsId                           (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaCreateAvionicsEx
@@ -193,9 +205,13 @@ XPLMDeviceID = {
                plugin is unloaded, you should destroy the device using
                XPLMDestroyAvionics().
 ]]--
--- Returns   : userdata<XPLMAvionicsID>
--- Parameters:
---   inParams (XPLMCreateAvionics_t)
+--[[
+    Returns   : userdata<XPLMAvionicsID>
+
+    Parameters:
+     inParams                               (XPLMCreateAvionics_t)
+
+]]--
 
 --[[
    XLuaDestroyAvionics
@@ -204,9 +220,13 @@ XPLMDeviceID = {
    only ever call this for devices that you created using
    XPLMCreateAvionicsEx(), not X-Plane' built-ine devices you have customised.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inHandle (XPLMAvionicsID)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaIsAvionicsBound
@@ -214,9 +234,13 @@ XPLMDeviceID = {
    Returns true (1) if the cockpit device with the given handle is used by the
    current aircraft.
 ]]--
--- Returns   : boolean
--- Parameters:
---   inHandle (XPLMAvionicsID)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaSetAvionicsBrightnessRheo
@@ -234,10 +258,14 @@ XPLMDeviceID = {
    screen brightness rheostat, allowing you to control the brightness even
    though it isn't connected to the `instrument_brightness_ratio` dataref.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inHandle (XPLMAvionicsID)
---   brightness (number)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+     brightness                             (number)
+
+]]--
 
 --[[
    XLuaGetAvionicsBrightnessRheo
@@ -254,9 +282,13 @@ XPLMDeviceID = {
            If the device is not currently bound, this returns the device's own
            brightness rheostat value.
 ]]--
--- Returns   : number
--- Parameters:
---   inHandle (XPLMAvionicsID)
+--[[
+    Returns   : number
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaGetAvionicsBusVoltsRatio
@@ -265,9 +297,13 @@ XPLMDeviceID = {
    of the electrical bus to which the given avionics device is bound, or -1 if
    the device is not bound to the current aircraft.
 ]]--
--- Returns   : number
--- Parameters:
---   inHandle (XPLMAvionicsID)
+--[[
+    Returns   : number
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaIsCursorOverAvionics
@@ -277,9 +313,16 @@ XPLMDeviceID = {
    arguments are filled with the co-ordinates of the mouse cursor in device
    co-ordinates.
 ]]--
--- Returns   : boolean,  Table { ["outX"], ["outY"] }
--- Parameters:
---   inHandle (XPLMAvionicsID)
+--[[
+    Returns   : boolean, Table {
+          ["outX"]                          (integer),
+          ["outY"]                          (integer)
+    }
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaAvionicsNeedsDrawing
@@ -289,46 +332,66 @@ XPLMDeviceID = {
    drawing callback before drawing the next simulator frame. If your device is
    already drawn every frame, this has no effect.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inHandle (XPLMAvionicsID)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaSetAvionicsPopupVisible
    
    Shows or hides the popup window for a cockpit device.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inHandle (XPLMAvionicsID)
---   inVisible (boolean)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+     inVisible                              (boolean)
+
+]]--
 
 --[[
    XLuaIsAvionicsPopupVisible
    
    Returns true (1) if the popup window for a cockpit device is visible.
 ]]--
--- Returns   : boolean
--- Parameters:
---   inHandle (XPLMAvionicsID)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaPopOutAvionics
    
    Pops out the window for a cockpit device.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inHandle (XPLMAvionicsID)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaIsAvionicsPoppedOut
    
    Returns true (1) if the popup window for a cockpit device is popped out.
 ]]--
--- Returns   : boolean
--- Parameters:
---   inHandle (XPLMAvionicsID)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaTakeAvionicsKeyboardFocus
@@ -336,9 +399,13 @@ XPLMDeviceID = {
    This routine gives keyboard focus to the popup window of a custom cockpit
    device, if it is visible.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inHandle (XPLMAvionicsID)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaHasAvionicsKeyboardFocus
@@ -346,9 +413,13 @@ XPLMDeviceID = {
    Returns true (1) if the popup window for a cockpit device has keyboard
    focus.
 ]]--
--- Returns   : boolean
--- Parameters:
---   inHandle (XPLMAvionicsID)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaGetAvionicsGeometry
@@ -356,9 +427,18 @@ XPLMDeviceID = {
    Returns the bounds of a cockpit device's popup window in the X-Plane
    coordinate system.
 ]]--
--- Returns   :  Table { ["outLeft"], ["outTop"], ["outRight"], ["outBottom"] }
--- Parameters:
---   inHandle (XPLMAvionicsID)
+--[[
+    Returns   : Table {
+          ["outLeft"]                       (integer),
+          ["outTop"]                        (integer),
+          ["outRight"]                      (integer),
+          ["outBottom"]                     (integer)
+    }
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaSetAvionicsGeometry
@@ -366,35 +446,52 @@ XPLMDeviceID = {
    Sets the size and position of a cockpit device's popup window in the
    X-Plane coordinate system.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inHandle (XPLMAvionicsID)
---   inLeft (integer)
---   inTop (integer)
---   inRight (integer)
---   inBottom (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+     inLeft                                 (integer)
+     inTop                                  (integer)
+     inRight                                (integer)
+     inBottom                               (integer)
+
+]]--
 
 --[[
    XLuaGetAvionicsGeometryOS
    
    Returns the bounds of a cockpit device's popped-out window.
 ]]--
--- Returns   :  Table { ["outLeft"], ["outTop"], ["outRight"], ["outBottom"] }
--- Parameters:
---   inHandle (XPLMAvionicsID)
+--[[
+    Returns   : Table {
+          ["outLeft"]                       (integer),
+          ["outTop"]                        (integer),
+          ["outRight"]                      (integer),
+          ["outBottom"]                     (integer)
+    }
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+
+]]--
 
 --[[
    XLuaSetAvionicsGeometryOS
    
    Sets the size and position of a cockpit device's popped-out window.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inHandle (XPLMAvionicsID)
---   inLeft (integer)
---   inTop (integer)
---   inRight (integer)
---   inBottom (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inHandle                               (XPLMAvionicsID)
+     inLeft                                 (integer)
+     inTop                                  (integer)
+     inRight                                (integer)
+     inBottom                               (integer)
+
+]]--
 
 --[[
    XLuaRegisterHotKey
@@ -406,40 +503,55 @@ XPLMDeviceID = {
    returned.  During execution, the actual key associated with your hot key
    may change, but you are insulated from this.
 ]]--
--- Returns   : userdata<XPLMHotKeyID>
--- Parameters:
---   inVirtualKey (string)
---   inFlags (integer)
---   inDescription (string)
---   inCallback (XPLMHotKey_f)
---   inRefcon (Any reference value)
+--[[
+    Returns   : userdata<XPLMHotKeyID>
+
+    Parameters:
+     inVirtualKey                           (string)
+     inFlags                                (XPLMKeyFlags)
+     inDescription                          (string)
+     inCallback                             (XPLMHotKey_f)
+     inRefcon                               (Any reference value)
+
+]]--
 
 --[[
    XLuaUnregisterHotKey
    
    Unregisters a hot key.  You can only unregister your own hot keys.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inHotKey (XPLMHotKeyID)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inHotKey                               (XPLMHotKeyID)
+
+]]--
 
 --[[
    XLuaCountHotKeys
    
    Returns the number of current hot keys.
 ]]--
--- Returns   : integer
--- Parameters:
---   None.
+--[[
+    Returns   : integer
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaGetNthHotKey
    
    Returns a hot key by index, for iteration on all hot keys.
 ]]--
--- Returns   : userdata<XPLMHotKeyID>
--- Parameters:
---   inIndex (integer)
+--[[
+    Returns   : userdata<XPLMHotKeyID>
+
+    Parameters:
+     inIndex                                (integer)
+
+]]--
 
 --[[
    XLuaGetHotKeyInfo
@@ -447,18 +559,31 @@ XPLMDeviceID = {
    Returns information about the hot key.  Return NULL for any parameter you
    don't want info about.  The description should be at least 512 chars long.
 ]]--
--- Returns   :  Table { ["outVirtualKey"], ["outFlags"], ["outDescription"], ["outPlugin"] }
--- Parameters:
---   inHotKey (XPLMHotKeyID)
+--[[
+    Returns   : Table {
+          ["outVirtualKey"]                 (array[1] of string),
+          ["outFlags"]                      (integer),
+          ["outDescription"]                (array[512] of string),
+          ["outPlugin"]                     (XPLMPluginID)
+    }
+
+    Parameters:
+     inHotKey                               (XPLMHotKeyID)
+
+]]--
 
 --[[
    XLuaSetHotKeyCombination
    
    Remaps a hot key's keystrokes.  You may remap another plugin's keystrokes.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inHotKey (XPLMHotKeyID)
---   inVirtualKey (string)
---   inFlags (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inHotKey                               (XPLMHotKeyID)
+     inVirtualKey                           (string)
+     inFlags                                (XPLMKeyFlags)
+
+]]--
 

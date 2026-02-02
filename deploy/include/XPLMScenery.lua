@@ -48,18 +48,26 @@ XPLMProbeResult = {
    
    Creates a new probe object of a given type and returns.
 ]]--
--- Returns   : userdata<XPLMProbeRef>
--- Parameters:
---   inProbeType (integer)
+--[[
+    Returns   : userdata<XPLMProbeRef>
+
+    Parameters:
+     inProbeType                            (XPLMProbeType)
+
+]]--
 
 --[[
    XLuaDestroyProbe
    
    Deallocates an existing probe object.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inProbe (XPLMProbeRef)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inProbe                                (XPLMProbeRef)
+
+]]--
 
 --[[
    XLuaProbeTerrainXYZ
@@ -69,13 +77,17 @@ XPLMProbeResult = {
    properly. Other fields are filled in if we hit terrain, and a probe result
    is returned.
 ]]--
--- Returns   : integer
--- Parameters:
---   inProbe (XPLMProbeRef)
---   inX (number)
---   inY (number)
---   inZ (number)
---   outInfo (XPLMProbeInfo_t)
+--[[
+    Returns   : integer
+
+    Parameters:
+     inProbe                                (XPLMProbeRef)
+     inX                                    (number)
+     inY                                    (number)
+     inZ                                    (number)
+     outInfo                                (XPLMProbeInfo_t)
+
+]]--
 
 --[[
    XLuaGetMagneticVariation
@@ -83,10 +95,14 @@ XPLMProbeResult = {
    Returns X-Plane's simulated magnetic variation (declination) at the
    indication latitude and longitude.
 ]]--
--- Returns   : number
--- Parameters:
---   latitude (number)
---   longitude (number)
+--[[
+    Returns   : number
+
+    Parameters:
+     latitude                               (number)
+     longitude                              (number)
+
+]]--
 
 --[[
    XLuaDegTrueToDegMagnetic
@@ -94,9 +110,13 @@ XPLMProbeResult = {
    Converts a heading in degrees relative to true north into a value relative
    to magnetic north at the user's current location.
 ]]--
--- Returns   : number
--- Parameters:
---   headingDegreesTrue (number)
+--[[
+    Returns   : number
+
+    Parameters:
+     headingDegreesTrue                     (number)
+
+]]--
 
 --[[
    XLuaDegMagneticToDegTrue
@@ -104,9 +124,13 @@ XPLMProbeResult = {
    Converts a heading in degrees relative to magnetic north at the user's
    current location into a value relative to true north.
 ]]--
--- Returns   : number
--- Parameters:
---   headingDegreesMagnetic (number)
+--[[
+    Returns   : number
+
+    Parameters:
+     headingDegreesMagnetic                 (number)
+
+]]--
 
 --[[
    XLuaLoadObject
@@ -130,9 +154,13 @@ XPLMProbeResult = {
    registered before you load the object. For this reason it may be necessary
    to defer object loading until the sim has fully started.
 ]]--
--- Returns   : userdata<XPLMObjectRef>
--- Parameters:
---   inPath (string)
+--[[
+    Returns   : userdata<XPLMObjectRef>
+
+    Parameters:
+     inPath                                 (string)
+
+]]--
 
 --[[
    XLuaLoadObjectAsync
@@ -150,11 +178,15 @@ XPLMProbeResult = {
    the load to complete and then release the object if it is no longer
    desired.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inPath (string)
---   inCallback (XPLMObjectLoaded_f)
---   inRefcon (Any reference value)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inPath                                 (string)
+     inCallback                             (XPLMObjectLoaded_f)
+     inRefcon                               (Any reference value)
+
+]]--
 
 --[[
    XLuaUnloadObject
@@ -164,9 +196,13 @@ XPLMProbeResult = {
    purged from memory. Make sure to call XPLMUnloadObject once for each
    successful call to XPLMLoadObject.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inObject (XPLMObjectRef)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inObject                               (XPLMObjectRef)
+
+]]--
 
 --[[
    XLuaLookupObjects
@@ -181,11 +217,15 @@ XPLMProbeResult = {
    objects to certain local locations. Only objects that are allowed at the
    latitude/longitude you provide will be returned.
 ]]--
--- Returns   : integer
--- Parameters:
---   inPath (string)
---   inLatitude (number)
---   inLongitude (number)
---   enumerator (XPLMLibraryEnumerator_f)
---   ref (Any reference value)
+--[[
+    Returns   : integer
+
+    Parameters:
+     inPath                                 (string)
+     inLatitude                             (number)
+     inLongitude                            (number)
+     enumerator                             (XPLMLibraryEnumerator_f)
+     ref                                    (Any reference value)
+
+]]--
 

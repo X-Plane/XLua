@@ -10,7 +10,7 @@ require("XPLMPlanes")
 require("XPLMPlugin")
 require("XPLMProcessing")
 require("XPLMScenery")
-require("XPLMSound")
+--require("XPLMSound")
 require("XPLMUtilities")
 require("XPLMWeather")
 -- require("XPLMUIGraphics")	Excluded entirely.
@@ -64,10 +64,20 @@ function hotkey_callback(userref)
 
 	hotkey_count = hotkey_count + 1
 	if hotkey_count == 5 then
-		print("Hotkey says that's enough.")
+		print("Hotkey '" .. tostring(hotkey_ref) .. "' says that's enough.")
 
 		XPLMUnregisterHotKey(hotkey_ref)
 		hotkey_ref = nil
+	end
+end
+
+function receive_message(inFromWho, inMessage, param)
+	local pi = XPLMGetPluginInfo(inFromWho)
+
+	if type(param) ~= "nil" then
+		print("Received message " .. inMessage .. " from '" .. tostring(inFromWho) .. "' with param " .. tostring(param))
+	else
+		print("Received message " .. inMessage .. " from '" .. tostring(inFromWho) .. "'")
 	end
 end
 
@@ -421,7 +431,7 @@ NUMENR 24
 	print("Requested 10 datarefs, got " .. #ten_datarefs)
 	for i = 1, 10 do
 		local dri = XPLMGetDataRefInfo(ten_datarefs[i])
-		print("dataref[" .. (offset + i) .. "] = " .. dri.name)
+		print("dataref[" .. (offset + i) .. "] = " .. tostring(dri))
 	end
 
 	-- Read datarefs 10 through 19
@@ -877,19 +887,21 @@ NUMENR 24
 	------------------------------------------------
 	--[[      XPLMSound/FMOD ACCESS tests       ]]--
 	------------------------------------------------
+	--[[
 	local fmod_studio = XPLMGetFMODStudio()
 	if fmod_studio ~= nil then
 		local fmod_pilotradio = XPLMGetFMODChannelGroup(XPLMAudioBus.xplm_AudioRadioPilot)
-		print("Pilot radio FMOD channel = " .. (fmod_pilotradio == nil and "nil" or fmod_pilotradio.to_string())
+		print("Pilot radio FMOD channel = " .. (fmod_pilotradio == nil and "nil" or fmod_pilotradio.to_string()))
 
 		local buf = nil
 		local pcm_chan = XPLMPlayPCMOnBus(buf, 0, 2, 
 											16000, 1, false, XPLMAudioBus.xplm_AudioRadioPilot, 
 											function(userref, fmod_result) end,
 											"UsErReF"
-		end
+										 )
 	else
 		print("FMOD Studio not available??!?")
 	end
+	]]
 end
 

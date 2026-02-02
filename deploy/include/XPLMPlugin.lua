@@ -15,7 +15,9 @@
 ]]--
 
 #include "XPLMDefs.h"
+#include "XPLMSound.h"
 require("XPLMDefs")
+require("XPLMSound")
 
 --[[
    XLuaGetMyID
@@ -23,9 +25,12 @@ require("XPLMDefs")
    This routine returns the plugin ID of the calling plug-in.  Call this to
    get your own ID.
 ]]--
--- Returns   : userdata<XPLMPluginID>
--- Parameters:
---   None.
+--[[
+    Returns   : userdata<XPLMPluginID>
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaCountPlugins
@@ -33,9 +38,12 @@ require("XPLMDefs")
    This routine returns the total number of plug-ins that are loaded, both
    disabled and enabled.
 ]]--
--- Returns   : integer
--- Parameters:
---   None.
+--[[
+    Returns   : integer
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaGetNthPlugin
@@ -44,9 +52,13 @@ require("XPLMDefs")
    to XPLMCountPlugins-1, inclusive. Plugins may be returned in any arbitrary
    order.
 ]]--
--- Returns   : userdata<XPLMPluginID>
--- Parameters:
---   inIndex (integer)
+--[[
+    Returns   : userdata<XPLMPluginID>
+
+    Parameters:
+     inIndex                                (integer)
+
+]]--
 
 --[[
    XLuaFindPluginByPath
@@ -55,9 +67,13 @@ require("XPLMDefs")
    passed in absolute file system path.  XPLM_NO_PLUGIN_ID is returned if the
    path does not point to a currently loaded plug-in.
 ]]--
--- Returns   : userdata<XPLMPluginID>
--- Parameters:
---   inPath (string)
+--[[
+    Returns   : userdata<XPLMPluginID>
+
+    Parameters:
+     inPath                                 (string)
+
+]]--
 
 --[[
    XLuaFindPluginBySignature
@@ -69,9 +85,13 @@ require("XPLMDefs")
    plug-in name, and should be unique for all plug-ins.  Use this routine to
    locate another plugin that your plugin interoperates with
 ]]--
--- Returns   : userdata<XPLMPluginID>
--- Parameters:
---   inSignature (string)
+--[[
+    Returns   : userdata<XPLMPluginID>
+
+    Parameters:
+     inSignature                            (string)
+
+]]--
 
 --[[
    XLuaGetPluginInfo
@@ -85,18 +105,31 @@ require("XPLMDefs")
    unique string that identifies this plug-in. outDescription - a
    human-readable description of this plug-in.
 ]]--
--- Returns   :  Table { ["outName"], ["outFilePath"], ["outSignature"], ["outDescription"] }
--- Parameters:
---   inPlugin (XPLMPluginID)
+--[[
+    Returns   : Table {
+          ["outName"]                       (array[256] of string),
+          ["outFilePath"]                   (array[256] of string),
+          ["outSignature"]                  (array[256] of string),
+          ["outDescription"]                (array[256] of string)
+    }
+
+    Parameters:
+     inPlugin                               (XPLMPluginID)
+
+]]--
 
 --[[
    XLuaIsPluginEnabled
    
    Returns whether the specified plug-in is enabled for running.
 ]]--
--- Returns   : boolean
--- Parameters:
---   inPluginID (XPLMPluginID)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inPluginID                             (XPLMPluginID)
+
+]]--
 
 --[[
    XLuaEnablePlugin
@@ -106,18 +139,26 @@ require("XPLMDefs")
    does not.  Plugins may fail to enable (for example, if resources cannot be
    acquired) by returning false from their XPluginEnable callback.
 ]]--
--- Returns   : boolean
--- Parameters:
---   inPluginID (XPLMPluginID)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inPluginID                             (XPLMPluginID)
+
+]]--
 
 --[[
    XLuaDisablePlugin
    
    This routine disables an enabled plug-in.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inPluginID (XPLMPluginID)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inPluginID                             (XPLMPluginID)
+
+]]--
 
 --[[
    XLuaReloadPlugins
@@ -128,9 +169,12 @@ require("XPLMDefs")
    will be unloaded, then the start process happens as if the sim was starting
    up.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   None.
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaSendMessageToPlugin
@@ -139,11 +183,15 @@ require("XPLMDefs")
    XPLM_NO_PLUGIN_ID to broadcast to all plug-ins.  Only enabled plug-ins with
    a message receive function receive the message.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inPlugin (XPLMPluginID)
---   inMessage (integer)
---   inParam (void*)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inPlugin                               (XPLMPluginID)
+     inMessage                              (integer)
+     inParam                                (void*)
+
+]]--
 
 --[[
    XLuaHasFeature
@@ -151,9 +199,13 @@ require("XPLMDefs")
    This returns 1 if the given installation of X-Plane supports a feature, or
    0 if it does not.
 ]]--
--- Returns   : boolean
--- Parameters:
---   inFeature (string)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inFeature                              (string)
+
+]]--
 
 --[[
    XLuaIsFeatureEnabled
@@ -162,9 +214,13 @@ require("XPLMDefs")
    it is not enabled.  It is an error to call this routine with an unsupported
    feature.
 ]]--
--- Returns   : boolean
--- Parameters:
---   inFeature (string)
+--[[
+    Returns   : boolean
+
+    Parameters:
+     inFeature                              (string)
+
+]]--
 
 --[[
    XLuaEnableFeature
@@ -173,10 +229,14 @@ require("XPLMDefs")
    change the running behavior of X-Plane and your plugin in some way,
    depending on the feature.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inFeature (string)
---   inEnable (boolean)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inFeature                              (string)
+     inEnable                               (boolean)
+
+]]--
 
 --[[
    XLuaEnumerateFeatures
@@ -185,8 +245,12 @@ require("XPLMDefs")
    running version of X-Plane supports. Use this routine to determine all of
    the features that X-Plane can support.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inEnumerator (XPLMFeatureEnumerator_f)
---   inRef (Any reference value)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inEnumerator                           (XPLMFeatureEnumerator_f)
+     inRef                                  (Any reference value)
+
+]]--
 

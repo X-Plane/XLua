@@ -64,9 +64,12 @@ XPLMMenuCheck = {
    This function returns the ID of the plug-ins menu, which is created for you
    at startup.
 ]]--
--- Returns   : userdata<XPLMMenuID>
--- Parameters:
---   None.
+--[[
+    Returns   : userdata<XPLMMenuID>
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaFindAircraftMenu
@@ -82,9 +85,12 @@ XPLMMenuCheck = {
    the aircraft menu. For all other plugins, this will return NULL, and any
    attempts to add menu items to it will fail.
 ]]--
--- Returns   : userdata<XPLMMenuID>
--- Parameters:
---   None.
+--[[
+    Returns   : userdata<XPLMMenuID>
+
+    Parameters:
+      None.
+]]--
 
 --[[
    XLuaCreateMenu
@@ -100,13 +106,17 @@ XPLMMenuCheck = {
    Important: you must pass a valid, non-empty menu title even if the menu is
    a submenu where the title is not visible.
 ]]--
--- Returns   : userdata<XPLMMenuID>
--- Parameters:
---   inName (string)
---   inParentMenu (XPLMMenuID)
---   inParentItem (integer)
---   inHandler (XPLMMenuHandler_f)
---   inMenuRef (Any reference value)
+--[[
+    Returns   : userdata<XPLMMenuID>
+
+    Parameters:
+     inName                                 (string)
+     inParentMenu                           (XPLMMenuID)
+     inParentItem                           (integer)
+     inHandler                              (XPLMMenuHandler_f)
+     inMenuRef                              (Any reference value)
+
+]]--
 
 --[[
    XLuaDestroyMenu
@@ -114,9 +124,13 @@ XPLMMenuCheck = {
    This function destroys a menu that you have created.  Use this to remove a
    submenu if necessary.  (Normally this function will not be necessary.)
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inMenuID (XPLMMenuID)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inMenuID                               (XPLMMenuID)
+
+]]--
 
 --[[
    XLuaClearAllMenuItems
@@ -124,9 +138,13 @@ XPLMMenuCheck = {
    This function removes all menu items from a menu, allowing you to rebuild
    it.  Use this function if you need to change the number of items on a menu.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inMenuID (XPLMMenuID)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inMenuID                               (XPLMMenuID)
+
+]]--
 
 --[[
    XLuaAppendMenuItem
@@ -146,12 +164,16 @@ XPLMMenuCheck = {
    are irrelevant to your plugin in order to deliver this consistency for each
    plugin.)
 ]]--
--- Returns   : integer
--- Parameters:
---   inMenu (XPLMMenuID)
---   inItemName (string)
---   inItemRef (Any reference value)
---   inDeprecatedAndIgnored (integer)
+--[[
+    Returns   : integer
+
+    Parameters:
+     inMenu                                 (XPLMMenuID)
+     inItemName                             (string)
+     inItemRef                              (Any reference value)
+     inDeprecatedAndIgnored                 (integer)
+
+]]--
 
 --[[
    XLuaAppendMenuItemWithCommand
@@ -168,11 +190,15 @@ XPLMMenuCheck = {
    Like XPLMAppendMenuItem(), all menu indices are relative to your plugin's
    menus only.
 ]]--
--- Returns   : integer
--- Parameters:
---   inMenu (XPLMMenuID)
---   inItemName (string)
---   inCommandToExecute (XPLMCommandRef)
+--[[
+    Returns   : integer
+
+    Parameters:
+     inMenu                                 (XPLMMenuID)
+     inItemName                             (string)
+     inCommandToExecute                     (XPLMCommandRef)
+
+]]--
 
 --[[
    XLuaAppendMenuSeparator
@@ -182,9 +208,13 @@ XPLMMenuCheck = {
    Returns a negative index if the append failed (due to an invalid parent
    menu argument).
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inMenu (XPLMMenuID)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inMenu                                 (XPLMMenuID)
+
+]]--
 
 --[[
    XLuaSetMenuItemName
@@ -192,23 +222,31 @@ XPLMMenuCheck = {
    This routine changes the name of an existing menu item.  Pass in the menu
    ID and the index of the menu item.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inMenu (XPLMMenuID)
---   inIndex (integer)
---   inItemName (string)
---   inDeprecatedAndIgnored (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inMenu                                 (XPLMMenuID)
+     inIndex                                (integer)
+     inItemName                             (string)
+     inDeprecatedAndIgnored                 (integer)
+
+]]--
 
 --[[
    XLuaCheckMenuItem
    
    Set whether a menu item is checked.  Pass in the menu ID and item index.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inMenu (XPLMMenuID)
---   index (integer)
---   inCheck (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inMenu                                 (XPLMMenuID)
+     index                                  (integer)
+     inCheck                                (XPLMMenuCheck)
+
+]]--
 
 --[[
    XLuaCheckMenuItemState
@@ -216,21 +254,31 @@ XPLMMenuCheck = {
    This routine returns whether a menu item is checked or not. A menu item's
    check mark may be on or off, or a menu may not have an icon at all.
 ]]--
--- Returns   :  Table { ["outCheck"] }
--- Parameters:
---   inMenu (XPLMMenuID)
---   index (integer)
+--[[
+    Returns   : Table {
+          ["outCheck"]                      (integer)
+    }
+
+    Parameters:
+     inMenu                                 (XPLMMenuID)
+     index                                  (integer)
+
+]]--
 
 --[[
    XLuaEnableMenuItem
    
    Sets whether this menu item is enabled.  Items start out enabled.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inMenu (XPLMMenuID)
---   index (integer)
---   enabled (boolean)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inMenu                                 (XPLMMenuID)
+     index                                  (integer)
+     enabled                                (boolean)
+
+]]--
 
 --[[
    XLuaRemoveMenuItem
@@ -238,8 +286,12 @@ XPLMMenuCheck = {
    Removes one item from a menu.  Note that all menu items below are moved up
    one; your plugin must track the change in index numbers.
 ]]--
--- Returns   : Nothing.
--- Parameters:
---   inMenu (XPLMMenuID)
---   inIndex (integer)
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     inMenu                                 (XPLMMenuID)
+     inIndex                                (integer)
+
+]]--
 
