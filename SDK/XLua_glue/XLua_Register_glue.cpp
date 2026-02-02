@@ -1,3 +1,5 @@
+void xlua_register_event(int EventID, char const* EventParamtype);
+
 extern "C"
 {
 	#include <lua.h>
@@ -15,6 +17,7 @@ extern "C"
 	#include "XPLMMenus.h"
 	#include "XPLMNavigation.h"
 	#include "XPLMPlanes.h"
+	#include "XPLMPlugin.h"
 	#include "XPLMProcessing.h"
 	#include "XPLMScenery.h"
 	#include "XPLMUtilities.h"
@@ -472,4 +475,12 @@ void add_xplm_to_interp(lua_State* L)
 	RegType_XPLMObjectRef(L);
 	RegType_XPLMPluginID(L);
 	RegType_XPLMProbeRef(L);
+
+	// Event types
+	xlua_register_event(XPLM_MSG_DATAREFS_ADDED, "*i");
+	xlua_register_event(XPLM_MSG_FMOD_BANK_LOADED, "extdata<XPLMBankID>");
+	xlua_register_event(XPLM_MSG_FMOD_BANK_UNLOADING, "extdata<XPLMBankID>");
+	xlua_register_event(XPLM_MSG_LIVERY_LOADED, "i");
+	xlua_register_event(XPLM_MSG_PLANE_LOADED, "i");
+	xlua_register_event(XPLM_MSG_PLANE_UNLOADED, "i");
 }

@@ -78,12 +78,13 @@ void RegType_XPLMMapLayerID(lua_State* L)
 	lua_pushstring(L, "XPLMMapLayerID");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMMapLayerID_to_string);
+#ifdef HAVE_XPLMMapLayerID_tostring
+	lua_pushcfunction(L, _XPLMMapLayerID_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMMapLayerID_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMMapLayerID", _XPLMMapLayerID_Constructor);
 
@@ -125,12 +126,13 @@ void RegType_XPLMMapProjectionID(lua_State* L)
 	lua_pushstring(L, "XPLMMapProjectionID");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMMapProjectionID_to_string);
+#ifdef HAVE_XPLMMapProjectionID_tostring
+	lua_pushcfunction(L, _XPLMMapProjectionID_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMMapProjectionID_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMMapProjectionID", _XPLMMapProjectionID_Constructor);
 

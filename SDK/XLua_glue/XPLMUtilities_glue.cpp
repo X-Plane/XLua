@@ -206,12 +206,13 @@ void RegType_XPLMCommandRef(lua_State* L)
 	lua_pushstring(L, "XPLMCommandRef");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMCommandRef_to_string);
+#ifdef HAVE_XPLMCommandRef_tostring
+	lua_pushcfunction(L, _XPLMCommandRef_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMCommandRef_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMCommandRef", _XPLMCommandRef_Constructor);
 

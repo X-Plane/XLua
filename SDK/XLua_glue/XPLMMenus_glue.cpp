@@ -77,12 +77,13 @@ void RegType_XPLMMenuID(lua_State* L)
 	lua_pushstring(L, "XPLMMenuID");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMMenuID_to_string);
+#ifdef HAVE_XPLMMenuID_tostring
+	lua_pushcfunction(L, _XPLMMenuID_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMMenuID_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMMenuID", _XPLMMenuID_Constructor);
 

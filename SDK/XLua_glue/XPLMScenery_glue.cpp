@@ -82,12 +82,13 @@ void RegType_XPLMProbeRef(lua_State* L)
 	lua_pushstring(L, "XPLMProbeRef");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMProbeRef_to_string);
+#ifdef HAVE_XPLMProbeRef_tostring
+	lua_pushcfunction(L, _XPLMProbeRef_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMProbeRef_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMProbeRef", _XPLMProbeRef_Constructor);
 
@@ -352,12 +353,13 @@ void RegType_XPLMObjectRef(lua_State* L)
 	lua_pushstring(L, "XPLMObjectRef");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMObjectRef_to_string);
+#ifdef HAVE_XPLMObjectRef_tostring
+	lua_pushcfunction(L, _XPLMObjectRef_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMObjectRef_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMObjectRef", _XPLMObjectRef_Constructor);
 

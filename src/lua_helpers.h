@@ -59,4 +59,19 @@ int lua_pushtraceback(lua_State* L);
 
 void clear_table(lua_State* L, int idx);
 
+////////////////////////////////////////////////////
+// Custom tostring functions for XPLM defined types.
+////////////////////////////////////////////////////
+extern "C"
+{
+	#define HAVE_XPLMPluginID_tostring
+	int _XPLMPluginID_tostring(lua_State* L);
+
+	#define HAVE_XPLMHotKeyID_tostring
+	int _XPLMHotKeyID_tostring(lua_State* L);
+
+	#define HAVE_XPLMDataRef_tostring
+	int _XPLMDataRef_tostring(lua_State* L);
+}
+
 #endif /* lua_helpers_h */

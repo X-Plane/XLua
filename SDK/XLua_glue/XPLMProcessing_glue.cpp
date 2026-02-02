@@ -77,12 +77,13 @@ void RegType_XPLMFlightLoopID(lua_State* L)
 	lua_pushstring(L, "XPLMFlightLoopID");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMFlightLoopID_to_string);
+#ifdef HAVE_XPLMFlightLoopID_tostring
+	lua_pushcfunction(L, _XPLMFlightLoopID_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMFlightLoopID_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMFlightLoopID", _XPLMFlightLoopID_Constructor);
 

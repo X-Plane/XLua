@@ -81,12 +81,13 @@ void RegType_XPLMNavRef(lua_State* L)
 	lua_pushstring(L, "XPLMNavRef");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMNavRef_to_string);
+#ifdef HAVE_XPLMNavRef_tostring
+	lua_pushcfunction(L, _XPLMNavRef_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMNavRef_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMNavRef", _XPLMNavRef_Constructor);
 

@@ -84,12 +84,13 @@ void RegType_XPLMInstanceRef(lua_State* L)
 	lua_pushstring(L, "XPLMInstanceRef");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMInstanceRef_to_string);
+#ifdef HAVE_XPLMInstanceRef_tostring
+	lua_pushcfunction(L, _XPLMInstanceRef_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMInstanceRef_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMInstanceRef", _XPLMInstanceRef_Constructor);
 

@@ -13,7 +13,8 @@
 #include <stdarg.h>
 #include <XPLMDataAccess.h>
 #include <XPLMUtilities.h>
-
+#include <XPLMPlugin.h>
+#include <XPLMDisplay.h>
 
 #include "log.h"
 #include "xpfuncs.h"
@@ -181,4 +182,44 @@ void clear_table(lua_State* L, int idx)
 			lua_settable(L, idx);	 // table[key] = nil
 		}
 	}
+}
+
+////////////////////////////////////////////////////
+// Custom tostring functions for XPLM defined types.
+////////////////////////////////////////////////////
+
+extern "C" int _XPLMPluginID_tostring(lua_State* L)
+{
+	XPLMPluginID const test1 = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
+	
+	char pname[256] = "";
+	XPLMGetPluginInfo(test1, pname, nullptr, nullptr, nullptr);
+	lua_pop(L, 1);
+
+	lua_pushstring(L, pname);
+	return 1;
+}
+
+extern "C" int _XPLMHotKeyID_tostring(lua_State* L)
+{
+	XPLMHotKeyID const test1 = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected XPLMHotKeyID");
+
+	char kname[256] = "";
+	XPLMGetHotKeyInfo(test1, nullptr, nullptr, kname, nullptr);
+	lua_pop(L, 1);
+
+	lua_pushstring(L, kname);
+	return 1;
+}
+
+extern "C" int _XPLMDataRef_tostring(lua_State* L)
+{
+	XPLMDataRef const test1 = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
+
+	XPLMDataRefInfo_t info = { .structSize = sizeof(XPLMDataRefInfo_t) };
+	XPLMGetDataRefInfo(test1, &info);
+	lua_pop(L, 1);
+
+	lua_pushstring(L, info.name);
+	return 1;
 }

@@ -77,12 +77,13 @@ void RegType_XPLMDataRef(lua_State* L)
 	lua_pushstring(L, "XPLMDataRef");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMDataRef_to_string);
+#ifdef HAVE_XPLMDataRef_tostring
+	lua_pushcfunction(L, _XPLMDataRef_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMDataRef_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMDataRef", _XPLMDataRef_Constructor);
 

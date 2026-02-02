@@ -79,12 +79,13 @@ void RegType_XPLMPluginID(lua_State* L)
 	lua_pushstring(L, "XPLMPluginID");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMPluginID_to_string);
+#ifdef HAVE_XPLMPluginID_tostring
+	lua_pushcfunction(L, _XPLMPluginID_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMPluginID_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMPluginID", _XPLMPluginID_Constructor);
 

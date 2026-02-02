@@ -175,12 +175,13 @@ void RegType_XPLMAvionicsID(lua_State* L)
 	lua_pushstring(L, "XPLMAvionicsID");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMAvionicsID_to_string);
+#ifdef HAVE_XPLMAvionicsID_tostring
+	lua_pushcfunction(L, _XPLMAvionicsID_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMAvionicsID_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMAvionicsID", _XPLMAvionicsID_Constructor);
 
@@ -1314,12 +1315,13 @@ void RegType_XPLMHotKeyID(lua_State* L)
 	lua_pushstring(L, "XPLMHotKeyID");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMHotKeyID_to_string);
+#ifdef HAVE_XPLMHotKeyID_tostring
+	lua_pushcfunction(L, _XPLMHotKeyID_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMHotKeyID_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMHotKeyID", _XPLMHotKeyID_Constructor);
 
