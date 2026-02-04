@@ -45,15 +45,18 @@
  *
  */
 
+
 #include "XPLMDefs.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
 /***************************************************************************
  * CAMERA CONTROL
  ***************************************************************************/
+
 
 /*
  * XPLMCameraControlDuration
@@ -63,8 +66,10 @@ extern "C" {
  *
  */
 enum {
+
     /* Control the camera until the user picks a new view.                        */
     xplm_ControlCameraUntilViewChanges       = 1,
+
 
     /* Control the camera until your plugin is disabled or another plugin forcibly*
      * takes control.                                                             */
@@ -73,6 +78,7 @@ enum {
 
 };
 typedef int XPLMCameraControlDuration;
+
 /*
  * XPLMCameraPosition_t
  * 
@@ -85,14 +91,22 @@ typedef int XPLMCameraControlDuration;
  *
  */
 typedef struct {
+
      float                     x;
+
      float                     y;
+
      float                     z;
+
      float                     pitch;
+
      float                     heading;
+
      float                     roll;
+
      float                     zoom;
 } XPLMCameraPosition_t;
+
 /*
  * XPLMCameraControl_f
  * 
@@ -111,6 +125,7 @@ typedef int (* XPLMCameraControl_f)(
                          XPLMCameraPosition_t * outCameraPosition,      /* Can be NULL */
                          int                  inIsLosingControl,
                          void*                inRefcon);
+
 /*
  * XPLMControlCamera
  * 
@@ -123,6 +138,7 @@ XPLM_API void       XPLMControlCamera(
                          XPLMCameraControlDuration inHowLong,
                          XPLMCameraControl_f  inControlFunc,
                          void*                inRefcon);
+
 /*
  * XPLMDontControlCamera
  * 
@@ -135,6 +151,7 @@ XPLM_API void       XPLMControlCamera(
  *
  */
 XPLM_API void       XPLMDontControlCamera(void);
+
 /*
  * XPLMIsCameraBeingControlled
  * 
@@ -145,6 +162,7 @@ XPLM_API void       XPLMDontControlCamera(void);
  */
 XPLM_API int        XPLMIsCameraBeingControlled(
                          XPLMCameraControlDuration * outCameraControlDuration);    /* Can be NULL */
+
 /*
  * XPLMReadCameraPosition
  * 

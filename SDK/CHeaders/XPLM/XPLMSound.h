@@ -19,18 +19,27 @@
  *
  */
 
+
 #include "XPLMDefs.h"
+
+#if defined(XPLM) || defined(SIM)
 #include "fmod.hpp"
+#endif				// XPLM|SIM
+
+#if defined(XPLM) || defined(SIM)
 #include "fmod_studio.hpp"
+#endif				// XPLM|SIM
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
 #if defined(XPLM400)
 /***************************************************************************
  * FMOD ACCESS
  ***************************************************************************/
+
 
 /*
  * XPLMAudioBus
@@ -44,30 +53,41 @@ extern "C" {
  *
  */
 enum {
+
     /* Incoming speech on COM1                                                    */
     xplm_AudioRadioCom1                      = 0,
+
 
     /* Incoming speech on COM2                                                    */
     xplm_AudioRadioCom2                      = 1,
 
+
     /* Pilot's own speech                                                         */
     xplm_AudioRadioPilot                     = 2,
+
 
     /* Copilot's own speech                                                       */
     xplm_AudioRadioCopilot                   = 3,
 
+
     xplm_AudioExteriorAircraft               = 4,
+
 
     xplm_AudioExteriorEnvironment            = 5,
 
+
     xplm_AudioExteriorUnprocessed            = 6,
+
 
     xplm_AudioInterior                       = 7,
 
+
     xplm_AudioUI                             = 8,
+
 
     /* Dedicated ground vehicle cable                                             */
     xplm_AudioGround                         = 9,
+
 
     /* Master bus. Not normally to be used directly.                              */
     xplm_Master                              = 10,
@@ -75,6 +95,7 @@ enum {
 
 };
 typedef int XPLMAudioBus;
+
 /*
  * XPLMBankID
  * 
@@ -83,8 +104,10 @@ typedef int XPLMAudioBus;
  *
  */
 enum {
+
     /* Master bank. Handles all aircraft and environmental audio.                 */
     xplm_MasterBank                          = 0,
+
 
     /* Radio bank. Handles COM1/COM2/GND/Pilot/Copilot.                           */
     xplm_RadioBank                           = 1,
@@ -93,6 +116,8 @@ enum {
 };
 typedef int XPLMBankID;
 
+
+	 
 /* 
  * If you want to get full access to FMOD sound features, you need to include fmod.h or fmod.hpp yourself FIRST.
  * If you only need the basic wrapper functions which allow 3D placement and playback on a specified channel, there
@@ -101,12 +126,19 @@ typedef int XPLMBankID;
  * within the functions of the X-Plane SDK.
  *
  * If you choose to use the advanced method, be aware that it is your responsibility to ensure that any resources,
- * especially callbacks, are cleaned up when needed. The sound system may well be completely rebuild when the master 
+ * especially callbacks, are cleaned up when needed. The sound system may well be completely rebuilt when the master 
  * banks are reloaded, when aircraft are reloaded, or your plugin is unloaded.
  *
  * IMPORTANT: For all calls which use, or return, FMOD base types like FMOD_Studio_System*, these are fully interchangeable
  *            with their C++ equivalents. See https://www.fmod.com/docs/2.02/api/white-papers-handle-system.html .
+ *
+ * Stub definitions are enough to play a basic sound without linking to the full FMOD distribution. You can still position it in 3D
+ * and change other basic parameters. In all cases where an FMOD_RESULT is returned, the full range of FMOD_RESULT codes are used - the
+ * status will in almost all situations be coming straight from FMOD - so the single definition here is purely to create a matching
+ * datatype and allow simple "is OK" and "is not OK" tests.
+
  */
+
 #if defined(_FMOD_COMMON_H)
 /*
  * XPLMGetFMODStudio
@@ -122,6 +154,9 @@ typedef int XPLMBankID;
  *
  */
 XPLM_API FMOD_STUDIO_SYSTEM* XPLMGetFMODStudio(void);
+#endif				// _FMOD_COMMON_H
+
+#if defined(_FMOD_COMMON_H)
 /*
  * XPLMGetFMODChannelGroup
  * 
@@ -131,29 +166,59 @@ XPLM_API FMOD_STUDIO_SYSTEM* XPLMGetFMODStudio(void);
  */
 XPLM_API FMOD_CHANNELGROUP* XPLMGetFMODChannelGroup(
                          XPLMAudioBus         audioType);
+#endif				// _FMOD_COMMON_H
 
-#else
+#if !defined(_FMOD_COMMON_H)
 /*
- * These definitions are enough to play a basic sound without linking to the full FMOD distribution. You can still position it in 3D
- * and change other basic parameters. In all cases where an FMOD_RESULT is returned, the full range of FMOD_RESULT codes are used - the
- * status will in almost all situations be coming straight from FMOD - so the single definition here is purely to create a matching
- * datatype and allow simple "is OK" and "is not OK" tests.
-*/
+ * FMOD_RESULT
+ *
+ */
+enum {
 
-typedef enum FMOD_RESULT
-{
-    FMOD_OK,
-} FMOD_RESULT;
-typedef enum FMOD_SOUND_FORMAT
-{
-	FMOD_SOUND_FORMAT_PCM16 = 2
-} FMOD_SOUND_FORMAT;
-typedef struct FMOD_VECTOR
-{
-	float x, y, z;
-} FMOD_VECTOR;
+    FMOD_OK                                  = 0,
+
+
+};
+typedef int FMOD_RESULT;
+#endif				// _FMOD_COMMON_H
+
+#if !defined(_FMOD_COMMON_H)
+/*
+ * FMOD_SOUND_FORMAT
+ *
+ */
+enum {
+
+    FMOD_SOUND_FORMAT_PCM16                  = 2,
+
+
+};
+typedef int FMOD_SOUND_FORMAT;
+#endif				// _FMOD_COMMON_H
+
+#if !defined(_FMOD_COMMON_H)
+/*
+ * FMOD_CHANNEL
+ *
+ */
 typedef void FMOD_CHANNEL;
-#endif
+#endif				// _FMOD_COMMON_H
+
+#if !defined(_FMOD_COMMON_H)
+/*
+ * FMOD_VECTOR
+ *
+ */
+typedef struct {
+
+     float                     x;
+
+     float                     y;
+
+     float                     z;
+} FMOD_VECTOR;
+#endif				// _FMOD_COMMON_H
+
 /*
  * XPLMPCMComplete_f
  * 
@@ -165,6 +230,7 @@ typedef void FMOD_CHANNEL;
 typedef void (* XPLMPCMComplete_f)(
                          void*                inRefcon,
                          FMOD_RESULT          status);
+
 /*
  * XPLMPlayPCMOnBus
  * 
@@ -184,8 +250,8 @@ typedef void (* XPLMPCMComplete_f)(
  *
  */
 XPLM_API FMOD_CHANNEL* XPLMPlayPCMOnBus(
-                         void *               audioBuffer,
-                         uint32_t             bufferSize,
+                         void*                audioBuffer,
+                         int                  bufferSize,
                          FMOD_SOUND_FORMAT    soundFormat,
                          int                  freqHz,
                          int                  numChannels,
@@ -193,6 +259,7 @@ XPLM_API FMOD_CHANNEL* XPLMPlayPCMOnBus(
                          XPLMAudioBus         audioType,
                          XPLMPCMComplete_f    inCallback,             /* Can be NULL */
                          void*                inRefcon);
+
 /*
  * XPLMStopAudio
  * 
@@ -203,6 +270,7 @@ XPLM_API FMOD_CHANNEL* XPLMPlayPCMOnBus(
  */
 XPLM_API FMOD_RESULT XPLMStopAudio(
                          FMOD_CHANNEL*        fmod_channel);
+
 /*
  * XPLMSetAudioPosition
  * 
@@ -214,6 +282,7 @@ XPLM_API FMOD_RESULT XPLMSetAudioPosition(
                          FMOD_CHANNEL*        fmod_channel,
                          FMOD_VECTOR*         position,
                          FMOD_VECTOR*         velocity);
+
 /*
  * XPLMSetAudioFadeDistance
  * 
@@ -229,6 +298,7 @@ XPLM_API FMOD_RESULT XPLMSetAudioFadeDistance(
                          FMOD_CHANNEL*        fmod_channel,
                          float                min_fade_distance,
                          float                max_fade_distance);
+
 /*
  * XPLMSetAudioVolume
  * 
@@ -241,6 +311,7 @@ XPLM_API FMOD_RESULT XPLMSetAudioFadeDistance(
 XPLM_API FMOD_RESULT XPLMSetAudioVolume(
                          FMOD_CHANNEL*        fmod_channel,
                          float                source_volume);
+
 /*
  * XPLMSetAudioPitch
  * 
@@ -250,6 +321,7 @@ XPLM_API FMOD_RESULT XPLMSetAudioVolume(
 XPLM_API FMOD_RESULT XPLMSetAudioPitch(
                          FMOD_CHANNEL*        fmod_channel,
                          float                audio_pitch_hz);
+
 /*
  * XPLMSetAudioCone
  * 

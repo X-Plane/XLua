@@ -15,11 +15,13 @@
  *
  */
 
+
 #include "XPLMDefs.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 #if defined(XPLM200)
 /***************************************************************************
@@ -56,6 +58,7 @@ extern "C" {
  *
  */
 
+
 /*
  * XPLMProbeType
  * 
@@ -65,6 +68,7 @@ extern "C" {
  *
  */
 enum {
+
     /* The Y probe gives you the location of the tallest physical scenery along   *
      * the Y axis going through the queried point.                                */
     xplm_ProbeY                              = 0,
@@ -72,6 +76,7 @@ enum {
 
 };
 typedef int XPLMProbeType;
+
 /*
  * XPLMProbeResult
  * 
@@ -79,12 +84,15 @@ typedef int XPLMProbeType;
  *
  */
 enum {
+
     /* The probe hit terrain and returned valid values.                           */
     xplm_ProbeHitTerrain                     = 0,
+
 
     /* An error in the API call.  Either the probe struct size is bad, the probe  *
      * is invalid, or the type is mismatched for the specific query call.         */
     xplm_ProbeError                          = 1,
+
 
     /* The probe call succeeded but there is no terrain under this point (perhaps *
      * it is off the side of the planet?)                                         */
@@ -93,6 +101,7 @@ enum {
 
 };
 typedef int XPLMProbeResult;
+
 /*
  * XPLMProbeRef
  * 
@@ -101,6 +110,7 @@ typedef int XPLMProbeResult;
  *
  */
 typedef void * XPLMProbeRef;
+
 /*
  * XPLMProbeInfo_t
  * 
@@ -109,32 +119,44 @@ typedef void * XPLMProbeRef;
  *
  */
 typedef struct {
+
     /* Size of structure in bytes - always set this before calling the XPLM.      */
      int                       structSize;
+
     /* Resulting X location of the terrain point we hit, in local OpenGL          *
      * coordinates.                                                               */
      float                     locationX;
+
     /* Resulting Y location of the terrain point we hit, in local OpenGL          *
      * coordinates.                                                               */
      float                     locationY;
+
     /* Resulting Z location of the terrain point we hit, in local OpenGL          *
      * coordinates.                                                               */
      float                     locationZ;
+
     /* X component of the normal vector to the terrain we found.                  */
      float                     normalX;
+
     /* Y component of the normal vector to the terrain we found.                  */
      float                     normalY;
+
     /* Z component of the normal vector to the terrain we found.                  */
      float                     normalZ;
+
     /* X component of the velocity vector of the terrain we found.                */
      float                     velocityX;
+
     /* Y component of the velocity vector of the terrain we found.                */
      float                     velocityY;
+
     /* Z component of the velocity vector of the terrain we found.                */
      float                     velocityZ;
+
     /* Tells if the surface we hit is water (otherwise it is land).               */
      int                       is_wet;
 } XPLMProbeInfo_t;
+
 /*
  * XPLMCreateProbe
  * 
@@ -143,6 +165,7 @@ typedef struct {
  */
 XPLM_API XPLMProbeRef XPLMCreateProbe(
                          XPLMProbeType        inProbeType);
+
 /*
  * XPLMDestroyProbe
  * 
@@ -151,6 +174,7 @@ XPLM_API XPLMProbeRef XPLMCreateProbe(
  */
 XPLM_API void       XPLMDestroyProbe(
                          XPLMProbeRef         inProbe);
+
 /*
  * XPLMProbeTerrainXYZ
  * 
@@ -167,6 +191,7 @@ XPLM_API XPLMProbeResult XPLMProbeTerrainXYZ(
                          float                inZ,
                          XPLMProbeInfo_t *    outInfo);
 #endif /* XPLM200 */
+
 #if defined(XPLM300)
 /***************************************************************************
  * Magnetic Variation
@@ -185,6 +210,7 @@ XPLM_API XPLMProbeResult XPLMProbeTerrainXYZ(
  *
  */
 
+
 /*
  * XPLMGetMagneticVariation
  * 
@@ -195,6 +221,7 @@ XPLM_API XPLMProbeResult XPLMProbeTerrainXYZ(
 XPLM_API float      XPLMGetMagneticVariation(
                          double               latitude,
                          double               longitude);
+
 /*
  * XPLMDegTrueToDegMagnetic
  * 
@@ -204,6 +231,7 @@ XPLM_API float      XPLMGetMagneticVariation(
  */
 XPLM_API float      XPLMDegTrueToDegMagnetic(
                          float                headingDegreesTrue);
+
 /*
  * XPLMDegMagneticToDegTrue
  * 
@@ -214,6 +242,7 @@ XPLM_API float      XPLMDegTrueToDegMagnetic(
 XPLM_API float      XPLMDegMagneticToDegTrue(
                          float                headingDegreesMagnetic);
 #endif /* XPLM300 */
+
 /***************************************************************************
  * Object Drawing
  ***************************************************************************/
@@ -225,6 +254,7 @@ XPLM_API float      XPLMDegMagneticToDegTrue(
  *
  */
 
+
 #if defined(XPLM200)
 /*
  * XPLMObjectRef
@@ -235,6 +265,7 @@ XPLM_API float      XPLMDegMagneticToDegTrue(
  */
 typedef void * XPLMObjectRef;
 #endif /* XPLM200 */
+
 #if defined(XPLM200)
 /*
  * XPLMDrawInfo_t
@@ -245,22 +276,30 @@ typedef void * XPLMObjectRef;
  *
  */
 typedef struct {
+
     /* Set this to the size of this structure!                                    */
      int                       structSize;
+
     /* X location of the object in local coordinates.                             */
      float                     x;
+
     /* Y location of the object in local coordinates.                             */
      float                     y;
+
     /* Z location of the object in local coordinates.                             */
      float                     z;
+
     /* Pitch in degres to rotate the object, positive is up.                      */
      float                     pitch;
+
     /* Heading in local coordinates to rotate the object, clockwise.              */
      float                     heading;
+
     /* Roll to rotate the object.                                                 */
      float                     roll;
 } XPLMDrawInfo_t;
 #endif /* XPLM200 */
+
 #if defined(XPLM420)
 /*
  * XPLMDrawInfoDouble_t
@@ -271,22 +310,30 @@ typedef struct {
  *
  */
 typedef struct {
+
     /* Set this to the size of this structure!                                    */
      int                       structSize;
+
     /* X location of the object in local coordinates.                             */
      double                    x;
+
     /* Y location of the object in local coordinates.                             */
      double                    y;
+
     /* Z location of the object in local coordinates.                             */
      double                    z;
+
     /* Pitch in degres to rotate the object, positive is up.                      */
      double                    pitch;
+
     /* Heading in local coordinates to rotate the object, clockwise.              */
      double                    heading;
+
     /* Roll to rotate the object.                                                 */
      double                    roll;
 } XPLMDrawInfoDouble_t;
 #endif /* XPLM420 */
+
 #if defined(XPLM210)
 /*
  * XPLMObjectLoaded_f
@@ -305,6 +352,7 @@ typedef void (* XPLMObjectLoaded_f)(
                          XPLMObjectRef        inObject,
                          void*                inRefcon);
 #endif /* XPLM210 */
+
 #if defined(XPLM200)
 /*
  * XPLMLoadObject
@@ -332,6 +380,7 @@ typedef void (* XPLMObjectLoaded_f)(
 XPLM_API XPLMObjectRef XPLMLoadObject(
                          const char *         inPath);
 #endif /* XPLM200 */
+
 #if defined(XPLM210)
 /*
  * XPLMLoadObjectAsync
@@ -355,6 +404,7 @@ XPLM_API void       XPLMLoadObjectAsync(
                          XPLMObjectLoaded_f   inCallback,
                          void*                inRefcon);
 #endif /* XPLM210 */
+
 #if defined(XPLM_DEPRECATED)
 /*
  * XPLMDrawObjects
@@ -390,6 +440,7 @@ XPLM_API void       XPLMDrawObjects(
                          int                  lighting,
                          int                  earth_relative);
 #endif /* XPLM_DEPRECATED */
+
 #if defined(XPLM200)
 /*
  * XPLMUnloadObject
@@ -403,6 +454,7 @@ XPLM_API void       XPLMDrawObjects(
 XPLM_API void       XPLMUnloadObject(
                          XPLMObjectRef        inObject);
 #endif /* XPLM200 */
+
 #if defined(XPLM200)
 /***************************************************************************
  * Library Access
@@ -415,6 +467,7 @@ XPLM_API void       XPLMUnloadObject(
  *
  */
 
+
 /*
  * XPLMLibraryEnumerator_f
  * 
@@ -426,6 +479,7 @@ XPLM_API void       XPLMUnloadObject(
 typedef void (* XPLMLibraryEnumerator_f)(
                          const char *         inFilePath,
                          void*                inRef);
+
 /*
  * XPLMLookupObjects
  * 
