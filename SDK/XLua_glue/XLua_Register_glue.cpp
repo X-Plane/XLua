@@ -181,6 +181,7 @@ extern "C"
 	int XLuaReleasePlanes(lua_State* L);
 	int XLuaReloadPlugins(lua_State* L);
 	int XLuaReloadScenery(lua_State* L);
+	int XLuaReloadThisPlugin(lua_State* L);
 	int XLuaRemoveMenuItem(lua_State* L);
 	int XLuaSaveDataFile(lua_State* L);
 	int XLuaScheduleFlightLoop(lua_State* L);
@@ -416,6 +417,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMReleasePlanes", XLuaReleasePlanes);
 	lua_register(L, "XPLMReloadPlugins", XLuaReloadPlugins);
 	lua_register(L, "XPLMReloadScenery", XLuaReloadScenery);
+	lua_register(L, "XPLMReloadThisPlugin", XLuaReloadThisPlugin);
 	lua_register(L, "XPLMRemoveMenuItem", XLuaRemoveMenuItem);
 	lua_register(L, "XPLMSaveDataFile", XLuaSaveDataFile);
 	lua_register(L, "XPLMScheduleFlightLoop", XLuaScheduleFlightLoop);

@@ -35,6 +35,8 @@ drTCASAlt = XPLMFindDataRef("sim/cockpit2/tcas/targets/position/ele")
 drUserHdg = XPLMFindDataRef("sim/flightmodel/position/psi")
 instanceRefs = {}
 
+XLuaReloadOnFlightChange()
+
 function print_banner(title)
 	title = "*     " .. title .. "     *"
 	local b = string.gsub(title, ".", "*")
@@ -595,7 +597,7 @@ NUMENR 24
 		if XPLMIsAvionicsBound(avionicsHd) then
 			print("Pilot has G1000")
 
-			XPLMSetAvionicsBrightnessRheo(avionicsHd, 0.05)
+			XPLMSetAvionicsBrightnessRheo(avionicsHd, 0.5)
 			print("  Has " .. (100 * XPLMGetAvionicsBusVoltsRatio(avionicsHd)) .. "% voltage")
 			
 			local cursorOver, cursorCoords = XPLMIsCursorOverAvionics(avionicsHd)

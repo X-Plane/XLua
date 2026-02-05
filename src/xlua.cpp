@@ -257,13 +257,7 @@ int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefco
 		// it will be immediately set back to true from the XPLM_MSG_AIRPORT_LOADED code below.
 		g_bReloadOnFlightChange = false;
 
-		CleanupScripts();
-		InitScripts();
-
-		if (!(intptr_t)inRefcon)	// Recursion block - ResetState() can be called from XPluginReceiveMessage().
-		{
-			XPluginReceiveMessage(XPLM_PLUGIN_XPLANE, XPLM_MSG_AIRPORT_LOADED, nullptr);
-		}
+		XPLMReloadThisPlugin(false);
 	}
 
 	return 0;
@@ -544,7 +538,7 @@ PLUGIN_API int XPluginStart(
 	auto relpath = std::filesystem::relative(std::filesystem::path(myPath), std::filesystem::path(sysPath) / "Aircraft");
 	g_bIsAircraftPlugin = !relpath.string().starts_with("..");
 
-	if (g_bIsAircraftPlugin)
+	if (!g_bIsAircraftPlugin)
 	{
 		strcpy(outSig, "com.x-plane.xlua-sys." VERSION);
 	}
@@ -668,6 +662,13 @@ PLUGIN_API int XPluginEnable(void)
 
 	InitScripts();
 
+	if (XPLMGetCycleNumber() > 0)
+	{
+		// Then we've been enabled while the sim's already running.
+		g_is_acf_inited = false;			// Belt-n-braces - ensure we don't start a reload loop.
+		XPluginReceiveMessage(XPLM_PLUGIN_XPLANE, XPLM_MSG_AIRPORT_LOADED, nullptr);
+	}
+
 	xlua_relink_all_drefs();
 	return 1;
 }
@@ -697,23 +698,26 @@ PLUGIN_API void XPluginReceiveMessage(
 			case XPLM_MSG_AIRPORT_LOADED:
 				if (g_bReloadOnFlightChange && g_is_acf_inited)
 				{
+					// This triggers a full reload of the plugin. No point in doing any other setup.
 					ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)1);
 				}
-
-				if (!g_is_acf_inited)
+				else
 				{
-					// Pick up any last stragglers from out-of-order load and then validate our datarefs!
-					xlua_relink_all_drefs();
-					xlua_validate_drefs();
+					if (!g_is_acf_inited)
+					{
+						// Pick up any last stragglers from out-of-order load and then validate our datarefs!
+						xlua_relink_all_drefs();
+						xlua_validate_drefs();
+
+						for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+							(*m)->acf_load();
+
+						g_is_acf_inited = true;
+					}
 
 					for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-						(*m)->acf_load();
-
-					g_is_acf_inited = true;
+						(*m)->flight_start();
 				}
-
-				for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-					(*m)->flight_start();
 
 				break;
 

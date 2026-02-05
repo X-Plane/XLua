@@ -169,6 +169,15 @@ int XLuaReloadPlugins(lua_State* L)
 	return 0;
 }
 
+int XLuaReloadThisPlugin(lua_State* L)
+{
+	bool forReplacement = xlua_checkboolean(L, 1);
+
+	XPLMReloadThisPlugin(forReplacement);
+
+	return 0;
+}
+
 int XLuaSendMessageToPlugin(lua_State* L)
 {
 	XPLMPluginID inPlugin = {};
