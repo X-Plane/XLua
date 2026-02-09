@@ -433,7 +433,7 @@ NUMENR 24
 	print("Requested 10 datarefs, got " .. #ten_datarefs)
 	for i = 1, 10 do
 		local dri = XPLMGetDataRefInfo(ten_datarefs[i])
-		print("dataref[" .. (offset + i) .. "] = " .. tostring(dri))
+		print("dataref[" .. (offset + i) .. "] = " .. (dri.name or "(none)"))
 	end
 
 	-- Read datarefs 10 through 19
@@ -758,30 +758,33 @@ NUMENR 24
 --	map_layer_def.layerType = ...
 --  These calls work as well as an ad-hoc table
 
-	XPLMRegisterMapCreationHook(
-		function(userref)
-			if XPLMMapExists("XPLM_MAP_USER_INTERFACE") and not XPLMMapExists("Lua Map Layer") then
-				print("Creating new map layer!")
+	function cb_MapCreationCallback(userref)
+		if XPLMMapExists("XPLM_MAP_USER_INTERFACE") and not XPLMMapExists("Lua Map Layer") then
+			print("Creating new map layer!")
 
-				XPLMCreateMapLayer({
-					mapToCreateLayerIn	= "XPLM_MAP_USER_INTERFACE",
-					layerType			= XPLMMapLayerType.xplm_MapLayer_Markings,
-					showUiToggle		= true,
-					layerName			= "Lua Map Layer",
-					refcon				= "Map Layer Userref",
-					-- Out of sequence, check it's still called/translated.
-					iconCallback		= function(inLayer, inMapBoundsLeftTopRightBottom, zoomRatio, mapUnitsPerUserInterfaceUnit, mapStyle, projection, inRefcon)
-												local proj = XPLMMapProject(projection, drUserLat + 0.05, drUserLon)
-												XPLMDrawMapIconFromSheet(inLayer, "Resources/bitmaps/interface11/map.png", 0, 0, 8, 8, proj.outX, proj.outY, XPLMMapOrientation.xplm_MapOrientation_Map, 5, 48 * mapUnitsPerUserInterfaceUnit)
-										  end,
-					labelCallback		= function(inLayer, inMapBoundsLeftTopRightBottom, zoomRatio, mapUnitsPerUserInterfaceUnit, mapStyle, projection, inRefcon)
-												local proj = XPLMMapProject(projection, drUserLat + 0.05, drUserLon)
-												XPLMDrawMapLabel(inLayer, "Lua-generated Map Label", proj.outX, proj.outY, XPLMMapOrientation.xplm_MapOrientation_Map, 5)
-										  end,
-				})
-			end
+			XPLMCreateMapLayer({
+				mapToCreateLayerIn	= "XPLM_MAP_USER_INTERFACE",
+				layerType			= XPLMMapLayerType.xplm_MapLayer_Markings,
+				showUiToggle		= true,
+				layerName			= "Lua Map Layer",
+				refcon				= "Map Layer Userref",
+				-- Out of sequence, check it's still called/translated.
+				iconCallback		= function(inLayer, inMapBoundsLeftTopRightBottom, zoomRatio, mapUnitsPerUserInterfaceUnit, mapStyle, projection, inRefcon)
+											local proj = XPLMMapProject(projection, drUserLat + 0.05, drUserLon)
+											XPLMDrawMapIconFromSheet(inLayer, "Resources/bitmaps/interface11/map.png", 0, 0, 8, 8, proj.outX, proj.outY, XPLMMapOrientation.xplm_MapOrientation_Map, 5, 48 * mapUnitsPerUserInterfaceUnit)
+										end,
+				labelCallback		= function(inLayer, inMapBoundsLeftTopRightBottom, zoomRatio, mapUnitsPerUserInterfaceUnit, mapStyle, projection, inRefcon)
+											local proj = XPLMMapProject(projection, drUserLat + 0.05, drUserLon)
+											XPLMDrawMapLabel(inLayer, "Lua-generated Map Label", proj.outX, proj.outY, XPLMMapOrientation.xplm_MapOrientation_Map, 5)
+										end,
+			})
 		end
-	)
+	end
+
+	XPLMRegisterMapCreationHook(cb_MapCreationCallback, "map creation callback")
+	if XPLMMapExists("XPLM_MAP_USER_INTERFACE") then
+		cb_MapCreationCallback("already existed")
+	end
 
 	----------------------------------------------
 	--[[      XPLMMap/MAP DRAWING tests       ]]--

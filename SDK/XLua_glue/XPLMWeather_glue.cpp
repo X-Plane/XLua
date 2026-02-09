@@ -617,10 +617,10 @@ int XLuaSetWeatherAtLocation(lua_State* L)
 {
 	double latitude = xlua_checknumber(L, 1);
 	double longitude = xlua_checknumber(L, 2);
-	double altitude_m = xlua_checknumber(L, 3);
+	double ground_altitude_msl = xlua_checknumber(L, 3);
 	XPLMWeatherInfo_t in_info = XPLMWeatherInfo_t_from_table(L, 4);
 
-	XPLMSetWeatherAtLocation(latitude, longitude, altitude_m, &in_info);
+	XPLMSetWeatherAtLocation(latitude, longitude, ground_altitude_msl, &in_info);
 
 	return 0;
 }

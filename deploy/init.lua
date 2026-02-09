@@ -444,28 +444,29 @@ function namespace_write(table, key, value)
 end
 
 function namespace_read(table,key)
-	vtable = rawget(table,'values')
-	var = vtable[key]
+	local vtable = rawget(table, 'values')
+	local var = vtable[key]
 	if var ~= nil then
 		return var
 	end
 
-	ftable = rawget(table,'functions')
-	func = ftable[key]
+	local ftable = rawget(table, 'functions')
+	local func = ftable[key]
 	if func ~= nil then
 		return func.__get(func)
 	end
 
-	if table.parent ~= nil then
-		return table.parent[key]
+	local rp = rawget(table, 'parent')
+	if rp ~= nil then
+		return rp[key]
 	end
 
 	return nil
 end
 
 function create_namespace()
-	ret = { 
-		functions = {}, 
+	local ret = { 
+		functions = {},
 		values = {},
 		raw_table_keys = {},
 		create_prop = function(self,name, func)
@@ -473,10 +474,15 @@ function create_namespace()
 		end,
 		parent = _G
 	}
-	-- TODO: use __len operator to restore # for Jim
-	-- TODO: look at __pairs, __ipairs support
-	mt = { __index = namespace_read, __newindex = namespace_write, __pairs = namespace_pairs, __ipairs = namespace_ipairs, __len = namespace_len }
-	setmetatable(ret,mt)
+
+	local mt = {
+		__index    = namespace_read,
+		__newindex = namespace_write,
+		__pairs    = namespace_pairs,
+		__ipairs   = namespace_ipairs,
+		__len      = namespace_len,
+	}
+	setmetatable(ret, mt)
 	return ret
 end
 

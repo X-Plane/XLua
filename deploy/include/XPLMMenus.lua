@@ -1,7 +1,7 @@
 -- Use require('XPLMMenus') to access these functions.
 
 --[[
-   Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+   Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
    rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
 ]]--
 
@@ -38,8 +38,6 @@
    character set; since X-Plane 9 all localization is done via UTF-8 only.
 ]]--
 
-#include "XPLMDefs.h"
-#include "XPLMUtilities.h"
 require("XPLMDefs")
 require("XPLMUtilities")
 
@@ -204,9 +202,6 @@ XPLMMenuCheck = {
    XLuaAppendMenuSeparator
    
    This routine adds a separator to the end of a menu.
-   
-   Returns a negative index if the append failed (due to an invalid parent
-   menu argument).
 ]]--
 --[[
     Returns   : Nothing.

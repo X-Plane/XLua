@@ -1,7 +1,7 @@
 -- Use require('XPLMPlugin') to access these functions.
 
 --[[
-   Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+   Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
    rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
 ]]--
 
@@ -14,8 +14,6 @@
    manage other plugins.
 ]]--
 
-#include "XPLMDefs.h"
-#include "XPLMSound.h"
 require("XPLMDefs")
 require("XPLMSound")
 
@@ -174,6 +172,22 @@ require("XPLMSound")
 
     Parameters:
       None.
+]]--
+
+--[[
+   XLuaReloadThisPlugin
+   
+   This routine reloads the plug-ins which calls it. If you pass true for
+   'forReplacement', a dialog will be shown after the .xpl has been unloaded
+   to allow you to replace it with a newer one manually. In other respects it
+   works identically to XPLMReloadPlugins().
+]]--
+--[[
+    Returns   : Nothing.
+
+    Parameters:
+     forReplacement                         (boolean)
+
 ]]--
 
 --[[

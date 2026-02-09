@@ -1,7 +1,7 @@
 -- Use require('XPLMScenery') to access these functions.
 
 --[[
-   Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+   Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
    rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
 ]]--
 
@@ -13,7 +13,6 @@
    This package contains APIs to interact with X-Plane's scenery system.
 ]]--
 
-#include "XPLMDefs.h"
 require("XPLMDefs")
 
 --[[

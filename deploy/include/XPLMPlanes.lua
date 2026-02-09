@@ -1,7 +1,7 @@
 -- Use require('XPLMPlanes') to access these functions.
 
 --[[
-   Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+   Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
    rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
 ]]--
 
@@ -31,7 +31,6 @@
     XPLMGetSystemPath.
 ]]--
 
-#include "XPLMDefs.h"
 require("XPLMDefs")
 
 --[[
@@ -77,9 +76,12 @@ XPLMInitResult = {
    XLuaInitFlight
    
    Initialize a new flight, ending th user's current flight. The flight config
-   is provided as json string. See (FIXME: URL GOES HERE) for the JSON format
-   specification. Returns a XPLMInitResult enum value specifying whether the
-   initalization succeeeded (and if not, what caused it to fail).
+   is provided as json string. See
+   https://developer.x-plane.com/article/flight-initialization-api/ for the
+   JSON format specification. 
+   
+   Returns a XPLMInitResult enum value specifying whether the initalization
+   succeeeded (and if not, what  caused it to fail).
 ]]--
 --[[
     Returns   : integer
@@ -93,10 +95,12 @@ XPLMInitResult = {
    XLuaUpdateFlight
    
    Updates the user's 'current flight, modifying some flight parameters. The
-   flight config is provided as a JSON string, see (FIXME: URL GOES HERE) for
-   the JSON format specification. Returns an XPLMInitResult enum value
-   specifying whether hte update suceeeded (and if not, what caused it to
-   fail).
+   flight config is provided as a JSON string, see
+   https://developer.x-plane.com/article/flight-initialization-api/ for the
+   JSON format  specification.
+   
+   Returns an XPLMInitResult enum value specifying whether hte update
+   suceeeded (and if not, what caused  it to fail).
 ]]--
 --[[
     Returns   : integer
