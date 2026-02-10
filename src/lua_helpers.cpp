@@ -81,23 +81,20 @@ int validate_args(lua_State * L, const char * fmt)
 
 static int traceback(lua_State * L)
 {
-	luaL_traceback(L, L, lua_tostring(L, -1), 2);
-	lua_getfield(L, LUA_GLOBALSINDEX, "debug");
-	lua_getfield(L, -1, "traceback");
-	lua_pushvalue(L, 1);
-	lua_pushinteger(L, 1);
+	luaL_traceback(L, L, lua_tostring(L, 1), 2);			// Push the traceback
+	lua_getfield(L, LUA_GLOBALSINDEX, "debug");				// The table of debug functions
+	lua_getfield(L, -1, "traceback");						// Function debug.traceback
+	lua_remove(L, -2);										// Kill the debug table entry
+
+	lua_pushvalue(L, 1);									// Passed-in parameter 1, the error description string
+	lua_pushinteger(L, 1);									// Trace depth
+
 	lua_call(L,2,1);
 
 	// IMC make sure we see the message in the log file!
 	// Pass nullptr here so we don't get a duplicate stack trace.
 	log_message(nullptr, "traceback: %s\n", lua_tostring(L, -1));
 
-//	lua_getfield(L, LUA_GLOBALSINDEX, "STP");
-//	lua_getfield(L, -1, "stacktrace");
-//	lua_pushvalue(L, 1);
-//	lua_pushinteger(L, 2);
-//	lua_call(L,2,1);
-//
 	return 1;
 }
 
