@@ -12,6 +12,7 @@
  ***************************************************************************/
 #include <optional>
 
+
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
 #define XPLM_DEPRECATED
 #include "XPLMDefs.h"
