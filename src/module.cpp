@@ -62,7 +62,7 @@ struct module_alloc_block {
 
 static module_alloc_block * make_alloc_block()
 {
-	module_alloc_block * r = (module_alloc_block *) malloc(MALLOC_CHUNK_SIZE);
+	module_alloc_block * r = (module_alloc_block *) malloc(sizeof(module_alloc_block));
 	assert(r);
 	r->next = NULL;
 	r->ptr = r->data;
