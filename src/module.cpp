@@ -19,7 +19,11 @@
 #include <lua.h>
 extern "C"
 {
+#if MOBILE
+    #include "luajit.h"
+#else
 	#include "../luajit/src/luajit.h"
+#endif
 }
 
 #if !MOBILE
