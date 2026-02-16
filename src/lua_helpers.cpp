@@ -106,15 +106,15 @@ int lua_pushtraceback(lua_State * L)
 
 void setup_std_vars(lua_State * L, int dbg)
 {
-	lua_getfield(L, LUA_GLOBALSINDEX, "setup_callback_var");
-	fmt_pcall(L, dbg, false, "sf", "SIM_PERIOD", XPLMGetDataf(g_sim_period));
+	lua_pushnumber(L, XPLMGetDataf(g_sim_period));
+	lua_setglobal(L, "SIM_PERIOD");
 
-	lua_getfield(L, LUA_GLOBALSINDEX, "setup_callback_var");
-	fmt_pcall(L, dbg, false, "si", "IN_REPLAY", XPLMGetDatai(g_replay_active) != 0 ? 1 : 0);
+	lua_pushnumber(L, XPLMGetDatai(g_replay_active));
+	lua_setglobal(L, "IN_REPLAY");
 }
 
-template<BoolOnly B>
-int vfmt_pcall(lua_State* L, int dbg, B expects_returnval, const char* fmt, va_list va)
+template<>
+int vfmt_pcall(lua_State* L, int dbg, bool expects_returnval, const char* fmt, va_list va)
 {
 	const char * f = fmt;
 	int arg_count = 0;

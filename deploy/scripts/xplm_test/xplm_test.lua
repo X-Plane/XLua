@@ -17,6 +17,7 @@ require("XPLMWeather")
 
 g_custom_accessor_store = 5
 g_pre_fl_handle = nil
+g_post_fl_handle = nil
 custom_cmnd = nil
 g_flagpolePath = nil
 
@@ -73,17 +74,7 @@ function hotkey_callback(userref)
 	end
 end
 
-function receive_message(inFromWho, inMessage, param)
-	local pi = XPLMGetPluginInfo(inFromWho)
-
-	if type(param) ~= "nil" then
-		print("Received message " .. inMessage .. " from '" .. tostring(inFromWho) .. "' with param " .. tostring(param))
-	else
-		print("Received message " .. inMessage .. " from '" .. tostring(inFromWho) .. "'")
-	end
-end
-
-function after_physics()
+function PostFlightLoop()
 	----------------------------------------------------
 	--[[      XPLMGraphics/X-PLANE TEXT tests       ]]--
 	----------------------------------------------------
@@ -131,7 +122,7 @@ function after_physics()
 	end
 end
 
-function flight_start()
+function flight_started()
 	--------------------------------------
 	--[[      XPLMPlugin tests       ]]--
 	--------------------------------------
@@ -201,7 +192,6 @@ function flight_start()
 	print("Type of base command: " .. type(base_cmnd))
 	XPLMCommandOnce(base_cmnd)
 
-	local custom_cmnd = XPLMCreateCommand("test/lua/commands", "Test creating a command from Lua")
 	print("Type of custom command: " .. type(custom_cmnd))
 	XPLMRegisterCommandHandler(custom_cmnd,
 		function(inCommand, inPhase, userref)
@@ -573,16 +563,19 @@ NUMENR 24
 	-----------------------------------------
 	print_banner("XPLMProcessing")
 
-	local fl = XPLMCreateFlightLoop_t()
-	fl.phase = XPLMFlightLoopPhaseType.xplm_FlightLoop_Phase_BeforeFlightModel
-	fl.callbackFunc = secondPreFlightLoop
-
 	g_pre_fl_handle = XPLMCreateFlightLoop({
 		["phase"] = XPLMFlightLoopPhaseType.xplm_FlightLoop_Phase_BeforeFlightModel,
 		["callbackFunc"] = secondPreFlightLoop,
 		["refcon"] = 0
 	})
 	XPLMScheduleFlightLoop(g_pre_fl_handle, 10, true)
+
+	g_post_fl_handle = XPLMCreateFlightLoop({
+		["phase"] = XPLMFlightLoopPhaseType.xplm_FlightLoop_Phase_AfterFlightModel,
+		["callbackFunc"] = PostFlightLoop,
+		["refcon"] = 0
+	})
+	XPLMScheduleFlightLoop(g_post_fl_handle, -1, false)
 
 	-- Old-style flightloop registration is not supported.
 	-- XPLMRegisterFlightLoopCallback
@@ -910,3 +903,63 @@ NUMENR 24
 	]]
 end
 
+function XPluginStart()
+	-- One-off setup stuff here. You _can_ do setup globally, but this is more like a compiled plugin will do
+	-- and keeps all your init in one place. Return false to say the script can't continue.
+	print_banner("XPluginStart")
+
+	custom_cmnd = XPLMCreateCommand("test/lua/commands", "Test creating a command from Lua")
+
+	return true
+end
+
+function XPluginStop()
+	-- One-off teardown stuff here. Called right before the script is unloaded.
+	print_banner("XPluginStop")
+end
+
+function XPluginEnable()
+	-- One-off enable stuff here. This is normally called right after XPluginStart, the difference being that a
+	-- script might be enabled and disabled during a flight. Do any setup here that you want to be able to undo
+	-- if the user requests that this script is disabled.
+	print_banner("XPluginEnable")
+
+	return true
+end
+
+function XPluginDisable()
+	-- One-off disable stuff here. Normally called right before XPluginStop, but can also be called at the user's request
+	-- during a flight. Stop or reset any stuff that your script may have modified that the user might expect to stop happening.
+	print("XPluginDisable")
+
+	hotkey_count = 0
+	g_flagpolePath = nil
+
+	if haveTCASAircraft then
+		XPLMReleasePlanes()
+		XPLMSetActiveAircraftCount(1)
+
+		haveTCASAircraft = false
+		g_AcfObjectPath = nil
+		instanceRefs = {}
+	end
+
+	return true
+end
+
+function XPluginReceiveMessage(inFromWho, inMessage, param)
+	-- X-Plane will send you messages at key points, identified by "inMessage". Please see the XPLMPlugin header for details.
+	local pi = XPLMGetPluginInfo(inFromWho)
+
+	if type(param) ~= "nil" then
+		print("Received message " .. inMessage .. " from '" .. tostring(inFromWho) .. "' with param " .. tostring(param))
+	else
+		print("Received message " .. inMessage .. " from '" .. tostring(inFromWho) .. "'")
+	end
+
+	if inFromWho == XPLM_PLUGIN_XPLANE then
+		if inMessage == XPLM_MSG_AIRPORT_LOADED then
+			flight_started()
+		end
+	end
+end

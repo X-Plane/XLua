@@ -148,15 +148,9 @@ static float xlua_post_timer_master_cb(
                                    int                  inCounter,    
                                    void *               inRefcon)
 {
-	if(XPLMGetDatai(g_replay_active) == 0)
-	{
-		if(XPLMGetDataf(g_sim_period) > 0.0f)
-		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)		
-			(*m)->post_physics();
-	}
-	else
-	for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)		
-		(*m)->post_replay();
+	for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+		(*m)->post_physics();
+
 #if !MOBILE
 	if (profilerWnd)
 	{
@@ -219,6 +213,11 @@ void InitScripts(void)
 				script_path.c_str(),
 				lj_alloc_f,
 				NULL));
+
+			if (!g_modules.back()->is_started())
+			{
+				g_modules.pop_back();
+			}
 		}
 
 		++offset;
@@ -229,12 +228,7 @@ void InitScripts(void)
 
 void CleanupScripts(void)
 {
-	if (g_is_acf_inited)
-	{
-		for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-			(*m)->acf_unload();
-		g_is_acf_inited = false;
-	}
+	g_is_acf_inited = false;
 
 	// Get rid of drefs/cmds/timers first, they may well hold references to the Lua interpreter.
 	xlua_dref_cleanup();
@@ -688,10 +682,6 @@ PLUGIN_API void XPluginReceiveMessage(
 				break;
 
 			case XPLM_MSG_PLANE_UNLOADED:
-				if (g_is_acf_inited)
-					for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-						(*m)->acf_unload();
-
 				g_is_acf_inited = false;
 				break;
 
@@ -701,30 +691,15 @@ PLUGIN_API void XPluginReceiveMessage(
 					// This triggers a full reload of the plugin. No point in doing any other setup.
 					ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)1);
 				}
-				else
+				else if (!g_is_acf_inited)
 				{
-					if (!g_is_acf_inited)
-					{
-						// Pick up any last stragglers from out-of-order load and then validate our datarefs!
-						xlua_relink_all_drefs();
-						xlua_validate_drefs();
+					// Pick up any last stragglers from out-of-order load and then validate our datarefs!
+					xlua_relink_all_drefs();
+					xlua_validate_drefs();
 
-						for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-							(*m)->acf_load();
-
-						g_is_acf_inited = true;
-					}
-
-					for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-						(*m)->flight_start();
+					g_is_acf_inited = true;
 				}
 
-				break;
-
-			case XPLM_MSG_PLANE_CRASHED:
-				assert(g_is_acf_inited);
-				for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-					(*m)->flight_crash();
 				break;
 		}
 	}
@@ -732,7 +707,7 @@ PLUGIN_API void XPluginReceiveMessage(
 	// Either way, send the full details through so that Lua can now deal with arbitrary messages.
 	for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
 	{
-		(*m)->forward_notification(inFromWho, inMessage, inParam);
+		(*m)->_XPluginReceiveMessage(inFromWho, inMessage, inParam);
 	}
 }
 

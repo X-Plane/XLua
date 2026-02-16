@@ -203,7 +203,8 @@ module::module(
 	m_interp(NULL),
 	m_memory(NULL),
 	m_path(in_module_path),
-	m_debug_proc(0)
+	m_debug_proc(0),
+	m_enabled(true)
 {
 	int boiler_plate_paths = length_of_dir(in_init_script);
 	m_log_path = in_module_script + boiler_plate_paths;
@@ -279,8 +280,6 @@ module::module(
 	script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
 	CTOR_FAIL(script_result, "run init script");
 
-	lua_getfield(m_interp, LUA_GLOBALSINDEX, "run_module_in_namespace");
-	
 	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
 	// we need to load the Lua script from an already allocated memory buffer.
 	xmap_class lmod(in_module_script);
@@ -289,8 +288,14 @@ module::module(
 	int module_load_result = luaL_loadbuffer(m_interp, (const char*)lmod.begin(), lmod.size(), m_log_path.c_str());
 	CTOR_FAIL(module_load_result,"load module");
 	
-	int module_run_result = lua_pcall(m_interp, 1, 0, m_debug_proc);
-	CTOR_FAIL(module_run_result,"run module");
+	int module_run_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
+	CTOR_FAIL(module_run_result, "run module");
+
+	// To completely duplicate the normal C API, add XPluginStart etc.
+	if (!(_XPluginStart() && _XPluginEnable()))
+	{
+		shutdown_lua();
+	}
 }
 
 int module::load_module_relative_path(const string& path)
@@ -332,57 +337,35 @@ void *		module::module_alloc_tracked(size_t amount)
 	return alloc_from_block(m_memory, amount);
 }
 
-void		module::acf_load()
-{
-	do_callout("aircraft_load");
-}
-
-void		module::acf_unload()
-{
-	do_callout("aircraft_unload");
-}
-
-void		module::flight_start()
-{
-	do_callout("flight_start");
-}
-
-void		module::flight_crash()
-{
-	do_callout("flight_crash");
-}
-
 void		module::pre_physics()
 {
-	do_callout("before_physics");
+	if (m_interp == nullptr || !m_enabled)
+		return;
 }
 
 void		module::post_physics()
 {
-	do_callout("after_physics");
+	if (m_interp == nullptr || !m_enabled)
+		return;
+
 #if !MOBILE
 	flwnd::onFlightLoop(m_interp);
 #endif
 }
 
-void		module::post_replay()
-{
-	do_callout("after_replay");
-}
-
 void module::do_callout(const char * f)
 {
-	if(m_interp == NULL)
+	if (m_interp == nullptr || !m_enabled)
 		return;
 
-	lua_getfield(m_interp, LUA_GLOBALSINDEX, "do_callout");
+	lua_getfield(m_interp, LUA_GLOBALSINDEX, f);
 	if (!lua_isfunction(m_interp, -1))
 	{
 		lua_pop(m_interp, 1);
 	}
 	else
 	{
-		fmt_pcall_stdvars(m_interp, m_debug_proc, false, "s", f);
+		fmt_pcall_stdvars(m_interp, m_debug_proc, false, "");
 	}
 }
 
@@ -391,12 +374,12 @@ extern "C"
 	XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 }
 
-void module::forward_notification(XPLMPluginID inFromWho, int inMessage, void* inParam)
+void module::_XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void* inParam)
 {
-	if (m_interp == NULL)
+	if (m_interp == nullptr || !m_enabled)
 		return;
 
-	lua_getfield(m_interp, LUA_GLOBALSINDEX, "receive_message");
+	lua_getfield(m_interp, LUA_GLOBALSINDEX, "XPluginReceiveMessage");
 	if (!lua_isfunction(m_interp, -1))
 	{
 		lua_pop(m_interp, 1);
@@ -431,18 +414,93 @@ void module::forward_notification(XPLMPluginID inFromWho, int inMessage, void* i
 	}
 }
 
-module::~module()
+void module::shutdown_lua(void)
 {
 	if (m_interp)
 	{
+		if (m_enabled)
+		{
+			_XPluginDisable();
+		}
+		_XPluginStop();
+
 		luaJIT_profile_stop(m_interp);
 #if !MOBILE
 		flwnd::deinitFloatingWindowSupport(m_interp);
 #endif
 		lua_close(m_interp);
+		m_interp = nullptr;
+	}
+}
+
+module::~module()
+{
+	shutdown_lua();
+	destroy_alloc_block(m_memory);
+}
+
+bool module::_XPluginStart(void)
+{
+	bool res = true;
+
+	lua_getfield(m_interp, LUA_GLOBALSINDEX, "XPluginStart");
+	if (!lua_isfunction(m_interp, -1))
+	{
+		lua_pop(m_interp, 1);
+	}
+	else
+	{
+		res = false;		// They've defined an XPluginStart function. Assume it fails - they now need to return true from working code to continue.
+
+		// In our case we're not going to pass through the parameters though, they're irrelevant.
+		if (0 == fmt_pcall_stdvars(m_interp, m_debug_proc, true, ""))
+		{
+			res = xlua_checkboolean(m_interp, -1);
+		}
 	}
 
-	destroy_alloc_block(m_memory);
+	return res;
+}
+
+void module::_XPluginStop(void)
+{
+	// We want XPluginStop to be called regardless of the enabled status. This only gets called immediately before
+	// an unload anyway.
+	m_enabled = true;
+
+	do_callout("XPluginStop");
+}
+
+bool module::_XPluginEnable(void)
+{
+	if (m_interp == nullptr)
+		return false;
+
+	m_enabled = true;
+
+	lua_getfield(m_interp, LUA_GLOBALSINDEX, "XPluginEnable");
+
+	if (!lua_isfunction(m_interp, -1))
+	{
+		lua_pop(m_interp, 1);
+	}
+	else
+	{
+		// In our case we're not going to pass through the parameters though, they're irrelevant.
+		m_enabled = false;		// They've defined an XPluginStart function. Assume it fails - they now need to return true from working code to continue.
+
+		if (0 == fmt_pcall_stdvars(m_interp, m_debug_proc, true, ""))
+		{
+			m_enabled = xlua_checkboolean(m_interp, -1);
+		}
+	}
+
+	return m_enabled;
+}
+
+void module::_XPluginDisable(void)
+{
+	do_callout("XPluginDisable");
 }
 
 #if !MOBILE
