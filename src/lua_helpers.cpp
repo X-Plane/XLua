@@ -104,15 +104,6 @@ int lua_pushtraceback(lua_State * L)
 	return lua_gettop(L);
 }
 
-void setup_std_vars(lua_State * L, int dbg)
-{
-	lua_pushnumber(L, XPLMGetDataf(g_sim_period));
-	lua_setglobal(L, "SIM_PERIOD");
-
-	lua_pushnumber(L, XPLMGetDatai(g_replay_active));
-	lua_setglobal(L, "IN_REPLAY");
-}
-
 template<>
 int vfmt_pcall(lua_State* L, int dbg, bool expects_returnval, const char* fmt, va_list va)
 {

@@ -19,8 +19,6 @@ extern "C" {
 	#include <lauxlib.h>
 };
 
-void setup_std_vars(lua_State* L, int dbg);
-
 // Calls the lua func at the stack top with "fmt" args, passed as var-args.
 // Returns the lua error if there is one or 0 if success; lua error message
 // is printed automagically.
@@ -47,7 +45,6 @@ int fmt_pcall(lua_State* L, int dbg, B expects_returnval, const char* fmt, ...)
 template<BoolOnly B>
 int fmt_pcall_stdvars(lua_State* L, int dbg, B expects_returnval, const char* fmt, ...)
 {
-	setup_std_vars(L, dbg);
 	va_list va;
 	va_start(va, fmt);
 	int r = vfmt_pcall<B>(L, dbg, expects_returnval, fmt, va);
