@@ -22,15 +22,35 @@
  *
  */
 
+
 #include "XPLMDefs.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
 /***************************************************************************
  * NAVIGATION DATABASE ACCESS
  ***************************************************************************/
+
+
+/*
+ * XPLMNavRef
+ * 
+ *                 XPLMNavRef is an iterator into the navigation database. 
+ *                 The navigation database is essentially an array, but it is
+ *                 not necessarily densely populated. The only assumption you
+ *                 can safely make is that like-typed nav-aids are grouped
+ *                 together.
+ * 
+ *                 Use XPLMNavRef to refer to a nav-aid.
+ * 
+ *                 XPLM_NAV_NOT_FOUND is returned by functions that return an
+ *                 XPLMNavRef when the iterator must be invalid.
+ *
+ */
+typedef int XPLMNavRef;
 
 /*
  * XPLMNavType
@@ -46,53 +66,54 @@ extern "C" {
  *
  */
 enum {
+
     xplm_Nav_Unknown                         = 0,
+
 
     xplm_Nav_Airport                         = 1,
 
+
     xplm_Nav_NDB                             = 2,
+
 
     xplm_Nav_VOR                             = 4,
 
+
     xplm_Nav_ILS                             = 8,
+
 
     xplm_Nav_Localizer                       = 16,
 
+
     xplm_Nav_GlideSlope                      = 32,
+
 
     xplm_Nav_OuterMarker                     = 64,
 
+
     xplm_Nav_MiddleMarker                    = 128,
+
 
     xplm_Nav_InnerMarker                     = 256,
 
+
     xplm_Nav_Fix                             = 512,
+
 
     xplm_Nav_DME                             = 1024,
 
+
     xplm_Nav_LatLon                          = 2048,
+
 
     xplm_Nav_TACAN                           = 4096,
 
 
 };
 typedef int XPLMNavType;
-/*
- * XPLMNavRef
- * 
- * XPLMNavRef is an iterator into the navigation database.  The navigation
- * database is essentially an array, but it is not necessarily densely
- * populated. The only assumption you can safely make is that like-typed
- * nav-aids are grouped together.
- * 
- * Use XPLMNavRef to refer to a nav-aid.
- * 
- * XPLM_NAV_NOT_FOUND is returned by functions that return an XPLMNavRef when
- * the iterator must be invalid.
- *
- */
-typedef int XPLMNavRef;
+
 #define XPLM_NAV_NOT_FOUND   -1
+
 /*
  * XPLMGetFirstNavAid
  * 
@@ -102,6 +123,7 @@ typedef int XPLMNavRef;
  *
  */
 XPLM_API XPLMNavRef XPLMGetFirstNavAid(void);
+
 /*
  * XPLMGetNextNavAid
  * 
@@ -113,6 +135,7 @@ XPLM_API XPLMNavRef XPLMGetFirstNavAid(void);
  */
 XPLM_API XPLMNavRef XPLMGetNextNavAid(
                          XPLMNavRef           inNavAidRef);
+
 /*
  * XPLMFindFirstNavAidOfType
  * 
@@ -123,6 +146,7 @@ XPLM_API XPLMNavRef XPLMGetNextNavAid(
  */
 XPLM_API XPLMNavRef XPLMFindFirstNavAidOfType(
                          XPLMNavType          inType);
+
 /*
  * XPLMFindLastNavAidOfType
  * 
@@ -133,6 +157,7 @@ XPLM_API XPLMNavRef XPLMFindFirstNavAidOfType(
  */
 XPLM_API XPLMNavRef XPLMFindLastNavAidOfType(
                          XPLMNavType          inType);
+
 /*
  * XPLMFindNavAid
  * 
@@ -168,6 +193,7 @@ XPLM_API XPLMNavRef XPLMFindNavAid(
                          float *              inLon,                  /* Can be NULL */
                          int *                inFrequency,            /* Can be NULL */
                          XPLMNavType          inType);
+
 /*
  * XPLMGetNavAidInfo
  * 
@@ -196,9 +222,10 @@ XPLM_API void       XPLMGetNavAidInfo(
                          float *              outHeight,              /* Can be NULL */
                          int *                outFrequency,           /* Can be NULL */
                          float *              outHeading,             /* Can be NULL */
-                         char *               outID,                  /* Can be NULL */
-                         char *               outName,                /* Can be NULL */
-                         char *               outReg);                /* Can be NULL */
+                         char                 outID[32],              /* Can be NULL */
+                         char                 outName[256],           /* Can be NULL */
+                         char                 outReg[1]);             /* Can be NULL */
+
 /***************************************************************************
  * FLIGHT MANAGEMENT COMPUTER
  ***************************************************************************/
@@ -213,6 +240,7 @@ XPLM_API void       XPLMGetNavAidInfo(
  *
  */
 
+
 /*
  * XPLMCountFMSEntries
  * 
@@ -220,6 +248,7 @@ XPLM_API void       XPLMGetNavAidInfo(
  *
  */
 XPLM_API int        XPLMCountFMSEntries(void);
+
 /*
  * XPLMGetDisplayedFMSEntry
  * 
@@ -227,6 +256,7 @@ XPLM_API int        XPLMCountFMSEntries(void);
  *
  */
 XPLM_API int        XPLMGetDisplayedFMSEntry(void);
+
 /*
  * XPLMGetDestinationFMSEntry
  * 
@@ -234,6 +264,7 @@ XPLM_API int        XPLMGetDisplayedFMSEntry(void);
  *
  */
 XPLM_API int        XPLMGetDestinationFMSEntry(void);
+
 /*
  * XPLMSetDisplayedFMSEntry
  * 
@@ -242,6 +273,7 @@ XPLM_API int        XPLMGetDestinationFMSEntry(void);
  */
 XPLM_API void       XPLMSetDisplayedFMSEntry(
                          int                  inIndex);
+
 /*
  * XPLMSetDestinationFMSEntry
  * 
@@ -251,6 +283,7 @@ XPLM_API void       XPLMSetDisplayedFMSEntry(
  */
 XPLM_API void       XPLMSetDestinationFMSEntry(
                          int                  inIndex);
+
 /*
  * XPLMGetFMSEntryInfo
  * 
@@ -275,11 +308,12 @@ XPLM_API void       XPLMSetDestinationFMSEntry(
 XPLM_API void       XPLMGetFMSEntryInfo(
                          int                  inIndex,
                          XPLMNavType *        outType,                /* Can be NULL */
-                         char *               outID,                  /* Can be NULL */
+                         char                 outID[256],             /* Can be NULL */
                          XPLMNavRef *         outRef,                 /* Can be NULL */
                          int *                outAltitude,            /* Can be NULL */
                          float *              outLat,                 /* Can be NULL */
                          float *              outLon);                /* Can be NULL */
+
 /*
  * XPLMSetFMSEntryInfo
  * 
@@ -292,7 +326,8 @@ XPLM_API void       XPLMGetFMSEntryInfo(
 XPLM_API void       XPLMSetFMSEntryInfo(
                          int                  inIndex,
                          XPLMNavRef           inRef,
-                         int                  inAltitude);
+                         int                  inAltitudeFt);
+
 /*
  * XPLMSetFMSEntryLatLon
  * 
@@ -304,7 +339,8 @@ XPLM_API void       XPLMSetFMSEntryLatLon(
                          int                  inIndex,
                          float                inLat,
                          float                inLon,
-                         int                  inAltitude);
+                         int                  inAltitudeFt);
+
 /*
  * XPLMClearFMSEntry
  * 
@@ -314,30 +350,36 @@ XPLM_API void       XPLMSetFMSEntryLatLon(
  */
 XPLM_API void       XPLMClearFMSEntry(
                          int                  inIndex);
+
 #if defined(XPLM410)
 /*
  * XPLMNavFlightPlan
  * 
- *     These enumerations defines the flightplan you are accesing using the
- *     FMSFlightPlan functions. An airplane can have up to two navigation
- *     devices (GPS or FMS) and each device can have two flightplans. A GPS
- *     has an enroute and an approach flightplan. An FMS has an active and a
- *     temporary flightplan. If you are trying to access a flightplan that
- *     doesn't exist in your aircraft, e.g. asking a GPS for a temp
- *     flightplan, FMSFlighPlan functions have no effect and will return no
- *     information.
+ * These enumerations defines the flightplan you are accesing using the
+ * FMSFlightPlan functions. An airplane can have up to two navigation devices
+ * (GPS or FMS) and each device can have two flightplans. A GPS has an enroute
+ * and an approach flightplan. An FMS has an active and a temporary
+ * flightplan. If you are trying to access a flightplan that doesn't exist in
+ * your aircraft, e.g. asking a GPS for a temp flightplan, FMSFlighPlan
+ * functions have no effect and will return no information.
  *
  */
 enum {
+
     xplm_Fpl_Pilot_Primary                   = 0,
+
 
     xplm_Fpl_CoPilot_Primary                 = 1,
 
+
     xplm_Fpl_Pilot_Approach                  = 2,
+
 
     xplm_Fpl_CoPilot_Approach                = 3,
 
+
     xplm_Fpl_Pilot_Temporary                 = 4,
+
 
     xplm_Fpl_CoPilot_Temporary               = 5,
 
@@ -345,6 +387,7 @@ enum {
 };
 typedef int XPLMNavFlightPlan;
 #endif /* XPLM410 */
+
 #if defined(XPLM410)
 /*
  * XPLMCountFMSFlightPlanEntries
@@ -355,6 +398,7 @@ typedef int XPLMNavFlightPlan;
 XPLM_API int        XPLMCountFMSFlightPlanEntries(
                          XPLMNavFlightPlan    inFlightPlan);
 #endif /* XPLM410 */
+
 #if defined(XPLM410)
 /*
  * XPLMGetDisplayedFMSFlightPlanEntry
@@ -365,6 +409,7 @@ XPLM_API int        XPLMCountFMSFlightPlanEntries(
 XPLM_API int        XPLMGetDisplayedFMSFlightPlanEntry(
                          XPLMNavFlightPlan    inFlightPlan);
 #endif /* XPLM410 */
+
 #if defined(XPLM410)
 /*
  * XPLMGetDestinationFMSFlightPlanEntry
@@ -375,6 +420,7 @@ XPLM_API int        XPLMGetDisplayedFMSFlightPlanEntry(
 XPLM_API int        XPLMGetDestinationFMSFlightPlanEntry(
                          XPLMNavFlightPlan    inFlightPlan);
 #endif /* XPLM410 */
+
 #if defined(XPLM410)
 /*
  * XPLMSetDisplayedFMSFlightPlanEntry
@@ -386,6 +432,7 @@ XPLM_API void       XPLMSetDisplayedFMSFlightPlanEntry(
                          XPLMNavFlightPlan    inFlightPlan,
                          int                  inIndex);
 #endif /* XPLM410 */
+
 #if defined(XPLM410)
 /*
  * XPLMSetDestinationFMSFlightPlanEntry
@@ -398,6 +445,7 @@ XPLM_API void       XPLMSetDestinationFMSFlightPlanEntry(
                          XPLMNavFlightPlan    inFlightPlan,
                          int                  inIndex);
 #endif /* XPLM410 */
+
 #if defined(XPLM410)
 /*
  * XPLMSetDirectToFMSFlightPlanEntry
@@ -411,6 +459,7 @@ XPLM_API void       XPLMSetDirectToFMSFlightPlanEntry(
                          XPLMNavFlightPlan    inFlightPlan,
                          int                  inIndex);
 #endif /* XPLM410 */
+
 #if defined(XPLM410)
 /*
  * XPLMGetFMSFlightPlanEntryInfo
@@ -437,12 +486,13 @@ XPLM_API void       XPLMGetFMSFlightPlanEntryInfo(
                          XPLMNavFlightPlan    inFlightPlan,
                          int                  inIndex,
                          XPLMNavType *        outType,                /* Can be NULL */
-                         char *               outID,                  /* Can be NULL */
+                         char                 outID[256],             /* Can be NULL */
                          XPLMNavRef *         outRef,                 /* Can be NULL */
                          int *                outAltitude,            /* Can be NULL */
                          float *              outLat,                 /* Can be NULL */
                          float *              outLon);                /* Can be NULL */
 #endif /* XPLM410 */
+
 #if defined(XPLM410)
 /*
  * XPLMSetFMSFlightPlanEntryInfo
@@ -458,8 +508,9 @@ XPLM_API void       XPLMSetFMSFlightPlanEntryInfo(
                          XPLMNavFlightPlan    inFlightPlan,
                          int                  inIndex,
                          XPLMNavRef           inRef,
-                         int                  inAltitude);
+                         int                  inAltitudeFt);
 #endif /* XPLM410 */
+
 #if defined(XPLM410)
 /*
  * XPLMSetFMSFlightPlanEntryLatLon
@@ -473,8 +524,9 @@ XPLM_API void       XPLMSetFMSFlightPlanEntryLatLon(
                          int                  inIndex,
                          float                inLat,
                          float                inLon,
-                         int                  inAltitude);
+                         int                  inAltitudeFt);
 #endif /* XPLM410 */
+
 #if defined(XPLM410)
 /*
  * XPLMSetFMSFlightPlanEntryLatLonWithId
@@ -488,10 +540,11 @@ XPLM_API void       XPLMSetFMSFlightPlanEntryLatLonWithId(
                          int                  inIndex,
                          float                inLat,
                          float                inLon,
-                         int                  inAltitude,
+                         int                  inAltitudeFt,
                          const char*          inId,
                          unsigned int         inIdLength);
 #endif /* XPLM410 */
+
 #if defined(XPLM410)
 /*
  * XPLMClearFMSFlightPlanEntry
@@ -504,6 +557,7 @@ XPLM_API void       XPLMClearFMSFlightPlanEntry(
                          XPLMNavFlightPlan    inFlightPlan,
                          int                  inIndex);
 #endif /* XPLM410 */
+
 #if defined(XPLM410)
 /*
  * XPLMLoadFMSFlightPlan
@@ -518,6 +572,7 @@ XPLM_API void       XPLMLoadFMSFlightPlan(
                          const char *         inBuffer,
                          unsigned int         inBufferLen);
 #endif /* XPLM410 */
+
 #if defined(XPLM410)
 /*
  * XPLMSaveFMSFlightPlan
@@ -539,6 +594,7 @@ XPLM_API unsigned int XPLMSaveFMSFlightPlan(
                          char *               inBuffer,
                          unsigned int         inBufferLen);
 #endif /* XPLM410 */
+
 /***************************************************************************
  * GPS RECEIVER
  ***************************************************************************/
@@ -546,6 +602,7 @@ XPLM_API unsigned int XPLMSaveFMSFlightPlan(
  * These APIs let you read data from the GPS unit.
  *
  */
+
 
 /*
  * XPLMGetGPSDestinationType
@@ -555,6 +612,7 @@ XPLM_API unsigned int XPLMSaveFMSFlightPlan(
  *
  */
 XPLM_API XPLMNavType XPLMGetGPSDestinationType(void);
+
 /*
  * XPLMGetGPSDestination
  * 

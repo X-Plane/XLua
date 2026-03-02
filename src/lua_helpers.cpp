@@ -13,9 +13,11 @@
 #include <stdarg.h>
 #include <XPLMDataAccess.h>
 #include <XPLMUtilities.h>
-
+#include <XPLMPlugin.h>
+#include <XPLMDisplay.h>
 
 #include "log.h"
+#include "xpfuncs.h"
 
 extern XPLMDataRef				g_replay_active;
 extern XPLMDataRef				g_sim_period;
@@ -79,23 +81,20 @@ int validate_args(lua_State * L, const char * fmt)
 
 static int traceback(lua_State * L)
 {
-	luaL_traceback(L, L, lua_tostring(L, -1), 2);
-	lua_getfield(L, LUA_GLOBALSINDEX, "debug");
-	lua_getfield(L, -1, "traceback");
-	lua_pushvalue(L, 1);
-	lua_pushinteger(L, 1);
+	luaL_traceback(L, L, lua_tostring(L, 1), 2);			// Push the traceback
+	lua_getfield(L, LUA_GLOBALSINDEX, "debug");				// The table of debug functions
+	lua_getfield(L, -1, "traceback");						// Function debug.traceback
+	lua_remove(L, -2);										// Kill the debug table entry
+
+	lua_pushvalue(L, 1);									// Passed-in parameter 1, the error description string
+	lua_pushinteger(L, 1);									// Trace depth
+
 	lua_call(L,2,1);
 
 	// IMC make sure we see the message in the log file!
 	// Pass nullptr here so we don't get a duplicate stack trace.
 	log_message(nullptr, "traceback: %s\n", lua_tostring(L, -1));
 
-//	lua_getfield(L, LUA_GLOBALSINDEX, "STP");
-//	lua_getfield(L, -1, "stacktrace");
-//	lua_pushvalue(L, 1);
-//	lua_pushinteger(L, 2);
-//	lua_call(L,2,1);
-//
 	return 1;
 }
 
@@ -142,10 +141,10 @@ int vfmt_pcall(lua_State* L, int dbg, B expects_returnval, const char* fmt, va_l
 			lua_rawgeti(L, LUA_REGISTRYINDEX, va_arg(va, int));
 			break;
 		case 'u':		// userdata
-			lua_pushlightuserdata(L, va_arg(va, void*));
+			xlua_pushuserdata<void*>(L, va_arg(va, void*));
 			break;
 		default:
-			lua_pushlightuserdata(L, va_arg(va, void*));
+			xlua_pushuserdata<void*>(L, va_arg(va, void*));
 			break;
 		}
 
@@ -164,4 +163,60 @@ int vfmt_pcall(lua_State* L, int dbg, B expects_returnval, const char* fmt, va_l
 		lua_pop(L, 1);
 	}
 	return e;
+}
+
+void clear_table(lua_State* L, int idx)
+{
+	if (idx > 0)
+	{
+		lua_pushnil(L);  // First key
+
+		while (lua_next(L, idx) != 0)
+		{
+			lua_pop(L, 1);           // Remove value, keep key
+			lua_pushvalue(L, -1);    // Duplicate key
+			lua_pushnil(L);          // Push nil as new value
+			lua_settable(L, idx);	 // table[key] = nil
+		}
+	}
+}
+
+////////////////////////////////////////////////////
+// Custom tostring functions for XPLM defined types.
+////////////////////////////////////////////////////
+
+extern "C" int _XPLMPluginID_tostring(lua_State* L)
+{
+	XPLMPluginID const test1 = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
+	
+	char pname[256] = "";
+	XPLMGetPluginInfo(test1, pname, nullptr, nullptr, nullptr);
+	lua_pop(L, 1);
+
+	lua_pushstring(L, pname);
+	return 1;
+}
+
+extern "C" int _XPLMHotKeyID_tostring(lua_State* L)
+{
+	XPLMHotKeyID const test1 = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected XPLMHotKeyID");
+
+	char kname[256] = "";
+	XPLMGetHotKeyInfo(test1, nullptr, nullptr, kname, nullptr);
+	lua_pop(L, 1);
+
+	lua_pushstring(L, kname);
+	return 1;
+}
+
+extern "C" int _XPLMDataRef_tostring(lua_State* L)
+{
+	XPLMDataRef const test1 = xlua_checkuserdata<XPLMDataRef>(L, 1, "Expected XPLMDataRef");
+
+	XPLMDataRefInfo_t info = { .structSize = sizeof(XPLMDataRefInfo_t) };
+	XPLMGetDataRefInfo(test1, &info);
+	lua_pop(L, 1);
+
+	lua_pushstring(L, info.name);
+	return 1;
 }

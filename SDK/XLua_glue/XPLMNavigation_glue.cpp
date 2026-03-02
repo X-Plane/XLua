@@ -13,14 +13,15 @@
 #include <optional>
 #include "XPLMDefs.h"
 
+
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
 #define XPLM_DEPRECATED
 #include "XPLMNavigation.h"
 #undef XPLM_DEPRECATED
 
-#include "../xpfuncs.h"
-#include "../module.h"
-#include "../lua_helpers.h"
+#include "xpfuncs.h"
+#include "module.h"
+#include "lua_helpers.h"
 
 extern "C" {
 
@@ -81,12 +82,13 @@ void RegType_XPLMNavRef(lua_State* L)
 	lua_pushstring(L, "XPLMNavRef");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMNavRef_to_string);
+#ifdef HAVE_XPLMNavRef_tostring
+	lua_pushcfunction(L, _XPLMNavRef_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMNavRef_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMNavRef", _XPLMNavRef_Constructor);
 
@@ -106,7 +108,7 @@ int XLuaGetNextNavAid(lua_State* L)
 	XPLMNavRef inNavAidRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inNavAidRef = xlua_checkuserdata<XPLMNavRef>(L, 1, "Expected userdata<XPLMNavRef>");
+		inNavAidRef = xlua_checkuserdata<XPLMNavRef>(L, 1, "Expected XPLMNavRef");
 	}
 
 	XPLMNavRef res = XPLMGetNextNavAid(inNavAidRef);
@@ -155,64 +157,55 @@ int XLuaGetNavAidInfo(lua_State* L)
 	XPLMNavRef inRef = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inRef = xlua_checkuserdata<XPLMNavRef>(L, 1, "Expected userdata<XPLMNavRef>");
+		inRef = xlua_checkuserdata<XPLMNavRef>(L, 1, "Expected XPLMNavRef");
 	}
-	XPLMNavType outType;
-	float outLatitude;
-	float outLongitude;
-	float outHeight;
-	int outFrequency;
-	float outHeading;
-	char outID[32];
-	char outName[256];
-	char outReg[1];
+	XPLMNavType outType = {};
+	float outLatitude = {};
+	float outLongitude = {};
+	float outHeight = {};
+	int outFrequency = {};
+	float outHeading = {};
+	char outID[32] = {};
+	char outName[256] = {};
+	char outReg[1] = {};
 
 	XPLMGetNavAidInfo(inRef, &outType, &outLatitude, &outLongitude, &outHeight, &outFrequency, &outHeading, outID, outName, outReg);
 
-	lua_createtable(L, 0, 9); // 0 array slots and 9 key-value pairs
+	lua_createtable(L, 0, 9);
 
 	lua_pushstring(L, "outType");
-
 	lua_pushinteger(L, outType);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLatitude");
-
 	lua_pushnumber(L, outLatitude);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLongitude");
-
 	lua_pushnumber(L, outLongitude);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outHeight");
-
 	lua_pushnumber(L, outHeight);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outFrequency");
-
 	lua_pushinteger(L, outFrequency);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outHeading");
-
 	lua_pushnumber(L, outHeading);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outID");
-
 	lua_pushstring(L, outID);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outName");
-
 	lua_pushstring(L, outName);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outReg");
-
 	lua_pushstring(L, outReg);
 	lua_settable(L, -3);
 
@@ -264,44 +257,38 @@ int XLuaSetDestinationFMSEntry(lua_State* L)
 int XLuaGetFMSEntryInfo(lua_State* L)
 {
 	int inIndex = xlua_checkinteger(L, 1);
-	XPLMNavType outType;
-	char outID[256];
-	XPLMNavRef outRef;
-	int outAltitude;
-	float outLat;
-	float outLon;
+	XPLMNavType outType = {};
+	char outID[256] = {};
+	XPLMNavRef outRef = {};
+	int outAltitude = {};
+	float outLat = {};
+	float outLon = {};
 
 	XPLMGetFMSEntryInfo(inIndex, &outType, outID, &outRef, &outAltitude, &outLat, &outLon);
 
-	lua_createtable(L, 0, 6); // 0 array slots and 6 key-value pairs
+	lua_createtable(L, 0, 6);
 
 	lua_pushstring(L, "outType");
-
 	lua_pushinteger(L, outType);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outID");
-
 	lua_pushstring(L, outID);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outRef");
-
 	xlua_pushuserdata<XPLMNavRef>(L, outRef);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outAltitude");
-
 	lua_pushinteger(L, outAltitude);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLat");
-
 	lua_pushnumber(L, outLat);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLon");
-
 	lua_pushnumber(L, outLon);
 	lua_settable(L, -3);
 
@@ -314,7 +301,7 @@ int XLuaSetFMSEntryInfo(lua_State* L)
 	XPLMNavRef inRef = {};
 	if (lua_isuserdata(L, 2))
 	{
-		inRef = xlua_checkuserdata<XPLMNavRef>(L, 2, "Expected userdata<XPLMNavRef>");
+		inRef = xlua_checkuserdata<XPLMNavRef>(L, 2, "Expected XPLMNavRef");
 	}
 	int inAltitudeFt = xlua_checkinteger(L, 3);
 
@@ -408,44 +395,38 @@ int XLuaGetFMSFlightPlanEntryInfo(lua_State* L)
 {
 	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
 	int inIndex = xlua_checkinteger(L, 2);
-	XPLMNavType outType;
-	char outID[256];
-	XPLMNavRef outRef;
-	int outAltitude;
-	float outLat;
-	float outLon;
+	XPLMNavType outType = {};
+	char outID[256] = {};
+	XPLMNavRef outRef = {};
+	int outAltitude = {};
+	float outLat = {};
+	float outLon = {};
 
 	XPLMGetFMSFlightPlanEntryInfo(inFlightPlan, inIndex, &outType, outID, &outRef, &outAltitude, &outLat, &outLon);
 
-	lua_createtable(L, 0, 6); // 0 array slots and 6 key-value pairs
+	lua_createtable(L, 0, 6);
 
 	lua_pushstring(L, "outType");
-
 	lua_pushinteger(L, outType);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outID");
-
 	lua_pushstring(L, outID);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outRef");
-
 	xlua_pushuserdata<XPLMNavRef>(L, outRef);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outAltitude");
-
 	lua_pushinteger(L, outAltitude);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLat");
-
 	lua_pushnumber(L, outLat);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLon");
-
 	lua_pushnumber(L, outLon);
 	lua_settable(L, -3);
 
@@ -459,7 +440,7 @@ int XLuaSetFMSFlightPlanEntryInfo(lua_State* L)
 	XPLMNavRef inRef = {};
 	if (lua_isuserdata(L, 3))
 	{
-		inRef = xlua_checkuserdata<XPLMNavRef>(L, 3, "Expected userdata<XPLMNavRef>");
+		inRef = xlua_checkuserdata<XPLMNavRef>(L, 3, "Expected XPLMNavRef");
 	}
 	int inAltitudeFt = xlua_checkinteger(L, 4);
 

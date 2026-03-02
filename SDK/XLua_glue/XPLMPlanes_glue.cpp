@@ -13,14 +13,15 @@
 #include <optional>
 #include "XPLMDefs.h"
 
+
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
 #define XPLM_DEPRECATED
 #include "XPLMPlanes.h"
 #undef XPLM_DEPRECATED
 
-#include "../xpfuncs.h"
-#include "../module.h"
-#include "../lua_helpers.h"
+#include "xpfuncs.h"
+#include "module.h"
+#include "lua_helpers.h"
 
 extern "C" {
 
@@ -104,72 +105,71 @@ XPLMPlaneDrawState_t XPLMPlaneDrawState_t_from_table(lua_State* L, int stackpos)
 
 	luaL_checktype(L, stackpos, LUA_TTABLE);
 	out.structSize = sizeof(out);
-	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "gearPosition");
+	lua_getfield(L, stackpos, "gearPosition");
 	if (!lua_isnil(L, -1))
 	{
 		out.gearPosition = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "flapRatio");
+	lua_getfield(L, stackpos, "flapRatio");
 	if (!lua_isnil(L, -1))
 	{
 		out.flapRatio = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "spoilerRatio");
+	lua_getfield(L, stackpos, "spoilerRatio");
 	if (!lua_isnil(L, -1))
 	{
 		out.spoilerRatio = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "speedBrakeRatio");
+	lua_getfield(L, stackpos, "speedBrakeRatio");
 	if (!lua_isnil(L, -1))
 	{
 		out.speedBrakeRatio = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "slatRatio");
+	lua_getfield(L, stackpos, "slatRatio");
 	if (!lua_isnil(L, -1))
 	{
 		out.slatRatio = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "wingSweep");
+	lua_getfield(L, stackpos, "wingSweep");
 	if (!lua_isnil(L, -1))
 	{
 		out.wingSweep = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "thrust");
+	lua_getfield(L, stackpos, "thrust");
 	if (!lua_isnil(L, -1))
 	{
 		out.thrust = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "yokePitch");
+	lua_getfield(L, stackpos, "yokePitch");
 	if (!lua_isnil(L, -1))
 	{
 		out.yokePitch = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "yokeHeading");
+	lua_getfield(L, stackpos, "yokeHeading");
 	if (!lua_isnil(L, -1))
 	{
 		out.yokeHeading = static_cast<float>(luaL_checknumber(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "yokeRoll");
+	lua_getfield(L, stackpos, "yokeRoll");
 	if (!lua_isnil(L, -1))
 	{
 		out.yokeRoll = static_cast<float>(luaL_checknumber(L, -1));
@@ -238,25 +238,22 @@ int MakeXPLMPlaneDrawState_t(lua_State* L)
 
 int XLuaCountAircraft(lua_State* L)
 {
-	int outTotalAircraft;
-	int outActiveAircraft;
-	XPLMPluginID outController;
+	int outTotalAircraft = {};
+	int outActiveAircraft = {};
+	XPLMPluginID outController = {};
 	XPLMCountAircraft(&outTotalAircraft, &outActiveAircraft, &outController);
 
-	lua_createtable(L, 0, 3); // 0 array slots and 3 key-value pairs
+	lua_createtable(L, 0, 3);
 
 	lua_pushstring(L, "outTotalAircraft");
-
 	lua_pushinteger(L, outTotalAircraft);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outActiveAircraft");
-
 	lua_pushinteger(L, outActiveAircraft);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outController");
-
 	xlua_pushuserdata<XPLMPluginID>(L, outController);
 	lua_settable(L, -3);
 
@@ -266,20 +263,18 @@ int XLuaCountAircraft(lua_State* L)
 int XLuaGetNthAircraftModel(lua_State* L)
 {
 	int inIndex = xlua_checkinteger(L, 1);
-	char outFileName[256];
-	char outPath[512];
+	char outFileName[256] = {};
+	char outPath[512] = {};
 
 	XPLMGetNthAircraftModel(inIndex, outFileName, outPath);
 
-	lua_createtable(L, 0, 2); // 0 array slots and 2 key-value pairs
+	lua_createtable(L, 0, 2);
 
 	lua_pushstring(L, "outFileName");
-
 	lua_pushstring(L, outFileName);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outPath");
-
 	lua_pushstring(L, outPath);
 	lua_settable(L, -3);
 
@@ -288,14 +283,49 @@ int XLuaGetNthAircraftModel(lua_State* L)
 
 static void cb_XPLMPlanesAvailable_f(void* inRefcon)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
-	lua_State* L = setup_lua_callback(cb, "XPLMPlanesAvailable_f");
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMPlanesAvailable_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r", cb->origRefconRegIndex))
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r", inRefcon_cb->get_capture()))
 		{
 		}
 	}
+}
+
+int XLuaAcquirePlanes(lua_State* L)
+{
+	if (!lua_isnil(L, 1))
+	{
+		luaL_checktype(L, 1, LUA_TTABLE);
+	}
+
+
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 3);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 2, true, "XPLMPlanesAvailable_f");
+
+	int inAircraft_len = lua_objlen(L, 1);
+	char const** inAircraft = new char const*[inAircraft_len + 1]{};		// Some APIs expect null-terminated arrays.
+
+	for (int i = 0; i < inAircraft_len; ++i)
+	{
+		lua_rawgeti(L, 1, i + 1);
+		inAircraft[i] = xlua_checkstring(L, -1);
+		lua_pop(L, 1);
+	}
+	
+	int res = XPLMAcquirePlanes((inAircraft ? &*inAircraft : nullptr), (cb_capture_0 ? cb_XPLMPlanesAvailable_f : nullptr), cb_capture_0.get());
+	lua_pushboolean(L, res);
+
+	if (inAircraft != nullptr)
+	{
+		delete[] inAircraft;
+	}
+
+	return 1;
 }
 
 int XLuaReleasePlanes(lua_State* L)
@@ -329,30 +359,6 @@ int XLuaDisableAIForPlane(lua_State* L)
 	int inPlaneIndex = xlua_checkinteger(L, 1);
 
 	XPLMDisableAIForPlane(inPlaneIndex);
-
-	return 0;
-}
-
-int XLuaDrawAircraft(lua_State* L)
-{
-	int inPlaneIndex = xlua_checkinteger(L, 1);
-	float inX = xlua_checknumber(L, 2);
-	float inY = xlua_checknumber(L, 3);
-	float inZ = xlua_checknumber(L, 4);
-	float inPitch = xlua_checknumber(L, 5);
-	float inRoll = xlua_checknumber(L, 6);
-	float inYaw = xlua_checknumber(L, 7);
-	bool inFullDraw = xlua_checkboolean(L, 8);
-	XPLMPlaneDrawState_t inDrawStateInfo = XPLMPlaneDrawState_t_from_table(L, 9);
-
-	XPLMDrawAircraft(inPlaneIndex, inX, inY, inZ, inPitch, inRoll, inYaw, inFullDraw, &inDrawStateInfo);
-
-	return 0;
-}
-
-int XLuaReinitUsersPlane(lua_State* L)
-{
-	XPLMReinitUsersPlane();
 
 	return 0;
 }

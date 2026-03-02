@@ -40,16 +40,20 @@
  *
  */
 
+
 #include "XPLMDefs.h"
+
 #include "XPLMUtilities.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
 /***************************************************************************
  * XPLM MENUS
  ***************************************************************************/
+
 
 /*
  * XPLMMenuCheck
@@ -60,11 +64,14 @@ extern "C" {
  *
  */
 enum {
+
     /* There is no symbol to the left of the menu item.                           */
     xplm_Menu_NoCheck                        = 0,
 
+
     /* The menu has a mark next to it that is unmarked (not lit).                 */
     xplm_Menu_Unchecked                      = 1,
+
 
     /* The menu has a mark next to it that is checked (lit).                      */
     xplm_Menu_Checked                        = 2,
@@ -72,6 +79,7 @@ enum {
 
 };
 typedef int XPLMMenuCheck;
+
 /*
  * XPLMMenuID
  * 
@@ -79,6 +87,7 @@ typedef int XPLMMenuCheck;
  *
  */
 typedef void * XPLMMenuID;
+
 /*
  * XPLMMenuHandler_f
  * 
@@ -88,8 +97,9 @@ typedef void * XPLMMenuID;
  *
  */
 typedef void (* XPLMMenuHandler_f)(
-                         void *               inMenuRef,
-                         void *               inItemRef);
+                         void*                inMenuRef,
+                         void*                inItemRef);
+
 /*
  * XPLMFindPluginsMenu
  * 
@@ -98,6 +108,7 @@ typedef void (* XPLMMenuHandler_f)(
  *
  */
 XPLM_API XPLMMenuID XPLMFindPluginsMenu(void);
+
 #if defined(XPLM300)
 /*
  * XPLMFindAircraftMenu
@@ -116,6 +127,7 @@ XPLM_API XPLMMenuID XPLMFindPluginsMenu(void);
  */
 XPLM_API XPLMMenuID XPLMFindAircraftMenu(void);
 #endif /* XPLM300 */
+
 /*
  * XPLMCreateMenu
  * 
@@ -135,8 +147,9 @@ XPLM_API XPLMMenuID XPLMCreateMenu(
                          const char *         inName,
                          XPLMMenuID           inParentMenu,
                          int                  inParentItem,
-                         XPLMMenuHandler_f    inHandler,
-                         void *               inMenuRef);
+                         XPLMMenuHandler_f    inHandler,              /* Can be NULL */
+                         void*                inMenuRef);
+
 /*
  * XPLMDestroyMenu
  * 
@@ -146,6 +159,7 @@ XPLM_API XPLMMenuID XPLMCreateMenu(
  */
 XPLM_API void       XPLMDestroyMenu(
                          XPLMMenuID           inMenuID);
+
 /*
  * XPLMClearAllMenuItems
  * 
@@ -155,6 +169,7 @@ XPLM_API void       XPLMDestroyMenu(
  */
 XPLM_API void       XPLMClearAllMenuItems(
                          XPLMMenuID           inMenuID);
+
 /*
  * XPLMAppendMenuItem
  * 
@@ -177,8 +192,9 @@ XPLM_API void       XPLMClearAllMenuItems(
 XPLM_API int        XPLMAppendMenuItem(
                          XPLMMenuID           inMenu,
                          const char *         inItemName,
-                         void *               inItemRef,
+                         void*                inItemRef,
                          int                  inDeprecatedAndIgnored);
+
 #if defined(XPLM300)
 /*
  * XPLMAppendMenuItemWithCommand
@@ -201,6 +217,7 @@ XPLM_API int        XPLMAppendMenuItemWithCommand(
                          const char *         inItemName,
                          XPLMCommandRef       inCommandToExecute);
 #endif /* XPLM300 */
+
 /*
  * XPLMAppendMenuSeparator
  * 
@@ -212,6 +229,7 @@ XPLM_API int        XPLMAppendMenuItemWithCommand(
  */
 XPLM_API void       XPLMAppendMenuSeparator(
                          XPLMMenuID           inMenu);
+
 /*
  * XPLMSetMenuItemName
  * 
@@ -224,6 +242,7 @@ XPLM_API void       XPLMSetMenuItemName(
                          int                  inIndex,
                          const char *         inItemName,
                          int                  inDeprecatedAndIgnored);
+
 /*
  * XPLMCheckMenuItem
  * 
@@ -234,6 +253,7 @@ XPLM_API void       XPLMCheckMenuItem(
                          XPLMMenuID           inMenu,
                          int                  index,
                          XPLMMenuCheck        inCheck);
+
 /*
  * XPLMCheckMenuItemState
  * 
@@ -245,6 +265,7 @@ XPLM_API void       XPLMCheckMenuItemState(
                          XPLMMenuID           inMenu,
                          int                  index,
                          XPLMMenuCheck *      outCheck);
+
 /*
  * XPLMEnableMenuItem
  * 
@@ -255,6 +276,7 @@ XPLM_API void       XPLMEnableMenuItem(
                          XPLMMenuID           inMenu,
                          int                  index,
                          int                  enabled);
+
 #if defined(XPLM210)
 /*
  * XPLMRemoveMenuItem

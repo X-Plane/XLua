@@ -40,7 +40,7 @@ jobs:
         if-no-files-found: error
           
   build-mac:
-    runs-on: macos-13
+    runs-on: macos-14
     env:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -72,8 +72,8 @@ jobs:
           
   build-linux:
     runs-on: ubuntu-latest
-    container:
-        image: ghcr.io/x-plane/xlua_builder:latest
+#    container:
+#        image: ghcr.io/x-plane/xlua_builder:latest
 
     steps:
       - uses: actions/checkout@v4
@@ -81,6 +81,9 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      - name: Install OpenGL development headers
+        run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev
+  
       - name: Build
         run: |
           ./jenkins_driver.sh

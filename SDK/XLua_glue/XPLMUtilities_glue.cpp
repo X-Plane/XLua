@@ -13,14 +13,15 @@
 #include <optional>
 #include "XPLMDefs.h"
 
+
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
 #define XPLM_DEPRECATED
 #include "XPLMUtilities.h"
 #undef XPLM_DEPRECATED
 
-#include "../xpfuncs.h"
-#include "../module.h"
-#include "../lua_helpers.h"
+#include "xpfuncs.h"
+#include "module.h"
+#include "lua_helpers.h"
 
 extern "C" {
 
@@ -42,9 +43,9 @@ XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 int XLuaGetSystemPath(lua_State* L)
 {
-	char outSystemPath[512];
-	XPLMGetSystemPath(outSystemPath);
+	char outSystemPath[512] = {};
 
+	XPLMGetSystemPath(outSystemPath);
 	lua_pushstring(L, outSystemPath);
 
 	return 1;
@@ -52,9 +53,9 @@ int XLuaGetSystemPath(lua_State* L)
 
 int XLuaGetPrefsPath(lua_State* L)
 {
-	char outPrefsPath[512];
-	XPLMGetPrefsPath(outPrefsPath);
+	char outPrefsPath[512] = {};
 
+	XPLMGetPrefsPath(outPrefsPath);
 	lua_pushstring(L, outPrefsPath);
 
 	return 1;
@@ -100,25 +101,22 @@ int XLuaInitialized(lua_State* L)
 
 int XLuaGetVersions(lua_State* L)
 {
-	int outXPlaneVersion;
-	int outXPLMVersion;
-	XPLMHostApplicationID outHostID;
+	int outXPlaneVersion = {};
+	int outXPLMVersion = {};
+	XPLMHostApplicationID outHostID = {};
 	XPLMGetVersions(&outXPlaneVersion, &outXPLMVersion, &outHostID);
 
-	lua_createtable(L, 0, 3); // 0 array slots and 3 key-value pairs
+	lua_createtable(L, 0, 3);
 
 	lua_pushstring(L, "outXPlaneVersion");
-
 	lua_pushinteger(L, outXPlaneVersion);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outXPLMVersion");
-
 	lua_pushinteger(L, outXPLMVersion);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outHostID");
-
 	lua_pushinteger(L, outHostID);
 	lua_settable(L, -3);
 
@@ -156,7 +154,7 @@ int XLuaGetVirtualKeyDescription(lua_State* L)
 	std::string inVirtualKey_s = luaL_checkstring(L, 1);
 	if (inVirtualKey_s.size() != 1)
 	{
-		luaL_argerror(L, 1, "inVirtualKey must be exactly one character");
+		luaL_argerror(L, 1, "inVirtualKey must be exactly one character");				// Never returns.
 		return 0;
 	}
 	char inVirtualKey = inVirtualKey_s[0];
@@ -209,12 +207,13 @@ void RegType_XPLMCommandRef(lua_State* L)
 	lua_pushstring(L, "XPLMCommandRef");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMCommandRef_to_string);
+#ifdef HAVE_XPLMCommandRef_tostring
+	lua_pushcfunction(L, _XPLMCommandRef_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMCommandRef_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMCommandRef", _XPLMCommandRef_Constructor);
 
@@ -224,11 +223,13 @@ void RegType_XPLMCommandRef(lua_State* L)
 static int cb_XPLMCommandCallback_f(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
 {
 	int res = {};
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
-	lua_State* L = setup_lua_callback(cb, "XPLMCommandCallback_f");
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMCommandCallback_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uir", inCommand, inPhase, cb->origRefconRegIndex))
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uir", inCommand, inPhase, inRefcon_cb->get_capture()))
 		{
 			res = xlua_checkboolean(L, -1) ? 1 : 0;
 			lua_pop(L, 1);
@@ -249,7 +250,7 @@ int XLuaFindCommand(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMCommandRef>(L, res);
+		Make_XPLMCommandRef(L, res);
 	}
 
 	return 1;
@@ -260,7 +261,7 @@ int XLuaCommandBegin(lua_State* L)
 	XPLMCommandRef inCommand = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inCommand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected userdata<XPLMCommandRef>");
+		inCommand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected XPLMCommandRef");
 	}
 
 	XPLMCommandBegin(inCommand);
@@ -273,7 +274,7 @@ int XLuaCommandEnd(lua_State* L)
 	XPLMCommandRef inCommand = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inCommand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected userdata<XPLMCommandRef>");
+		inCommand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected XPLMCommandRef");
 	}
 
 	XPLMCommandEnd(inCommand);
@@ -286,7 +287,7 @@ int XLuaCommandOnce(lua_State* L)
 	XPLMCommandRef inCommand = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inCommand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected userdata<XPLMCommandRef>");
+		inCommand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected XPLMCommandRef");
 	}
 
 	XPLMCommandOnce(inCommand);
@@ -306,7 +307,7 @@ int XLuaCreateCommand(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMCommandRef>(L, res);
+		Make_XPLMCommandRef(L, res);
 	}
 
 	return 1;
@@ -317,15 +318,15 @@ int XLuaRegisterCommandHandler(lua_State* L)
 	XPLMCommandRef inComand = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inComand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected userdata<XPLMCommandRef>");
+		inComand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected XPLMCommandRef");
 	}
-	int refcon_regindex = capture_lua_value(L, 4);
-	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 2, "XPLMCommandCallback_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 4);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 2, false, "XPLMCommandCallback_f");
 	bool inBefore = xlua_checkboolean(L, 3);
 
-	XPLMRegisterCommandHandler(inComand, cb_XPLMCommandCallback_f, inBefore, cb_capture_0);
+	XPLMRegisterCommandHandler(inComand, cb_XPLMCommandCallback_f, inBefore, cb_capture_0.get());
 
 	return 0;
 }
@@ -335,15 +336,15 @@ int XLuaUnregisterCommandHandler(lua_State* L)
 	XPLMCommandRef inComand = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inComand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected userdata<XPLMCommandRef>");
+		inComand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected XPLMCommandRef");
 	}
-	int refcon_regindex = capture_lua_value(L, 4);
-	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 2, "XPLMCommandCallback_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 4);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 2, false, "XPLMCommandCallback_f");
 	bool inBefore = xlua_checkboolean(L, 3);
 
-	XPLMUnregisterCommandHandler(inComand, cb_XPLMCommandCallback_f, inBefore, cb_capture_0);
+	XPLMUnregisterCommandHandler(inComand, cb_XPLMCommandCallback_f, inBefore, cb_capture_0.get());
 
 	return 0;
 }

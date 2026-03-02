@@ -40,6 +40,7 @@
     <ClCompile Include="SDK\XLua_glue\XPLMPlugin_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMProcessing_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMScenery_glue.cpp" />
+    <ClCompile Include="SDK\XLua_glue\XPLMSound_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMUtilities_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMWeather_glue.cpp" />
     <ClCompile Include="src\FloatingWindows\FloatingWindow.cpp" />
@@ -110,20 +111,19 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
-    <UseDynamicDebugging>true</UseDynamicDebugging>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -166,7 +166,7 @@
     <TargetExt>.xpl</TargetExt>
     <GenerateManifest>false</GenerateManifest>
     <TargetName>xlua</TargetName>
-    <IncludePath>$(ProjectDir)\src\FloatingWindows;$(ProjectDir)\src\FloatingWindows\GL;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\src\FloatingWindows;$(ProjectDir)\src\FloatingWindows\GL;$(ProjectDir)\fmod\win\core\inc;$(ProjectDir)\fmod\win\studio\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>.\Debug\plugins\$(TargetName)\32\</OutDir>
@@ -183,7 +183,7 @@
     <TargetExt>.xpl</TargetExt>
     <GenerateManifest>false</GenerateManifest>
     <TargetName>xlua</TargetName>
-    <IncludePath>$(ProjectDir)\src\FloatingWindows;$(ProjectDir)\src\FloatingWindows\GL;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\src\FloatingWindows;$(ProjectDir)\src\FloatingWindows\GL;$(ProjectDir)\fmod\win\core\inc;$(ProjectDir)\fmod\win\studio\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -237,8 +237,8 @@
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>SDK\CHeaders\XPLM;SDK\CHeaders\Widgets;lua_sdk;imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;XPLM200;XPLM210;XPLM300;XPLM301;XPLM302;XPLM303;XPLM400;LUA_BINDINGS_LOCAL_STATE;NDEBUG;_WINDOWS;_USRDLL;SIMDATA_EXPORTS;IBM=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>SDK\CHeaders\XPLM;SDK\CHeaders\Widgets;lua_sdk;imgui;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;XPLM200;XPLM210;XPLM300;XPLM301;XPLM302;XPLM303;XPLM400;XPLM410;XPLM420;XPLM430;LUA_BINDINGS_LOCAL_STATE;NDEBUG;_WINDOWS;_USRDLL;SIMDATA_EXPORTS;IBM=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\64\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Release\64\xlua.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeader>
@@ -324,7 +324,7 @@
       <Optimization>Disabled</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
-      <AdditionalIncludeDirectories>SDK\CHeaders\XPLM;SDK\CHeaders\Widgets;lua_sdk;imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>SDK\CHeaders\XPLM;SDK\CHeaders\Widgets;lua_sdk;imgui;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;XPLM200;XPLM210;XPLM300;XPLM301;XPLM302;XPLM303;XPLM400;XPLM410;XPLM420;XPLM430;LUA_BINDINGS_LOCAL_STATE;_DEBUG;_WINDOWS;_USRDLL;SIMDATA_EXPORTS;IBM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug\64\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Debug\64\xlua.pch</PrecompiledHeaderOutputFile>

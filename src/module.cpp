@@ -10,6 +10,7 @@
 
 #include "module.h"
 #include <XPLMUtilities.h>
+#include <XPLMPlugin.h>
 #include "xpfuncs.h"
 #include <stdlib.h>
 #include <assert.h>
@@ -56,10 +57,10 @@ static int length_of_dir(const char * p)
 class	xmap_class {
 public:
 	xmap_class(const string& in_file_name);
-	~xmap_class() { free(m_buffer); }
-	bool exists() const { return m_buffer != NULL; }
-	const char * begin() const { return m_buffer; }
-	size_t size() const { return m_size; }
+	~xmap_class()				{ if (m_buffer != nullptr) free(m_buffer); }
+	bool exists() const			{ return m_buffer != nullptr; }
+	char const* begin() const	{ return m_buffer; }
+	size_t size() const			{ return m_size; }
 private:
 	char *		 m_buffer;
 	size_t		 m_size;
@@ -178,6 +179,24 @@ void module::dump_profile(void) const
 		log_message(m_interp, "%s : %zu\n", it->first.c_str(), it->second);
 	}
 	log_message(m_interp, "========================\n");
+}
+
+void module::set_jit_mode(bool enable)
+{
+	luaJIT_setmode(m_interp, 0, LUAJIT_MODE_ENGINE | (enable ? LUAJIT_MODE_ON : LUAJIT_MODE_OFF));
+	luaJIT_setmode(m_interp, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_FLUSH);
+}
+
+bool module::get_jit_mode(void)
+{
+	// There's no C equivalent to _get_ the JIT mode...
+	bool is_enabled = false;
+	if (m_interp != nullptr && 0 == luaL_dostring(m_interp, "return jit and jit.status() or false"))
+	{
+		is_enabled = lua_toboolean(m_interp, -1);
+		lua_pop(m_interp, 1);
+	}
+	return is_enabled;
 }
 
 module::module(
@@ -375,6 +394,51 @@ void module::do_callout(const char * f)
 	}
 }
 
+extern "C"
+{
+	XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
+}
+
+void module::forward_notification(XPLMPluginID inFromWho, int inMessage, void* inParam)
+{
+	if (m_interp == NULL)
+		return;
+
+	lua_getfield(m_interp, LUA_GLOBALSINDEX, "receive_message");
+	if (!lua_isfunction(m_interp, -1))
+	{
+		lua_pop(m_interp, 1);
+	}
+	else
+	{
+		/*
+		* Try to allow messages received via XPluginReceiveMessage to be sent. The problem is that the inParam is void* and
+		* messages can be defined arbitrarily by plugins, so there's no way of knowing what datatype to make available.
+		*
+		* One option would be to translate _known_ messages to the correct type and leave all others as either null or userdata with a pointer
+		* which could at least be used as a unique ID.
+		*/
+
+		std::string ptype = "n";
+		auto known_msg = gXPMessageParamTypes.find(inMessage);
+		if (known_msg != gXPMessageParamTypes.end())
+		{
+			ptype = known_msg->second;
+		}
+
+		if (ptype.front() == '*')
+		{
+			inParam = *(void**)inParam;
+			ptype.erase(0);
+		}
+
+		Make_XPLMPluginID(m_interp, inFromWho);
+		int ref = luaL_ref(m_interp, LUA_REGISTRYINDEX);
+		fmt_pcall_stdvars(m_interp, m_debug_proc, false, ("ri" + ptype).c_str(), ref, inMessage, inParam);
+		luaL_unref(m_interp, LUA_REGISTRYINDEX, ref);
+	}
+}
+
 module::~module()
 {
 	if (m_interp)
@@ -419,17 +483,21 @@ xmap_class::xmap_class(const string& in_file_name) :
 #else
 	FILE * fi = fopen(in_file_name.c_str(), "rb");
 #endif
-	if(fi)
+	if (fi)
 	{
 		fseek(fi,0,SEEK_END);
 		m_size = ftell(fi);
-		fseek(fi,0,SEEK_SET);
-		m_buffer = (char *) malloc(m_size);
-		size_t bytes = fread(m_buffer,1,m_size,fi);
-		(void) bytes;
+		fseek(fi, 0, SEEK_SET);
+
+		m_buffer = static_cast<char *>(malloc(m_size + 1));
+		if (m_buffer != nullptr)
+		{
+			fread(m_buffer, 1, m_size, fi);
+			m_buffer[m_size] = 0;
+		}
+
 		fclose(fi);
 	}
 }
-
 
 #endif

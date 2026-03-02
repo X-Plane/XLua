@@ -84,6 +84,9 @@
     <ClCompile Include="SDK\XLua_glue\XPLMDefs_glue.cpp">
       <Filter>Glue</Filter>
     </ClCompile>
+    <ClCompile Include="SDK\XLua_glue\XPLMSound_glue.cpp">
+      <Filter>Glue</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua_sdk\lauxlib.h" />

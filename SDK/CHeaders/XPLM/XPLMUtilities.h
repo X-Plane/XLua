@@ -11,11 +11,13 @@
  * XPLMUtilities
  ***************************************************************************/
 
+
 #include "XPLMDefs.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 /***************************************************************************
  * FILE UTILITIES
@@ -62,6 +64,7 @@ extern "C" {
  *
  */
 
+
 #if defined(XPLM200)
 /*
  * XPLMDataFileType
@@ -71,9 +74,11 @@ extern "C" {
  *
  */
 enum {
+
     /* A situation (.sit) file, which starts off a flight in a given              *
      * configuration.                                                             */
     xplm_DataFile_Situation                  = 1,
+
 
     /* A situation movie (.smo) file, which replays a past flight.                */
     xplm_DataFile_ReplayMovie                = 2,
@@ -82,6 +87,7 @@ enum {
 };
 typedef int XPLMDataFileType;
 #endif /* XPLM200 */
+
 /*
  * XPLMGetSystemPath
  * 
@@ -93,7 +99,8 @@ typedef int XPLMDataFileType;
  *
  */
 XPLM_API void       XPLMGetSystemPath(
-                         char *               outSystemPath);
+                         char                 outSystemPath[512]);
+
 /*
  * XPLMGetPrefsPath
  * 
@@ -107,7 +114,8 @@ XPLM_API void       XPLMGetSystemPath(
  *
  */
 XPLM_API void       XPLMGetPrefsPath(
-                         char *               outPrefsPath);
+                         char                 outPrefsPath[512]);
+
 /*
  * XPLMGetDirectorySeparator
  * 
@@ -118,6 +126,7 @@ XPLM_API void       XPLMGetPrefsPath(
  *
  */
 XPLM_API const char * XPLMGetDirectorySeparator(void);
+
 /*
  * XPLMExtractFileAndPath
  * 
@@ -130,6 +139,7 @@ XPLM_API const char * XPLMGetDirectorySeparator(void);
  */
 XPLM_API char *     XPLMExtractFileAndPath(
                          char *               inFullPath);
+
 /*
  * XPLMGetDirectoryContents
  * 
@@ -137,8 +147,9 @@ XPLM_API char *     XPLMExtractFileAndPath(
  * path, no trailing : or / ). The output is returned as a list of NULL
  * terminated strings. An index array (if specified) is filled with pointers
  * into the strings. The last file is indicated by a zero-length string (and
- * NULL in the indices). This routine will return 1 if you had capacity for
- * all files or 0 if you did not. You can also skip a given number of files.
+ * NULL in the indices). This routine will return true if you had capacity for
+ * all files or false if you did not. You can also skip a given number of
+ * files.
  * 
  *  * inDirectoryPath - a null terminated C string containing the full path to
  *    the directory with no trailing directory char.
@@ -177,10 +188,11 @@ XPLM_API int        XPLMGetDirectoryContents(
                          int                  inFirstReturn,
                          char *               outFileNames,
                          int                  inFileNameBufSize,
-                         char **              outIndices,             /* Can be NULL */
+                         char *               outIndices[],           /* Can be NULL */
                          int                  inIndexCount,
                          int *                outTotalFiles,          /* Can be NULL */
                          int *                outReturnedFiles);      /* Can be NULL */
+
 #if defined(XPLM200)
 /*
  * XPLMLoadDataFile
@@ -194,6 +206,7 @@ XPLM_API int        XPLMLoadDataFile(
                          XPLMDataFileType     inFileType,
                          const char *         inFilePath);            /* Can be NULL */
 #endif /* XPLM200 */
+
 #if defined(XPLM200)
 /*
  * XPLMSaveDataFile
@@ -206,9 +219,11 @@ XPLM_API int        XPLMSaveDataFile(
                          XPLMDataFileType     inFileType,
                          const char *         inFilePath);
 #endif /* XPLM200 */
+
 /***************************************************************************
  * X-PLANE MISC
  ***************************************************************************/
+
 
 /*
  * XPLMHostApplicationID
@@ -221,46 +236,58 @@ XPLM_API int        XPLMSaveDataFile(
  *
  */
 enum {
+
     xplm_Host_Unknown                        = 0,
 
+
     xplm_Host_XPlane                         = 1,
+
 
 #if defined(XPLM_DEPRECATED)
     xplm_Host_PlaneMaker                     = 2,
 
 #endif /* XPLM_DEPRECATED */
+
 #if defined(XPLM_DEPRECATED)
     xplm_Host_WorldMaker                     = 3,
 
 #endif /* XPLM_DEPRECATED */
+
 #if defined(XPLM_DEPRECATED)
     xplm_Host_Briefer                        = 4,
 
 #endif /* XPLM_DEPRECATED */
+
 #if defined(XPLM_DEPRECATED)
     xplm_Host_PartMaker                      = 5,
 
 #endif /* XPLM_DEPRECATED */
+
 #if defined(XPLM_DEPRECATED)
     xplm_Host_YoungsMod                      = 6,
 
 #endif /* XPLM_DEPRECATED */
+
 #if defined(XPLM_DEPRECATED)
     xplm_Host_XAuto                          = 7,
 
 #endif /* XPLM_DEPRECATED */
+
 #if defined(XPLM_DEPRECATED)
     xplm_Host_Xavion                         = 8,
 
 #endif /* XPLM_DEPRECATED */
+
 #if defined(XPLM_DEPRECATED)
     xplm_Host_Control_Pad                    = 9,
 
 #endif /* XPLM_DEPRECATED */
+
 #if defined(XPLM_DEPRECATED)
     xplm_Host_PFD_Map                        = 10,
 
 #endif /* XPLM_DEPRECATED */
+
 #if defined(XPLM_DEPRECATED)
     xplm_Host_RADAR                          = 11,
 
@@ -268,6 +295,7 @@ enum {
 
 };
 typedef int XPLMHostApplicationID;
+
 /*
  * XPLMLanguageCode
  * 
@@ -278,36 +306,48 @@ typedef int XPLMHostApplicationID;
  *
  */
 enum {
+
     xplm_Language_Unknown                    = 0,
+
 
     xplm_Language_English                    = 1,
 
+
     xplm_Language_French                     = 2,
+
 
     xplm_Language_German                     = 3,
 
+
     xplm_Language_Italian                    = 4,
+
 
     xplm_Language_Spanish                    = 5,
 
+
     xplm_Language_Korean                     = 6,
+
 
 #if defined(XPLM200)
     xplm_Language_Russian                    = 7,
 
 #endif /* XPLM200 */
+
 #if defined(XPLM200)
     xplm_Language_Greek                      = 8,
 
 #endif /* XPLM200 */
+
 #if defined(XPLM200)
     xplm_Language_Japanese                   = 9,
 
 #endif /* XPLM200 */
+
 #if defined(XPLM300)
     xplm_Language_Chinese                    = 10,
 
 #endif /* XPLM300 */
+
 #if defined(XPLM400)
     xplm_Language_Ukrainian                  = 11,
 
@@ -315,6 +355,7 @@ enum {
 
 };
 typedef int XPLMLanguageCode;
+
 #if defined(XPLM200)
 /*
  * XPLMError_f
@@ -332,22 +373,24 @@ typedef int XPLMLanguageCode;
 typedef void (* XPLMError_f)(
                          const char *         inMessage);
 #endif /* XPLM200 */
+
 #if defined(XPLM_DEPRECATED)
 /*
  * XPLMInitialized
  * 
- * Deprecated: This function returns 1 if X-Plane has properly initialized the
- * plug-in system. If this routine returns 0, many XPLM functions will not
- * work.
+ * Deprecated: This function returns true if X-Plane has properly initialized
+ * the plug-in system. If this routine returns false, many XPLM functions will
+ * not work.
  * 
  * NOTE: because plugins are always called from within the XPLM, there is no
- * need to check for initialization; it will always return 1.  This routine is
- * deprecated - you do not need to check it before continuing within your
+ * need to check for initialization; it will always return true.  This routine
+ * is deprecated - you do not need to check it before continuing within your
  * plugin.
  *
  */
 XPLM_API int        XPLMInitialized(void);
 #endif /* XPLM_DEPRECATED */
+
 /*
  * XPLMGetVersions
  * 
@@ -364,6 +407,7 @@ XPLM_API void       XPLMGetVersions(
                          int *                outXPlaneVersion,
                          int *                outXPLMVersion,
                          XPLMHostApplicationID * outHostID);
+
 /*
  * XPLMGetLanguage
  * 
@@ -371,6 +415,7 @@ XPLM_API void       XPLMGetVersions(
  *
  */
 XPLM_API XPLMLanguageCode XPLMGetLanguage(void);
+
 #if defined(XPLM200)
 /*
  * XPLMFindSymbol
@@ -403,6 +448,7 @@ XPLM_API XPLMLanguageCode XPLMGetLanguage(void);
 XPLM_API void *     XPLMFindSymbol(
                          const char *         inString);
 #endif /* XPLM200 */
+
 #if defined(XPLM200)
 /*
  * XPLMSetErrorCallback
@@ -432,6 +478,7 @@ XPLM_API void *     XPLMFindSymbol(
 XPLM_API void       XPLMSetErrorCallback(
                          XPLMError_f          inCallback);
 #endif /* XPLM200 */
+
 /*
  * XPLMDebugString
  * 
@@ -448,6 +495,7 @@ XPLM_API void       XPLMSetErrorCallback(
  */
 XPLM_API void       XPLMDebugString(
                          const char *         inString);
+
 /*
  * XPLMSpeakString
  * 
@@ -459,6 +507,7 @@ XPLM_API void       XPLMDebugString(
  */
 XPLM_API void       XPLMSpeakString(
                          const char *         inString);
+
 /*
  * XPLMGetVirtualKeyDescription
  * 
@@ -470,6 +519,7 @@ XPLM_API void       XPLMSpeakString(
  */
 XPLM_API const char * XPLMGetVirtualKeyDescription(
                          char                 inVirtualKey);
+
 /*
  * XPLMReloadScenery
  * 
@@ -482,6 +532,7 @@ XPLM_API const char * XPLMGetVirtualKeyDescription(
  *
  */
 XPLM_API void       XPLMReloadScenery(void);
+
 #if defined(XPLM200)
 /***************************************************************************
  * X-PLANE COMMAND MANAGEMENT
@@ -526,6 +577,7 @@ XPLM_API void       XPLMReloadScenery(void);
  *
  */
 
+
 /*
  * XPLMCommandPhase
  * 
@@ -533,11 +585,14 @@ XPLM_API void       XPLMReloadScenery(void);
  *
  */
 enum {
+
     /* The command is being started.                                              */
     xplm_CommandBegin                        = 0,
 
+
     /* The command is continuing to execute.                                      */
     xplm_CommandContinue                     = 1,
+
 
     /* The command has ended.                                                     */
     xplm_CommandEnd                          = 2,
@@ -545,6 +600,7 @@ enum {
 
 };
 typedef int XPLMCommandPhase;
+
 /*
  * XPLMCommandRef
  * 
@@ -559,6 +615,7 @@ typedef int XPLMCommandPhase;
  *
  */
 typedef void * XPLMCommandRef;
+
 /*
  * XPLMCommandCallback_f
  * 
@@ -567,15 +624,16 @@ typedef void * XPLMCommandRef;
  * particular command, the phase of the command that is executing, and a
  * reference pointer that you specify when registering the callback.
  * 
- * Your command handler should return 1 to let processing of the command
- * continue to other plugins and X-Plane, or 0 to halt processing, potentially
- * bypassing X-Plane code.
+ * Your command handler should return true to let processing of the command
+ * continue to other plugins and X-Plane, or false to halt processing,
+ * potentially bypassing X-Plane code.
  *
  */
 typedef int (* XPLMCommandCallback_f)(
                          XPLMCommandRef       inCommand,
                          XPLMCommandPhase     inPhase,
-                         void *               inRefcon);
+                         void*                inRefcon);
+
 /*
  * XPLMFindCommand
  * 
@@ -585,6 +643,7 @@ typedef int (* XPLMCommandCallback_f)(
  */
 XPLM_API XPLMCommandRef XPLMFindCommand(
                          const char *         inName);
+
 /*
  * XPLMCommandBegin
  * 
@@ -596,6 +655,7 @@ XPLM_API XPLMCommandRef XPLMFindCommand(
  */
 XPLM_API void       XPLMCommandBegin(
                          XPLMCommandRef       inCommand);
+
 /*
  * XPLMCommandEnd
  * 
@@ -606,6 +666,7 @@ XPLM_API void       XPLMCommandBegin(
  */
 XPLM_API void       XPLMCommandEnd(
                          XPLMCommandRef       inCommand);
+
 /*
  * XPLMCommandOnce
  * 
@@ -616,6 +677,7 @@ XPLM_API void       XPLMCommandEnd(
  */
 XPLM_API void       XPLMCommandOnce(
                          XPLMCommandRef       inCommand);
+
 /*
  * XPLMCreateCommand
  * 
@@ -628,6 +690,7 @@ XPLM_API void       XPLMCommandOnce(
 XPLM_API XPLMCommandRef XPLMCreateCommand(
                          const char *         inName,
                          const char *         inDescription);
+
 /*
  * XPLMRegisterCommandHandler
  * 
@@ -645,7 +708,8 @@ XPLM_API void       XPLMRegisterCommandHandler(
                          XPLMCommandRef       inComand,
                          XPLMCommandCallback_f inHandler,
                          int                  inBefore,
-                         void *               inRefcon);
+                         void*                inRefcon);
+
 /*
  * XPLMUnregisterCommandHandler
  * 
@@ -657,8 +721,9 @@ XPLM_API void       XPLMUnregisterCommandHandler(
                          XPLMCommandRef       inComand,
                          XPLMCommandCallback_f inHandler,
                          int                  inBefore,
-                         void *               inRefcon);
+                         void*                inRefcon);
 #endif /* XPLM200 */
+
 #if defined(XPLM_DEPRECATED)
 /***************************************************************************
  * X-PLANE USER INTERACTION
@@ -677,6 +742,7 @@ XPLM_API void       XPLMUnregisterCommandHandler(
  * underlying sim data.
  *
  */
+
 
 /*
  * XPLMCommandKeyID
@@ -784,6 +850,7 @@ enum {
           xplm_key_max
 };
 typedef int XPLMCommandKeyID;
+
 /*
  * XPLMCommandButtonID
  * 
@@ -891,6 +958,7 @@ enum {
           xplm_joy_max
 };
 typedef int XPLMCommandButtonID;
+
 /*
  * XPLMSimulateKeyPress
  * 
@@ -905,6 +973,7 @@ typedef int XPLMCommandButtonID;
 XPLM_API void       XPLMSimulateKeyPress(
                          int                  inKeyType,
                          int                  inKey);
+
 #if defined(XPLM_DEPRECATED)
 /*
  * XPLMCommandKeyStroke
@@ -920,6 +989,7 @@ XPLM_API void       XPLMSimulateKeyPress(
 XPLM_API void       XPLMCommandKeyStroke(
                          XPLMCommandKeyID     inKey);
 #endif /* XPLM_DEPRECATED */
+
 #if defined(XPLM_DEPRECATED)
 /*
  * XPLMCommandButtonPress
@@ -936,6 +1006,7 @@ XPLM_API void       XPLMCommandKeyStroke(
 XPLM_API void       XPLMCommandButtonPress(
                          XPLMCommandButtonID  inButton);
 #endif /* XPLM_DEPRECATED */
+
 #if defined(XPLM_DEPRECATED)
 /*
  * XPLMCommandButtonRelease

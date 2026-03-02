@@ -267,25 +267,23 @@ end
 --------------------------------------------------------------------------------
 -- TIMER UTILITIES
 --------------------------------------------------------------------------------
-
 function run_timer(func,delay,rep)
-	tobj = all_timers[func]
+	tobj = XLuaFindTimer(func)
 	if tobj == nil then
 		tobj = XLuaCreateTimer(func)
-		all_timers[func] = tobj
 	end
 	XLuaRunTimer(tobj,delay,rep)
 end
 
 function stop_timer(func)
-	tobj = all_timers[func]
+	tobj = XLuaFindTimer(func)
 	if tobj ~= nil then
 		XLuaRunTimer(tobj, -1.0, -1.0)
 	end
 end
 
 function is_timer_scheduled(func)
-	tobj = all_timers[func]
+	tobj = XLuaFindTimer(func)
 	if tobj == nil then
 		return false
 	end
@@ -293,9 +291,9 @@ function is_timer_scheduled(func)
 end
 
 function get_timer_remaining(func)
-	tobj = all_timers[func]
+	tobj = XLuaFindTimer(func)
 	if tobj == nil then
-		return false
+		return 0
 	end
 	return XLuaGetTimerRemaining(tobj)
 end
@@ -446,28 +444,29 @@ function namespace_write(table, key, value)
 end
 
 function namespace_read(table,key)
-	vtable = rawget(table,'values')
-	var = vtable[key]
+	local vtable = rawget(table, 'values')
+	local var = vtable[key]
 	if var ~= nil then
 		return var
 	end
 
-	ftable = rawget(table,'functions')
-	func = ftable[key]
+	local ftable = rawget(table, 'functions')
+	local func = ftable[key]
 	if func ~= nil then
 		return func.__get(func)
 	end
 
-	if table.parent ~= nil then
-		return table.parent[key]
+	local rp = rawget(table, 'parent')
+	if rp ~= nil then
+		return rp[key]
 	end
 
 	return nil
 end
 
 function create_namespace()
-	ret = { 
-		functions = {}, 
+	local ret = { 
+		functions = {},
 		values = {},
 		raw_table_keys = {},
 		create_prop = function(self,name, func)
@@ -475,10 +474,15 @@ function create_namespace()
 		end,
 		parent = _G
 	}
-	-- TODO: use __len operator to restore # for Jim
-	-- TODO: look at __pairs, __ipairs support
-	mt = { __index = namespace_read, __newindex = namespace_write, __pairs = namespace_pairs, __ipairs = namespace_ipairs, __len = namespace_len }
-	setmetatable(ret,mt)
+
+	local mt = {
+		__index    = namespace_read,
+		__newindex = namespace_write,
+		__pairs    = namespace_pairs,
+		__ipairs   = namespace_ipairs,
+		__len      = namespace_len,
+	}
+	setmetatable(ret, mt)
 	return ret
 end
 
@@ -554,6 +558,13 @@ function do_callout(fname)
 			STP.add_known_function(func, fname)
 		end
 		func()
+	end
+end
+
+function receive_message(inFromWho, inMessage, inParam)
+	func=n["receive_message"]
+	if func ~= nil then
+		func(inFromWho, inMessage, inParam)
 	end
 end
 

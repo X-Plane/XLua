@@ -7,6 +7,23 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2906C7DB2F2924050016D331 /* XPLMUtilities_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7D92F2924050016D331 /* XPLMUtilities_glue.cpp */; };
+		2906C7DC2F2924050016D331 /* XPLMWeather_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7DA2F2924050016D331 /* XPLMWeather_glue.cpp */; };
+		2906C7DD2F2924050016D331 /* XPLMDataAccess_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7CC2F2924050016D331 /* XPLMDataAccess_glue.cpp */; };
+		2906C7DE2F2924050016D331 /* XPLMDisplay_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7CE2F2924050016D331 /* XPLMDisplay_glue.cpp */; };
+		2906C7DF2F2924050016D331 /* XPLMNavigation_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7D32F2924050016D331 /* XPLMNavigation_glue.cpp */; };
+		2906C7E02F2924050016D331 /* XPLMGraphics_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7CF2F2924050016D331 /* XPLMGraphics_glue.cpp */; };
+		2906C7E12F2924050016D331 /* XPLMMenus_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7D22F2924050016D331 /* XPLMMenus_glue.cpp */; };
+		2906C7E22F2924050016D331 /* XPLMInstance_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7D02F2924050016D331 /* XPLMInstance_glue.cpp */; };
+		2906C7E32F2924050016D331 /* XLua_Register_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7CA2F2924050016D331 /* XLua_Register_glue.cpp */; };
+		2906C7E42F2924050016D331 /* XPLMSound_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7D82F2924050016D331 /* XPLMSound_glue.cpp */; };
+		2906C7E52F2924050016D331 /* XPLMCamera_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7CB2F2924050016D331 /* XPLMCamera_glue.cpp */; };
+		2906C7E62F2924050016D331 /* XPLMPlugin_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7D52F2924050016D331 /* XPLMPlugin_glue.cpp */; };
+		2906C7E72F2924050016D331 /* XPLMProcessing_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7D62F2924050016D331 /* XPLMProcessing_glue.cpp */; };
+		2906C7E82F2924050016D331 /* XPLMMap_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7D12F2924050016D331 /* XPLMMap_glue.cpp */; };
+		2906C7E92F2924050016D331 /* XPLMDefs_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7CD2F2924050016D331 /* XPLMDefs_glue.cpp */; };
+		2906C7EA2F2924050016D331 /* XPLMScenery_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7D72F2924050016D331 /* XPLMScenery_glue.cpp */; };
+		2906C7EB2F2924050016D331 /* XPLMPlanes_glue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2906C7D42F2924050016D331 /* XPLMPlanes_glue.cpp */; };
 		29A35AC22D96E4930065038F /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29A35ABE2D96E4930065038F /* imgui_widgets.cpp */; };
 		29A35AC32D96E4930065038F /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29A35ABB2D96E4930065038F /* imgui_draw.cpp */; };
 		29A35AC42D96E4930065038F /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29A35AB92D96E4930065038F /* imgui.cpp */; };
@@ -30,6 +47,23 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2906C7CA2F2924050016D331 /* XLua_Register_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XLua_Register_glue.cpp; path = SDK/XLua_glue/XLua_Register_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7CB2F2924050016D331 /* XPLMCamera_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMCamera_glue.cpp; path = SDK/XLua_glue/XPLMCamera_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7CC2F2924050016D331 /* XPLMDataAccess_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMDataAccess_glue.cpp; path = SDK/XLua_glue/XPLMDataAccess_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7CD2F2924050016D331 /* XPLMDefs_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMDefs_glue.cpp; path = SDK/XLua_glue/XPLMDefs_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7CE2F2924050016D331 /* XPLMDisplay_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMDisplay_glue.cpp; path = SDK/XLua_glue/XPLMDisplay_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7CF2F2924050016D331 /* XPLMGraphics_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMGraphics_glue.cpp; path = SDK/XLua_glue/XPLMGraphics_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7D02F2924050016D331 /* XPLMInstance_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMInstance_glue.cpp; path = SDK/XLua_glue/XPLMInstance_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7D12F2924050016D331 /* XPLMMap_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMMap_glue.cpp; path = SDK/XLua_glue/XPLMMap_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7D22F2924050016D331 /* XPLMMenus_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMMenus_glue.cpp; path = SDK/XLua_glue/XPLMMenus_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7D32F2924050016D331 /* XPLMNavigation_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMNavigation_glue.cpp; path = SDK/XLua_glue/XPLMNavigation_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7D42F2924050016D331 /* XPLMPlanes_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMPlanes_glue.cpp; path = SDK/XLua_glue/XPLMPlanes_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7D52F2924050016D331 /* XPLMPlugin_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMPlugin_glue.cpp; path = SDK/XLua_glue/XPLMPlugin_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7D62F2924050016D331 /* XPLMProcessing_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMProcessing_glue.cpp; path = SDK/XLua_glue/XPLMProcessing_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7D72F2924050016D331 /* XPLMScenery_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMScenery_glue.cpp; path = SDK/XLua_glue/XPLMScenery_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7D82F2924050016D331 /* XPLMSound_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMSound_glue.cpp; path = SDK/XLua_glue/XPLMSound_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7D92F2924050016D331 /* XPLMUtilities_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMUtilities_glue.cpp; path = SDK/XLua_glue/XPLMUtilities_glue.cpp; sourceTree = SOURCE_ROOT; };
+		2906C7DA2F2924050016D331 /* XPLMWeather_glue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = XPLMWeather_glue.cpp; path = SDK/XLua_glue/XPLMWeather_glue.cpp; sourceTree = SOURCE_ROOT; };
 		29A35AB72D96E4930065038F /* imconfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imconfig.h; path = imgui/imconfig.h; sourceTree = SOURCE_ROOT; };
 		29A35AB82D96E4930065038F /* imgui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imgui.h; path = imgui/imgui.h; sourceTree = SOURCE_ROOT; };
 		29A35AB92D96E4930065038F /* imgui.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = imgui.cpp; path = imgui/imgui.cpp; sourceTree = SOURCE_ROOT; };
@@ -90,6 +124,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2906C7EC2F29240E0016D331 /* Glue */ = {
+			isa = PBXGroup;
+			children = (
+				2906C7CA2F2924050016D331 /* XLua_Register_glue.cpp */,
+				2906C7CB2F2924050016D331 /* XPLMCamera_glue.cpp */,
+				2906C7CC2F2924050016D331 /* XPLMDataAccess_glue.cpp */,
+				2906C7CD2F2924050016D331 /* XPLMDefs_glue.cpp */,
+				2906C7CE2F2924050016D331 /* XPLMDisplay_glue.cpp */,
+				2906C7CF2F2924050016D331 /* XPLMGraphics_glue.cpp */,
+				2906C7D02F2924050016D331 /* XPLMInstance_glue.cpp */,
+				2906C7D12F2924050016D331 /* XPLMMap_glue.cpp */,
+				2906C7D22F2924050016D331 /* XPLMMenus_glue.cpp */,
+				2906C7D32F2924050016D331 /* XPLMNavigation_glue.cpp */,
+				2906C7D42F2924050016D331 /* XPLMPlanes_glue.cpp */,
+				2906C7D52F2924050016D331 /* XPLMPlugin_glue.cpp */,
+				2906C7D62F2924050016D331 /* XPLMProcessing_glue.cpp */,
+				2906C7D72F2924050016D331 /* XPLMScenery_glue.cpp */,
+				2906C7D82F2924050016D331 /* XPLMSound_glue.cpp */,
+				2906C7D92F2924050016D331 /* XPLMUtilities_glue.cpp */,
+				2906C7DA2F2924050016D331 /* XPLMWeather_glue.cpp */,
+			);
+			path = Glue;
+			sourceTree = "<group>";
+		};
 		29A35AB62D96E43A0065038F /* imgui */ = {
 			isa = PBXGroup;
 			children = (
@@ -161,6 +219,7 @@
 		D60205561CC7CC8C00933688 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				2906C7EC2F29240E0016D331 /* Glue */,
 				29A35AF12D96E6BE0065038F /* imgui_iterator.inl */,
 				29A35AF22D96E6BE0065038F /* imgui_lua_bindings.cpp */,
 				29A35AB62D96E43A0065038F /* imgui */,
@@ -283,6 +342,23 @@
 				29A35AC22D96E4930065038F /* imgui_widgets.cpp in Sources */,
 				29A35AC32D96E4930065038F /* imgui_draw.cpp in Sources */,
 				29A35AC42D96E4930065038F /* imgui.cpp in Sources */,
+				2906C7DB2F2924050016D331 /* XPLMUtilities_glue.cpp in Sources */,
+				2906C7DC2F2924050016D331 /* XPLMWeather_glue.cpp in Sources */,
+				2906C7DD2F2924050016D331 /* XPLMDataAccess_glue.cpp in Sources */,
+				2906C7DE2F2924050016D331 /* XPLMDisplay_glue.cpp in Sources */,
+				2906C7DF2F2924050016D331 /* XPLMNavigation_glue.cpp in Sources */,
+				2906C7E02F2924050016D331 /* XPLMGraphics_glue.cpp in Sources */,
+				2906C7E12F2924050016D331 /* XPLMMenus_glue.cpp in Sources */,
+				2906C7E22F2924050016D331 /* XPLMInstance_glue.cpp in Sources */,
+				2906C7E32F2924050016D331 /* XLua_Register_glue.cpp in Sources */,
+				2906C7E42F2924050016D331 /* XPLMSound_glue.cpp in Sources */,
+				2906C7E52F2924050016D331 /* XPLMCamera_glue.cpp in Sources */,
+				2906C7E62F2924050016D331 /* XPLMPlugin_glue.cpp in Sources */,
+				2906C7E72F2924050016D331 /* XPLMProcessing_glue.cpp in Sources */,
+				2906C7E82F2924050016D331 /* XPLMMap_glue.cpp in Sources */,
+				2906C7E92F2924050016D331 /* XPLMDefs_glue.cpp in Sources */,
+				2906C7EA2F2924050016D331 /* XPLMScenery_glue.cpp in Sources */,
+				2906C7EB2F2924050016D331 /* XPLMPlanes_glue.cpp in Sources */,
 				29A35AEE2D96E4F90065038F /* FloatingWindow.cpp in Sources */,
 				29A35AEF2D96E4F90065038F /* ImGUIIntegration.cpp in Sources */,
 				29A35AF02D96E4F90065038F /* FLWIntegration.cpp in Sources */,
@@ -448,6 +524,9 @@
 					"IBM=0",
 					"LIN=0",
 					LUA_BINDINGS_LOCAL_STATE,
+					XPLM430,
+					XPLM420,
+					XPLM410,
 					XPLM400,
 					XPLM303,
 					XPLM302,
@@ -455,6 +534,14 @@
 					XPLM300,
 					XPLM210,
 					XPLM200,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(XPSDK_ROOT)/CHeaders/Widgets",
+					"$(XPSDK_ROOT)/CHeaders/XPLM",
+					lua_sdk,
+					"fmod/mac/**",
+					src,
+					"$(HEADER_SEARCH_PATHS)",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -478,6 +565,9 @@
 					"IBM=0",
 					"LIN=0",
 					LUA_BINDINGS_LOCAL_STATE,
+					XPLM430,
+					XPLM420,
+					XPLM410,
 					XPLM400,
 					XPLM303,
 					XPLM302,
@@ -485,6 +575,14 @@
 					XPLM300,
 					XPLM210,
 					XPLM200,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(XPSDK_ROOT)/CHeaders/Widgets",
+					"$(XPSDK_ROOT)/CHeaders/XPLM",
+					lua_sdk,
+					"fmod/mac/**",
+					src,
+					"$(HEADER_SEARCH_PATHS)",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",

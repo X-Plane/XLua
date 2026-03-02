@@ -12,15 +12,17 @@
  ***************************************************************************/
 #include <optional>
 #include "XPLMDefs.h"
+#include "XPLMSound.h"
+
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
 #define XPLM_DEPRECATED
 #include "XPLMPlugin.h"
 #undef XPLM_DEPRECATED
 
-#include "../xpfuncs.h"
-#include "../module.h"
-#include "../lua_helpers.h"
+#include "xpfuncs.h"
+#include "module.h"
+#include "lua_helpers.h"
 
 extern "C" {
 
@@ -90,34 +92,30 @@ int XLuaGetPluginInfo(lua_State* L)
 	XPLMPluginID inPlugin = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inPlugin = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
+		inPlugin = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
 	}
-	char outName[256];
-	char outFilePath[256];
-	char outSignature[256];
-	char outDescription[256];
+	char outName[256] = {};
+	char outFilePath[256] = {};
+	char outSignature[256] = {};
+	char outDescription[256] = {};
 
 	XPLMGetPluginInfo(inPlugin, outName, outFilePath, outSignature, outDescription);
 
-	lua_createtable(L, 0, 4); // 0 array slots and 4 key-value pairs
+	lua_createtable(L, 0, 4);
 
 	lua_pushstring(L, "outName");
-
 	lua_pushstring(L, outName);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outFilePath");
-
 	lua_pushstring(L, outFilePath);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outSignature");
-
 	lua_pushstring(L, outSignature);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outDescription");
-
 	lua_pushstring(L, outDescription);
 	lua_settable(L, -3);
 
@@ -129,7 +127,7 @@ int XLuaIsPluginEnabled(lua_State* L)
 	XPLMPluginID inPluginID = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
+		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
 	}
 
 	int res = XPLMIsPluginEnabled(inPluginID);
@@ -143,7 +141,7 @@ int XLuaEnablePlugin(lua_State* L)
 	XPLMPluginID inPluginID = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
+		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
 	}
 
 	int res = XPLMEnablePlugin(inPluginID);
@@ -157,7 +155,7 @@ int XLuaDisablePlugin(lua_State* L)
 	XPLMPluginID inPluginID = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
+		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
 	}
 
 	XPLMDisablePlugin(inPluginID);
@@ -172,18 +170,27 @@ int XLuaReloadPlugins(lua_State* L)
 	return 0;
 }
 
+int XLuaReloadThisPlugin(lua_State* L)
+{
+	bool forReplacement = xlua_checkboolean(L, 1);
+
+	XPLMReloadThisPlugin(forReplacement);
+
+	return 0;
+}
+
 int XLuaSendMessageToPlugin(lua_State* L)
 {
 	XPLMPluginID inPlugin = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inPlugin = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected userdata<XPLMPluginID>");
+		inPlugin = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
 	}
 	int inMessage = xlua_checkinteger(L, 2);
 	void * inParam = {};
 	if (lua_isuserdata(L, 3))
 	{
-		inParam = xlua_checkuserdata<void*>(L, 3, "Expected userdata<void*>");
+		inParam = xlua_checkuserdata<void*>(L, 3, "Expected void*");
 	}
 
 	XPLMSendMessageToPlugin(inPlugin, inMessage, inParam);
@@ -193,11 +200,13 @@ int XLuaSendMessageToPlugin(lua_State* L)
 
 static void cb_XPLMFeatureEnumerator_f(const char * inFeature, void* inRef)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRef);
-	lua_State* L = setup_lua_callback(cb, "XPLMFeatureEnumerator_f");
+	notify_cb_t const* inRef_cb = static_cast<notify_cb_t*>(inRef);
+
+	lua_State* L = setup_lua_callback(inRef_cb, "XPLMFeatureEnumerator_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFeature, cb->origRefconRegIndex))
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", inFeature, inRef_cb->get_capture()))
 		{
 		}
 	}
@@ -235,12 +244,12 @@ int XLuaEnableFeature(lua_State* L)
 
 int XLuaEnumerateFeatures(lua_State* L)
 {
-	int refcon_regindex = capture_lua_value(L, 2);
-	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 1, "XPLMFeatureEnumerator_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 2);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 1, true, "XPLMFeatureEnumerator_f");
 
-	XPLMEnumerateFeatures(cb_XPLMFeatureEnumerator_f, cb_capture_0);
+	XPLMEnumerateFeatures((cb_capture_0 ? cb_XPLMFeatureEnumerator_f : nullptr), cb_capture_0.get());
 
 	return 0;
 }

@@ -13,14 +13,15 @@
 #include <optional>
 #include "XPLMDefs.h"
 
+
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
 #define XPLM_DEPRECATED
 #include "XPLMMap.h"
 #undef XPLM_DEPRECATED
 
-#include "../xpfuncs.h"
-#include "../module.h"
-#include "../lua_helpers.h"
+#include "xpfuncs.h"
+#include "module.h"
+#include "lua_helpers.h"
 
 extern "C" {
 
@@ -78,12 +79,13 @@ void RegType_XPLMMapLayerID(lua_State* L)
 	lua_pushstring(L, "XPLMMapLayerID");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMMapLayerID_to_string);
+#ifdef HAVE_XPLMMapLayerID_tostring
+	lua_pushcfunction(L, _XPLMMapLayerID_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMMapLayerID_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMMapLayerID", _XPLMMapLayerID_Constructor);
 
@@ -125,73 +127,136 @@ void RegType_XPLMMapProjectionID(lua_State* L)
 	lua_pushstring(L, "XPLMMapProjectionID");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMMapProjectionID_to_string);
+#ifdef HAVE_XPLMMapProjectionID_tostring
+	lua_pushcfunction(L, _XPLMMapProjectionID_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMMapProjectionID_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMMapProjectionID", _XPLMMapProjectionID_Constructor);
 
 	lua_pop(L, 1);
 }
 
-static void cb_XPLMMapDrawingCallback_f(XPLMMapLayerID inLayer, const float * inMapBoundsLeftTopRightBottom, float zoomRatio, float mapUnitsPerUserInterfaceUnit, XPLMMapStyle mapStyle, XPLMMapProjectionID projection, void* inRefcon)
+static void cb_XPLMMapDrawingCallback_f(XPLMMapLayerID inLayer, const float inMapBoundsLeftTopRightBottom[4], float zoomRatio, float mapUnitsPerUserInterfaceUnit, XPLMMapStyle mapStyle, XPLMMapProjectionID projection, void* inRefcon)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
-	lua_State* L = setup_lua_callback(cb, "XPLMMapDrawingCallback_f");
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMMapDrawingCallback_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "u?ddiur", inLayer, inMapBoundsLeftTopRightBottom, zoomRatio, mapUnitsPerUserInterfaceUnit, mapStyle, projection, cb->origRefconRegIndex))
+
+		lua_createtable(L, 4, 0);
+		if (inMapBoundsLeftTopRightBottom != nullptr)
+		{
+			for (size_t i = 0; i < 4; ++i)
+			{
+				xlua_pushnumber(L, inMapBoundsLeftTopRightBottom[i]);
+				lua_rawseti(L, -2, i + 1);
+			}
+		}
+		int inMapBoundsLeftTopRightBottom_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "urddiur", inLayer, inMapBoundsLeftTopRightBottom_ref, zoomRatio, mapUnitsPerUserInterfaceUnit, mapStyle, projection, inRefcon_cb->get_capture()))
 		{
 		}
+
+		luaL_unref(L, LUA_REGISTRYINDEX, inMapBoundsLeftTopRightBottom_ref);
 	}
 }
 
-static void cb_XPLMMapIconDrawingCallback_f(XPLMMapLayerID inLayer, const float * inMapBoundsLeftTopRightBottom, float zoomRatio, float mapUnitsPerUserInterfaceUnit, XPLMMapStyle mapStyle, XPLMMapProjectionID projection, void* inRefcon)
+static void cb_XPLMMapIconDrawingCallback_f(XPLMMapLayerID inLayer, const float inMapBoundsLeftTopRightBottom[4], float zoomRatio, float mapUnitsPerUserInterfaceUnit, XPLMMapStyle mapStyle, XPLMMapProjectionID projection, void* inRefcon)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
-	lua_State* L = setup_lua_callback(cb, "XPLMMapIconDrawingCallback_f");
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMMapIconDrawingCallback_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "u?ddiur", inLayer, inMapBoundsLeftTopRightBottom, zoomRatio, mapUnitsPerUserInterfaceUnit, mapStyle, projection, cb->origRefconRegIndex))
+
+		lua_createtable(L, 4, 0);
+		if (inMapBoundsLeftTopRightBottom != nullptr)
+		{
+			for (size_t i = 0; i < 4; ++i)
+			{
+				xlua_pushnumber(L, inMapBoundsLeftTopRightBottom[i]);
+				lua_rawseti(L, -2, i + 1);
+			}
+		}
+		int inMapBoundsLeftTopRightBottom_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "urddiur", inLayer, inMapBoundsLeftTopRightBottom_ref, zoomRatio, mapUnitsPerUserInterfaceUnit, mapStyle, projection, inRefcon_cb->get_capture()))
 		{
 		}
+
+		luaL_unref(L, LUA_REGISTRYINDEX, inMapBoundsLeftTopRightBottom_ref);
 	}
 }
 
-static void cb_XPLMMapLabelDrawingCallback_f(XPLMMapLayerID inLayer, const float * inMapBoundsLeftTopRightBottom, float zoomRatio, float mapUnitsPerUserInterfaceUnit, XPLMMapStyle mapStyle, XPLMMapProjectionID projection, void* inRefcon)
+static void cb_XPLMMapLabelDrawingCallback_f(XPLMMapLayerID inLayer, const float inMapBoundsLeftTopRightBottom[4], float zoomRatio, float mapUnitsPerUserInterfaceUnit, XPLMMapStyle mapStyle, XPLMMapProjectionID projection, void* inRefcon)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
-	lua_State* L = setup_lua_callback(cb, "XPLMMapLabelDrawingCallback_f");
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMMapLabelDrawingCallback_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "u?ddiur", inLayer, inMapBoundsLeftTopRightBottom, zoomRatio, mapUnitsPerUserInterfaceUnit, mapStyle, projection, cb->origRefconRegIndex))
+
+		lua_createtable(L, 4, 0);
+		if (inMapBoundsLeftTopRightBottom != nullptr)
+		{
+			for (size_t i = 0; i < 4; ++i)
+			{
+				xlua_pushnumber(L, inMapBoundsLeftTopRightBottom[i]);
+				lua_rawseti(L, -2, i + 1);
+			}
+		}
+		int inMapBoundsLeftTopRightBottom_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "urddiur", inLayer, inMapBoundsLeftTopRightBottom_ref, zoomRatio, mapUnitsPerUserInterfaceUnit, mapStyle, projection, inRefcon_cb->get_capture()))
 		{
 		}
+
+		luaL_unref(L, LUA_REGISTRYINDEX, inMapBoundsLeftTopRightBottom_ref);
 	}
 }
 
-static void cb_XPLMMapPrepareCacheCallback_f(XPLMMapLayerID inLayer, const float * inTotalMapBoundsLeftTopRightBottom, XPLMMapProjectionID projection, void* inRefcon)
+static void cb_XPLMMapPrepareCacheCallback_f(XPLMMapLayerID inLayer, const float inTotalMapBoundsLeftTopRightBottom[4], XPLMMapProjectionID projection, void* inRefcon)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
-	lua_State* L = setup_lua_callback(cb, "XPLMMapPrepareCacheCallback_f");
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMMapPrepareCacheCallback_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "u?ur", inLayer, inTotalMapBoundsLeftTopRightBottom, projection, cb->origRefconRegIndex))
+
+		lua_createtable(L, 4, 0);
+		if (inTotalMapBoundsLeftTopRightBottom != nullptr)
+		{
+			for (size_t i = 0; i < 4; ++i)
+			{
+				xlua_pushnumber(L, inTotalMapBoundsLeftTopRightBottom[i]);
+				lua_rawseti(L, -2, i + 1);
+			}
+		}
+		int inTotalMapBoundsLeftTopRightBottom_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "urur", inLayer, inTotalMapBoundsLeftTopRightBottom_ref, projection, inRefcon_cb->get_capture()))
 		{
 		}
+
+		luaL_unref(L, LUA_REGISTRYINDEX, inTotalMapBoundsLeftTopRightBottom_ref);
 	}
 }
 
 static void cb_XPLMMapWillBeDeletedCallback_f(XPLMMapLayerID inLayer, void* inRefcon)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
-	lua_State* L = setup_lua_callback(cb, "XPLMMapWillBeDeletedCallback_f");
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMMapWillBeDeletedCallback_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ur", inLayer, cb->origRefconRegIndex))
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ur", inLayer, inRefcon_cb->get_capture()))
 		{
 		}
 	}
@@ -209,64 +274,74 @@ XPLMCreateMapLayer_t XPLMCreateMapLayer_t_from_table(lua_State* L, int stackpos)
 
 	luaL_checktype(L, stackpos, LUA_TTABLE);
 
-	lua_getfield(L, -1, "refcon");
-	int refcon_0_regindex = capture_lua_value(L, -1);
+	lua_getfield(L, stackpos, "refcon");
+	std::shared_ptr<notify_cb_t> refcon_cb = capture_lua_value(L, -1);
 	lua_pop(L, 1);
-	out.structSize = sizeof(out);
-	lua_pop(L, 1);
+	xlua_persist_userref(L, refcon_cb);
+	out.refcon = refcon_cb.get();
 
-	lua_getfield(L, -1, "mapToCreateLayerIn");
+	out.structSize = sizeof(out);
+
+	lua_getfield(L, stackpos, "mapToCreateLayerIn");
 	if (!lua_isnil(L, -1))
 	{
 		out.mapToCreateLayerIn = static_cast<const char *>(luaL_checkstring(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "layerType");
+	lua_getfield(L, stackpos, "layerType");
 	if (!lua_isnil(L, -1))
 	{
 		out.layerType = static_cast<XPLMMapLayerType>(luaL_checkinteger(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "willBeDeletedCallback");
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, -1, "XPLMMapWillBeDeletedCallback_f", refcon_0_regindex);
-	lua_pop(L, 1);
-
-	lua_getfield(L, -1, "prepCacheCallback");
-	wrap_next_lua_func(cb_capture_0, -1, "XPLMMapPrepareCacheCallback_f");
-	lua_pop(L, 1);
-
-	lua_getfield(L, -1, "drawCallback");
-	wrap_next_lua_func(cb_capture_0, -1, "XPLMMapDrawingCallback_f");
-	lua_pop(L, 1);
-
-	lua_getfield(L, -1, "iconCallback");
-	wrap_next_lua_func(cb_capture_0, -1, "XPLMMapIconDrawingCallback_f");
-	lua_pop(L, 1);
-
-	lua_getfield(L, -1, "labelCallback");
-	wrap_next_lua_func(cb_capture_0, -1, "XPLMMapLabelDrawingCallback_f");
-	lua_pop(L, 1);
-
-	lua_getfield(L, -1, "showUiToggle");
-	if (!lua_isnil(L, -1))
+	lua_getfield(L, stackpos, "willBeDeletedCallback");
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMMapWillBeDeletedCallback_f"))
 	{
-		out.showUiToggle = static_cast<int>(luaL_checkinteger(L, -1));
+		out.willBeDeletedCallback = cb_XPLMMapWillBeDeletedCallback_f;
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "layerName");
+	lua_getfield(L, stackpos, "prepCacheCallback");
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMMapPrepareCacheCallback_f"))
+	{
+		out.prepCacheCallback = cb_XPLMMapPrepareCacheCallback_f;
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "drawCallback");
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMMapDrawingCallback_f"))
+	{
+		out.drawCallback = cb_XPLMMapDrawingCallback_f;
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "iconCallback");
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMMapIconDrawingCallback_f"))
+	{
+		out.iconCallback = cb_XPLMMapIconDrawingCallback_f;
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "labelCallback");
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMMapLabelDrawingCallback_f"))
+	{
+		out.labelCallback = cb_XPLMMapLabelDrawingCallback_f;
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "showUiToggle");
+	if (!lua_isnil(L, -1))
+	{
+		out.showUiToggle = static_cast<int>(xlua_checkboolean(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "layerName");
 	if (!lua_isnil(L, -1))
 	{
 		out.layerName = static_cast<const char *>(luaL_checkstring(L, -1));
-	}
-	lua_pop(L, 1);
-
-	lua_getfield(L, -1, "refcon");
-	if (!lua_isnil(L, -1))
-	{
-		out.refcon = static_cast<void*>(xlua_checkuserdata<void*>(L, -1, "Expected userdata<void*>"));
 	}
 	lua_pop(L, 1);
 
@@ -306,7 +381,7 @@ void XPLMCreateMapLayer_t_to_table(lua_State* L, XPLMCreateMapLayer_t const& src
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "showUiToggle");
-	lua_pushinteger(L, src.showUiToggle);
+	lua_pushboolean(L, src.showUiToggle);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "layerName");
@@ -341,7 +416,7 @@ int XLuaCreateMapLayer(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMMapLayerID>(L, res);
+		Make_XPLMMapLayerID(L, res);
 	}
 
 	return 1;
@@ -352,7 +427,7 @@ int XLuaDestroyMapLayer(lua_State* L)
 	XPLMMapLayerID inLayer = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inLayer = xlua_checkuserdata<XPLMMapLayerID>(L, 1, "Expected userdata<XPLMMapLayerID>");
+		inLayer = xlua_checkuserdata<XPLMMapLayerID>(L, 1, "Expected XPLMMapLayerID");
 	}
 
 	int res = XPLMDestroyMapLayer(inLayer);
@@ -363,11 +438,13 @@ int XLuaDestroyMapLayer(lua_State* L)
 
 static void cb_XPLMMapCreatedCallback_f(const char * mapIdentifier, void* inRefcon)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inRefcon);
-	lua_State* L = setup_lua_callback(cb, "XPLMMapCreatedCallback_f");
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMMapCreatedCallback_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", mapIdentifier, cb->origRefconRegIndex))
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "sr", mapIdentifier, inRefcon_cb->get_capture()))
 		{
 		}
 	}
@@ -375,12 +452,12 @@ static void cb_XPLMMapCreatedCallback_f(const char * mapIdentifier, void* inRefc
 
 int XLuaRegisterMapCreationHook(lua_State* L)
 {
-	int refcon_regindex = capture_lua_value(L, 2);
-	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 1, "XPLMMapCreatedCallback_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 2);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 1, true, "XPLMMapCreatedCallback_f");
 
-	XPLMRegisterMapCreationHook(cb_XPLMMapCreatedCallback_f, cb_capture_0);
+	XPLMRegisterMapCreationHook((cb_capture_0 ? cb_XPLMMapCreatedCallback_f : nullptr), cb_capture_0.get());
 
 	return 0;
 }
@@ -400,7 +477,7 @@ int XLuaDrawMapIconFromSheet(lua_State* L)
 	XPLMMapLayerID layer = {};
 	if (lua_isuserdata(L, 1))
 	{
-		layer = xlua_checkuserdata<XPLMMapLayerID>(L, 1, "Expected userdata<XPLMMapLayerID>");
+		layer = xlua_checkuserdata<XPLMMapLayerID>(L, 1, "Expected XPLMMapLayerID");
 	}
 	const char * inPngPath = xlua_checkstring(L, 2);
 	int s = xlua_checkinteger(L, 3);
@@ -423,7 +500,7 @@ int XLuaDrawMapLabel(lua_State* L)
 	XPLMMapLayerID layer = {};
 	if (lua_isuserdata(L, 1))
 	{
-		layer = xlua_checkuserdata<XPLMMapLayerID>(L, 1, "Expected userdata<XPLMMapLayerID>");
+		layer = xlua_checkuserdata<XPLMMapLayerID>(L, 1, "Expected XPLMMapLayerID");
 	}
 	const char * inText = xlua_checkstring(L, 2);
 	float mapX = xlua_checknumber(L, 3);
@@ -441,24 +518,22 @@ int XLuaMapProject(lua_State* L)
 	XPLMMapProjectionID projection = {};
 	if (lua_isuserdata(L, 1))
 	{
-		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected userdata<XPLMMapProjectionID>");
+		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected XPLMMapProjectionID");
 	}
 	double latitude = xlua_checknumber(L, 2);
 	double longitude = xlua_checknumber(L, 3);
-	float outX;
-	float outY;
+	float outX = {};
+	float outY = {};
 
 	XPLMMapProject(projection, latitude, longitude, &outX, &outY);
 
-	lua_createtable(L, 0, 2); // 0 array slots and 2 key-value pairs
+	lua_createtable(L, 0, 2);
 
 	lua_pushstring(L, "outX");
-
 	lua_pushnumber(L, outX);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outY");
-
 	lua_pushnumber(L, outY);
 	lua_settable(L, -3);
 
@@ -470,24 +545,22 @@ int XLuaMapUnproject(lua_State* L)
 	XPLMMapProjectionID projection = {};
 	if (lua_isuserdata(L, 1))
 	{
-		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected userdata<XPLMMapProjectionID>");
+		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected XPLMMapProjectionID");
 	}
 	float mapX = xlua_checknumber(L, 2);
 	float mapY = xlua_checknumber(L, 3);
-	double outLatitude;
-	double outLongitude;
+	double outLatitude = {};
+	double outLongitude = {};
 
 	XPLMMapUnproject(projection, mapX, mapY, &outLatitude, &outLongitude);
 
-	lua_createtable(L, 0, 2); // 0 array slots and 2 key-value pairs
+	lua_createtable(L, 0, 2);
 
 	lua_pushstring(L, "outLatitude");
-
 	lua_pushnumber(L, outLatitude);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outLongitude");
-
 	lua_pushnumber(L, outLongitude);
 	lua_settable(L, -3);
 
@@ -499,7 +572,7 @@ int XLuaMapScaleMeter(lua_State* L)
 	XPLMMapProjectionID projection = {};
 	if (lua_isuserdata(L, 1))
 	{
-		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected userdata<XPLMMapProjectionID>");
+		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected XPLMMapProjectionID");
 	}
 	float mapX = xlua_checknumber(L, 2);
 	float mapY = xlua_checknumber(L, 3);
@@ -515,7 +588,7 @@ int XLuaMapGetNorthHeading(lua_State* L)
 	XPLMMapProjectionID projection = {};
 	if (lua_isuserdata(L, 1))
 	{
-		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected userdata<XPLMMapProjectionID>");
+		projection = xlua_checkuserdata<XPLMMapProjectionID>(L, 1, "Expected XPLMMapProjectionID");
 	}
 	float mapX = xlua_checknumber(L, 2);
 	float mapY = xlua_checknumber(L, 3);

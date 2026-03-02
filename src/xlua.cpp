@@ -3,7 +3,7 @@
 //	See LICENSE.txt for the full terms of the license.
 
 
-#define VERSION "1.5.0r1"
+#define VERSION "1.5.1r1"
 
 #include <stdio.h>
 #include <string.h>
@@ -12,6 +12,7 @@
 #include <memory>
 #include <algorithm>
 #include <array>
+#include <filesystem>
 
 #ifndef XPLM200
 #define XPLM200
@@ -32,6 +33,7 @@
 #include "xpdatarefs.h"
 #include "xpcommands.h"
 #include "xptimers.h"
+#include "xpfuncs.h"
 
 #if !MOBILE
 #include "ImGUIIntegration.h"
@@ -45,6 +47,8 @@ extern "C" {
 #include "lauxlib.h"
 }
 
+std::map<int, char const*> gXPMessageParamTypes;
+
 static vector<module *>g_modules;
 static XPLMFlightLoopID	g_pre_loop = NULL;
 static XPLMFlightLoopID	g_post_loop = NULL;
@@ -52,7 +56,10 @@ static bool				g_is_acf_inited = false;
 XPLMDataRef				g_replay_active = NULL;
 XPLMDataRef				g_sim_period = NULL;
 XPLMCommandRef			reset_cmd = nullptr;
-XPLMMenuID				PluginMenu = 0;
+XPLMMenuID				PluginMenu = 0;					// Our sub-menu
+int						PluginMenuItem = 0;				// Our sub-menu's item number on the Plugins menu
+bool					g_bIsAircraftPlugin = true;
+int						JITMenuItem = 0;
 
 static string plugin_base_path;
 
@@ -68,6 +75,7 @@ enum eMenuItems : int
 	MI_ResetState,
 #if !MOBILE
 	MI_ShowProfiler,
+	MI_ToggleJIT
 #endif
 };
 
@@ -158,6 +166,11 @@ static float xlua_post_timer_master_cb(
 			profilerWnd.reset();
 		}
 	}
+	if (!g_modules.empty())
+	{
+		bool is_enabled = g_modules.front()->get_jit_mode();
+		XPLMCheckMenuItem(PluginMenu, JITMenuItem, is_enabled ? xplm_Menu_Checked : xplm_Menu_Unchecked);
+	}
 #endif
 	return -1;
 }
@@ -223,13 +236,15 @@ void CleanupScripts(void)
 		g_is_acf_inited = false;
 	}
 
-	for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-		delete (*m);
-	g_modules.clear();
-
+	// Get rid of drefs/cmds/timers first, they may well hold references to the Lua interpreter.
 	xlua_dref_cleanup();
 	xlua_cmd_cleanup();
 	xlua_timer_cleanup();
+	xlua_callback_cleanup();
+
+	for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+		delete (*m);
+	g_modules.clear();
 }
 
 int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
@@ -242,13 +257,7 @@ int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefco
 		// it will be immediately set back to true from the XPLM_MSG_AIRPORT_LOADED code below.
 		g_bReloadOnFlightChange = false;
 
-		CleanupScripts();
-		InitScripts();
-
-		if (!(intptr_t)inRefcon)	// Recursion block - ResetState() can be called from XPluginReceiveMessage().
-		{
-			XPluginReceiveMessage(XPLM_PLUGIN_XPLANE, XPLM_MSG_AIRPORT_LOADED, nullptr);
-		}
+		XPLMReloadThisPlugin(false);
 	}
 
 	return 0;
@@ -358,12 +367,12 @@ void ShowProfiler(void)
 
 										  ImGui::SameLine(0, 20);
 										  ImGui::BeginDisabled(selected_module == nullptr || selected_module->m_profile.empty());
-										  if (ImGui::Button("Dump to Log"))
+										  if (selected_module != nullptr && ImGui::Button("Dump to Log"))
 										  {
 											  selected_module->dump_profile();
 										  }
 										  ImGui::SameLine();
-										  if (ImGui::Button("Clear"))
+										  if (selected_module != nullptr && ImGui::Button("Clear"))
 										  {
 											  selected_module->clear_profile();
 										  }
@@ -477,6 +486,21 @@ static void MenuHandler(void* menuRef, void* itemRef)
 		case MI_ShowProfiler:
 			ShowProfiler();
 			break;
+
+		case MI_ToggleJIT:
+		{
+			if (!g_modules.empty())
+			{
+				XPLMMenuCheck curState;
+				XPLMCheckMenuItemState(PluginMenu, JITMenuItem, &curState);
+
+				for (auto const& m : g_modules)
+				{
+					m->set_jit_mode(curState != xplm_Menu_Checked);
+				}
+			}
+			break;
+		}
 #endif
 	}
 }
@@ -493,24 +517,10 @@ PLUGIN_API int XPluginStart(
 	g_replay_active = XPLMFindDataRef("sim/time/is_in_replay");
 	g_sim_period = XPLMFindDataRef("sim/operation/misc/frame_rate_period");
 	
-	XPLMCreateFlightLoop_t pre = { 0 };
-	XPLMCreateFlightLoop_t post = { 0 };
-	pre.structSize = sizeof(pre);
-	post.structSize = sizeof(post);
-	pre.phase = xplm_FlightLoop_Phase_BeforeFlightModel;
-	post.phase = xplm_FlightLoop_Phase_AfterFlightModel;
-	pre.callbackFunc = xlua_pre_timer_master_cb;
-	post.callbackFunc = xlua_post_timer_master_cb;
-
-	g_pre_loop = XPLMCreateFlightLoop(&pre);
-	g_post_loop = XPLMCreateFlightLoop(&post);
-	XPLMScheduleFlightLoop(g_pre_loop, -1, 0);
-	XPLMScheduleFlightLoop(g_post_loop, -1, 0);
-	
 	XPLMEnableFeature("XPLM_USE_NATIVE_PATHS", 1);
 	
 	// Plugin base path: pop off two dirs from the plugin name to get the base path for scripts, *not* the owning aircraft's base path.
-	char pName[256], pPath[512] = { 0 }, myPath[512] = { 0 };
+	char pPath[512] = { 0 }, myPath[512] = { 0 };
 	XPLMGetPluginInfo(XPLMGetMyID(), nullptr, myPath, nullptr, nullptr);
 	plugin_base_path = myPath;
 	for (int s = 0; s < 2; ++s)
@@ -523,54 +533,14 @@ PLUGIN_API int XPluginStart(
 	}
 	plugin_base_path += XPLMGetDirectorySeparator();
 
-	// Do we want to add a "reset" menu item? Only for the user's plane.
-	XPLMGetNthAircraftModel(XPLM_USER_AIRCRAFT, pName, pPath);
-	char *PDest = strrchr(pPath, *XPLMGetDirectorySeparator());
-	if (PDest != nullptr)
+	char sysPath[512];
+	XPLMGetSystemPath(sysPath);
+	auto relpath = std::filesystem::relative(std::filesystem::path(myPath), std::filesystem::path(sysPath) / "Aircraft");
+	g_bIsAircraftPlugin = !relpath.string().starts_with("..");
+
+	if (!g_bIsAircraftPlugin)
 	{
-		*PDest = 0;
-		const size_t acPathLen = strlen(pPath);
-		std::string ac_base_path(plugin_base_path);
-		string::size_type lp = std::string::npos;
-
-		do
-		{
-			lp = ac_base_path.find_last_of(XPLMGetDirectorySeparator());
-			if (lp != std::string::npos)
-			{
-				ac_base_path.erase(lp);
-			}
-
-			if (ac_base_path.compare(pPath) == 0)
-			{
-				const char* menuName;
-				lp = ac_base_path.find_last_of(XPLMGetDirectorySeparator());
-				if (lp != std::string::npos)
-				{
-					menuName = ac_base_path.c_str() + lp + 1;
-				}
-				else
-				{
-					menuName = outName;
-				}
-
-				int item = XPLMAppendMenuItem(XPLMFindPluginsMenu(), menuName, nullptr, 0);
-				PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), item, MenuHandler, nullptr);
-				XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, 0);
-#if !MOBILE
-				XPLMAppendMenuItem(PluginMenu, "Show Profiler", (void*)MI_ShowProfiler, 1);
-#endif
-				break;
-			}
-		} while (lp != std::string::npos && ac_base_path.size() >= acPathLen);
-	}
-
-	InitScripts();
-
-	reset_cmd = XPLMCreateCommand("laminar/xlua/reload_all_scripts", "Reload scripts and state for this aircraft");
-	if (reset_cmd != nullptr)
-	{
-		XPLMRegisterCommandHandler(reset_cmd, ResetState, 1, nullptr);
+		strcpy(outSig, "com.x-plane.xlua-sys." VERSION);
 	}
 
 	return 1;
@@ -578,27 +548,127 @@ PLUGIN_API int XPluginStart(
 
 PLUGIN_API void	XPluginStop(void)
 {
+}
+
+PLUGIN_API void XPluginDisable(void)
+{
 	if (PluginMenu != nullptr)
 	{
+		XPLMRemoveMenuItem(XPLMFindPluginsMenu(), PluginMenuItem);
 		XPLMDestroyMenu(PluginMenu);
 		PluginMenu = nullptr;
 	}
 
 	CleanupScripts();
-	
+
 	XPLMDestroyFlightLoop(g_pre_loop);
 	XPLMDestroyFlightLoop(g_post_loop);
-	g_pre_loop = NULL;
-	g_post_loop = NULL;	
+	g_pre_loop = nullptr;
+	g_post_loop = nullptr;
 	g_is_acf_inited = false;
-}
-
-PLUGIN_API void XPluginDisable(void)
-{
 }
 
 PLUGIN_API int XPluginEnable(void)
 {
+	XPLMCreateFlightLoop_t pre =
+	{
+		.structSize = sizeof(XPLMCreateFlightLoop_t),
+		.phase = xplm_FlightLoop_Phase_BeforeFlightModel,
+		.callbackFunc = xlua_pre_timer_master_cb
+	};
+	g_pre_loop = XPLMCreateFlightLoop(&pre);
+	XPLMScheduleFlightLoop(g_pre_loop, -1, 0);
+
+	XPLMCreateFlightLoop_t post =
+	{
+		.structSize = sizeof(XPLMCreateFlightLoop_t),
+		.phase = xplm_FlightLoop_Phase_AfterFlightModel,
+		.callbackFunc = xlua_post_timer_master_cb
+	};
+	g_post_loop = XPLMCreateFlightLoop(&post);
+	XPLMScheduleFlightLoop(g_post_loop, -1, 0);
+
+	char const* menuName = nullptr;
+	std::string ac_base_path(plugin_base_path);
+
+	if (g_bIsAircraftPlugin)
+	{
+		// Do we want to add a "reset" menu item? Only for the user's plane.
+		char pName[256], sysPath[512];
+
+		XPLMGetSystemPath(sysPath);
+		XPLMGetNthAircraftModel(XPLM_USER_AIRCRAFT, pName, sysPath);
+		char* PDest = strrchr(sysPath, *XPLMGetDirectorySeparator());
+		if (PDest != nullptr)
+		{
+			*PDest = 0;
+			const size_t acPathLen = strlen(sysPath);
+			string::size_type lp = std::string::npos;
+
+			do
+			{
+				lp = ac_base_path.find_last_of(XPLMGetDirectorySeparator());
+				if (lp != std::string::npos)
+				{
+					ac_base_path.erase(lp);
+				}
+
+				if (ac_base_path.compare(sysPath) == 0)
+				{
+					lp = ac_base_path.find_last_of(XPLMGetDirectorySeparator());
+					if (lp != std::string::npos)
+					{
+						menuName = ac_base_path.c_str() + lp + 1;
+					}
+					else
+					{
+						menuName = "XLua " VERSION;
+					}
+
+					break;
+				}
+			} while (lp != std::string::npos && ac_base_path.size() >= acPathLen);
+		}
+
+		if (g_bIsAircraftPlugin)
+		{
+			reset_cmd = XPLMCreateCommand("laminar/xlua/reload_all_scripts", "Reload scripts and state for this aircraft");
+		}
+		else
+		{
+			reset_cmd = XPLMCreateCommand("laminar/xlua_sys/reload_all_scripts", "Reload scripts and state for system-level XLua");
+		}
+
+		if (reset_cmd != nullptr)
+		{
+			XPLMRegisterCommandHandler(reset_cmd, ResetState, 1, nullptr);
+		}
+	}
+	else
+	{
+		menuName = "System XLua";
+	}
+
+	if (menuName != nullptr)
+	{
+		PluginMenuItem = XPLMAppendMenuItem(XPLMFindPluginsMenu(), menuName, nullptr, 0);
+		PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), PluginMenuItem, MenuHandler, nullptr);
+		XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, 0);
+#if !MOBILE
+		XPLMAppendMenuItem(PluginMenu, "Show Profiler", (void*)MI_ShowProfiler, 1);
+		JITMenuItem = XPLMAppendMenuItem(PluginMenu, "Toggle JIT", (void*)MI_ToggleJIT, 2);
+#endif
+	}
+
+	InitScripts();
+
+	if (XPLMGetCycleNumber() > 0)
+	{
+		// Then we've been enabled while the sim's already running.
+		g_is_acf_inited = false;			// Belt-n-braces - ensure we don't start a reload loop.
+		XPluginReceiveMessage(XPLM_PLUGIN_XPLANE, XPLM_MSG_AIRPORT_LOADED, nullptr);
+	}
+
 	xlua_relink_all_drefs();
 	return 1;
 }
@@ -608,50 +678,65 @@ PLUGIN_API void XPluginReceiveMessage(
 					int				inMessage,
 					void *			inParam)
 {
-	if(inFromWho != XPLM_PLUGIN_XPLANE)
-		return;
-		
-	switch(inMessage) {
-	case XPLM_MSG_PLANE_LOADED:
-		if(inParam == 0)
-			g_is_acf_inited = false;
-		break;
-
-	case XPLM_MSG_PLANE_UNLOADED:
-		if(g_is_acf_inited)
-		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)		
-			(*m)->acf_unload();
-		g_is_acf_inited = false;
-		break;
-
-	case XPLM_MSG_AIRPORT_LOADED:
-		if (g_bReloadOnFlightChange && g_is_acf_inited)
+	if (inFromWho == XPLM_PLUGIN_XPLANE)
+	{
+		switch (inMessage)
 		{
-			ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)1);
+			case XPLM_MSG_PLANE_LOADED:
+				if (inParam == 0)
+					g_is_acf_inited = false;
+				break;
+
+			case XPLM_MSG_PLANE_UNLOADED:
+				if (g_is_acf_inited)
+					for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+						(*m)->acf_unload();
+
+				g_is_acf_inited = false;
+				break;
+
+			case XPLM_MSG_AIRPORT_LOADED:
+				if (g_bReloadOnFlightChange && g_is_acf_inited)
+				{
+					// This triggers a full reload of the plugin. No point in doing any other setup.
+					ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)1);
+				}
+				else
+				{
+					if (!g_is_acf_inited)
+					{
+						// Pick up any last stragglers from out-of-order load and then validate our datarefs!
+						xlua_relink_all_drefs();
+						xlua_validate_drefs();
+
+						for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+							(*m)->acf_load();
+
+						g_is_acf_inited = true;
+					}
+
+					for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+						(*m)->flight_start();
+				}
+
+				break;
+
+			case XPLM_MSG_PLANE_CRASHED:
+				assert(g_is_acf_inited);
+				for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+					(*m)->flight_crash();
+				break;
 		}
+	}
 
-		if (!g_is_acf_inited)
-		{
-			// Pick up any last stragglers from out-of-order load and then validate our datarefs!
-			xlua_relink_all_drefs();
-			xlua_validate_drefs();
-			
-			for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-				(*m)->acf_load();
-
-			g_is_acf_inited = true;
-		}
-
-		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-			(*m)->flight_start();
-
-		break;
-
-	case XPLM_MSG_PLANE_CRASHED:
-		assert(g_is_acf_inited);
-		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-			(*m)->flight_crash();		
-		break;
+	// Either way, send the full details through so that Lua can now deal with arbitrary messages.
+	for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+	{
+		(*m)->forward_notification(inFromWho, inMessage, inParam);
 	}
 }
 
+void xlua_register_event(int EventID, char const* EventParamtype)
+{
+	gXPMessageParamTypes[EventID] = EventParamtype;
+}

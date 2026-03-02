@@ -11,6 +11,8 @@
 #ifndef module_h
 #define module_h
 
+#define NOMINMAX
+
 #include <stddef.h>
 #include <sys/types.h>
 #include <stdint.h>
@@ -26,6 +28,8 @@ extern "C" {
 
 #include <string>
 #include <map>
+
+#include "XPLMDefs.h"
 
 using std::string;
 
@@ -49,7 +53,8 @@ public:
 			
 			// Pushes error string or chunk onto interp stack, returns error code or 0.  
 			int			load_module_relative_path(const string& path);
-	const	string		&get_log_path(void) const { return m_log_path; }
+	std::string const&	get_log_path(void) const { return m_log_path; }
+	std::string const&	get_script_path(void) const { return m_path; }
 
 			void		acf_load();
 			void		acf_unload();
@@ -64,6 +69,11 @@ public:
 			void		stop_profile(void);
 			void		dump_profile() const;
 			void		clear_profile(void) { m_profile.clear(); }
+
+			void		set_jit_mode(bool enable);
+			bool		get_jit_mode(void);
+
+			void		forward_notification(XPLMPluginID inFromWho, int inMessage, void* inParam);
 
 			struct prof_data
 			{

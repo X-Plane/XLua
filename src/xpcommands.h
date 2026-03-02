@@ -12,21 +12,48 @@
 #define xpcommands_h
 
 #include "lua.h"
+#include <memory>
+#include <string>
+#include "XPLMUtilities.h"
 
-struct	xlua_cmd;
-struct	notify_cb_t;
+class	notify_cb_t;
+struct xlua_cmd;
 
-typedef int (* xlua_cmd_handler_f)(xlua_cmd * cmd, int phase, float duration, void * ref);
+typedef int (* xlua_cmd_handler_f)(xlua_cmd * cmd, int phase, float duration, std::shared_ptr<notify_cb_t> ref);
+
+struct xlua_cmd {
+public:
+	xlua_cmd() = delete;
+	xlua_cmd(std::string const& name, XPLMCommandRef cmd) : m_name(name), m_cmd(cmd) {}
+	~xlua_cmd();
+
+	std::string			m_name;
+	XPLMCommandRef		m_cmd = nullptr;
+	bool				m_ours = false;
+	xlua_cmd_handler_f	m_pre_handler = nullptr;
+	std::shared_ptr<notify_cb_t> m_pre_ref = nullptr;
+	xlua_cmd_handler_f	m_main_handler = nullptr;
+	std::shared_ptr<notify_cb_t> m_main_ref = nullptr;
+	xlua_cmd_handler_f	m_post_handler = nullptr;
+	std::shared_ptr<notify_cb_t> m_post_ref = nullptr;
+	float				m_down_time = 0;
+	xlua_cmd_handler_f	m_filter_handler = nullptr;
+	std::shared_ptr<notify_cb_t> m_filter_ref = nullptr;
+	bool				m_filter_inited = false;
+	bool				m_filter_allow = true;
+	bool				m_filter_allow_release = false;
+	bool				m_filter_sent_fake_end = false;
+};
 
 xlua_cmd * xlua_find_cmd(const char * name);
 xlua_cmd * xlua_create_cmd(lua_State* L, const char * name, const char * desc);
 
 // The main handler can be used to provide guts to our command or REPLACE an existing
 // command. The pre/post handlers always augment.
-void xlua_cmd_install_handler(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, notify_cb_t* ref);
-void xlua_cmd_install_pre_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, notify_cb_t* ref);
-void xlua_cmd_install_post_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f handler, notify_cb_t* ref);
-void xlua_cmd_install_filter(lua_State* L, xlua_cmd* cmd, xlua_cmd_handler_f handler, notify_cb_t* ref);
+void xlua_cmd_install_handler(lua_State* L, xlua_cmd* cmd, xlua_cmd_handler_f handler, std::shared_ptr<notify_cb_t> ref);
+void xlua_cmd_install_pre_wrapper(lua_State* L, xlua_cmd* cmd, xlua_cmd_handler_f handler, std::shared_ptr<notify_cb_t> ref);
+void xlua_cmd_install_post_wrapper(lua_State* L, xlua_cmd* cmd, xlua_cmd_handler_f handler, std::shared_ptr<notify_cb_t> ref);
+void xlua_cmd_install_filter(lua_State* L, xlua_cmd* cmd, xlua_cmd_handler_f handler, std::shared_ptr<notify_cb_t> ref);
 
 void xlua_cmd_start(xlua_cmd * cmd);
 void xlua_cmd_stop(xlua_cmd * cmd);

@@ -14,14 +14,15 @@
 #include "XPLMDefs.h"
 #include "XPLMUtilities.h"
 
+
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
 #define XPLM_DEPRECATED
 #include "XPLMMenus.h"
 #undef XPLM_DEPRECATED
 
-#include "../xpfuncs.h"
-#include "../module.h"
-#include "../lua_helpers.h"
+#include "xpfuncs.h"
+#include "module.h"
+#include "lua_helpers.h"
 
 extern "C" {
 
@@ -77,12 +78,13 @@ void RegType_XPLMMenuID(lua_State* L)
 	lua_pushstring(L, "XPLMMenuID");
 	lua_setfield(L, -2, "__name");
 
-/*	lua_pushcfunction(L, _XPLMMenuID_to_string);
+#ifdef HAVE_XPLMMenuID_tostring
+	lua_pushcfunction(L, _XPLMMenuID_tostring);
 	lua_setfield(L, -2, "__tostring");
+#endif
 
 	lua_pushcfunction(L, _XPLMMenuID_compare);
 	lua_setfield(L, -2, "__eq");
-*/
 
 	lua_register(L, "XPLMMenuID", _XPLMMenuID_Constructor);
 
@@ -91,11 +93,14 @@ void RegType_XPLMMenuID(lua_State* L)
 
 static void cb_XPLMMenuHandler_f(void* inMenuRef, void* inItemRef)
 {
-	notify_cb_t* cb = static_cast<notify_cb_t*>(inMenuRef);
-	lua_State* L = setup_lua_callback(cb, "XPLMMenuHandler_f");
+	notify_cb_t const* inMenuRef_cb = static_cast<notify_cb_t*>(inMenuRef);
+	notify_cb_t const* inItemRef_cb = static_cast<notify_cb_t*>(inItemRef);
+
+	lua_State* L = setup_lua_callback(inMenuRef_cb, "XPLMMenuHandler_f");
 	if (L)
 	{
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rr", cb->origRefconRegIndex, inItemRef))
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rr", inMenuRef_cb->get_capture(), inItemRef_cb->get_capture()))
 		{
 		}
 	}
@@ -110,7 +115,7 @@ int XLuaFindPluginsMenu(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMMenuID>(L, res);
+		Make_XPLMMenuID(L, res);
 	}
 
 	return 1;
@@ -125,7 +130,7 @@ int XLuaFindAircraftMenu(lua_State* L)
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMMenuID>(L, res);
+		Make_XPLMMenuID(L, res);
 	}
 
 	return 1;
@@ -137,22 +142,22 @@ int XLuaCreateMenu(lua_State* L)
 	XPLMMenuID inParentMenu = {};
 	if (lua_isuserdata(L, 2))
 	{
-		inParentMenu = xlua_checkuserdata<XPLMMenuID>(L, 2, "Expected userdata<XPLMMenuID>");
+		inParentMenu = xlua_checkuserdata<XPLMMenuID>(L, 2, "Expected XPLMMenuID");
 	}
 	int inParentItem = xlua_checkinteger(L, 3);
-	int refcon_regindex = capture_lua_value(L, 5);
-	CleanupStoredCallbacks(L, refcon_regindex);
 
-	notify_cb_t* cb_capture_0 = wrap_first_lua_func(L, 4, "XPLMMenuHandler_f", refcon_regindex);
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 5);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 4, true, "XPLMMenuHandler_f");
 
-	XPLMMenuID res = XPLMCreateMenu(inName, inParentMenu, inParentItem, cb_XPLMMenuHandler_f, cb_capture_0);
+	XPLMMenuID res = XPLMCreateMenu(inName, inParentMenu, inParentItem, (cb_capture_0 ? cb_XPLMMenuHandler_f : nullptr), cb_capture_0.get());
 	if (res == nullptr)
 	{
 		lua_pushnil(L);
 	}
 	else
 	{
-		xlua_pushuserdata<XPLMMenuID>(L, res);
+		Make_XPLMMenuID(L, res);
 	}
 
 	return 1;
@@ -163,7 +168,7 @@ int XLuaDestroyMenu(lua_State* L)
 	XPLMMenuID inMenuID = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inMenuID = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected userdata<XPLMMenuID>");
+		inMenuID = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected XPLMMenuID");
 	}
 
 	XPLMDestroyMenu(inMenuID);
@@ -176,7 +181,7 @@ int XLuaClearAllMenuItems(lua_State* L)
 	XPLMMenuID inMenuID = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inMenuID = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected userdata<XPLMMenuID>");
+		inMenuID = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected XPLMMenuID");
 	}
 
 	XPLMClearAllMenuItems(inMenuID);
@@ -189,13 +194,15 @@ int XLuaAppendMenuItem(lua_State* L)
 	XPLMMenuID inMenu = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected userdata<XPLMMenuID>");
+		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected XPLMMenuID");
 	}
 	const char * inItemName = xlua_checkstring(L, 2);
-	int inItemRef_regindex = capture_lua_value(L, 3);
+
+	std::shared_ptr<notify_cb_t> inItemRef_cb = capture_lua_value(L, 3);
+	xlua_persist_userref(L, inItemRef_cb);
 	int inDeprecatedAndIgnored = xlua_checkinteger(L, 4);
 
-	int res = XPLMAppendMenuItem(inMenu, inItemName, reinterpret_cast<void*>(static_cast<intptr_t>(inItemRef_regindex)), inDeprecatedAndIgnored);
+	int res = XPLMAppendMenuItem(inMenu, inItemName, inItemRef_cb.get(), inDeprecatedAndIgnored);
 	lua_pushinteger(L, res);
 
 	return 1;
@@ -206,13 +213,13 @@ int XLuaAppendMenuItemWithCommand(lua_State* L)
 	XPLMMenuID inMenu = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected userdata<XPLMMenuID>");
+		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected XPLMMenuID");
 	}
 	const char * inItemName = xlua_checkstring(L, 2);
 	XPLMCommandRef inCommandToExecute = {};
 	if (lua_isuserdata(L, 3))
 	{
-		inCommandToExecute = xlua_checkuserdata<XPLMCommandRef>(L, 3, "Expected userdata<XPLMCommandRef>");
+		inCommandToExecute = xlua_checkuserdata<XPLMCommandRef>(L, 3, "Expected XPLMCommandRef");
 	}
 
 	int res = XPLMAppendMenuItemWithCommand(inMenu, inItemName, inCommandToExecute);
@@ -226,7 +233,7 @@ int XLuaAppendMenuSeparator(lua_State* L)
 	XPLMMenuID inMenu = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected userdata<XPLMMenuID>");
+		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected XPLMMenuID");
 	}
 
 	XPLMAppendMenuSeparator(inMenu);
@@ -239,7 +246,7 @@ int XLuaSetMenuItemName(lua_State* L)
 	XPLMMenuID inMenu = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected userdata<XPLMMenuID>");
+		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected XPLMMenuID");
 	}
 	int inIndex = xlua_checkinteger(L, 2);
 	const char * inItemName = xlua_checkstring(L, 3);
@@ -255,7 +262,7 @@ int XLuaCheckMenuItem(lua_State* L)
 	XPLMMenuID inMenu = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected userdata<XPLMMenuID>");
+		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected XPLMMenuID");
 	}
 	int index = xlua_checkinteger(L, 2);
 	XPLMMenuCheck inCheck = xlua_checkinteger(L, 3);
@@ -270,13 +277,12 @@ int XLuaCheckMenuItemState(lua_State* L)
 	XPLMMenuID inMenu = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected userdata<XPLMMenuID>");
+		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected XPLMMenuID");
 	}
 	int index = xlua_checkinteger(L, 2);
-	XPLMMenuCheck outCheck;
+	XPLMMenuCheck outCheck = {};
 
 	XPLMCheckMenuItemState(inMenu, index, &outCheck);
-
 	lua_pushinteger(L, outCheck);
 
 	return 1;
@@ -287,7 +293,7 @@ int XLuaEnableMenuItem(lua_State* L)
 	XPLMMenuID inMenu = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected userdata<XPLMMenuID>");
+		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected XPLMMenuID");
 	}
 	int index = xlua_checkinteger(L, 2);
 	bool enabled = xlua_checkboolean(L, 3);
@@ -302,7 +308,7 @@ int XLuaRemoveMenuItem(lua_State* L)
 	XPLMMenuID inMenu = {};
 	if (lua_isuserdata(L, 1))
 	{
-		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected userdata<XPLMMenuID>");
+		inMenu = xlua_checkuserdata<XPLMMenuID>(L, 1, "Expected XPLMMenuID");
 	}
 	int inIndex = xlua_checkinteger(L, 2);
 
