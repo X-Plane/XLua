@@ -287,7 +287,7 @@ void			xlua_validate_drefs()
 		if (f.m_dref == nullptr)
 		{
 			dref_missing = true;
-			log_message(nullptr, "WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
+			log_message(nullptr, "WARNING: dataref %s is used but not defined.\n", f.m_name.c_str());
 		}
 	}
 	
