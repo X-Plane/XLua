@@ -188,6 +188,7 @@ extern "C" int _XPLMPluginID_tostring(lua_State* L)
 	return 1;
 }
 
+#if !MOBILE
 extern "C" int _XPLMHotKeyID_tostring(lua_State* L)
 {
 	XPLMHotKeyID const test1 = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected XPLMHotKeyID");
@@ -199,6 +200,7 @@ extern "C" int _XPLMHotKeyID_tostring(lua_State* L)
 	lua_pushstring(L, kname);
 	return 1;
 }
+#endif
 
 extern "C" int _XPLMDataRef_tostring(lua_State* L)
 {

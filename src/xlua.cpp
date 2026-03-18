@@ -56,8 +56,10 @@ static bool				g_is_acf_inited = false;
 XPLMDataRef				g_replay_active = NULL;
 XPLMDataRef				g_sim_period = NULL;
 XPLMCommandRef			reset_cmd = nullptr;
+#if !MOBILE
 XPLMMenuID				PluginMenu = 0;					// Our sub-menu
 int						PluginMenuItem = 0;				// Our sub-menu's item number on the Plugins menu
+#endif
 bool					g_bIsAircraftPlugin = true;
 int						JITMenuItem = 0;
 
@@ -70,14 +72,14 @@ struct lua_alloc_request_t {
 			size_t	nsize;
 };
 
+#if !MOBILE
 enum eMenuItems : int
 {
 	MI_ResetState,
-#if !MOBILE
 	MI_ShowProfiler,
 	MI_ToggleJIT
-#endif
 };
+#endif
 
 bool g_bReloadOnFlightChange = false;
 
@@ -468,7 +470,7 @@ void ShowProfiler(void)
 		profilerWnd->setVisible(true);
 	}
 }
-#endif
+
 static void MenuHandler(void* menuRef, void* itemRef)
 {
 	switch ((eMenuItems)(size_t)itemRef)
@@ -476,7 +478,6 @@ static void MenuHandler(void* menuRef, void* itemRef)
 		case MI_ResetState:
 			ResetState(reset_cmd, xplm_CommandBegin, nullptr);
 			break;
-#if !MOBILE
 		case MI_ShowProfiler:
 			ShowProfiler();
 			break;
@@ -495,9 +496,9 @@ static void MenuHandler(void* menuRef, void* itemRef)
 			}
 			break;
 		}
-#endif
 	}
 }
+#endif
 
 PLUGIN_API int XPluginStart(
 						char *		outName,
@@ -514,7 +515,7 @@ PLUGIN_API int XPluginStart(
 	XPLMEnableFeature("XPLM_USE_NATIVE_PATHS", 1);
 	
 	// Plugin base path: pop off two dirs from the plugin name to get the base path for scripts, *not* the owning aircraft's base path.
-	char pPath[512] = { 0 }, myPath[512] = { 0 };
+	char myPath[512] = { 0 };
 	XPLMGetPluginInfo(XPLMGetMyID(), nullptr, myPath, nullptr, nullptr);
 	plugin_base_path = myPath;
 	for (int s = 0; s < 2; ++s)
@@ -546,13 +547,14 @@ PLUGIN_API void	XPluginStop(void)
 
 PLUGIN_API void XPluginDisable(void)
 {
+#if !MOBILE
 	if (PluginMenu != nullptr)
 	{
 		XPLMRemoveMenuItem(XPLMFindPluginsMenu(), PluginMenuItem);
 		XPLMDestroyMenu(PluginMenu);
 		PluginMenu = nullptr;
 	}
-
+#endif
 	CleanupScripts();
 
 	XPLMDestroyFlightLoop(g_pre_loop);
@@ -582,6 +584,7 @@ PLUGIN_API int XPluginEnable(void)
 	g_post_loop = XPLMCreateFlightLoop(&post);
 	XPLMScheduleFlightLoop(g_post_loop, -1, 0);
 
+#if !MOBILE
 	char const* menuName = nullptr;
 	std::string ac_base_path(plugin_base_path);
 
@@ -648,11 +651,10 @@ PLUGIN_API int XPluginEnable(void)
 		PluginMenuItem = XPLMAppendMenuItem(XPLMFindPluginsMenu(), menuName, nullptr, 0);
 		PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), PluginMenuItem, MenuHandler, nullptr);
 		XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, 0);
-#if !MOBILE
 		XPLMAppendMenuItem(PluginMenu, "Show Profiler", (void*)MI_ShowProfiler, 1);
 		JITMenuItem = XPLMAppendMenuItem(PluginMenu, "Toggle JIT", (void*)MI_ToggleJIT, 2);
-#endif
 	}
+#endif
 
 	InitScripts();
 
