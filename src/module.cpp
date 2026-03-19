@@ -18,13 +18,32 @@
 #include "log.h"
 #include "lua_helpers.h"
 #include <lua.h>
-extern "C"
-{
-	#include "../luajit/src/luajit.h"
-}
 
-#if !MOBILE
-#include "FLWIntegration.h"
+
+#if MOBILE
+	#include "xmap.h"
+	extern "C"
+	{
+		#include "luajit.h"
+	}
+#else
+	#include "FLWIntegration.h"
+	extern "C"
+	{
+		#include "../luajit/src/luajit.h"
+	}
+
+	class	xmap_class {
+	public:
+		xmap_class(const string& in_file_name);
+		~xmap_class()				{ if (m_buffer != nullptr) free(m_buffer); }
+		bool exists() const			{ return m_buffer != nullptr; }
+		char const* begin() const	{ return m_buffer; }
+		size_t size() const			{ return m_size; }
+	private:
+		char *		 m_buffer;
+		size_t		 m_size;
+	};
 #endif
 
 void add_xplm_to_interp(lua_State* L);
@@ -46,22 +65,6 @@ static int length_of_dir(const char * p)
 	const char * f = shorten_to_file(p);
 	return f - p;
 }
-
-#if !MOBILE
-
-class	xmap_class {
-public:
-	xmap_class(const string& in_file_name);
-	~xmap_class()				{ if (m_buffer != nullptr) free(m_buffer); }
-	bool exists() const			{ return m_buffer != nullptr; }
-	char const* begin() const	{ return m_buffer; }
-	size_t size() const			{ return m_size; }
-private:
-	char *		 m_buffer;
-	size_t		 m_size;
-};
-
-#endif
 
 #define MALLOC_CHUNK_SIZE 4096
 

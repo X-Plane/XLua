@@ -21,8 +21,8 @@
 #include <memory>
 
 extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
+	#include <lua.h>
+	#include <lauxlib.h>
 };
 
 void	add_xlua_funcs_to_interp(lua_State * interp);
