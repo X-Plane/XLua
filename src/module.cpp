@@ -290,12 +290,14 @@ module::module(
     xlua_pushuserdata(m_interp, this);
 	lua_setglobal(m_interp, "__module_ptr");
 
-	if (m_xlua_compat[0] < 2)
-	{
-		// XLua 1.x functions.
-		add_xlua_funcs_to_interp(m_interp);
-	}
-	else
+	xlua_pushinteger(m_interp, m_xlua_compat[0]);
+	lua_setglobal(m_interp, "XLuaMajorVersion");
+
+	lua_pushstring(m_interp, XLUA_VERSION);
+	lua_setglobal(m_interp, "XLuaPluginVersion");
+
+	add_xlua_funcs_to_interp(m_interp, m_xlua_compat[0]);
+	if (m_xlua_compat[0] >= 2)
 	{
 		// XLua 2.x functions.
 		add_xplm_to_interp(m_interp);
@@ -360,13 +362,24 @@ module::module(
 	int module_load_result = luaL_loadbuffer(m_interp, (const char*)lmod.begin(), lmod.size(), m_log_path.c_str());
 	CTOR_FAIL(module_load_result,"load module");
 	
-	int module_run_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
-	CTOR_FAIL(module_run_result, "run module");
-
-	// To completely duplicate the normal C API, add XPluginStart etc.
-	if (!(_XPluginStart() && _XPluginEnable()))
+	int module_run_result;
+	if (m_xlua_compat[0] == 1)
 	{
-		shutdown_lua();
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, "run_module_in_namespace");
+		lua_insert(m_interp, -2);
+		module_run_result = lua_pcall(m_interp, 1, 0, m_debug_proc);
+		CTOR_FAIL(module_run_result, "run module V1");
+	}
+	else
+	{
+		module_run_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
+		CTOR_FAIL(module_run_result, "run module V2+");
+
+		// To completely duplicate the normal C API, add XPluginStart etc.
+		if (!(_XPluginStart() && _XPluginEnable()))
+		{
+			shutdown_lua();
+		}
 	}
 }
 
@@ -409,35 +422,94 @@ void *		module::module_alloc_tracked(size_t amount)
 	return alloc_from_block(m_memory, amount);
 }
 
+void		module::acf_load()
+{
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("aircraft_load");
+	}
+}
+
+void		module::acf_unload()
+{
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("aircraft_unload");
+	}
+}
+
+void		module::flight_start()
+{
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("flight_start");
+	}
+}
+
+void		module::flight_crash()
+{
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("flight_crash");
+	}
+}
+
 void		module::pre_physics()
 {
-	if (m_interp == nullptr || !m_enabled)
-		return;
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("before_physics");
+	}
 }
 
 void		module::post_physics()
 {
-	if (m_interp == nullptr || !m_enabled)
-		return;
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("after_physics");
+	}
 
 #if !MOBILE
 	flwnd::onFlightLoop(m_interp);
 #endif
 }
 
-void module::do_callout(const char * f)
+void		module::post_replay()
+{
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("after_replay");
+	}
+}
+
+void module::do_callout(char const* f)
 {
 	if (m_interp == nullptr || !m_enabled)
 		return;
 
-	lua_getfield(m_interp, LUA_GLOBALSINDEX, f);
-	if (!lua_isfunction(m_interp, -1))
+	if (m_xlua_compat[0] == 1)
 	{
-		lua_pop(m_interp, 1);
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, "do_callout");
+		if (!lua_isfunction(m_interp, -1))
+		{
+			lua_pop(m_interp, 1);
+		}
+		else
+		{
+			fmt_pcall_stdvars(m_interp, m_debug_proc, false, "s", f);
+		}
 	}
 	else
 	{
-		fmt_pcall_stdvars(m_interp, m_debug_proc, false, "");
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, f);
+		if (!lua_isfunction(m_interp, -1))
+		{
+			lua_pop(m_interp, 1);
+		}
+		else
+		{
+			fmt_pcall_stdvars(m_interp, m_debug_proc, false, "");
+		}
 	}
 }
 
@@ -448,10 +520,18 @@ extern "C"
 
 void module::_XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void* inParam)
 {
-	if (m_interp == nullptr || !m_enabled)
+	if (m_interp == nullptr || !m_enabled || m_xlua_compat[0] < 2)
 		return;
 
-	lua_getfield(m_interp, LUA_GLOBALSINDEX, "XPluginReceiveMessage");
+	if (m_xlua_compat[0] == 1)
+	{
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, "receive_message");
+	}
+	else
+	{
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, "XPluginReceiveMessage");
+	}
+
 	if (!lua_isfunction(m_interp, -1))
 	{
 		lua_pop(m_interp, 1);

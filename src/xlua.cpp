@@ -145,13 +145,24 @@ static float xlua_pre_timer_master_cb(
 }
 
 static float xlua_post_timer_master_cb(
-                                   float                inElapsedSinceLastCall,    
-                                   float                inElapsedTimeSinceLastFlightLoop,    
-                                   int                  inCounter,    
+                                   float                inElapsedSinceLastCall,
+                                   float                inElapsedTimeSinceLastFlightLoop,
+                                   int                  inCounter,
                                    void *               inRefcon)
 {
-	for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-		(*m)->post_physics();
+	bool const isInReplay = (XPLMGetDatai(g_replay_active) != 0);
+	float const framePeriod = XPLMGetDataf(g_sim_period);
+	for (auto &m : g_modules)
+	{
+		if (isInReplay)
+		{
+			m->post_replay();
+		}
+		else if (framePeriod > 0.f)
+		{
+			m->post_physics();
+		}
+	}
 
 #if !MOBILE
 	if (profilerWnd)
@@ -230,7 +241,15 @@ void InitScripts(void)
 
 void CleanupScripts(void)
 {
-	g_is_acf_inited = false;
+	if (g_is_acf_inited)
+	{
+		for (auto& m : g_modules)
+		{
+			m->acf_unload();
+		}
+
+		g_is_acf_inited = false;
+	}
 
 	// Get rid of drefs/cmds/timers first, they may well hold references to the Lua interpreter.
 	xlua_dref_cleanup();
@@ -690,7 +709,14 @@ PLUGIN_API void XPluginReceiveMessage(
 				break;
 
 			case XPLM_MSG_PLANE_UNLOADED:
-				g_is_acf_inited = false;
+				if (g_is_acf_inited)
+				{
+					for (auto &m : g_modules)
+					{
+						m->acf_unload();
+					}
+					g_is_acf_inited = false;
+				}
 				break;
 
 			case XPLM_MSG_AIRPORT_LOADED:
@@ -699,15 +725,36 @@ PLUGIN_API void XPluginReceiveMessage(
 					// This triggers a full reload of the plugin. No point in doing any other setup.
 					ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)1);
 				}
-				else if (!g_is_acf_inited)
+				else
 				{
-					// Pick up any last stragglers from out-of-order load and then validate our datarefs!
-					xlua_relink_all_drefs();
-					xlua_validate_drefs();
+					if (!g_is_acf_inited)
+					{
+						for (auto& m : g_modules)
+						{
+							m->acf_load();
+						}
 
-					g_is_acf_inited = true;
+						// Pick up any last stragglers from out-of-order load and then validate our datarefs!
+						xlua_relink_all_drefs();
+						xlua_validate_drefs();
+
+						g_is_acf_inited = true;
+					}
+
+					for (auto& m : g_modules)
+					{
+						m->flight_start();
+					}
 				}
 
+				break;
+
+			case XPLM_MSG_PLANE_CRASHED:
+				assert(g_is_acf_inited);
+				for (auto& m : g_modules)
+				{
+					m->flight_crash();
+				}
 				break;
 		}
 	}

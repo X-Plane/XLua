@@ -25,7 +25,7 @@ extern "C" {
 	#include <lauxlib.h>
 };
 
-void	add_xlua_funcs_to_interp(lua_State * interp);
+void	add_xlua_funcs_to_interp(lua_State * interp, int compat_version);
 std::string get_log_prefix(char l='I');
 extern std::map<int, char const*> gXPMessageParamTypes;
 

@@ -1,4 +1,4 @@
---[[ XLua 2.2 ]]
+--[[ XLua 2.0 ]]
 
 require("XPLMCamera")
 require("XPLMDataAccess")

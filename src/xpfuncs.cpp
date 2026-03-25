@@ -169,370 +169,543 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 	return nullptr;
 }
 
-//----------------------------------------------------------------
-// MISC
-//----------------------------------------------------------------
-
-static int XLuaGetCode(lua_State * L)
+namespace XLua1
 {
-	module * me = module::module_from_interp(L);
-	assert(me);
-	
-	const char * name = luaL_checkstring(L, 1);
-	
-	int result = me->load_module_relative_path(name);
-	
-	if(result)
-	{
-		const char * err_msg = luaL_checkstring(L, 2);
-		log_message(L, "%s: %s\n", name, err_msg);
+	//----------------------------------------------------------------
+	// MISC
+	//----------------------------------------------------------------
 
+	static int XLuaGetCode(lua_State* L)
+	{
+		module* me = module::module_from_interp(L);
+		assert(me);
+
+		const char* name = luaL_checkstring(L, 1);
+
+		int result = me->load_module_relative_path(name);
+
+		if (result)
+		{
+			const char* err_msg = luaL_checkstring(L, 2);
+			log_message(L, "%s: %s\n", name, err_msg);
+
+			return 0;
+		}
+
+		return 1;
+	}
+
+	//----------------------------------------------------------------
+	// DATAREFS
+	//----------------------------------------------------------------
+
+	// XPLMFindDataRef "foo" -> dref
+	static int XLuaFindDataRef(lua_State* L)
+	{
+		const char* name = luaL_checkstring(L, -1);
+
+		xlua_dref* r = xlua_find_dref(name);
+		assert(r);
+
+		xlua_pushuserdata(L, r);
+		return 1;
+	}
+
+	static void xlua_dataref_notify_helper(xlua_dref* who, std::shared_ptr<notify_cb_t> ref)
+	{
+		lua_State* L = setup_lua_callback(ref.get(), kDatarefCallbackSig);
+		if (L)
+		{
+			fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "");
+		}
+	}
+
+	// XPLMCreateDataRef name "array[4]" "yes" func -> dref
+	static int XLuaCreateDataRef(lua_State* L)
+	{
+		const char* name = luaL_checkstring(L, 1);
+		const char* typestr = luaL_checkstring(L, 2);
+		const char* writable = luaL_checkstring(L, 3);
+		std::shared_ptr<notify_cb_t> cb = wrap_lua_func_nil(L, 4, kDatarefCallbackSig);
+
+		if (strlen(name) == 0)
+			return luaL_argerror(L, 1, "dataref name must not be an empty string.");
+
+		int my_writeable;
+		if (strcmp(writable, "yes") == 0)
+			my_writeable = 1;
+		else if (strcmp(writable, "no") == 0)
+			my_writeable = 0;
+		else
+			return luaL_argerror(L, 3, "writable must be 'yes' or 'no'");
+
+		xlua_dref_type my_type = xlua_none;
+		int my_dim = 1;
+		const char* c = typestr;
+		if (strcmp(c, "string") == 0)
+			my_type = xlua_string;
+		else if (strcmp(c, "number") == 0)
+			my_type = xlua_number;
+		else if (strncmp(c, "array[", 6) == 0)
+		{
+			while (*c && *c != '[') ++c;
+			if (*c == '[')
+			{
+				++c;
+				my_dim = atoi(c);
+				my_type = xlua_array;
+			}
+		}
+		else
+			return luaL_argerror(L, 2, "Type must be number, string, or array[n]");
+
+		xlua_dref* r = xlua_create_dref(L,
+										name,
+										my_type,
+										my_dim,
+										my_writeable,
+										(my_writeable && cb) ? xlua_dataref_notify_helper : nullptr,
+										cb);
+		assert(r);
+
+		xlua_pushuserdata(L, r);
+		return 1;
+
+	}
+
+	// dref -> "array[4]"
+	static int XLuaGetDataRefType(lua_State* L)
+	{
+		xlua_dref_type dt = xlua_none;
+
+		xlua_dref* d = xlua_checkuserdata<xlua_dref*>(L, 1, "expected dataref");
+		if (d != nullptr)
+		{
+			dt = xlua_dref_get_type(d);
+		}
+
+		switch (dt) {
+			case xlua_none:
+				lua_pushstring(L, "none");
+				break;
+			case xlua_number:
+				lua_pushstring(L, "number");
+				break;
+			case xlua_array:
+			{
+				char buf[256];
+				sprintf(buf, "array[%d]", xlua_dref_get_dim(d));
+				lua_pushstring(L, buf);
+			}
+			break;
+			case xlua_string:
+				lua_pushstring(L, "string");
+				break;
+		}
+		return 1;
+	}
+
+	// XPLMGetNumber dref -> value
+	static int XLuaGetNumber(lua_State* L)
+	{
+		xlua_dref* d = xlua_checkuserdata<xlua_dref*>(L, 1, "expected dataref");
+
+		lua_pushnumber(L, xlua_dref_get_number(d));
+		return 1;
+	}
+
+	// XPLMSetNumber dref value
+	static int XLuaSetNumber(lua_State* L)
+	{
+		xlua_dref* d = xlua_checkuserdata<xlua_dref*>(L, 1, "expected dataref");
+		double v = luaL_checknumber(L, 2);
+
+		xlua_dref_set_number(d, v);
 		return 0;
 	}
-	
-	return 1;
-}
 
-
-//----------------------------------------------------------------
-// DATAREFS
-//----------------------------------------------------------------
-
-// XPLMFindDataRef "foo" -> dref
-static int XLuaFindDataRef(lua_State * L)
-{
-	const char * name = luaL_checkstring(L, -1);
-
-	xlua_dref * r = xlua_find_dref(name);
-	assert(r);
-	
-    xlua_pushuserdata(L, r);
-	return 1;
-}
-
-static void xlua_dataref_notify_helper(xlua_dref* who, std::shared_ptr<notify_cb_t> ref)
-{
-	lua_State * L = setup_lua_callback(ref.get(), kDatarefCallbackSig);
-	if (L)
+	// XPLMGetArray dref idx -> value
+	static int XLuaGetArray(lua_State* L)
 	{
-		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "");
+		xlua_dref* d = xlua_checkuserdata<xlua_dref*>(L, 1, "expected dataref");
+		int idx = static_cast<int>(luaL_checknumber(L, 2));
+
+		lua_pushnumber(L, xlua_dref_get_array(d, idx));
+		return 1;
 	}
-}
 
-// XPLMCreateDataRef name "array[4]" "yes" func -> dref
-static int XLuaCreateDataRef(lua_State * L)
-{
-	const char * name = luaL_checkstring(L, 1);
-	const char * typestr = luaL_checkstring(L,2);
-	const char * writable = luaL_checkstring(L,3);
-	std::shared_ptr<notify_cb_t> cb = wrap_lua_func_nil(L, 4, kDatarefCallbackSig);
-	
-	if(strlen(name) == 0)
-		return luaL_argerror(L, 1, "dataref name must not be an empty string.");
-
-	int my_writeable;
-	if(strcmp(writable,"yes")==0)
-		my_writeable = 1;
-	else if (strcmp(writable,"no")==0)
-		my_writeable = 0;
-	else 
-		return luaL_argerror(L, 3, "writable must be 'yes' or 'no'");
-	
-	xlua_dref_type my_type = xlua_none;
-	int my_dim = 1;
-	const char * c = typestr;
-	if(strcmp(c,"string") == 0)
-		my_type = xlua_string;
-	else if(strcmp(c,"number")==0)
-		my_type = xlua_number;
-	else if (strncmp(c,"array[",6) == 0)
+	// XPLMSetArray dref idx value
+	static int XLuaSetArray(lua_State* L)
 	{
-		while(*c && *c != '[') ++c;
-		if(*c == '[')
+		xlua_dref* d = xlua_checkuserdata<xlua_dref*>(L, 1, "expected dataref");
+		int idx = static_cast<int>(luaL_checknumber(L, 2));
+		double v = luaL_checknumber(L, 3);
+
+		xlua_dref_set_array(d, idx, v);
+		return 0;
+	}
+
+	// XLuaSetArrayFromArray dref value_array
+	static int XLuaSetArrayFromArray(lua_State* L)
+	{
+		xlua_dref* d = xlua_checkuserdata<xlua_dref*>(L, 1, "expected dataref");
+		luaL_checktype(L, 2, LUA_TTABLE);
+
+		lua_pushvalue(L, 2);
+		lua_pushnil(L);
+
+		std::vector<double> tableVals;
+		while (lua_next(L, -2))
 		{
-			++c;
-			my_dim = atoi(c);
-			my_type = xlua_array;
+			tableVals.emplace_back(lua_tonumber(L, -1));
+			lua_pop(L, 1);
 		}
-	}
-	else
-		return luaL_argerror(L, 2, "Type must be number, string, or array[n]");
-	
-	xlua_dref * r = xlua_create_dref(L,
-							name,
-							my_type,
-							my_dim,
-							my_writeable,
-							(my_writeable && cb) ? xlua_dataref_notify_helper : nullptr,
-							cb);							
-	assert(r);
-	
-    xlua_pushuserdata(L, r);
-	return 1;
-	
-}
-
-// dref -> "array[4]"
-static int XLuaGetDataRefType(lua_State * L)
-{
-	xlua_dref_type dt = xlua_none;
-
-	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
-	if (d != nullptr)
-	{
-		dt = xlua_dref_get_type(d);
-	}
-
-	switch(dt) {
-	case xlua_none:
-		lua_pushstring(L, "none");
-		break;
-	case xlua_number:
-		lua_pushstring(L, "number");
-		break;
-	case xlua_array:
-		{
-			char buf[256];
-			sprintf(buf,"array[%d]",xlua_dref_get_dim(d));
-			lua_pushstring(L,buf);
-		}
-		break;
-	case xlua_string:
-		lua_pushstring(L, "string");
-		break;
-	}	
-	return 1;
-}
-
-// XPLMGetNumber dref -> value
-static int XLuaGetNumber(lua_State * L)
-{
-	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
-	
-	lua_pushnumber(L, xlua_dref_get_number(d));
-	return 1;	
-}
-
-// XPLMSetNumber dref value
-static int XLuaSetNumber(lua_State * L)
-{
-	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
-	double v = luaL_checknumber(L, 2);
-	
-	xlua_dref_set_number(d,v);
-	return 0;	
-}
-
-// XPLMGetArray dref idx -> value
-static int XLuaGetArray(lua_State * L)
-{
-	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
-	int idx = static_cast<int>(luaL_checknumber(L, 2));
-	
-	lua_pushnumber(L, xlua_dref_get_array(d,idx));
-	return 1;	
-}
-
-// XPLMSetArray dref idx value
-static int XLuaSetArray(lua_State * L)
-{
-	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
-	int idx = static_cast<int>(luaL_checknumber(L, 2));
-	double v = luaL_checknumber(L, 3);
-
-	xlua_dref_set_array(d,idx,v);
-	return 0;		
-}
-
-// XLuaSetArrayFromArray dref value_array
-static int XLuaSetArrayFromArray(lua_State* L)
-{
-	xlua_dref* d = xlua_checkuserdata<xlua_dref*>(L, 1, "expected dataref");
-	luaL_checktype(L, 2, LUA_TTABLE);
-
-	lua_pushvalue(L, 2);
-	lua_pushnil(L);
-
-	std::vector<double> tableVals;
-	while (lua_next(L, -2))
-	{
-		tableVals.emplace_back(lua_tonumber(L, -1));
 		lua_pop(L, 1);
-	}
-	lua_pop(L, 1);
 
-	xlua_dref_set_array(d, tableVals);
-	return 0;
-}
-
-// XPLMGetString dref -> value
-static int XLuaGetString(lua_State * L)
-{
-	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
-	
-	lua_pushstring(L, xlua_dref_get_string(d).c_str());
-	return 1;	
-}
-
-// XPLMSetString dref value
-static int XLuaSetString(lua_State * L)
-{
-	xlua_dref * d = xlua_checkuserdata<xlua_dref*>(L,1,"expected dataref");
-	const char * s = luaL_checkstring(L, 2);
-	xlua_dref_set_string(d,string(s));
-	return 0;	
-}
-
-//----------------------------------------------------------------
-// COMMANDS
-//----------------------------------------------------------------
-
-// XPLMFindCommand name
-static int XLuaFindCommand(lua_State * L)
-{
-	const char * name = luaL_checkstring(L, 1);
-
-	xlua_cmd* r = xlua_find_cmd(name);
-	if (r == nullptr)
-	{
-		lua_pushnil(L);
-	}
-	else
-	{
-		xlua_pushuserdata(L, r);
+		xlua_dref_set_array(d, tableVals);
+		return 0;
 	}
 
-	return 1;
-}
-
-// XPLMCreateCommand name desc
-static int XLuaCreateCommand(lua_State * L)
-{
-	const char * name = luaL_checkstring(L, 1);
-	const char * desc = luaL_checkstring(L, 2);
-
-	xlua_cmd* r = xlua_create_cmd(L,name,desc);
-	if (r == nullptr)
+	// XPLMGetString dref -> value
+	static int XLuaGetString(lua_State* L)
 	{
-		lua_pushnil(L);
-	}
-	else
-	{
-		xlua_pushuserdata(L, r);
+		xlua_dref* d = xlua_checkuserdata<xlua_dref*>(L, 1, "expected dataref");
+
+		lua_pushstring(L, xlua_dref_get_string(d).c_str());
+		return 1;
 	}
 
-	return 1;
-}
-
-static int cmd_filter_cb_helper(xlua_cmd* cmd, int phase, float elapsed, std::shared_ptr<notify_cb_t> ref)
-{
-	int res = 1;
-
-	lua_State* L = setup_lua_callback(ref.get(), kFilterCallbackSig);
-	if (L)
+	// XPLMSetString dref value
+	static int XLuaSetString(lua_State* L)
 	{
-		int e = lua_pcall(L, 0, 1, module::debug_proc_from_interp(L));
-		if (e != 0)
+		xlua_dref* d = xlua_checkuserdata<xlua_dref*>(L, 1, "expected dataref");
+		const char* s = luaL_checkstring(L, 2);
+		xlua_dref_set_string(d, string(s));
+		return 0;
+	}
+
+	//----------------------------------------------------------------
+	// COMMANDS
+	//----------------------------------------------------------------
+
+	// XPLMFindCommand name
+	static int XLuaFindCommand(lua_State* L)
+	{
+		const char* name = luaL_checkstring(L, 1);
+
+		xlua_cmd* r = xlua_find_cmd(name);
+		if (r == nullptr)
 		{
-			l_my_print(L);
+			lua_pushnil(L);
 		}
 		else
 		{
-			res = lua_toboolean(L, -1);
+			xlua_pushuserdata(L, r);
 		}
 
-		lua_pop(L, 1);
+		return 1;
 	}
 
-	return res;
-}
-
-static int cmd_cb_helper(xlua_cmd * cmd, int phase, float elapsed, std::shared_ptr<notify_cb_t> ref)
-{
-	lua_State * L = setup_lua_callback(ref.get(), kCommandCallbackSig);
-	if (L)
+	// XPLMCreateCommand name desc
+	static int XLuaCreateCommand(lua_State* L)
 	{
-		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "if", phase, elapsed);
+		const char* name = luaL_checkstring(L, 1);
+		const char* desc = luaL_checkstring(L, 2);
+
+		xlua_cmd* r = xlua_create_cmd(L, name, desc);
+		if (r == nullptr)
+		{
+			lua_pushnil(L);
+		}
+		else
+		{
+			xlua_pushuserdata(L, r);
+		}
+
+		return 1;
 	}
 
-	return 1;
-}
-
-// XPLMFilterCommand handler
-static int XLuaFilterCommand(lua_State* L)
-{
-	xlua_cmd* cmd = xlua_checkuserdata<xlua_cmd*>(L, 1, "expected command");
-
-	std::shared_ptr<notify_cb_t> cb_filter = std::make_shared<notify_cb_t>(L, 0);
-	if (wrap_next_lua_func(cb_filter, 2, false, kFilterCallbackSig))
+	static int cmd_filter_cb_helper(xlua_cmd* cmd, int phase, float elapsed, std::shared_ptr<notify_cb_t> ref)
 	{
-		xlua_cmd_install_filter(L, cmd, cmd_filter_cb_helper, cb_filter);
+		int res = 1;
+
+		lua_State* L = setup_lua_callback(ref.get(), kFilterCallbackSig);
+		if (L)
+		{
+			int e = lua_pcall(L, 0, 1, module::debug_proc_from_interp(L));
+			if (e != 0)
+			{
+				l_my_print(L);
+			}
+			else
+			{
+				res = lua_toboolean(L, -1);
+			}
+
+			lua_pop(L, 1);
+		}
+
+		return res;
 	}
 
-	return 0;
-}
-
-// XPLMReplaceCommand cmd handler
-static int XLuaReplaceCommand(lua_State * L)
-{
-	xlua_cmd* d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
-
-	std::shared_ptr<notify_cb_t> cb_command = std::make_shared<notify_cb_t>(L, 0);
-	if (wrap_next_lua_func(cb_command, 2, false, kCommandCallbackSig))
+	static int cmd_cb_helper(xlua_cmd* cmd, int phase, float elapsed, std::shared_ptr<notify_cb_t> ref)
 	{
-		xlua_cmd_install_handler(L, d, cmd_cb_helper, cb_command);
+		lua_State* L = setup_lua_callback(ref.get(), kCommandCallbackSig);
+		if (L)
+		{
+			fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "if", phase, elapsed);
+		}
+
+		return 1;
 	}
 
-	return 0;
-}
-
-// XPLMWrapCommand cmd handler1 handler2
-static int XLuaWrapCommand(lua_State * L)
-{
-	xlua_cmd* d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
-
-	std::shared_ptr<notify_cb_t> cb_pre = std::make_shared<notify_cb_t>(L, 0);
-	if (wrap_next_lua_func(cb_pre, 2, false, kCommandCallbackSig))
+	// XPLMFilterCommand handler
+	static int XLuaFilterCommand(lua_State* L)
 	{
-		xlua_cmd_install_pre_wrapper(L, d, cmd_cb_helper, cb_pre);
+		xlua_cmd* cmd = xlua_checkuserdata<xlua_cmd*>(L, 1, "expected command");
+
+		std::shared_ptr<notify_cb_t> cb_filter = std::make_shared<notify_cb_t>(L, 0);
+		if (wrap_next_lua_func(cb_filter, 2, false, kFilterCallbackSig))
+		{
+			xlua_cmd_install_filter(L, cmd, cmd_filter_cb_helper, cb_filter);
+		}
+
+		return 0;
 	}
 
-	std::shared_ptr<notify_cb_t> cb_post = std::make_shared<notify_cb_t>(L, 0);
-	if (wrap_next_lua_func(cb_post, 3, false, kCommandCallbackSig))
+	// XPLMReplaceCommand cmd handler
+	static int XLuaReplaceCommand(lua_State* L)
 	{
-		xlua_cmd_install_post_wrapper(L, d, cmd_cb_helper, cb_post);
+		xlua_cmd* d = xlua_checkuserdata<xlua_cmd*>(L, 1, "expected command");
+
+		std::shared_ptr<notify_cb_t> cb_command = std::make_shared<notify_cb_t>(L, 0);
+		if (wrap_next_lua_func(cb_command, 2, false, kCommandCallbackSig))
+		{
+			xlua_cmd_install_handler(L, d, cmd_cb_helper, cb_command);
+		}
+
+		return 0;
 	}
 
-	if (cb_pre->callbacks.empty() && cb_post->callbacks.empty())
+	// XPLMWrapCommand cmd handler1 handler2
+	static int XLuaWrapCommand(lua_State* L)
 	{
-		luaL_error(L, "XLuaWrapCommand on %s had neither pre nor post functions specified.",
-				   d->m_name.c_str());
+		xlua_cmd* d = xlua_checkuserdata<xlua_cmd*>(L, 1, "expected command");
+
+		std::shared_ptr<notify_cb_t> cb_pre = std::make_shared<notify_cb_t>(L, 0);
+		if (wrap_next_lua_func(cb_pre, 2, false, kCommandCallbackSig))
+		{
+			xlua_cmd_install_pre_wrapper(L, d, cmd_cb_helper, cb_pre);
+		}
+
+		std::shared_ptr<notify_cb_t> cb_post = std::make_shared<notify_cb_t>(L, 0);
+		if (wrap_next_lua_func(cb_post, 3, false, kCommandCallbackSig))
+		{
+			xlua_cmd_install_post_wrapper(L, d, cmd_cb_helper, cb_post);
+		}
+
+		if (cb_pre->callbacks.empty() && cb_post->callbacks.empty())
+		{
+			luaL_error(L, "XLuaWrapCommand on %s had neither pre nor post functions specified.",
+					   d->m_name.c_str());
+		}
+
+		return 0;
 	}
 
-	return 0;
-}
+	// XPLMCommandStart cmd
+	static int XLuaCommandStart(lua_State* L)
+	{
+		xlua_cmd* d = xlua_checkuserdata<xlua_cmd*>(L, 1, "expected command");
+		xlua_cmd_start(d);
+		return 0;
+	}
 
-// XPLMCommandStart cmd
-static int XLuaCommandStart(lua_State * L)
-{
-	xlua_cmd * d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
-	xlua_cmd_start(d);
-	return 0;
-}
+	// XPLMCommandStop cmd
+	static int XLuaCommandStop(lua_State* L)
+	{
+		xlua_cmd* d = xlua_checkuserdata<xlua_cmd*>(L, 1, "expected command");
+		xlua_cmd_stop(d);
+		return 0;
+	}
 
-// XPLMCommandStop cmd
-static int XLuaCommandStop(lua_State * L)
-{
-	xlua_cmd * d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
-	xlua_cmd_stop(d);
-	return 0;
-}
+	// XPLMCommandOnce cmd
+	static int XLuaCommandOnce(lua_State* L)
+	{
+		xlua_cmd* d = xlua_checkuserdata<xlua_cmd*>(L, 1, "expected command");
+		xlua_cmd_once(d);
+		return 0;
+	}
 
-// XPLMCommandOnce cmd
-static int XLuaCommandOnce(lua_State * L)
+	std::map<std::pair<lua_State const*, std::string>, xlua_dref*> cachedDrefs;
+
+	#define NS_READ_STATS 1
+	static int namespace_read_native(lua_State* L)
+	{
+		// The namespace is a table containing 'functions', 'values', 'raw_table_keys' etc.
+		// That table has a custom metatable with overrides for __index, __newindex etc.
+		luaL_checktype(L, 1, LUA_TTABLE);
+
+		int test = lua_gettop(L);
+
+	#if NS_READ_STATS
+		static size_t c_values = 0, c_funcs = 0, c_cache_reads = 0, c_cache_writes = 0;
+		static std::map<std::string, size_t> c_val_reads;
+	#endif
+		char const* wanted_key = lua_tostring(L, 2);
+
+		lua_pushstring(L, "values");
+		lua_rawget(L, 1);					// Pops 'values', pushes the result.
+
+		lua_pushvalue(L, 2);				// Re-push the index, i.e. put at -1
+		lua_gettable(L, -2);
+		lua_remove(L, -2);					// Dump the 'values' table from the stack
+		if (lua_type(L, -1) != LUA_TNIL)
+		{
+	#if NS_READ_STATS
+			++c_values;
+			if (wanted_key != nullptr)
+			{
+				c_val_reads[wanted_key]++;
+			}
+			else
+			{
+				c_val_reads["<None>"]++;
+			}
+	#endif
+			return 1;						// Topmost item is the value we need.
+		}
+		lua_pop(L, 1);						// Pop the 'nil'
+		test = lua_gettop(L);
+
+		if (wanted_key != nullptr)
+		{
+			auto cache = cachedDrefs.find({ L, wanted_key });
+			if (cache != cachedDrefs.end())
+			{
+				xlua_dref_type dt = xlua_dref_get_type(cache->second);
+				if (dt == xlua_dref_type::xlua_number)
+				{
+					lua_pushnumber(L, xlua_dref_get_number(cache->second));
+				}
+				else
+				{
+					lua_pushstring(L, xlua_dref_get_string(cache->second).c_str());
+				}
+
+	#if NS_READ_STATS
+				++c_cache_reads;
+	#endif
+				test = lua_gettop(L);
+				return 1;
+			}
+		}
+
+		lua_pushstring(L, "functions");
+		lua_rawget(L, 1);					// Pops 'functions', pushes the result.
+
+		lua_pushvalue(L, 2);				// Re-push the index, i.e. put at -1
+		lua_gettable(L, -2);
+		lua_remove(L, -2);					// Dump the 'functions' table from the stack
+		if (lua_type(L, -1) != LUA_TNIL)
+		{
+			// If should have a '__get' method - this is a lua stub referencing the C call i.e. XLuaGetNumber() .
+			lua_pushstring(L, "__get");
+			lua_rawget(L, -2);				// Pops '__get', pushes the result, which should be a function.
+
+			/////
+			lua_pushstring(L, "dref");		// Test to see if there's a dref value. If so, we can shortcut the whole process next time.
+			lua_rawget(L, -3);
+			if (lua_type(L, -1) == LUA_TUSERDATA)
+			{
+				xlua_dref** actual_dref = static_cast<xlua_dref**>(lua_touserdata(L, -1));
+				xlua_dref_type dt = xlua_dref_get_type(*actual_dref);
+				if (dt == xlua_dref_type::xlua_number || dt == xlua_dref_type::xlua_string)
+				{
+					cachedDrefs.emplace(std::pair<lua_State const*, std::string>{ L, wanted_key }, *actual_dref);
+	#if NS_READ_STATS
+					++c_cache_writes;
+	#endif
+				}
+			}
+			lua_pop(L, 1);
+			test = lua_gettop(L);
+			/////
+
+			lua_pushvalue(L, -2);			// Push the table again as a parameter.
+			lua_call(L, 1, 1);
+
+	#if NS_READ_STATS
+			++c_funcs;
+	#endif
+
+			test = lua_gettop(L);
+			return 1;						// Topmost item is the value we need.
+		}
+		lua_pop(L, 1);						// Pop the 'nil'
+
+		lua_pushstring(L, "parent");
+		lua_rawget(L, 1);					// Pops 'parent', pushes the result.
+		if (lua_type(L, -1) != LUA_TNIL)
+		{
+			lua_pushvalue(L, 2);				// Re-push the index, i.e. put at -1
+			lua_gettable(L, -2);
+		}
+		else
+		{
+			lua_pushnil(L);
+		}
+
+		lua_remove(L, -2);					// Dump the 'parent' table from the stack
+		test = lua_gettop(L);
+
+		return 1;
+	}
+
+#define XLUA1_FUNC_LIST \
+	FUNC_V1(XLuaGetCode) \
+	FUNC_V1(XLuaFindDataRef) \
+	FUNC_V1(XLuaCreateDataRef) \
+	FUNC_V1(XLuaGetDataRefType) \
+	FUNC_V1(XLuaGetNumber) \
+	FUNC_V1(XLuaSetNumber) \
+	FUNC_V1(XLuaGetArray) \
+	FUNC_V1(XLuaSetArray) \
+	FUNC_V1(XLuaSetArrayFromArray) \
+	FUNC_V1(XLuaGetString) \
+	FUNC_V1(XLuaSetString) \
+	FUNC_V1(XLuaFindCommand) \
+	FUNC_V1(XLuaCreateCommand) \
+	FUNC_V1(XLuaReplaceCommand) \
+	FUNC_V1(XLuaWrapCommand) \
+	FUNC_V1(XLuaFilterCommand) \
+	FUNC_V1(XLuaCommandStart) \
+	FUNC_V1(XLuaCommandStop) \
+	FUNC_V1(XLuaCommandOnce) \
+	FUNC_V1(namespace_read_native)
+
+}	// End of XLua1_Compat namespace
+
+#define XLUA_ALL_FUNC_LIST \
+	FUNC(XLuaCreateTimer) \
+	FUNC(XLuaRunTimer) \
+	FUNC(XLuaFindTimer) \
+	FUNC(XLuaIsTimerScheduled) \
+	FUNC(XLuaGetTimerRemaining) \
+	FUNC(XLuaReloadOnFlightChange)
+
+static int XLuaReloadOnFlightChange(lua_State* L)
 {
-	xlua_cmd * d = xlua_checkuserdata<xlua_cmd*>(L,1,"expected command");
-	xlua_cmd_once(d);
+	char log[512];
+	sprintf(log, "Aircraft scripts will be fully reloaded when flight details change.");
+
+	// Log the fact that the plugin's been put into reinit-on-flight-change mode.
+	lua_pushstring(L, log);
+	l_my_print(L);
+	lua_pop(L, 1);
+
+	xlua_cmd_mark_reload_on_change();
+
 	return 0;
 }
 
@@ -542,7 +715,7 @@ static int XLuaCommandOnce(lua_State * L)
 
 static void timer_callback(std::shared_ptr<notify_cb_t> ref)
 {
-	lua_State * L = setup_lua_callback(ref.get(), kTimerCallbackSig);
+	lua_State* L = setup_lua_callback(ref.get(), kTimerCallbackSig);
 	if (L)
 	{
 		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "");
@@ -550,7 +723,7 @@ static void timer_callback(std::shared_ptr<notify_cb_t> ref)
 }
 
 // XPLMCreateTimer func -> ptr
-static int XLuaCreateTimer(lua_State * L)
+static int XLuaCreateTimer(lua_State* L)
 {
 	std::shared_ptr<notify_cb_t> timer_cb = std::make_shared<notify_cb_t>(L, 0);
 	if (!wrap_next_lua_func(timer_cb, -1, false, kTimerCallbackSig))
@@ -561,7 +734,7 @@ static int XLuaCreateTimer(lua_State * L)
 	xlua_timer* t = xlua_create_timer(L, timer_callback, timer_cb);
 	assert(t);
 
-    xlua_pushuserdata(L, t);
+	xlua_pushuserdata(L, t);
 	return 1;
 }
 
@@ -570,10 +743,10 @@ static int XLuaCreateTimer(lua_State * L)
 * timers created with closures because each instance of the closure - i.e. unique per frame - was stored. Moving the management
 * of timers into the plugin solves that but it also means we need to be able to search for an existing timer by function, to satisfy
 * the case where the callback is _not_ a closure.
-* 
+*
 * The original function is stored only as a registry index as part of the notify_cb_t struct and that's going to be expanded to allow
 * multiple callbacks for the same refcon, which makes problems here because all we have to search on is a function on the stack...
-* 
+*
 */
 static int XLuaFindTimer(lua_State* L)
 {
@@ -610,192 +783,24 @@ static int XLuaGetTimerRemaining(lua_State* L)
 }
 
 // XPLMRunTimer timer delay repeat
-static int XLuaRunTimer(lua_State * L)
+static int XLuaRunTimer(lua_State* L)
 {
-	xlua_timer * t = xlua_checkuserdata<xlua_timer*>(L,1,"expected timer");
-	if(!t)
+	xlua_timer* t = xlua_checkuserdata<xlua_timer*>(L, 1, "expected timer");
+	if (!t)
 		return 0;
-	
+
 	xlua_run_timer(L, t, lua_tonumber(L, -2), lua_tonumber(L, -1));
 	return 0;
 }
 
 // XPLMIsTimerScheduled ptr -> int
-static int XLuaIsTimerScheduled(lua_State * L)
+static int XLuaIsTimerScheduled(lua_State* L)
 {
-	xlua_timer * t = xlua_checkuserdata<xlua_timer*>(L,1,"expected timer");
+	xlua_timer* t = xlua_checkuserdata<xlua_timer*>(L, 1, "expected timer");
 	int sched = xlua_is_timer_scheduled(L, t);
 	lua_pushboolean(L, sched);
 	return 1;
 }
-
-static int XLuaReloadOnFlightChange(lua_State* L)
-{
-	char log[512];
-	sprintf(log, "Aircraft scripts will be fully reloaded when flight details change.");
-
-	// Log the fact that the plugin's been put into reinit-on-flight-change mode.
-	lua_pushstring(L, log);
-	l_my_print(L);
-	lua_pop(L, 1);
-
-	xlua_cmd_mark_reload_on_change();
-
-	return 0;
-}
-
-std::map<std::pair<lua_State const*, std::string>, xlua_dref*> cachedDrefs;
-
-#define NS_READ_STATS 1
-static int namespace_read_native(lua_State* L)
-{
-	// The namespace is a table containing 'functions', 'values', 'raw_table_keys' etc.
-	// That table has a custom metatable with overrides for __index, __newindex etc.
-	luaL_checktype(L, 1, LUA_TTABLE);
-
-	int test = lua_gettop(L);
-
-#if NS_READ_STATS
-	static size_t c_values = 0, c_funcs = 0, c_cache_reads = 0, c_cache_writes = 0;
-	static std::map<std::string, size_t> c_val_reads;
-#endif
-	char const* wanted_key = lua_tostring(L, 2);
-
-	lua_pushstring(L, "values");
-	lua_rawget(L, 1);					// Pops 'values', pushes the result.
-
-	lua_pushvalue(L, 2);				// Re-push the index, i.e. put at -1
-	lua_gettable(L, -2);
-	lua_remove(L, -2);					// Dump the 'values' table from the stack
-	if (lua_type(L, -1) != LUA_TNIL)
-	{
-#if NS_READ_STATS
-		++c_values;
-		if (wanted_key != nullptr)
-		{
-			c_val_reads[wanted_key]++;
-		}
-		else
-		{
-			c_val_reads["<None>"]++;
-		}
-#endif
-		return 1;						// Topmost item is the value we need.
-	}
-	lua_pop(L, 1);						// Pop the 'nil'
-	test = lua_gettop(L);
-
-	if (wanted_key != nullptr)
-	{
-		auto cache = cachedDrefs.find({ L, wanted_key });
-		if (cache != cachedDrefs.end())
-		{
-			xlua_dref_type dt = xlua_dref_get_type(cache->second);
-			if (dt == xlua_dref_type::xlua_number)
-			{
-				lua_pushnumber(L, xlua_dref_get_number(cache->second));
-			}
-			else
-			{
-				lua_pushstring(L, xlua_dref_get_string(cache->second).c_str());
-			}
-
-#if NS_READ_STATS
-			++c_cache_reads;
-#endif
-			test = lua_gettop(L);
-			return 1;
-		}
-	}
-
-	lua_pushstring(L, "functions");
-	lua_rawget(L, 1);					// Pops 'functions', pushes the result.
-
-	lua_pushvalue(L, 2);				// Re-push the index, i.e. put at -1
-	lua_gettable(L, -2);
-	lua_remove(L, -2);					// Dump the 'functions' table from the stack
-	if (lua_type(L, -1) != LUA_TNIL)
-	{
-		// If should have a '__get' method - this is a lua stub referencing the C call i.e. XLuaGetNumber() .
-		lua_pushstring(L, "__get");
-		lua_rawget(L, -2);				// Pops '__get', pushes the result, which should be a function.
-
-		/////
-		lua_pushstring(L, "dref");		// Test to see if there's a dref value. If so, we can shortcut the whole process next time.
-		lua_rawget(L, -3);
-		if (lua_type(L, -1) == LUA_TUSERDATA)
-		{
-			xlua_dref** actual_dref = static_cast<xlua_dref**>(lua_touserdata(L, -1));
-			xlua_dref_type dt = xlua_dref_get_type(*actual_dref);
-			if (dt == xlua_dref_type::xlua_number || dt == xlua_dref_type::xlua_string)
-			{
-				cachedDrefs.emplace(std::pair<lua_State const*, std::string>{ L, wanted_key }, *actual_dref);
-#if NS_READ_STATS
-				++c_cache_writes;
-#endif
-			}
-		}
-		lua_pop(L, 1);
-		test = lua_gettop(L);
-		/////
-
-		lua_pushvalue(L, -2);			// Push the table again as a parameter.
-		lua_call(L, 1, 1);
-
-#if NS_READ_STATS
-		++c_funcs;
-#endif
-
-		test = lua_gettop(L);
-		return 1;						// Topmost item is the value we need.
-	}
-	lua_pop(L, 1);						// Pop the 'nil'
-
-	lua_pushstring(L, "parent");
-	lua_rawget(L, 1);					// Pops 'parent', pushes the result.
-	if (lua_type(L, -1) != LUA_TNIL)
-	{
-		lua_pushvalue(L, 2);				// Re-push the index, i.e. put at -1
-		lua_gettable(L, -2);
-	}
-	else
-	{
-		lua_pushnil(L);
-	}
-
-	lua_remove(L, -2);					// Dump the 'parent' table from the stack
-	test = lua_gettop(L);
-
-	return 1;
-}
-
-#define FUNC_LIST \
-	FUNC(XLuaGetCode) \
-	FUNC(XLuaFindDataRef) \
-	FUNC(XLuaCreateDataRef) \
-	FUNC(XLuaGetDataRefType) \
-	FUNC(XLuaGetNumber) \
-	FUNC(XLuaSetNumber) \
-	FUNC(XLuaGetArray) \
-	FUNC(XLuaSetArray) \
-	FUNC(XLuaSetArrayFromArray) \
-	FUNC(XLuaGetString) \
-	FUNC(XLuaSetString) \
-	FUNC(XLuaFindCommand) \
-	FUNC(XLuaCreateCommand) \
-	FUNC(XLuaReplaceCommand) \
-	FUNC(XLuaWrapCommand) \
-	FUNC(XLuaFilterCommand) \
-	FUNC(XLuaCommandStart) \
-	FUNC(XLuaCommandStop) \
-	FUNC(XLuaCommandOnce) \
-	FUNC(XLuaCreateTimer) \
-	FUNC(XLuaRunTimer) \
-	FUNC(XLuaFindTimer) \
-	FUNC(XLuaIsTimerScheduled) \
-	FUNC(XLuaGetTimerRemaining) \
-	FUNC(XLuaReloadOnFlightChange) \
-	FUNC(namespace_read_native)
 
 std::string get_log_prefix(char l)
 {
@@ -930,12 +935,17 @@ static const struct luaL_Reg printlib[] = {
 	{ NULL, NULL } /* end of array */
 };
 
-void	add_xlua_funcs_to_interp(lua_State * L)
+void	add_xlua_funcs_to_interp(lua_State * L, int compat_version)
 {
-	#define FUNC(x) \
-		lua_register(L,#x,x);
-		
-	FUNC_LIST
+	#define FUNC(x) lua_register(L,#x,x);
+	#define FUNC_V1(x) lua_register(L,#x,XLua1::x);
+
+	XLUA_ALL_FUNC_LIST;
+
+	if (compat_version == 1)
+	{
+		XLUA1_FUNC_LIST;
+	}
 
 	// For logging
 	drSimRealTime = XPLMFindDataRef("sim/network/misc/network_time_sec");

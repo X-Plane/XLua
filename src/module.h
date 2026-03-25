@@ -69,6 +69,12 @@ public:
 	std::string const&	get_log_path(void) const { return m_log_path; }
 	std::string const&	get_script_path(void) const { return m_path; }
 
+	void		acf_load();
+	void		acf_unload();
+	void		flight_start();
+	void		flight_crash();
+	void		post_replay();
+
 			// Module-level equivalents of XPLM plugin setup/admin calls.
 			bool		_XPluginStart(void);
 			void		_XPluginStop(void);
@@ -76,7 +82,7 @@ public:
 			bool		_XPluginEnable(void);				// TODO: Add a UI to allow individual scripts to be enabled/disabled.
 			void		_XPluginDisable(void);
 
-			// Internal housekeeping.
+			// Internal housekeeping, possibly required even for XLua 2+ .
 			void		pre_physics();
 			void		post_physics();
 
