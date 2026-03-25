@@ -11,6 +11,8 @@
 #ifndef module_h
 #define module_h
 
+#define XLUA_VERSION "2.0.0a1"
+
 #define NOMINMAX
 
 #include <stddef.h>
@@ -28,12 +30,20 @@ extern "C" {
 
 #include <string>
 #include <map>
+#include <array>
 
 #include "XPLMDefs.h"
 
 using std::string;
 
 struct module_alloc_block;
+
+struct version_triplet : public std::array<int, 3>
+{
+public:
+	auto operator<=>(version_triplet const& other) const = default;
+	bool init_from_string(std::string ver_str);
+};
 
 class module {
 public:
@@ -50,6 +60,7 @@ public:
 	static int			debug_proc_from_interp(lua_State * interp);
 	bool				is_started(void) const { return m_interp != nullptr; }
 	bool				is_enabled(void) const { return m_enabled; }
+	version_triplet const& get_required_version(void) const { return m_xlua_compat; }
 
 			void *		module_alloc_tracked(size_t amount);
 			
@@ -96,6 +107,7 @@ private:
 	string					m_log_path;
 	int						m_debug_proc;
 	bool					m_enabled;
+	version_triplet			m_xlua_compat;
 
 	module();
 	module(const module& rhs);

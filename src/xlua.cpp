@@ -3,8 +3,6 @@
 //	See LICENSE.txt for the full terms of the license.
 
 
-#define VERSION "1.5.1r1"
-
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -13,6 +11,7 @@
 #include <algorithm>
 #include <array>
 #include <filesystem>
+#include <regex>
 
 #ifndef XPLM200
 #define XPLM200
@@ -62,6 +61,7 @@ int						PluginMenuItem = 0;				// Our sub-menu's item number on the Plugins men
 #endif
 bool					g_bIsAircraftPlugin = true;
 int						JITMenuItem = 0;
+extern version_triplet sPluginVersion;
 
 static string plugin_base_path;
 
@@ -505,8 +505,8 @@ PLUGIN_API int XPluginStart(
 						char *		outSig,
 						char *		outDesc)
 {
-    strcpy(outName, "XLua " VERSION);
-    strcpy(outSig, "com.x-plane.xlua." VERSION);
+    strcpy(outName, "XLua " XLUA_VERSION);
+    strcpy(outSig, "com.x-plane.xlua." XLUA_VERSION);
     strcpy(outDesc, "A minimal scripting environment for aircraft authors.");
 
 	g_replay_active = XPLMFindDataRef("sim/time/is_in_replay");
@@ -535,7 +535,13 @@ PLUGIN_API int XPluginStart(
 
 	if (!g_bIsAircraftPlugin)
 	{
-		strcpy(outSig, "com.x-plane.xlua-sys." VERSION);
+		strcpy(outSig, "com.x-plane.xlua-sys." XLUA_VERSION);
+	}
+
+	if (!sPluginVersion.init_from_string(XLUA_VERSION))
+	{
+		XPLMDebugString("XLua was unable to parse its own version string!");
+		return 0;
 	}
 
 	return 1;
@@ -619,7 +625,7 @@ PLUGIN_API int XPluginEnable(void)
 					}
 					else
 					{
-						menuName = "XLua " VERSION;
+						menuName = "XLua " XLUA_VERSION;
 					}
 
 					break;

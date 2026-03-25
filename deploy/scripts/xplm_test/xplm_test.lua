@@ -1,3 +1,5 @@
+--[[ XLua 2.2 ]]
+
 require("XPLMCamera")
 require("XPLMDataAccess")
 require("XPLMDisplay")			-- Partially excluded.

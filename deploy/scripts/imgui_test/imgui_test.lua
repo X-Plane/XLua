@@ -1,3 +1,5 @@
+--[[ XLua 2.0 ]]
+
 local simDR_flight_time = XPLMFindDataRef("sim/time/total_flight_time_sec")
 
 if not SUPPORTS_FLOATING_WINDOWS then

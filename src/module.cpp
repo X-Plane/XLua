@@ -18,7 +18,7 @@
 #include "log.h"
 #include "lua_helpers.h"
 #include <lua.h>
-
+#include <regex>
 
 #if MOBILE
 	#include "xmap.h"
@@ -47,6 +47,43 @@
 #endif
 
 void add_xplm_to_interp(lua_State* L);
+
+version_triplet sPluginVersion = { -1, -1, -1 };
+
+static_assert(version_triplet{ 1,0,0 } == version_triplet{ 1,0,0 });
+static_assert(version_triplet{ 1,0,0 } < version_triplet{ 1,0,1 });
+static_assert(version_triplet{ 1,0,1 } > version_triplet{ 1,0,0 });
+
+bool version_triplet::init_from_string(std::string ver_str)
+{
+	std::smatch v_match;
+	static const std::regex reVersion(R"(^(\d+)(?:\.(\d+))?(?:\.(\d+))?)");
+	if (std::regex_search(ver_str, v_match, reVersion))
+	{
+		for (int i = 1; i <= 3; ++i)
+		{
+			if (v_match[i].matched)
+			{
+				try
+				{
+					(*this)[i-1] = std::stoi(v_match[i].str());
+				}
+				catch (std::exception const& ex)
+				{
+					return false;
+				}
+			}
+			else
+			{
+				(*this)[i-1] = 0;
+			}
+		}
+
+		return true;
+	}
+
+	return false;
+}
 
 static const char * shorten_to_file(const char * path)
 {
@@ -121,11 +158,15 @@ static void destroy_alloc_block(module_alloc_block * head)
 
 #define CTOR_FAIL(errcode,msg) \
 if(errcode != 0) { \
-	const char *errmsg = lua_tostring(m_interp, -1); \
 	XPLMDebugString((get_log_prefix('E') + "Error during " + msg + " '" + m_log_path + "'\n").c_str()); \
-	log_message(m_interp,"%s\n%s failed: %d\n",errmsg,msg,errcode); \
-	lua_close(m_interp); \
-	m_interp = NULL; \
+	if (m_interp) \
+	{ \
+		const char *errmsg = nullptr; \
+		lua_tostring(m_interp, -1); \
+		log_message(m_interp,"%s\n%s failed: %d\n",errmsg,msg,errcode); \
+		lua_close(m_interp); \
+		m_interp = nullptr; \
+	} \
 	return; }
 
 void profile_callback(void* data, lua_State* L, int samples, int vmstate)
@@ -207,14 +248,39 @@ module::module(
 	m_memory(NULL),
 	m_path(in_module_path),
 	m_debug_proc(0),
-	m_enabled(true)
+	m_enabled(true),
+	m_xlua_compat({ 1, 0, 0 })
 {
 	int boiler_plate_paths = length_of_dir(in_init_script);
 	m_log_path = in_module_script + boiler_plate_paths;
 
-	m_interp = luaL_newstate();
+	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
+	// we need to load the Lua script from an already allocated memory buffer.
+	xmap_class lmod(in_module_script);
+	if (!lmod.exists())
+		CTOR_FAIL(-1, "load module");
 
-	if(m_interp == NULL)
+	static const std::regex reHashbang(R"(^--\[\[\s*XLua\s+((?:\d+\.?){1,3})\s*\]\])");
+	std::smatch hb_match;
+	std::string hb_view(lmod.begin(), 128);
+	if (std::regex_search(hb_view, hb_match, reHashbang))
+	{
+		if (!m_xlua_compat.init_from_string(hb_match[1].str()))
+		{
+			log_message(nullptr, "Unable to parse version '%s' in '%s'\n", hb_match[1].str().c_str(), m_log_path.c_str());
+			CTOR_FAIL(-1, "load module");
+		}
+	}
+
+	if (m_xlua_compat > sPluginVersion)
+	{
+		log_message(nullptr, "Script '%s' requires XLua %d.%d.%d or higher.\n", m_log_path.c_str(),
+					m_xlua_compat[0], m_xlua_compat[1], m_xlua_compat[2]);
+		CTOR_FAIL(-1, "Version too low");
+	}
+
+	m_interp = luaL_newstate();
+	if(m_interp == nullptr)
 	{
 		XPLMDebugString("Unable to set up Lua.");
 		return;
@@ -224,8 +290,16 @@ module::module(
     xlua_pushuserdata(m_interp, this);
 	lua_setglobal(m_interp, "__module_ptr");
 
-	add_xlua_funcs_to_interp(m_interp);
-	add_xplm_to_interp(m_interp);
+	if (m_xlua_compat[0] < 2)
+	{
+		// XLua 1.x functions.
+		add_xlua_funcs_to_interp(m_interp);
+	}
+	else
+	{
+		// XLua 2.x functions.
+		add_xplm_to_interp(m_interp);
+	}
 
 	lua_getfield(m_interp, LUA_GLOBALSINDEX, "package");
 	lua_getfield(m_interp, -1, "path");
@@ -283,11 +357,6 @@ module::module(
 	script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
 	CTOR_FAIL(script_result, "run init script");
 
-	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
-	// we need to load the Lua script from an already allocated memory buffer.
-	xmap_class lmod(in_module_script);
-	if(!lmod.exists())
-		CTOR_FAIL(-1, "load module");
 	int module_load_result = luaL_loadbuffer(m_interp, (const char*)lmod.begin(), lmod.size(), m_log_path.c_str());
 	CTOR_FAIL(module_load_result,"load module");
 	
