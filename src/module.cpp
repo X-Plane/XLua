@@ -14,6 +14,7 @@
 #include "xpfuncs.h"
 #include <stdlib.h>
 #include <assert.h>
+#include <string>
 #include <string_view>
 #include "log.h"
 #include "lua_helpers.h"
@@ -262,7 +263,7 @@ module::module(
 
 	static const std::regex reHashbang(R"(^--\[\[\s*XLua\s+((?:\d+\.?){1,3})\s*\]\])");
 	std::smatch hb_match;
-	std::string hb_view(lmod.begin(), 128);
+	std::string hb_view(reinterpret_cast<char const*>(lmod.begin()), 128);
 	if (std::regex_search(hb_view, hb_match, reHashbang))
 	{
 		if (!m_xlua_compat.init_from_string(hb_match[1].str()))
