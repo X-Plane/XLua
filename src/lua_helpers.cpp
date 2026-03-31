@@ -18,6 +18,7 @@
 
 #include "log.h"
 #include "xpfuncs.h"
+#include "module.h"
 
 extern XPLMDataRef				g_replay_active;
 extern XPLMDataRef				g_sim_period;
@@ -106,15 +107,19 @@ int lua_pushtraceback(lua_State * L)
 
 void setup_std_vars(lua_State * L, int dbg)
 {
-	lua_getfield(L, LUA_GLOBALSINDEX, "setup_callback_var");
-	fmt_pcall(L, dbg, false, "sf", "SIM_PERIOD", XPLMGetDataf(g_sim_period));
+	::module const* mod = module::module_from_interp(L);
+	if (mod != nullptr && mod->get_required_version()[0] == 1)
+	{
+		lua_pushnumber(L, XPLMGetDataf(g_sim_period));
+		lua_setglobal(L, "SIM_PERIOD");
 
-	lua_getfield(L, LUA_GLOBALSINDEX, "setup_callback_var");
-	fmt_pcall(L, dbg, false, "si", "IN_REPLAY", XPLMGetDatai(g_replay_active) != 0 ? 1 : 0);
+		lua_pushnumber(L, XPLMGetDatai(g_replay_active));
+		lua_setglobal(L, "IN_REPLAY");
+	}
 }
 
-template<BoolOnly B>
-int vfmt_pcall(lua_State* L, int dbg, B expects_returnval, const char* fmt, va_list va)
+template<>
+int vfmt_pcall(lua_State* L, int dbg, bool expects_returnval, const char* fmt, va_list va)
 {
 	const char * f = fmt;
 	int arg_count = 0;
@@ -197,6 +202,7 @@ extern "C" int _XPLMPluginID_tostring(lua_State* L)
 	return 1;
 }
 
+#if !MOBILE
 extern "C" int _XPLMHotKeyID_tostring(lua_State* L)
 {
 	XPLMHotKeyID const test1 = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected XPLMHotKeyID");
@@ -208,6 +214,7 @@ extern "C" int _XPLMHotKeyID_tostring(lua_State* L)
 	lua_pushstring(L, kname);
 	return 1;
 }
+#endif
 
 extern "C" int _XPLMDataRef_tostring(lua_State* L)
 {

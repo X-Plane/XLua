@@ -14,25 +14,78 @@
 #include "xpfuncs.h"
 #include <stdlib.h>
 #include <assert.h>
+#include <string>
 #include <string_view>
 #include "log.h"
 #include "lua_helpers.h"
 #include <lua.h>
-extern "C"
-{
+#include <regex>
+
 #if MOBILE
-    #include "luajit.h"
+	#include "xmap.h"
+	extern "C"
+	{
+		#include "../luajit/src/luajit.h"
+	}
 #else
-	#include "../luajit/src/luajit.h"
+	#include "FLWIntegration.h"
+	extern "C"
+	{
+		#include "../luajit/src/luajit.h"
+	}
+
+	void add_xplm_to_interp(lua_State* L);
+	class	xmap_class {
+	public:
+		xmap_class(const string& in_file_name);
+		~xmap_class()				{ if (m_buffer != nullptr) free(m_buffer); }
+		bool exists() const			{ return m_buffer != nullptr; }
+		char const* begin() const	{ return m_buffer; }
+		size_t size() const			{ return m_size; }
+	private:
+		char *		 m_buffer;
+		size_t		 m_size;
+	};
+
+	void add_xplm_to_interp(lua_State* L);
 #endif
+
+version_triplet sPluginVersion = { -1, -1, -1 };
+
+static_assert(version_triplet{ 1,0,0 } == version_triplet{ 1,0,0 });
+static_assert(version_triplet{ 1,0,0 } < version_triplet{ 1,0,1 });
+static_assert(version_triplet{ 1,0,1 } > version_triplet{ 1,0,0 });
+
+bool version_triplet::init_from_string(std::string ver_str)
+{
+	std::smatch v_match;
+	static const std::regex reVersion(R"(^(\d+)(?:\.(\d+))?(?:\.(\d+))?)");
+	if (std::regex_search(ver_str, v_match, reVersion))
+	{
+		for (int i = 1; i <= 3; ++i)
+		{
+			if (v_match[i].matched)
+			{
+				try
+				{
+					(*this)[i-1] = std::stoi(v_match[i].str());
+				}
+				catch (std::exception const& ex)
+				{
+					return false;
+				}
+			}
+			else
+			{
+				(*this)[i-1] = 0;
+			}
+		}
+
+		return true;
+	}
+
+	return false;
 }
-
-#if !MOBILE
-#include "FLWIntegration.h"
-
-void add_xplm_to_interp(lua_State* L);
-#endif
-
 
 static const char * shorten_to_file(const char * path)
 {
@@ -52,22 +105,6 @@ static int length_of_dir(const char * p)
 	return f - p;
 }
 
-#if !MOBILE
-
-class	xmap_class {
-public:
-	xmap_class(const string& in_file_name);
-	~xmap_class()				{ if (m_buffer != nullptr) free(m_buffer); }
-	bool exists() const			{ return m_buffer != nullptr; }
-	char const* begin() const	{ return m_buffer; }
-	size_t size() const			{ return m_size; }
-private:
-	char *		 m_buffer;
-	size_t		 m_size;
-};
-
-#endif
-
 #define MALLOC_CHUNK_SIZE 4096
 
 struct module_alloc_block {
@@ -79,7 +116,7 @@ struct module_alloc_block {
 
 static module_alloc_block * make_alloc_block()
 {
-	module_alloc_block * r = (module_alloc_block *) malloc(MALLOC_CHUNK_SIZE);
+	module_alloc_block * r = (module_alloc_block *) malloc(sizeof(module_alloc_block));
 	assert(r);
 	r->next = NULL;
 	r->ptr = r->data;
@@ -123,11 +160,15 @@ static void destroy_alloc_block(module_alloc_block * head)
 
 #define CTOR_FAIL(errcode,msg) \
 if(errcode != 0) { \
-	const char *errmsg = lua_tostring(m_interp, -1); \
 	XPLMDebugString((get_log_prefix('E') + "Error during " + msg + " '" + m_log_path + "'\n").c_str()); \
-	log_message(m_interp,"%s\n%s failed: %d\n",errmsg,msg,errcode); \
-	lua_close(m_interp); \
-	m_interp = NULL; \
+	if (m_interp) \
+	{ \
+		const char *errmsg = nullptr; \
+		lua_tostring(m_interp, -1); \
+		log_message(m_interp,"%s\n%s failed: %d\n",errmsg,msg,errcode); \
+		lua_close(m_interp); \
+		m_interp = nullptr; \
+	} \
 	return; }
 
 void profile_callback(void* data, lua_State* L, int samples, int vmstate)
@@ -208,14 +249,40 @@ module::module(
 	m_interp(NULL),
 	m_memory(NULL),
 	m_path(in_module_path),
-	m_debug_proc(0)
+	m_debug_proc(0),
+	m_enabled(true),
+	m_xlua_compat({ 1, 0, 0 })
 {
 	int boiler_plate_paths = length_of_dir(in_init_script);
 	m_log_path = in_module_script + boiler_plate_paths;
 
-	m_interp = luaL_newstate();
+	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
+	// we need to load the Lua script from an already allocated memory buffer.
+	xmap_class lmod(in_module_script);
+	if (!lmod.exists())
+		CTOR_FAIL(-1, "load module");
 
-	if(m_interp == NULL)
+	static const std::regex reHashbang(R"(^--\[\[\s*XLua\s+((?:\d+\.?){1,3})\s*\]\])");
+	std::smatch hb_match;
+	std::string hb_view(reinterpret_cast<char const*>(lmod.begin()), 128);
+	if (std::regex_search(hb_view, hb_match, reHashbang))
+	{
+		if (!m_xlua_compat.init_from_string(hb_match[1].str()))
+		{
+			log_message(nullptr, "Unable to parse version '%s' in '%s'\n", hb_match[1].str().c_str(), m_log_path.c_str());
+			CTOR_FAIL(-1, "load module");
+		}
+	}
+
+	if (m_xlua_compat > sPluginVersion)
+	{
+		log_message(nullptr, "Script '%s' requires XLua %d.%d.%d or higher.\n", m_log_path.c_str(),
+					m_xlua_compat[0], m_xlua_compat[1], m_xlua_compat[2]);
+		CTOR_FAIL(-1, "Version too low");
+	}
+
+	m_interp = luaL_newstate();
+	if(m_interp == nullptr)
 	{
 		XPLMDebugString("Unable to set up Lua.");
 		return;
@@ -225,10 +292,19 @@ module::module(
     xlua_pushuserdata(m_interp, this);
 	lua_setglobal(m_interp, "__module_ptr");
 
-	add_xlua_funcs_to_interp(m_interp);
+	xlua_pushinteger(m_interp, m_xlua_compat[0]);
+	lua_setglobal(m_interp, "XLuaMajorVersion");
 
+	lua_pushstring(m_interp, XLUA_VERSION);
+	lua_setglobal(m_interp, "XLuaPluginVersion");
+
+	add_xlua_funcs_to_interp(m_interp, m_xlua_compat[0]);
 #if !MOBILE
-	add_xplm_to_interp(m_interp);
+	if (m_xlua_compat[0] >= 2)
+	{
+		// XLua 2.x functions.
+		add_xplm_to_interp(m_interp);
+	}
 #endif
 
 	lua_getfield(m_interp, LUA_GLOBALSINDEX, "package");
@@ -287,18 +363,28 @@ module::module(
 	script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
 	CTOR_FAIL(script_result, "run init script");
 
-	lua_getfield(m_interp, LUA_GLOBALSINDEX, "run_module_in_namespace");
-	
-	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
-	// we need to load the Lua script from an already allocated memory buffer.
-	xmap_class lmod(in_module_script);
-	if(!lmod.exists())
-		CTOR_FAIL(-1, "load module");
 	int module_load_result = luaL_loadbuffer(m_interp, (const char*)lmod.begin(), lmod.size(), m_log_path.c_str());
 	CTOR_FAIL(module_load_result,"load module");
 	
-	int module_run_result = lua_pcall(m_interp, 1, 0, m_debug_proc);
-	CTOR_FAIL(module_run_result,"run module");
+	int module_run_result;
+	if (m_xlua_compat[0] == 1)
+	{
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, "run_module_in_namespace");
+		lua_insert(m_interp, -2);
+		module_run_result = lua_pcall(m_interp, 1, 0, m_debug_proc);
+		CTOR_FAIL(module_run_result, "run module V1");
+	}
+	else
+	{
+		module_run_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
+		CTOR_FAIL(module_run_result, "run module V2+");
+
+		// To completely duplicate the normal C API, add XPluginStart etc.
+		if (!(_XPluginStart() && _XPluginEnable()))
+		{
+			shutdown_lua();
+		}
+	}
 }
 
 int module::load_module_relative_path(const string& path)
@@ -342,32 +428,51 @@ void *		module::module_alloc_tracked(size_t amount)
 
 void		module::acf_load()
 {
-	do_callout("aircraft_load");
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("aircraft_load");
+	}
 }
 
 void		module::acf_unload()
 {
-	do_callout("aircraft_unload");
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("aircraft_unload");
+	}
 }
 
 void		module::flight_start()
 {
-	do_callout("flight_start");
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("flight_start");
+	}
 }
 
 void		module::flight_crash()
 {
-	do_callout("flight_crash");
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("flight_crash");
+	}
 }
 
 void		module::pre_physics()
 {
-	do_callout("before_physics");
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("before_physics");
+	}
 }
 
 void		module::post_physics()
 {
-	do_callout("after_physics");
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("after_physics");
+	}
+
 #if !MOBILE
 	flwnd::onFlightLoop(m_interp);
 #endif
@@ -375,22 +480,40 @@ void		module::post_physics()
 
 void		module::post_replay()
 {
-	do_callout("after_replay");
+	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
+	{
+		do_callout("after_replay");
+	}
 }
 
-void module::do_callout(const char * f)
+void module::do_callout(char const* f)
 {
-	if(m_interp == NULL)
+	if (m_interp == nullptr || !m_enabled)
 		return;
 
-	lua_getfield(m_interp, LUA_GLOBALSINDEX, "do_callout");
-	if (!lua_isfunction(m_interp, -1))
+	if (m_xlua_compat[0] == 1)
 	{
-		lua_pop(m_interp, 1);
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, "do_callout");
+		if (!lua_isfunction(m_interp, -1))
+		{
+			lua_pop(m_interp, 1);
+		}
+		else
+		{
+			fmt_pcall_stdvars(m_interp, m_debug_proc, false, "s", f);
+		}
 	}
 	else
 	{
-		fmt_pcall_stdvars(m_interp, m_debug_proc, false, "s", f);
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, f);
+		if (!lua_isfunction(m_interp, -1))
+		{
+			lua_pop(m_interp, 1);
+		}
+		else
+		{
+			fmt_pcall_stdvars(m_interp, m_debug_proc, false, "");
+		}
 	}
 }
 
@@ -399,12 +522,20 @@ extern "C"
 	XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 }
 
-void module::forward_notification(XPLMPluginID inFromWho, int inMessage, void* inParam)
+void module::_XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void* inParam)
 {
-	if (m_interp == NULL)
+	if (m_interp == nullptr || !m_enabled || m_xlua_compat[0] < 2)
 		return;
 
-	lua_getfield(m_interp, LUA_GLOBALSINDEX, "receive_message");
+	if (m_xlua_compat[0] == 1)
+	{
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, "receive_message");
+	}
+	else
+	{
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, "XPluginReceiveMessage");
+	}
+
 	if (!lua_isfunction(m_interp, -1))
 	{
 		lua_pop(m_interp, 1);
@@ -439,18 +570,93 @@ void module::forward_notification(XPLMPluginID inFromWho, int inMessage, void* i
 	}
 }
 
-module::~module()
+void module::shutdown_lua(void)
 {
 	if (m_interp)
 	{
+		if (m_enabled)
+		{
+			_XPluginDisable();
+		}
+		_XPluginStop();
+
 		luaJIT_profile_stop(m_interp);
 #if !MOBILE
 		flwnd::deinitFloatingWindowSupport(m_interp);
 #endif
 		lua_close(m_interp);
+		m_interp = nullptr;
+	}
+}
+
+module::~module()
+{
+	shutdown_lua();
+	destroy_alloc_block(m_memory);
+}
+
+bool module::_XPluginStart(void)
+{
+	bool res = true;
+
+	lua_getfield(m_interp, LUA_GLOBALSINDEX, "XPluginStart");
+	if (!lua_isfunction(m_interp, -1))
+	{
+		lua_pop(m_interp, 1);
+	}
+	else
+	{
+		res = false;		// They've defined an XPluginStart function. Assume it fails - they now need to return true from working code to continue.
+
+		// In our case we're not going to pass through the parameters though, they're irrelevant.
+		if (0 == fmt_pcall_stdvars(m_interp, m_debug_proc, true, ""))
+		{
+			res = xlua_checkboolean(m_interp, -1);
+		}
 	}
 
-	destroy_alloc_block(m_memory);
+	return res;
+}
+
+void module::_XPluginStop(void)
+{
+	// We want XPluginStop to be called regardless of the enabled status. This only gets called immediately before
+	// an unload anyway.
+	m_enabled = true;
+
+	do_callout("XPluginStop");
+}
+
+bool module::_XPluginEnable(void)
+{
+	if (m_interp == nullptr)
+		return false;
+
+	m_enabled = true;
+
+	lua_getfield(m_interp, LUA_GLOBALSINDEX, "XPluginEnable");
+
+	if (!lua_isfunction(m_interp, -1))
+	{
+		lua_pop(m_interp, 1);
+	}
+	else
+	{
+		// In our case we're not going to pass through the parameters though, they're irrelevant.
+		m_enabled = false;		// They've defined an XPluginStart function. Assume it fails - they now need to return true from working code to continue.
+
+		if (0 == fmt_pcall_stdvars(m_interp, m_debug_proc, true, ""))
+		{
+			m_enabled = xlua_checkboolean(m_interp, -1);
+		}
+	}
+
+	return m_enabled;
+}
+
+void module::_XPluginDisable(void)
+{
+	do_callout("XPluginDisable");
 }
 
 #if !MOBILE

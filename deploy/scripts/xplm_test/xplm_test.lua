@@ -1,3 +1,5 @@
+--[[ XLua 2.0 ]]
+
 require("XPLMCamera")
 require("XPLMDataAccess")
 require("XPLMDisplay")			-- Partially excluded.
@@ -17,6 +19,7 @@ require("XPLMWeather")
 
 g_custom_accessor_store = 5
 g_pre_fl_handle = nil
+g_post_fl_handle = nil
 custom_cmnd = nil
 g_flagpolePath = nil
 
@@ -33,6 +36,8 @@ drTCASLat = XPLMFindDataRef("sim/cockpit2/tcas/targets/position/lat")
 drTCASLon = XPLMFindDataRef("sim/cockpit2/tcas/targets/position/lon")
 drTCASAlt = XPLMFindDataRef("sim/cockpit2/tcas/targets/position/ele")
 drUserHdg = XPLMFindDataRef("sim/flightmodel/position/psi")
+drUserLat = XPLMFindDataRef("sim/flightmodel/position/latitude")
+drUserLon = XPLMFindDataRef("sim/flightmodel/position/longitude")
 instanceRefs = {}
 
 XLuaReloadOnFlightChange()
@@ -73,17 +78,9 @@ function hotkey_callback(userref)
 	end
 end
 
-function receive_message(inFromWho, inMessage, param)
-	local pi = XPLMGetPluginInfo(inFromWho)
+function PostFlightLoop()
+--	print("  POST-FL: Sim elapsed time: " .. XPLMGetElapsedTime() .. ", cycle #" .. XPLMGetCycleNumber())
 
-	if type(param) ~= "nil" then
-		print("Received message " .. inMessage .. " from '" .. tostring(inFromWho) .. "' with param " .. tostring(param))
-	else
-		print("Received message " .. inMessage .. " from '" .. tostring(inFromWho) .. "'")
-	end
-end
-
-function after_physics()
 	----------------------------------------------------
 	--[[      XPLMGraphics/X-PLANE TEXT tests       ]]--
 	----------------------------------------------------
@@ -129,9 +126,11 @@ function after_physics()
 			end
 		end
 	end
+
+	return -1
 end
 
-function flight_start()
+function FlightStarted()
 	--------------------------------------
 	--[[      XPLMPlugin tests       ]]--
 	--------------------------------------
@@ -157,10 +156,6 @@ function flight_start()
 
 	-- XPLMFindPluginByPath()
 	local missing_plugin = XPLMFindPluginByPath("/some/path/that/doesnt/exist.xpl")
-	-- TODO: Make this compatible with comparisons. We need to have the actual constants for XPLM_NO_PLUGIN etc. as
-	--       directly comparable values, which means exposing those #define'd values as strong types.
-	XPLM_NO_PLUGIN_ID  = XPLMPluginID(-1)
-	XPLM_PLUGIN_XPLANE = XPLMPluginID(0)
 
 	-- Lua 5.2 would support automatic __tostring if used directly but not with concatenation...
 	print("Missing plugin ID should be XPLM_NO_PLUGIN_ID: " .. (missing_plugin == XPLM_NO_PLUGIN_ID and "Yes" or ("No (" .. tostring(missing_plugin) .. ")")))
@@ -201,7 +196,6 @@ function flight_start()
 	print("Type of base command: " .. type(base_cmnd))
 	XPLMCommandOnce(base_cmnd)
 
-	local custom_cmnd = XPLMCreateCommand("test/lua/commands", "Test creating a command from Lua")
 	print("Type of custom command: " .. type(custom_cmnd))
 	XPLMRegisterCommandHandler(custom_cmnd,
 		function(inCommand, inPhase, userref)
@@ -529,23 +523,17 @@ NUMENR 24
 		"UD_read", "UD_write"
 	)
 
-	-- XLua references to datarefs must NOT be local.
-	xlua_drTest = find_dataref("xlua/test/custom_accessors")
-
 	-- XPLM-method read:
 	print("Custom dataref can provide up to " .. XPLMGetDatavi(drTest, nil, 0, 0) .. " items as an array.")
 
 	print("Read custom dataref using XPLM: " .. XPLMGetDatai(drTest) .. " (should be 5)")
-	print("Read custom dataref using XLua: " .. xlua_drTest .. " (should be 5)")
 
 	XPLMSetDatai(drTest, 6)
 	print("Read updated custom dataref using XPLM: " .. XPLMGetDatai(drTest) .. " (should be 6)")
-	print("Read updated custom dataref using XLua: " .. xlua_drTest .. " (should be 6)")
 
 	XPLMUnregisterDataAccessor(drTest)
 
 	print("Read deleted custom dataref using XPLM: " .. XPLMGetDatai(drTest) .. " (should be 0, unreadable)")
-	print("Read deleted custom dataref using XLua: " .. xlua_drTest .. " (should be 0, unreadable)")
 
 --[[ Not implemented due to dependency issue.
 
@@ -573,16 +561,23 @@ NUMENR 24
 	-----------------------------------------
 	print_banner("XPLMProcessing")
 
-	local fl = XPLMCreateFlightLoop_t()
-	fl.phase = XPLMFlightLoopPhaseType.xplm_FlightLoop_Phase_BeforeFlightModel
-	fl.callbackFunc = secondPreFlightLoop
+	if g_pre_fl_handle == nil then
+		g_pre_fl_handle = XPLMCreateFlightLoop({
+			["phase"] = XPLMFlightLoopPhaseType.xplm_FlightLoop_Phase_BeforeFlightModel,
+			["callbackFunc"] = secondPreFlightLoop,
+			["refcon"] = 0
+		})
+		XPLMScheduleFlightLoop(g_pre_fl_handle, 10, true)
+	end
 
-	g_pre_fl_handle = XPLMCreateFlightLoop({
-		["phase"] = XPLMFlightLoopPhaseType.xplm_FlightLoop_Phase_BeforeFlightModel,
-		["callbackFunc"] = secondPreFlightLoop,
-		["refcon"] = 0
-	})
-	XPLMScheduleFlightLoop(g_pre_fl_handle, 10, true)
+	if g_post_fl_handle == nil then
+		g_post_fl_handle = XPLMCreateFlightLoop({
+			["phase"] = XPLMFlightLoopPhaseType.xplm_FlightLoop_Phase_AfterFlightModel,
+			["callbackFunc"] = PostFlightLoop,
+			["refcon"] = 0
+		})
+		XPLMScheduleFlightLoop(g_post_fl_handle, -1, false)
+	end
 
 	-- Old-style flightloop registration is not supported.
 	-- XPLMRegisterFlightLoopCallback
@@ -664,11 +659,11 @@ NUMENR 24
 	--------------------------------------------------------
 	print_banner("XPLMScenery/Terrain Y-Testing")
 
-	drUserLat = find_dataref("sim/flightmodel/position/latitude")
-	drUserLon = find_dataref("sim/flightmodel/position/longitude")
+	local userLat = XPLMGetDataf(drUserLat)
+	local userLon = XPLMGetDataf(drUserLon)
 
 	local probe = XPLMCreateProbe(XPLMProbeType.xplm_ProbeY)
-	local localCoords = XPLMWorldToLocal(drUserLat, drUserLon, 0)
+	local localCoords = XPLMWorldToLocal(userLat, userLon, 0)
 	print("Local coords are " .. localCoords.outX .. ", " .. localCoords.outZ .. ", " .. localCoords.outZ)
 
 	local probeRes, probeDetails = XPLMProbeTerrainXYZ(probe, localCoords.outX, localCoords.outY, localCoords.outZ, {})
@@ -681,7 +676,7 @@ NUMENR 24
 	---------------------------------------------------------
 	print_banner("XPLMScenery/Magnetic Variation")
 
-	print("Magnetic variation at " .. drUserLat .. ", " .. drUserLon .. " is " .. XPLMGetMagneticVariation(drUserLat, drUserLon))
+	print("Magnetic variation at " .. userLat .. ", " .. userLon .. " is " .. XPLMGetMagneticVariation(userLat, userLon))
 	print("30 degrees true at the user's location is " .. XPLMDegTrueToDegMagnetic(30) .. " degrees magnetic")
 	print("30 degrees magnetic at the user's location is " .. XPLMDegMagneticToDegTrue(30) .. " degrees true")
 
@@ -692,7 +687,7 @@ NUMENR 24
 	print_banner("XPLMScenery/Library Access")
 
 	print("Request flagpoles from the object library:")
-	XPLMLookupObjects("lib/airport/Common_Elements/Miscellaneous/Flagpole.obj", drUserLat, drUserLon,
+	XPLMLookupObjects("lib/airport/Common_Elements/Miscellaneous/Flagpole.obj", userLat, userLon,
 				function(filePath, userref)
 					print(" - " .. filePath)
 					g_flagpolePath = filePath
@@ -762,6 +757,9 @@ NUMENR 24
 		if XPLMMapExists("XPLM_MAP_USER_INTERFACE") and not XPLMMapExists("Lua Map Layer") then
 			print("Creating new map layer!")
 
+			local userLat = XPLMGetDataf(drUserLat)
+			local userLon = XPLMGetDataf(drUserLon)
+
 			XPLMCreateMapLayer({
 				mapToCreateLayerIn	= "XPLM_MAP_USER_INTERFACE",
 				layerType			= XPLMMapLayerType.xplm_MapLayer_Markings,
@@ -770,11 +768,11 @@ NUMENR 24
 				refcon				= "Map Layer Userref",
 				-- Out of sequence, check it's still called/translated.
 				iconCallback		= function(inLayer, inMapBoundsLeftTopRightBottom, zoomRatio, mapUnitsPerUserInterfaceUnit, mapStyle, projection, inRefcon)
-											local proj = XPLMMapProject(projection, drUserLat + 0.05, drUserLon)
+											local proj = XPLMMapProject(projection, userLat + 0.05, userLon)
 											XPLMDrawMapIconFromSheet(inLayer, "Resources/bitmaps/interface11/map.png", 0, 0, 8, 8, proj.outX, proj.outY, XPLMMapOrientation.xplm_MapOrientation_Map, 5, 48 * mapUnitsPerUserInterfaceUnit)
 										end,
 				labelCallback		= function(inLayer, inMapBoundsLeftTopRightBottom, zoomRatio, mapUnitsPerUserInterfaceUnit, mapStyle, projection, inRefcon)
-											local proj = XPLMMapProject(projection, drUserLat + 0.05, drUserLon)
+											local proj = XPLMMapProject(projection, userLat + 0.05, userLon)
 											XPLMDrawMapLabel(inLayer, "Lua-generated Map Label", proj.outX, proj.outY, XPLMMapOrientation.xplm_MapOrientation_Map, 5)
 										end,
 			})
@@ -865,7 +863,7 @@ NUMENR 24
 	print_banner("XPLMInstance/Instance Creation and Destruction")
 
 	g_AcfObjectPath = nil
-	XPLMLookupObjects("lib/airport/aircraft/cargo/heavy_d.obj", drUserLat, drUserLon,
+	XPLMLookupObjects("lib/airport/aircraft/cargo/heavy_d.obj", userLat, userLon,
 				function(filePath, userref)
 					print(" - " .. filePath)
 					g_AcfObjectPath = filePath
@@ -908,5 +906,77 @@ NUMENR 24
 		print("FMOD Studio not available??!?")
 	end
 	]]
+
+	return -1
 end
 
+function XPluginStart()
+	-- One-off setup stuff here. You _can_ do setup globally, but this is more like a compiled plugin will do
+	-- and keeps all your init in one place. Return false to say the script can't continue.
+	print_banner("XPluginStart")
+
+	custom_cmnd = XPLMCreateCommand("test/lua/commands", "Test creating a command from Lua")
+
+	return true
+end
+
+function XPluginStop()
+	-- One-off teardown stuff here. Called right before the script is unloaded.
+	print_banner("XPluginStop")
+
+	if g_pre_fl_handle ~= nil then
+		XPLMDestroyFlightLoop(g_pre_fl_handle)
+		g_post_fl_handle = nil
+	end
+
+	if g_post_fl_handle ~= nil then
+		XPLMDestroyFlightLoop(g_post_fl_handle)
+		g_post_fl_handle = nil
+	end
+end
+
+function XPluginEnable()
+	-- One-off enable stuff here. This is normally called right after XPluginStart, the difference being that a
+	-- script might be enabled and disabled during a flight. Do any setup here that you want to be able to undo
+	-- if the user requests that this script is disabled.
+	print_banner("XPluginEnable")
+
+	return true
+end
+
+function XPluginDisable()
+	-- One-off disable stuff here. Normally called right before XPluginStop, but can also be called at the user's request
+	-- during a flight. Stop or reset any stuff that your script may have modified that the user might expect to stop happening.
+	print("XPluginDisable")
+
+	hotkey_count = 0
+	g_flagpolePath = nil
+
+	if haveTCASAircraft then
+		XPLMReleasePlanes()
+		XPLMSetActiveAircraftCount(1)
+
+		haveTCASAircraft = false
+		g_AcfObjectPath = nil
+		instanceRefs = {}
+	end
+
+	return true
+end
+
+function XPluginReceiveMessage(inFromWho, inMessage, param)
+	-- X-Plane will send you messages at key points, identified by "inMessage". Please see the XPLMPlugin header for details.
+	local pi = XPLMGetPluginInfo(inFromWho)
+
+	if type(param) ~= "nil" then
+		print("Received message " .. inMessage .. " from '" .. tostring(inFromWho) .. "' with param " .. tostring(param))
+	else
+		print("Received message " .. inMessage .. " from '" .. tostring(inFromWho) .. "'")
+	end
+
+	if inFromWho == XPLM_PLUGIN_XPLANE then
+		if inMessage == XPLM_MSG_AIRPORT_LOADED then
+			FlightStarted()
+		end
+	end
+end

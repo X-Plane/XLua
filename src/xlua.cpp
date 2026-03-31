@@ -3,8 +3,6 @@
 //	See LICENSE.txt for the full terms of the license.
 
 
-#define VERSION "1.5.1r1"
-
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -13,6 +11,7 @@
 #include <algorithm>
 #include <array>
 #include <filesystem>
+#include <regex>
 
 #ifndef XPLM200
 #define XPLM200
@@ -56,10 +55,13 @@ static bool				g_is_acf_inited = false;
 XPLMDataRef				g_replay_active = NULL;
 XPLMDataRef				g_sim_period = NULL;
 XPLMCommandRef			reset_cmd = nullptr;
+#if !MOBILE
 XPLMMenuID				PluginMenu = 0;					// Our sub-menu
 int						PluginMenuItem = 0;				// Our sub-menu's item number on the Plugins menu
+#endif
 bool					g_bIsAircraftPlugin = true;
 int						JITMenuItem = 0;
+extern version_triplet sPluginVersion;
 
 static string plugin_base_path;
 
@@ -70,14 +72,14 @@ struct lua_alloc_request_t {
 			size_t	nsize;
 };
 
+#if !MOBILE
 enum eMenuItems : int
 {
 	MI_ResetState,
-#if !MOBILE
 	MI_ShowProfiler,
 	MI_ToggleJIT
-#endif
 };
+#endif
 
 bool g_bReloadOnFlightChange = false;
 
@@ -143,20 +145,25 @@ static float xlua_pre_timer_master_cb(
 }
 
 static float xlua_post_timer_master_cb(
-                                   float                inElapsedSinceLastCall,    
-                                   float                inElapsedTimeSinceLastFlightLoop,    
-                                   int                  inCounter,    
+                                   float                inElapsedSinceLastCall,
+                                   float                inElapsedTimeSinceLastFlightLoop,
+                                   int                  inCounter,
                                    void *               inRefcon)
 {
-	if(XPLMGetDatai(g_replay_active) == 0)
+	bool const isInReplay = (XPLMGetDatai(g_replay_active) != 0);
+	float const framePeriod = XPLMGetDataf(g_sim_period);
+	for (auto &m : g_modules)
 	{
-		if(XPLMGetDataf(g_sim_period) > 0.0f)
-		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)		
-			(*m)->post_physics();
+		if (isInReplay)
+		{
+			m->post_replay();
+		}
+		else if (framePeriod > 0.f)
+		{
+			m->post_physics();
+		}
 	}
-	else
-	for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)		
-		(*m)->post_replay();
+
 #if !MOBILE
 	if (profilerWnd)
 	{
@@ -219,6 +226,11 @@ void InitScripts(void)
 				script_path.c_str(),
 				lj_alloc_f,
 				NULL));
+
+			if (!g_modules.back()->is_started())
+			{
+				g_modules.pop_back();
+			}
 		}
 
 		++offset;
@@ -231,8 +243,11 @@ void CleanupScripts(void)
 {
 	if (g_is_acf_inited)
 	{
-		for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-			(*m)->acf_unload();
+		for (auto& m : g_modules)
+		{
+			m->acf_unload();
+		}
+
 		g_is_acf_inited = false;
 	}
 
@@ -474,7 +489,7 @@ void ShowProfiler(void)
 		profilerWnd->setVisible(true);
 	}
 }
-#endif
+
 static void MenuHandler(void* menuRef, void* itemRef)
 {
 	switch ((eMenuItems)(size_t)itemRef)
@@ -482,7 +497,6 @@ static void MenuHandler(void* menuRef, void* itemRef)
 		case MI_ResetState:
 			ResetState(reset_cmd, xplm_CommandBegin, nullptr);
 			break;
-#if !MOBILE
 		case MI_ShowProfiler:
 			ShowProfiler();
 			break;
@@ -501,17 +515,17 @@ static void MenuHandler(void* menuRef, void* itemRef)
 			}
 			break;
 		}
-#endif
 	}
 }
+#endif
 
 PLUGIN_API int XPluginStart(
 						char *		outName,
 						char *		outSig,
 						char *		outDesc)
 {
-    strcpy(outName, "XLua " VERSION);
-    strcpy(outSig, "com.x-plane.xlua." VERSION);
+    strcpy(outName, "XLua " XLUA_VERSION);
+    strcpy(outSig, "com.x-plane.xlua." XLUA_VERSION);
     strcpy(outDesc, "A minimal scripting environment for aircraft authors.");
 
 	g_replay_active = XPLMFindDataRef("sim/time/is_in_replay");
@@ -520,7 +534,7 @@ PLUGIN_API int XPluginStart(
 	XPLMEnableFeature("XPLM_USE_NATIVE_PATHS", 1);
 	
 	// Plugin base path: pop off two dirs from the plugin name to get the base path for scripts, *not* the owning aircraft's base path.
-	char pPath[512] = { 0 }, myPath[512] = { 0 };
+	char myPath[512] = { 0 };
 	XPLMGetPluginInfo(XPLMGetMyID(), nullptr, myPath, nullptr, nullptr);
 	plugin_base_path = myPath;
 	for (int s = 0; s < 2; ++s)
@@ -540,7 +554,13 @@ PLUGIN_API int XPluginStart(
 
 	if (!g_bIsAircraftPlugin)
 	{
-		strcpy(outSig, "com.x-plane.xlua-sys." VERSION);
+		strcpy(outSig, "com.x-plane.xlua-sys." XLUA_VERSION);
+	}
+
+	if (!sPluginVersion.init_from_string(XLUA_VERSION))
+	{
+		XPLMDebugString("XLua was unable to parse its own version string!");
+		return 0;
 	}
 
 	return 1;
@@ -552,13 +572,14 @@ PLUGIN_API void	XPluginStop(void)
 
 PLUGIN_API void XPluginDisable(void)
 {
+#if !MOBILE
 	if (PluginMenu != nullptr)
 	{
 		XPLMRemoveMenuItem(XPLMFindPluginsMenu(), PluginMenuItem);
 		XPLMDestroyMenu(PluginMenu);
 		PluginMenu = nullptr;
 	}
-
+#endif
 	CleanupScripts();
 
 	XPLMDestroyFlightLoop(g_pre_loop);
@@ -588,6 +609,7 @@ PLUGIN_API int XPluginEnable(void)
 	g_post_loop = XPLMCreateFlightLoop(&post);
 	XPLMScheduleFlightLoop(g_post_loop, -1, 0);
 
+#if !MOBILE
 	char const* menuName = nullptr;
 	std::string ac_base_path(plugin_base_path);
 
@@ -622,7 +644,7 @@ PLUGIN_API int XPluginEnable(void)
 					}
 					else
 					{
-						menuName = "XLua " VERSION;
+						menuName = "XLua " XLUA_VERSION;
 					}
 
 					break;
@@ -654,11 +676,10 @@ PLUGIN_API int XPluginEnable(void)
 		PluginMenuItem = XPLMAppendMenuItem(XPLMFindPluginsMenu(), menuName, nullptr, 0);
 		PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), PluginMenuItem, MenuHandler, nullptr);
 		XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, 0);
-#if !MOBILE
 		XPLMAppendMenuItem(PluginMenu, "Show Profiler", (void*)MI_ShowProfiler, 1);
 		JITMenuItem = XPLMAppendMenuItem(PluginMenu, "Toggle JIT", (void*)MI_ToggleJIT, 2);
-#endif
 	}
+#endif
 
 	InitScripts();
 
@@ -689,10 +710,13 @@ PLUGIN_API void XPluginReceiveMessage(
 
 			case XPLM_MSG_PLANE_UNLOADED:
 				if (g_is_acf_inited)
-					for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-						(*m)->acf_unload();
-
-				g_is_acf_inited = false;
+				{
+					for (auto &m : g_modules)
+					{
+						m->acf_unload();
+					}
+					g_is_acf_inited = false;
+				}
 				break;
 
 			case XPLM_MSG_AIRPORT_LOADED:
@@ -705,26 +729,32 @@ PLUGIN_API void XPluginReceiveMessage(
 				{
 					if (!g_is_acf_inited)
 					{
+						for (auto& m : g_modules)
+						{
+							m->acf_load();
+						}
+
 						// Pick up any last stragglers from out-of-order load and then validate our datarefs!
 						xlua_relink_all_drefs();
 						xlua_validate_drefs();
 
-						for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-							(*m)->acf_load();
-
 						g_is_acf_inited = true;
 					}
 
-					for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-						(*m)->flight_start();
+					for (auto& m : g_modules)
+					{
+						m->flight_start();
+					}
 				}
 
 				break;
 
 			case XPLM_MSG_PLANE_CRASHED:
 				assert(g_is_acf_inited);
-				for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
-					(*m)->flight_crash();
+				for (auto& m : g_modules)
+				{
+					m->flight_crash();
+				}
 				break;
 		}
 	}
@@ -732,7 +762,7 @@ PLUGIN_API void XPluginReceiveMessage(
 	// Either way, send the full details through so that Lua can now deal with arbitrary messages.
 	for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
 	{
-		(*m)->forward_notification(inFromWho, inMessage, inParam);
+		(*m)->_XPluginReceiveMessage(inFromWho, inMessage, inParam);
 	}
 }
 
