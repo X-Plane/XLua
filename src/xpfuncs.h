@@ -61,8 +61,8 @@ std::shared_ptr<notify_cb_t> capture_lua_value(lua_State* L, int idx);
 
 void xlua_callback_cleanup();
 void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb);
-std::shared_ptr<notify_cb_t> wrap_lua_func(lua_State* L, int func_stack_idx, bool optional, std::string const cb_typename);
-bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb, int func_stack_idx, bool optional, std::string const cb_typename);
+std::shared_ptr<notify_cb_t> wrap_lua_func(lua_State* L, int func_stack_idx, bool optional, std::string const& cb_typename);
+bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb, int func_stack_idx, bool optional, std::string const& cb_typename);
 void xlua_remove_callback(std::shared_ptr<notify_cb_t> cb);
 
 // Syntactic sugar to make the code-generation simpler.

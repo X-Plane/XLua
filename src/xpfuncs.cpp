@@ -68,7 +68,7 @@ static int l_my_print(lua_State* L);
 //
 // If the closure is actually nil, we return NULL and allocate nothing.
 
-std::shared_ptr<notify_cb_t> wrap_lua_func(lua_State* L, int func_stack_idx, bool optional, std::string const cb_typename)
+std::shared_ptr<notify_cb_t> wrap_lua_func(lua_State* L, int func_stack_idx, bool optional, std::string const& cb_typename)
 {
 	auto cb = std::make_shared<notify_cb_t>(L, 0);
 	wrap_next_lua_func(cb, func_stack_idx, optional, cb_typename);
@@ -76,17 +76,19 @@ std::shared_ptr<notify_cb_t> wrap_lua_func(lua_State* L, int func_stack_idx, boo
 	return cb;
 }
 
-bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb_record, int func_stack_idx, bool optional, std::string const cb_typename)
+bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb_record, int func_stack_idx, bool optional, std::string const& cb_typename)
 {
 	if (!lua_isfunction(cb_record->L, func_stack_idx) && !lua_isnil(cb_record->L, func_stack_idx))
 	{
-		luaL_argerror(cb_record->L, func_stack_idx, "Callback must be a function or nil");
+		std::string extra_msg = cb_typename + " callback must be a function or nil";
+		luaL_argerror(cb_record->L, func_stack_idx, extra_msg.c_str());
 		return false;
 	}
 
 	if (!optional && lua_isnil(cb_record->L, func_stack_idx))
 	{
-		luaL_argerror(cb_record->L, func_stack_idx, "Callback must be a function");
+		std::string extra_msg = cb_typename + " callback must be a function";
+		luaL_argerror(cb_record->L, func_stack_idx, extra_msg.c_str());
 		return false;
 	}
 
