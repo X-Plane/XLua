@@ -134,7 +134,7 @@ int vfmt_pcall(lua_State* L, int dbg, bool expects_returnval, const char* fmt, v
 			lua_pushinteger(L, va_arg(va, int));
 			break;
 		case 'b':
-			lua_pushboolean(L, va_arg(va, bool));
+			lua_pushboolean(L, va_arg(va, int));
 			break;
 		case 's':
 			lua_pushstring(L, va_arg(va, const char *));
