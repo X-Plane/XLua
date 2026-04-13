@@ -2,7 +2,7 @@
 #define _XPLMDisplay_h_
 
 /*
- * Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
  * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
@@ -272,6 +272,7 @@ typedef int (* XPLMDrawCallback_f)(
  * future-proof drawing of 3-D objects.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMRegisterDrawCallback(
                          XPLMDrawCallback_f   inCallback,
                          XPLMDrawingPhase     inPhase,
@@ -291,6 +292,7 @@ XPLM_API int        XPLMRegisterDrawCallback(
  * future-proof drawing of 3-D objects.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMUnregisterDrawCallback(
                          XPLMDrawCallback_f   inCallback,
                          XPLMDrawingPhase     inPhase,
@@ -616,6 +618,8 @@ typedef struct {
     /* A reference which will be passed into each of your draw callbacks. Use this*
      * to pass information to yourself as needed.                                 */
      void*                     refcon;
+
+     int                       native;
 } XPLMCustomizeAvionics_t;
 
 /*
@@ -633,6 +637,7 @@ typedef struct {
  * another plugin has created).
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMAvionicsID XPLMRegisterAvionicsCallbacksEx(
                          XPLMCustomizeAvionics_t * inParams);
 
@@ -647,6 +652,7 @@ XPLM_API XPLMAvionicsID XPLMRegisterAvionicsCallbacksEx(
  * XPLMRegisterAvionicsCallbackEx() with NULL for all callbacks.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMAvionicsID XPLMGetAvionicsHandle(
                          XPLMDeviceID         inDeviceID);
 
@@ -658,6 +664,7 @@ XPLM_API XPLMAvionicsID XPLMGetAvionicsHandle(
  * XPLMRegisterAvionicsCallbacksEx(). They will no longer be called.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMUnregisterAvionicsCallbacks(
                          XPLMAvionicsID       inAvionicsId);
 
@@ -840,6 +847,8 @@ typedef struct {
     /* A reference which will be passed into your draw and mouse callbacks. Use   *
      * this to pass information to yourself as needed.                            */
      void*                     refcon;
+
+     int                       native;
 } XPLMCreateAvionics_t;
 #endif /* XPLM410 */
 
@@ -857,6 +866,7 @@ typedef struct {
  *             XPLMDestroyAvionics().
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMAvionicsID XPLMCreateAvionicsEx(
                          XPLMCreateAvionics_t * inParams);
 #endif /* XPLM410 */
@@ -870,6 +880,7 @@ XPLM_API XPLMAvionicsID XPLMCreateAvionicsEx(
  * XPLMCreateAvionicsEx(), not X-Plane' built-ine devices you have customised.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDestroyAvionics(
                          XPLMAvionicsID       inHandle);
 #endif /* XPLM410 */
@@ -882,6 +893,7 @@ XPLM_API void       XPLMDestroyAvionics(
  * current aircraft.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMIsAvionicsBound(
                          XPLMAvionicsID       inHandle);
 #endif /* XPLM410 */
@@ -904,6 +916,7 @@ XPLM_API int        XPLMIsAvionicsBound(
  * though it isn't connected to the `instrument_brightness_ratio` dataref.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetAvionicsBrightnessRheo(
                          XPLMAvionicsID       inHandle,
                          float                brightness);
@@ -926,6 +939,7 @@ XPLM_API void       XPLMSetAvionicsBrightnessRheo(
  *         brightness rheostat value.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API float      XPLMGetAvionicsBrightnessRheo(
                          XPLMAvionicsID       inHandle);
 #endif /* XPLM410 */
@@ -939,6 +953,7 @@ XPLM_API float      XPLMGetAvionicsBrightnessRheo(
  * the device is not bound to the current aircraft.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API float      XPLMGetAvionicsBusVoltsRatio(
                          XPLMAvionicsID       inHandle);
 #endif /* XPLM410 */
@@ -953,6 +968,7 @@ XPLM_API float      XPLMGetAvionicsBusVoltsRatio(
  * co-ordinates.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMIsCursorOverAvionics(
                          XPLMAvionicsID       inHandle,
                          int *                outX,                   /* Can be NULL */
@@ -969,6 +985,7 @@ XPLM_API int        XPLMIsCursorOverAvionics(
  * already drawn every frame, this has no effect.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMAvionicsNeedsDrawing(
                          XPLMAvionicsID       inHandle);
 #endif /* XPLM410 */
@@ -980,6 +997,7 @@ XPLM_API void       XPLMAvionicsNeedsDrawing(
  * Shows or hides the popup window for a cockpit device.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetAvionicsPopupVisible(
                          XPLMAvionicsID       inHandle,
                          int                  inVisible);
@@ -992,6 +1010,7 @@ XPLM_API void       XPLMSetAvionicsPopupVisible(
  * Returns true (1) if the popup window for a cockpit device is visible.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMIsAvionicsPopupVisible(
                          XPLMAvionicsID       inHandle);
 #endif /* XPLM410 */
@@ -1003,6 +1022,7 @@ XPLM_API int        XPLMIsAvionicsPopupVisible(
  * Pops out the window for a cockpit device.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMPopOutAvionics(
                          XPLMAvionicsID       inHandle);
 #endif /* XPLM410 */
@@ -1014,6 +1034,7 @@ XPLM_API void       XPLMPopOutAvionics(
  * Returns true (1) if the popup window for a cockpit device is popped out.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMIsAvionicsPoppedOut(
                          XPLMAvionicsID       inHandle);
 #endif /* XPLM410 */
@@ -1026,6 +1047,7 @@ XPLM_API int        XPLMIsAvionicsPoppedOut(
  * device, if it is visible.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMTakeAvionicsKeyboardFocus(
                          XPLMAvionicsID       inHandle);
 #endif /* XPLM410 */
@@ -1038,6 +1060,7 @@ XPLM_API void       XPLMTakeAvionicsKeyboardFocus(
  * focus.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMHasAvionicsKeyboardFocus(
                          XPLMAvionicsID       inHandle);
 #endif /* XPLM410 */
@@ -1050,6 +1073,7 @@ XPLM_API int        XPLMHasAvionicsKeyboardFocus(
  * coordinate system.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetAvionicsGeometry(
                          XPLMAvionicsID       inHandle,
                          int *                outLeft,                /* Can be NULL */
@@ -1066,6 +1090,7 @@ XPLM_API void       XPLMGetAvionicsGeometry(
  * X-Plane coordinate system.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetAvionicsGeometry(
                          XPLMAvionicsID       inHandle,
                          int                  inLeft,
@@ -1081,6 +1106,7 @@ XPLM_API void       XPLMSetAvionicsGeometry(
  * Returns the bounds of a cockpit device's popped-out window.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetAvionicsGeometryOS(
                          XPLMAvionicsID       inHandle,
                          int *                outLeft,                /* Can be NULL */
@@ -1096,6 +1122,7 @@ XPLM_API void       XPLMGetAvionicsGeometryOS(
  * Sets the size and position of a cockpit device's popped-out window.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetAvionicsGeometryOS(
                          XPLMAvionicsID       inHandle,
                          int                  inLeft,
@@ -1489,6 +1516,7 @@ typedef struct {
  * functions that return the default values.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMWindowID XPLMCreateWindowEx(
                          XPLMCreateWindow_t * inParams);
 #endif /* XPLM200 */
@@ -1515,6 +1543,7 @@ XPLM_API XPLMWindowID XPLMCreateWindowEx(
  * routines which make this easy.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMWindowID XPLMCreateWindow(
                          int                  inLeft,
                          int                  inTop,
@@ -1534,6 +1563,7 @@ XPLM_API XPLMWindowID XPLMCreateWindow(
  * destroying it.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDestroyWindow(
                          XPLMWindowID         inWindowID);
 
@@ -1545,6 +1575,7 @@ XPLM_API void       XPLMDestroyWindow(
  * user will be able to see when drawing in 3-d.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetScreenSize(
                          int *                outWidth,               /* Can be NULL */
                          int *                outHeight);             /* Can be NULL */
@@ -1583,6 +1614,7 @@ XPLM_API void       XPLMGetScreenSize(
  * bounds.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetScreenBoundsGlobal(
                          int *                outLeft,                /* Can be NULL */
                          int *                outTop,                 /* Can be NULL */
@@ -1634,6 +1666,7 @@ typedef void (* XPLMReceiveMonitorBoundsGlobal_f)(
  * scaling).
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetAllMonitorBoundsGlobal(
                          XPLMReceiveMonitorBoundsGlobal_f inMonitorBoundsCallback,
                          void*                inRefcon);
@@ -1674,6 +1707,7 @@ typedef void (* XPLMReceiveMonitorBoundsOS_f)(
  * desktop, and one X-Plane boxel may be larger than one pixel).
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetAllMonitorBoundsOS(
                          XPLMReceiveMonitorBoundsOS_f inMonitorBoundsCallback,
                          void*                inRefcon);
@@ -1699,6 +1733,7 @@ XPLM_API void       XPLMGetAllMonitorBoundsOS(
  * monitor), this function will not reflect it.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetMouseLocation(
                          int *                outX,                   /* Can be NULL */
                          int *                outY);                  /* Can be NULL */
@@ -1721,6 +1756,7 @@ XPLM_API void       XPLMGetMouseLocation(
  * Pass NULL to not receive info about either parameter.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetMouseLocationGlobal(
                          int *                outX,                   /* Can be NULL */
                          int *                outY);                  /* Can be NULL */
@@ -1744,6 +1780,7 @@ XPLM_API void       XPLMGetMouseLocationGlobal(
  * Pass NULL to not receive any paramter.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetWindowGeometry(
                          XPLMWindowID         inWindowID,
                          int *                outLeft,                /* Can be NULL */
@@ -1767,6 +1804,7 @@ XPLM_API void       XPLMGetWindowGeometry(
  * need to instead use XPLMSetWindowGeometryOS().
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetWindowGeometry(
                          XPLMWindowID         inWindowID,
                          int                  inLeft,
@@ -1783,6 +1821,7 @@ XPLM_API void       XPLMSetWindowGeometry(
  * pixels.  Pass NULL to not receive any parameter.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetWindowGeometryOS(
                          XPLMWindowID         inWindowID,
                          int *                outLeft,                /* Can be NULL */
@@ -1805,6 +1844,7 @@ XPLM_API void       XPLMGetWindowGeometryOS(
  * OS coordinates you provide (using XPLMGetAllMonitorBoundsOS()).
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetWindowGeometryOS(
                          XPLMWindowID         inWindowID,
                          int                  inLeft,
@@ -1822,6 +1862,7 @@ XPLM_API void       XPLMSetWindowGeometryOS(
  * XPLMWindowIsInVR()).
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetWindowGeometryVR(
                          XPLMWindowID         inWindowID,
                          int *                outWidthBoxels,         /* Can be NULL */
@@ -1839,6 +1880,7 @@ XPLM_API void       XPLMGetWindowGeometryVR(
  * XPLMWindowIsInVR()).
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetWindowGeometryVR(
                          XPLMWindowID         inWindowID,
                          int                  widthBoxels,
@@ -1851,6 +1893,7 @@ XPLM_API void       XPLMSetWindowGeometryVR(
  * Returns true (1) if the specified window is visible.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMGetWindowIsVisible(
                          XPLMWindowID         inWindowID);
 
@@ -1860,6 +1903,7 @@ XPLM_API int        XPLMGetWindowIsVisible(
  * This routine shows or hides a window.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetWindowIsVisible(
                          XPLMWindowID         inWindowID,
                          int                  inIsVisible);
@@ -1877,6 +1921,7 @@ XPLM_API void       XPLMSetWindowIsVisible(
  * the SDK cannot be popped out.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMWindowIsPoppedOut(
                          XPLMWindowID         inWindowID);
 #endif /* XPLM300 */
@@ -1894,6 +1939,7 @@ XPLM_API int        XPLMWindowIsPoppedOut(
  * the SDK cannot be moved to VR.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMWindowIsInVR(
                          XPLMWindowID         inWindowID);
 #endif /* XPLM301 */
@@ -1922,6 +1968,7 @@ XPLM_API int        XPLMWindowIsInVR(
  * the SDK will simply get the default gravity.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetWindowGravity(
                          XPLMWindowID         inWindowID,
                          float                inLeftGravity,
@@ -1944,6 +1991,7 @@ XPLM_API void       XPLMSetWindowGravity(
  * the SDK will have no minimum or maximum size.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetWindowResizingLimits(
                          XPLMWindowID         inWindowID,
                          int                  inMinWidthBoxels,
@@ -2022,6 +2070,7 @@ typedef int XPLMWindowPositioningMode;
  * the SDK will always use xplm_WindowPositionFree.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetWindowPositioningMode(
                          XPLMWindowID         inWindowID,
                          XPLMWindowPositioningMode inPositioningMode,
@@ -2038,6 +2087,7 @@ XPLM_API void       XPLMSetWindowPositioningMode(
  * XPLMCreateWindowEx().
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetWindowTitle(
                          XPLMWindowID         inWindowID,
                          const char *         inWindowTitle);
@@ -2050,7 +2100,8 @@ XPLM_API void       XPLMSetWindowTitle(
  * your own purposes.
  *
  */
-XPLM_API void *     XPLMGetWindowRefCon(
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void*      XPLMGetWindowRefCon(
                          XPLMWindowID         inWindowID);
 
 /*
@@ -2060,9 +2111,10 @@ XPLM_API void *     XPLMGetWindowRefCon(
  * the callbacks.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetWindowRefCon(
                          XPLMWindowID         inWindowID,
-                         void *               inRefcon);
+                         void*                inRefcon);
 
 /*
  * XPLMTakeKeyboardFocus
@@ -2073,6 +2125,7 @@ XPLM_API void       XPLMSetWindowRefCon(
  * X-Plane.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMTakeKeyboardFocus(
                          XPLMWindowID         inWindow);
 
@@ -2084,6 +2137,7 @@ XPLM_API void       XPLMTakeKeyboardFocus(
  * directly to X-Plane.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMHasKeyboardFocus(
                          XPLMWindowID         inWindow);
 
@@ -2104,6 +2158,7 @@ XPLM_API int        XPLMHasKeyboardFocus(
  * higher one.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMBringWindowToFront(
                          XPLMWindowID         inWindow);
 
@@ -2126,6 +2181,7 @@ XPLM_API void       XPLMBringWindowToFront(
  * be in the front (of their different layers!) at the same time.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMIsWindowInFront(
                          XPLMWindowID         inWindow);
 
@@ -2179,6 +2235,7 @@ typedef int (* XPLMKeySniffer_f)(
  * successful.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMRegisterKeySniffer(
                          XPLMKeySniffer_f     inCallback,
                          int                  inBeforeWindows,
@@ -2192,6 +2249,7 @@ XPLM_API int        XPLMRegisterKeySniffer(
  * true if successful.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMUnregisterKeySniffer(
                          XPLMKeySniffer_f     inCallback,
                          int                  inBeforeWindows,
@@ -2236,6 +2294,7 @@ typedef void * XPLMHotKeyID;
  * may change, but you are insulated from this.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMHotKeyID XPLMRegisterHotKey(
                          char                 inVirtualKey,
                          XPLMKeyFlags         inFlags,
@@ -2249,6 +2308,7 @@ XPLM_API XPLMHotKeyID XPLMRegisterHotKey(
  * Unregisters a hot key.  You can only unregister your own hot keys.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMUnregisterHotKey(
                          XPLMHotKeyID         inHotKey);
 
@@ -2258,6 +2318,7 @@ XPLM_API void       XPLMUnregisterHotKey(
  * Returns the number of current hot keys.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMCountHotKeys(void);
 
 /*
@@ -2266,6 +2327,7 @@ XPLM_API int        XPLMCountHotKeys(void);
  * Returns a hot key by index, for iteration on all hot keys.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMHotKeyID XPLMGetNthHotKey(
                          int                  inIndex);
 
@@ -2276,6 +2338,7 @@ XPLM_API XPLMHotKeyID XPLMGetNthHotKey(
  * don't want info about.  The description should be at least 512 chars long.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetHotKeyInfo(
                          XPLMHotKeyID         inHotKey,
                          char                 outVirtualKey[1],       /* Can be NULL */
@@ -2289,6 +2352,7 @@ XPLM_API void       XPLMGetHotKeyInfo(
  * Remaps a hot key's keystrokes.  You may remap another plugin's keystrokes.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetHotKeyCombination(
                          XPLMHotKeyID         inHotKey,
                          char                 inVirtualKey,

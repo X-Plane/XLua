@@ -2,7 +2,7 @@
 #define _XPLMMap_h_
 
 /*
- * Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
  * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
@@ -384,6 +384,7 @@ typedef struct {
  * opened in X-Plane, at which time you can create layers in it.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMMapLayerID XPLMCreateMapLayer(
                          XPLMCreateMapLayer_t * inParams);
 
@@ -395,6 +396,7 @@ XPLM_API XPLMMapLayerID XPLMCreateMapLayer(
  * took place.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMDestroyMapLayer(
                          XPLMMapLayerID       inLayer);
 
@@ -423,6 +425,7 @@ typedef void (* XPLMMapCreatedCallback_f)(
  * can use XPLMMapExists() to check for maps that were created previously.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMRegisterMapCreationHook(
                          XPLMMapCreatedCallback_f callback,               /* Can be NULL */
                          void*                inRefcon);
@@ -435,6 +438,7 @@ XPLM_API void       XPLMRegisterMapCreationHook(
  * that your layer should be added to that map.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMMapExists(
                          const char *         mapIdentifier);
 #endif /* XPLM300 */
@@ -517,6 +521,7 @@ typedef int XPLMMapOrientation;
  * callback).
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDrawMapIconFromSheet(
                          XPLMMapLayerID       layer,
                          const char *         inPngPath,
@@ -539,6 +544,7 @@ XPLM_API void       XPLMDrawMapIconFromSheet(
  * text labels to be drawn from within your callback).
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDrawMapLabel(
                          XPLMMapLayerID       layer,
                          const char *         inText,
@@ -580,6 +586,7 @@ XPLM_API void       XPLMDrawMapLabel(
  * XPLMMapIconDrawingCallback_f, or XPLMMapLabelDrawingCallback_f.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMMapProject(
                          XPLMMapProjectionID  projection,
                          double               latitude,
@@ -598,6 +605,7 @@ XPLM_API void       XPLMMapProject(
  * XPLMMapIconDrawingCallback_f, or XPLMMapLabelDrawingCallback_f.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMMapUnproject(
                          XPLMMapProjectionID  projection,
                          float                mapX,
@@ -616,6 +624,7 @@ XPLM_API void       XPLMMapUnproject(
  * XPLMMapIconDrawingCallback_f, or XPLMMapLabelDrawingCallback_f.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API float      XPLMMapScaleMeter(
                          XPLMMapProjectionID  projection,
                          float                mapX,
@@ -635,6 +644,7 @@ XPLM_API float      XPLMMapScaleMeter(
  * XPLMMapIconDrawingCallback_f, or XPLMMapLabelDrawingCallback_f.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API float      XPLMMapGetNorthHeading(
                          XPLMMapProjectionID  projection,
                          float                mapX,

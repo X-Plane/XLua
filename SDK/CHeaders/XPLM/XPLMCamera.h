@@ -2,7 +2,7 @@
 #define _XPLMCamera_h_
 
 /*
- * Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
  * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
@@ -134,6 +134,7 @@ typedef int (* XPLMCameraControl_f)(
  * control (indefinitely or until a new view mode is set by the user).
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMControlCamera(
                          XPLMCameraControlDuration inHowLong,
                          XPLMCameraControl_f  inControlFunc,
@@ -150,6 +151,7 @@ XPLM_API void       XPLMControlCamera(
  * posession of the camera.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDontControlCamera(void);
 
 /*
@@ -160,6 +162,7 @@ XPLM_API void       XPLMDontControlCamera(void);
  * current control duration will be returned.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMIsCameraBeingControlled(
                          XPLMCameraControlDuration * outCameraControlDuration);    /* Can be NULL */
 
@@ -169,6 +172,7 @@ XPLM_API int        XPLMIsCameraBeingControlled(
  * This function reads the current camera position.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMReadCameraPosition(
                          XPLMCameraPosition_t * outCameraPosition);
 #ifdef __cplusplus

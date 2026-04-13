@@ -2,7 +2,7 @@
 #define _XPLMWeather_h_
 
 /*
- * Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
  * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
@@ -107,9 +107,9 @@ typedef struct {
 #endif /* XPLM420 */
 
 #if defined(XPLM420)
-/* Default vertical radius of effect of weather data points set using         *
+/* Default vertical limit of effect of weather data points set using          *
  * XPLMSetWeatherAtLocation and XPLMSetWeatherAtAirport.                      */
-#define XPLM_DEFAULT_WXR_RADIUS_MSL_FT 10000
+#define XPLM_DEFAULT_WXR_LIMIT_MSL_FT 10000
 #endif /* XPLM420 */
 
 /*
@@ -232,6 +232,7 @@ typedef struct {
  * during the pre-flight loop callback.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetMETARForAirport(
                          const char *         airport_id,
                          XPLMFixedString150_t * outMETAR);
@@ -248,6 +249,7 @@ XPLM_API void       XPLMGetMETARForAirport(
  * during the pre-flight loop callback.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMGetWeatherAtLocation(
                          double               latitude,
                          double               longitude,
@@ -270,6 +272,7 @@ XPLM_API int        XPLMGetWeatherAtLocation(
  * is not permitted.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMBeginWeatherUpdate(void);
 #endif /* XPLM420 */
 
@@ -297,10 +300,16 @@ XPLM_API void       XPLMBeginWeatherUpdate(void);
  * for an initial setup, you may want to ensure that the weather is changed
  * instantly. To do this, set 'updateImmediately' as true.
  * 
+ * isIncremental     : If true, append or modify existing records created by
+ * your plugin. If false, clear any existing records. updateImmediately : If
+ * true, immediately reset and recalculate the weather. If false, your new
+ * data will be used when the weather next recalculates.
+ * 
  * This call is not intended to be used per-frame. It should be called only
  * during the pre-flight loop callback.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMEndWeatherUpdate(
                          int                  isIncremental,
                          int                  updateImmediately);
@@ -310,18 +319,24 @@ XPLM_API void       XPLMEndWeatherUpdate(
 /*
  * XPLMSetWeatherAtLocation
  * 
- * Set the current weather conditions at a given location. Please see the
- * notes on individual fields in XPLMSetWeatherAtAirport, and notes on timing
- * in XPLMEndWeatherUpdate.
+ * Set the current weather conditions at a given location on the ground and
+ * above it.. Please see the notes on individual fields in 
+ * XPLMSetWeatherAtAirport, and notes on timing in XPLMEndWeatherUpdate.
+ * 
+ * The ground altitude passed into this function call does not set the area of
+ * influence of this weather vertically; the weather takes effect from 0 MSL
+ * ground up to the passed in max_altitude_msl_ft  The ground altitude passed
+ * in is the elevation of the reporting station to calibrate QNH.
  * 
  * This call is not intended to be used per-frame. It should be called only
  * during the pre-flight loop callback.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetWeatherAtLocation(
                          double               latitude,
                          double               longitude,
-                         double               altitude_m,
+                         double               ground_altitude_msl,
                          XPLMWeatherInfo_t *  in_info);
 #endif /* XPLM420 */
 
@@ -337,6 +352,7 @@ XPLM_API void       XPLMSetWeatherAtLocation(
  * during the pre-flight loop callback.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMEraseWeatherAtLocation(
                          double               latitude,
                          double               longitude);
@@ -352,9 +368,9 @@ XPLM_API void       XPLMEraseWeatherAtLocation(
  * instead of being used as just another weather sample.
  * 
  * Some notes on individual fields:
- *   - pressure_alt should be QNH as reported by a station at the ground
- *     altitude given, or 0 if you are passing sealevel pressure in
- *     'pressure_sl' instead.
+ *   - pressure_alt should be QNH as reported by a station at the specified
+ *     airport, or 0 if you are passing sealevel pressure in 'pressure_sl'
+ *     instead.
  *   - pressure_sl is ignored if pressure_alt is given.
  *   - wind_dir_alt, wind_spd_alt, turbulence_alt, wave_speed, wave_length are
  *     derived from other data and are UNUSED when setting weather.
@@ -385,6 +401,7 @@ XPLM_API void       XPLMEraseWeatherAtLocation(
  * during the pre-flight loop callback.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetWeatherAtAirport(
                          const char *         airport_id,
                          XPLMWeatherInfo_t *  in_info);
@@ -402,6 +419,7 @@ XPLM_API void       XPLMSetWeatherAtAirport(
  * during the pre-flight loop callback.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMEraseWeatherAtAirport(
                          const char *         airport_id);
 #endif /* XPLM420 */

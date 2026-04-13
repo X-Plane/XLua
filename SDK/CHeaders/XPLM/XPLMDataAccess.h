@@ -2,7 +2,7 @@
 #define _XPLMDataAccess_h_
 
 /*
- * Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
  * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
@@ -212,6 +212,7 @@ typedef struct {
  * Returns the total number of datarefs that have been registered in X-Plane.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMCountDataRefs(void);
 #endif /* XPLM400 */
 
@@ -224,6 +225,7 @@ XPLM_API int        XPLMCountDataRefs(void);
  * like pagination.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetDataRefsByIndex(
                          int                  offset,
                          int                  count,
@@ -238,6 +240,7 @@ XPLM_API void       XPLMGetDataRefsByIndex(
  * available information about the dataref.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetDataRefInfo(
                          XPLMDataRef          inDataRef,
                          XPLMDataRefInfo_t *  outInfo);               /* Can be NULL */
@@ -257,6 +260,7 @@ XPLM_API void       XPLMGetDataRefInfo(
  * every time you need to read or write it.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMDataRef XPLMFindDataRef(
                          const char *         inDataRefName);
 
@@ -272,6 +276,7 @@ XPLM_API XPLMDataRef XPLMFindDataRef(
  * separate "override" dataref to 1 to stop X-Plane from writing it.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMCanWriteDataRef(
                          XPLMDataRef          inDataRef);
 
@@ -290,6 +295,7 @@ XPLM_API int        XPLMCanWriteDataRef(
  * it has a performance cost.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMIsDataRefGood(
                          XPLMDataRef          inDataRef);
 
@@ -301,6 +307,7 @@ XPLM_API int        XPLMIsDataRefGood(
  * will be returned.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMDataTypeID XPLMGetDataRefTypes(
                          XPLMDataRef          inDataRef);
 
@@ -336,6 +343,7 @@ XPLM_API XPLMDataTypeID XPLMGetDataRefTypes(
  * dataref value or 0 if the dataref is NULL or the plugin is disabled.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMGetDatai(
                          XPLMDataRef          inDataRef);
 
@@ -347,6 +355,7 @@ XPLM_API int        XPLMGetDatai(
  * dataref is not writable.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetDatai(
                          XPLMDataRef          inDataRef,
                          int                  inValue);
@@ -359,6 +368,7 @@ XPLM_API void       XPLMSetDatai(
  * plugin is disabled.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API float      XPLMGetDataf(
                          XPLMDataRef          inDataRef);
 
@@ -370,6 +380,7 @@ XPLM_API float      XPLMGetDataf(
  * dataref is NULL, or the dataref is not writable.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetDataf(
                          XPLMDataRef          inDataRef,
                          float                inValue);
@@ -382,6 +393,7 @@ XPLM_API void       XPLMSetDataf(
  * plugin is disabled.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API double     XPLMGetDatad(
                          XPLMDataRef          inDataRef);
 
@@ -393,6 +405,7 @@ XPLM_API double     XPLMGetDatad(
  * dataref is NULL, or the dataref is not writable.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetDatad(
                          XPLMDataRef          inDataRef,
                          double               inValue);
@@ -414,6 +427,7 @@ XPLM_API void       XPLMSetDatad(
  * plugin may have different behavior.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMGetDatavi(
                          XPLMDataRef          inDataRef,
                          int                  outValues[],            /* Can be NULL */
@@ -434,6 +448,7 @@ XPLM_API int        XPLMGetDatavi(
  * plugin may have different behavior.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetDatavi(
                          XPLMDataRef          inDataRef,
                          int                  inValues[],
@@ -458,6 +473,7 @@ XPLM_API void       XPLMSetDatavi(
  * plugin may have different behavior.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMGetDatavf(
                          XPLMDataRef          inDataRef,
                          float                outValues[],            /* Can be NULL */
@@ -478,6 +494,7 @@ XPLM_API int        XPLMGetDatavf(
  * plugin may have different behavior.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetDatavf(
                          XPLMDataRef          inDataRef,
                          float                inValues[],
@@ -501,6 +518,7 @@ XPLM_API void       XPLMSetDatavf(
  * plugin may have different behavior.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMGetDatab(
                          XPLMDataRef          inDataRef,
                          void*                outValue,               /* Can be NULL */
@@ -521,6 +539,7 @@ XPLM_API int        XPLMGetDatab(
  * plugin may have different behavior.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetDatab(
                          XPLMDataRef          inDataRef,
                          void*                inValue,
@@ -682,6 +701,7 @@ typedef void (* XPLMSetDatab_f)(
  * this dataref to unregister your data later or read or write from it.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMDataRef XPLMRegisterDataAccessor(
                          const char *         inDataName,
                          XPLMDataTypeID       inDataType,
@@ -710,6 +730,7 @@ XPLM_API XPLMDataRef XPLMRegisterDataAccessor(
  * anymore.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMUnregisterDataAccessor(
                          XPLMDataRef          inDataRef);
 
@@ -785,6 +806,7 @@ typedef void (* XPLMDataChanged_f)(
  * false if the data already exists but is of the wrong type.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMShareData(
                          const char *         inDataName,
                          XPLMDataTypeID       inDataType,
@@ -802,6 +824,7 @@ XPLM_API int        XPLMShareData(
  * using it. This will return true if data was unshared, false otherwise.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMUnshareData(
                          const char *         inDataName,
                          XPLMDataTypeID       inDataType,

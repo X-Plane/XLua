@@ -2,7 +2,7 @@
 #define _XPLMPlanes_h_
 
 /*
- * Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
  * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
@@ -116,11 +116,15 @@ typedef int XPLMInitResult;
  * XPLMInitFlight
  * 
  * Initialize a new flight, ending th user's current flight. The flight config
- * is provided as json string. See (FIXME: URL GOES HERE) for the JSON format
- * specification. Returns a XPLMInitResult enum value specifying whether the
- * initalization succeeeded (and if not, what caused it to fail).
+ * is provided as json string. See
+ * https://developer.x-plane.com/article/flight-initialization-api/ for the
+ * JSON format specification. 
+ * 
+ * Returns a XPLMInitResult enum value specifying whether the initalization
+ * succeeeded (and if not, what  caused it to fail).
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMInitResult XPLMInitFlight(
                          char const*          inJsonData);
 #endif /* XPLM430 */
@@ -130,12 +134,15 @@ XPLM_API XPLMInitResult XPLMInitFlight(
  * XPLMUpdateFlight
  * 
  * Updates the user's 'current flight, modifying some flight parameters. The
- * flight config is provided as a JSON string, see (FIXME: URL GOES HERE) for
- * the JSON format specification. Returns an XPLMInitResult enum value
- * specifying whether hte update suceeeded (and if not, what caused it to
- * fail).
+ * flight config is provided as a JSON string, see
+ * https://developer.x-plane.com/article/flight-initialization-api/ for the
+ * JSON format  specification.
+ * 
+ * Returns an XPLMInitResult enum value specifying whether the update
+ * suceeeded (and if not, what caused  it to fail).
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMInitResult XPLMUpdateFlight(
                          char const*          inJsonData);
 #endif /* XPLM430 */
@@ -152,6 +159,7 @@ XPLM_API XPLMInitResult XPLMUpdateFlight(
  * **WARNING**: this API takes a full, not relative aicraft path.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetUsersAircraft(
                          const char *         inAircraftPath);
 
@@ -164,6 +172,7 @@ XPLM_API void       XPLMSetUsersAircraft(
  * Use XPLMInitFlight for complete control over initialization.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMPlaceUserAtAirport(
                          const char *         inAirportCode);
 
@@ -182,6 +191,7 @@ XPLM_API void       XPLMPlaceUserAtAirport(
  * Use XPLMInitFlight for complete control over initialization.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMPlaceUserAtLocation(
                          double               latitudeDegrees,
                          double               longitudeDegrees,
@@ -268,6 +278,7 @@ typedef struct {
  * aircraft the user has enabled in the rendering options window.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMCountAircraft(
                          int *                outTotalAircraft,       /* Can be NULL */
                          int *                outActiveAircraft,      /* Can be NULL */
@@ -282,6 +293,7 @@ XPLM_API void       XPLMCountAircraft(
  * length.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetNthAircraftModel(
                          int                  inIndex,
                          char                 outFileName[256],       /* Can be NULL */
@@ -327,6 +339,7 @@ typedef void (* XPLMPlanesAvailable_f)(
  * airplane access, your callback will not be called.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMAcquirePlanes(
                          char const*          inAircraft[],           /* Can be NULL */
                          XPLMPlanesAvailable_f inCallback,             /* Can be NULL */
@@ -339,6 +352,7 @@ XPLM_API int        XPLMAcquirePlanes(
  * disabled, access to planes is released for you and you must reacquire it.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMReleasePlanes(void);
 
 /*
@@ -349,6 +363,7 @@ XPLM_API void       XPLMReleasePlanes(void);
  * planes available is actually used.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetActiveAircraftCount(
                          int                  inCount);
 
@@ -363,6 +378,7 @@ XPLM_API void       XPLMSetActiveAircraftCount(
  * This API takes a full aircraft path.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetAircraftModel(
                          int                  inIndex,
                          const char *         inAircraftPath);
@@ -374,6 +390,7 @@ XPLM_API void       XPLMSetAircraftModel(
  * continue to draw and be a real plane in X-Plane, but will not move itself.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDisableAIForPlane(
                          int                  inPlaneIndex);
 
@@ -392,6 +409,7 @@ XPLM_API void       XPLMDisableAIForPlane(
  * drawn. (This saves rendering time when planes are far away.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDrawAircraft(
                          int                  inPlaneIndex,
                          float                inX,
@@ -423,6 +441,7 @@ XPLM_API void       XPLMDrawAircraft(
  * flight.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMReinitUsersPlane(void);
 #endif /* XPLM_DEPRECATED */
 #ifdef __cplusplus

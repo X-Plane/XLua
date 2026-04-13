@@ -2,7 +2,7 @@
 #define _XPUIGraphics_h_
 
 /*
- * Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
  * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
@@ -11,15 +11,20 @@
  * XPUIGraphics
  ***************************************************************************/
 
+
 #include "XPWidgetDefs.h"
+
+#include "XPLMGraphics.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
 /***************************************************************************
  * UI GRAPHICS
  ***************************************************************************/
+
 
 /*
  * XPWindowStyle
@@ -43,17 +48,22 @@ extern "C" {
  *
  */
 enum {
+
     /* An LCD screen that shows help.                                             */
     xpWindow_Help                            = 0,
+
 
     /* A dialog box window.                                                       */
     xpWindow_MainWindow                      = 1,
 
+
     /* A panel or frame within a dialog box window.                               */
     xpWindow_SubWindow                       = 2,
 
+
     /* An LCD screen within a panel to hold text displays.                        */
     xpWindow_Screen                          = 4,
+
 
     /* A list view within a panel for scrolling file names, etc.                  */
     xpWindow_ListView                        = 5,
@@ -61,6 +71,7 @@ enum {
 
 };
 typedef int XPWindowStyle;
+
 /*
  * XPDrawWindow
  * 
@@ -70,12 +81,14 @@ typedef int XPWindowStyle;
  * appropriate to the style.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 WIDGET_API void       XPDrawWindow(
                          int                  inX1,
                          int                  inY1,
                          int                  inX2,
                          int                  inY2,
                          XPWindowStyle        inStyle);
+
 /*
  * XPGetWindowDefaultDimensions
  * 
@@ -83,10 +96,12 @@ WIDGET_API void       XPDrawWindow(
  * a minimum or fixed value depending on whether the window is scalable.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 WIDGET_API void       XPGetWindowDefaultDimensions(
                          XPWindowStyle        inStyle,
                          int *                outWidth,               /* Can be NULL */
                          int *                outHeight);             /* Can be NULL */
+
 /*
  * XPElementStyle
  * 
@@ -102,110 +117,146 @@ WIDGET_API void       XPGetWindowDefaultDimensions(
  *
  */
 enum {
+
     /* x      metal                                                               */
     xpElement_TextField                      = 6,
+
 
     /* none     metal                                                             */
     xpElement_CheckBox                       = 9,
 
+
     /* none     metal                                                             */
     xpElement_CheckBoxLit                    = 10,
+
 
     /* none     window header                                                     */
     xpElement_WindowCloseBox                 = 14,
 
+
     /* none     window header                                                     */
     xpElement_WindowCloseBoxPressed          = 15,
+
 
     /* x     metal                                                                */
     xpElement_PushButton                     = 16,
 
+
     /* x     metal                                                                */
     xpElement_PushButtonLit                  = 17,
+
 
     /* none     any                                                               */
     xpElement_OilPlatform                    = 24,
 
+
     /* none     any                                                               */
     xpElement_OilPlatformSmall               = 25,
+
 
     /* none     any                                                               */
     xpElement_Ship                           = 26,
 
+
     /* none     any                                                               */
     xpElement_ILSGlideScope                  = 27,
+
 
     /* none     any                                                               */
     xpElement_MarkerLeft                     = 28,
 
+
     /* none     any                                                               */
     xpElement_Airport                        = 29,
+
 
     /* none     any                                                               */
     xpElement_Waypoint                       = 30,
 
+
     /* none     any                                                               */
     xpElement_NDB                            = 31,
+
 
     /* none     any                                                               */
     xpElement_VOR                            = 32,
 
+
     /* none     any                                                               */
     xpElement_RadioTower                     = 33,
+
 
     /* none     any                                                               */
     xpElement_AircraftCarrier                = 34,
 
+
     /* none     any                                                               */
     xpElement_Fire                           = 35,
+
 
     /* none     any                                                               */
     xpElement_MarkerRight                    = 36,
 
+
     /* none     any                                                               */
     xpElement_CustomObject                   = 37,
+
 
     /* none     any                                                               */
     xpElement_CoolingTower                   = 38,
 
+
     /* none     any                                                               */
     xpElement_SmokeStack                     = 39,
+
 
     /* none     any                                                               */
     xpElement_Building                       = 40,
 
+
     /* none     any                                                               */
     xpElement_PowerLine                      = 41,
+
 
     /* none     metal                                                             */
     xpElement_CopyButtons                    = 45,
 
+
     /* none     metal                                                             */
     xpElement_CopyButtonsWithEditingGrid     = 46,
+
 
     /* x, y     metal                                                             */
     xpElement_EditingGrid                    = 47,
 
+
     /* THIS CAN PROBABLY BE REMOVED                                               */
     xpElement_ScrollBar                      = 48,
+
 
     /* none     any                                                               */
     xpElement_VORWithCompassRose             = 49,
 
+
     /* none     metal                                                             */
     xpElement_Zoomer                         = 51,
+
 
     /* x, y     metal                                                             */
     xpElement_TextFieldMiddle                = 52,
 
+
     /* none     metal                                                             */
     xpElement_LittleDownArrow                = 53,
+
 
     /* none     metal                                                             */
     xpElement_LittleUpArrow                  = 54,
 
+
     /* none     metal                                                             */
     xpElement_WindowDragBar                  = 61,
+
 
     /* none     metal                                                             */
     xpElement_WindowDragBarSmooth            = 62,
@@ -213,6 +264,7 @@ enum {
 
 };
 typedef int XPElementStyle;
+
 /*
  * XPDrawElement
  * 
@@ -223,6 +275,7 @@ typedef int XPElementStyle;
  * cannot be lit this is ignored.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 WIDGET_API void       XPDrawElement(
                          int                  inX1,
                          int                  inY1,
@@ -230,6 +283,7 @@ WIDGET_API void       XPDrawElement(
                          int                  inY2,
                          XPElementStyle       inStyle,
                          int                  inLit);
+
 /*
  * XPGetElementDefaultDimensions
  * 
@@ -238,11 +292,13 @@ WIDGET_API void       XPDrawElement(
  * state. Pass NULL to not receive any of these parameters.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 WIDGET_API void       XPGetElementDefaultDimensions(
                          XPElementStyle       inStyle,
                          int *                outWidth,               /* Can be NULL */
                          int *                outHeight,              /* Can be NULL */
                          int *                outCanBeLit);           /* Can be NULL */
+
 /*
  * XPTrackStyle
  * 
@@ -260,11 +316,14 @@ WIDGET_API void       XPGetElementDefaultDimensions(
  *
  */
 enum {
+
     /*  not over metal can be lit  can be rotated                                 */
     xpTrack_ScrollBar                        = 0,
 
+
     /*  over metal  can be lit  can be rotated                                    */
     xpTrack_Slider                           = 1,
+
 
     /*  over metal  cannot be lit cannot be rotated                               */
     xpTrack_Progress                         = 2,
@@ -272,6 +331,7 @@ enum {
 
 };
 typedef int XPTrackStyle;
+
 /*
  * XPDrawTrack
  * 
@@ -282,6 +342,7 @@ typedef int XPTrackStyle;
  * not.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 WIDGET_API void       XPDrawTrack(
                          int                  inX1,
                          int                  inY1,
@@ -292,6 +353,7 @@ WIDGET_API void       XPDrawTrack(
                          int                  inValue,
                          XPTrackStyle         inTrackStyle,
                          int                  inLit);
+
 /*
  * XPGetTrackDefaultDimensions
  * 
@@ -300,10 +362,12 @@ WIDGET_API void       XPDrawTrack(
  * lit.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 WIDGET_API void       XPGetTrackDefaultDimensions(
                          XPTrackStyle         inStyle,
                          int *                outWidth,
                          int *                outCanBeLit);
+
 /*
  * XPGetTrackMetrics
  * 
@@ -321,6 +385,7 @@ WIDGET_API void       XPGetTrackDefaultDimensions(
  * button decreases; for vertical scrollers, the top button decreases.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 WIDGET_API void       XPGetTrackMetrics(
                          int                  inX1,
                          int                  inY1,

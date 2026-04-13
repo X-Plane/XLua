@@ -2,7 +2,7 @@
 #define _XPLMProcessing_h_
 
 /*
- * Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
  * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
@@ -165,6 +165,7 @@ typedef struct {
  * for timing critical applications like network multiplayer.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API float      XPLMGetElapsedTime(void);
 
 /*
@@ -174,6 +175,7 @@ XPLM_API float      XPLMGetElapsedTime(void);
  * computed/video frame rendered.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMGetCycleNumber(void);
 
 /*
@@ -191,6 +193,7 @@ XPLM_API int        XPLMGetCycleNumber(void);
  * XPLMCreateFlightLoop for more control.)
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMRegisterFlightLoopCallback(
                          XPLMFlightLoop_f     inFlightLoop,
                          float                inInterval,
@@ -207,6 +210,7 @@ XPLM_API void       XPLMRegisterFlightLoopCallback(
  * XPLMRegisterFlightLoopCallback.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMUnregisterFlightLoopCallback(
                          XPLMFlightLoop_f     inFlightLoop,
                          void*                inRefcon);
@@ -225,6 +229,7 @@ XPLM_API void       XPLMUnregisterFlightLoopCallback(
  * it was registered if it has never been called.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetFlightLoopCallbackInterval(
                          XPLMFlightLoop_f     inFlightLoop,
                          float                inInterval,
@@ -240,6 +245,7 @@ XPLM_API void       XPLMSetFlightLoopCallbackInterval(
  * unscheduled. Use XPLMScheduleFlightLoop to schedule it.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMFlightLoopID XPLMCreateFlightLoop(
                          XPLMCreateFlightLoop_t * inParams);
 #endif /* XPLM210 */
@@ -252,6 +258,7 @@ XPLM_API XPLMFlightLoopID XPLMCreateFlightLoop(
  * loops created with the newer XPLMCreateFlightLoop API.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDestroyFlightLoop(
                          XPLMFlightLoopID     inFlightLoopID);
 #endif /* XPLM210 */
@@ -270,6 +277,7 @@ XPLM_API void       XPLMDestroyFlightLoop(
  * time the flight loop was registered (if never called).
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMScheduleFlightLoop(
                          XPLMFlightLoopID     inFlightLoopID,
                          float                inInterval,
