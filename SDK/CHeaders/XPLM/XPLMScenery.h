@@ -2,7 +2,7 @@
 #define _XPLMScenery_h_
 
 /*
- * Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
  * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
@@ -163,6 +163,7 @@ typedef struct {
  * Creates a new probe object of a given type and returns.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMProbeRef XPLMCreateProbe(
                          XPLMProbeType        inProbeType);
 
@@ -172,6 +173,7 @@ XPLM_API XPLMProbeRef XPLMCreateProbe(
  * Deallocates an existing probe object.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDestroyProbe(
                          XPLMProbeRef         inProbe);
 
@@ -184,6 +186,7 @@ XPLM_API void       XPLMDestroyProbe(
  * is returned.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMProbeResult XPLMProbeTerrainXYZ(
                          XPLMProbeRef         inProbe,
                          float                inX,
@@ -218,6 +221,7 @@ XPLM_API XPLMProbeResult XPLMProbeTerrainXYZ(
  * indication latitude and longitude.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API float      XPLMGetMagneticVariation(
                          double               latitude,
                          double               longitude);
@@ -229,6 +233,7 @@ XPLM_API float      XPLMGetMagneticVariation(
  * to magnetic north at the user's current location.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API float      XPLMDegTrueToDegMagnetic(
                          float                headingDegreesTrue);
 
@@ -239,6 +244,7 @@ XPLM_API float      XPLMDegTrueToDegMagnetic(
  * current location into a value relative to true north.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API float      XPLMDegMagneticToDegTrue(
                          float                headingDegreesMagnetic);
 #endif /* XPLM300 */
@@ -377,6 +383,7 @@ typedef void (* XPLMObjectLoaded_f)(
  * to defer object loading until the sim has fully started.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMObjectRef XPLMLoadObject(
                          const char *         inPath);
 #endif /* XPLM200 */
@@ -399,6 +406,7 @@ XPLM_API XPLMObjectRef XPLMLoadObject(
  * desired.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMLoadObjectAsync(
                          const char *         inPath,
                          XPLMObjectLoaded_f   inCallback,
@@ -433,6 +441,7 @@ XPLM_API void       XPLMLoadObjectAsync(
  * local coordinate Y axis.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDrawObjects(
                          XPLMObjectRef        inObject,
                          int                  inCount,
@@ -451,6 +460,7 @@ XPLM_API void       XPLMDrawObjects(
  * successful call to XPLMLoadObject.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMUnloadObject(
                          XPLMObjectRef        inObject);
 #endif /* XPLM200 */
@@ -494,6 +504,7 @@ typedef void (* XPLMLibraryEnumerator_f)(
  * latitude/longitude you provide will be returned.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMLookupObjects(
                          const char *         inPath,
                          float                inLatitude,

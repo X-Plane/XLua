@@ -463,6 +463,13 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 	}
 	lua_pop(L, 1);
 
+	lua_getfield(L, stackpos, "native");
+	if (!lua_isnil(L, -1))
+	{
+		out.native = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
 	return out;
 }
 
@@ -476,6 +483,10 @@ void XPLMCustomizeAvionics_t_to_table(lua_State* L, XPLMCustomizeAvionics_t cons
 
 	lua_pushstring(L, "refcon");
 	xlua_pushuserdata<void*>(L, src.refcon);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "native");
+	lua_pushinteger(L, src.native);
 	lua_settable(L, -3);
 }
 
@@ -655,21 +666,21 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelDrawCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "XPLMAvionicsBezelCallback_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMAvionicsBezelCallback_f"))
 	{
 		out.bezelDrawCallback = cb_XPLMAvionicsBezelCallback_f;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "drawCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "XPLMAvionicsScreenCallback_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMAvionicsScreenCallback_f"))
 	{
 		out.drawCallback = cb_XPLMAvionicsScreenCallback_f;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelClickCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "bezelClickCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "bezelClickCallback"))
 	{
 		out.bezelClickCallback = [](int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
@@ -693,7 +704,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelRightClickCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "bezelRightClickCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "bezelRightClickCallback"))
 	{
 		out.bezelRightClickCallback = [](int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
@@ -717,7 +728,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelScrollCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "bezelScrollCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "bezelScrollCallback"))
 	{
 		out.bezelScrollCallback = [](int x, int y, int wheel, int clicks, void* inRefcon)
 		{
@@ -741,7 +752,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelCursorCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "bezelCursorCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "bezelCursorCallback"))
 	{
 		out.bezelCursorCallback = [](int x, int y, void* inRefcon)
 		{
@@ -765,7 +776,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "screenTouchCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "screenTouchCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "screenTouchCallback"))
 	{
 		out.screenTouchCallback = [](int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
@@ -789,7 +800,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "screenRightTouchCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "screenRightTouchCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "screenRightTouchCallback"))
 	{
 		out.screenRightTouchCallback = [](int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
@@ -813,7 +824,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "screenScrollCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "screenScrollCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "screenScrollCallback"))
 	{
 		out.screenScrollCallback = [](int x, int y, int wheel, int clicks, void* inRefcon)
 		{
@@ -837,7 +848,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "screenCursorCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "screenCursorCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "screenCursorCallback"))
 	{
 		out.screenCursorCallback = [](int x, int y, void* inRefcon)
 		{
@@ -861,7 +872,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "keyboardCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "XPLMAvionicsKeyboard_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMAvionicsKeyboard_f"))
 	{
 		out.keyboardCallback = cb_XPLMAvionicsKeyboard_f;
 	}
@@ -885,6 +896,13 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	if (!lua_isnil(L, -1))
 	{
 		out.deviceName = static_cast<char const *>(luaL_checkstring(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "native");
+	if (!lua_isnil(L, -1))
+	{
+		out.native = static_cast<int>(luaL_checkinteger(L, -1));
 	}
 	lua_pop(L, 1);
 
@@ -941,6 +959,10 @@ void XPLMCreateAvionics_t_to_table(lua_State* L, XPLMCreateAvionics_t const& src
 
 	lua_pushstring(L, "refcon");
 	xlua_pushuserdata<void*>(L, src.refcon);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "native");
+	lua_pushinteger(L, src.native);
 	lua_settable(L, -3);
 }
 

@@ -2,7 +2,7 @@
 #define _XPLMGraphics_h_
 
 /*
- * Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
  * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
@@ -69,6 +69,7 @@ extern "C" {
  *                 in meters in the local OpenGL coordinate system.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMWorldToLocal(
                          double               inLatitude,
                          double               inLongitude,
@@ -91,6 +92,7 @@ XPLM_API void       XPLMWorldToLocal(
  *                 local to world and back.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMLocalToWorld(
                          double               inX,
                          double               inY,
@@ -151,6 +153,18 @@ enum {
 
 #endif /* XPLM420 */
 
+#if defined(XPLM440)
+    /*           The SVT instrument texture as seen by pilot-side instruments     */
+    xplm_Tex_SVT_Pilot                       = 5,
+
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+    /*           The SVT instrument texture as seen by copilot-side instruments   */
+    xplm_Tex_SVT_Copilot                     = 6,
+
+#endif /* XPLM440 */
+
 };
 typedef int XPLMTextureID;
 
@@ -202,6 +216,7 @@ typedef int XPLMTextureID;
  *  XPLMSetGraphicsState should have no fog or lighting.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSetGraphicsState(
                          int                  inEnableFog,
                          int                  inNumberTexUnits,
@@ -229,6 +244,7 @@ XPLM_API void       XPLMSetGraphicsState(
  * Use this routine instead of glBindTexture(GL_TEXTURE_2D, ....);
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMBindTexture2d(
                          int                  inTextureNum,
                          int                  inTextureUnit);
@@ -241,6 +257,7 @@ XPLM_API void       XPLMBindTexture2d(
  * that X-Plane is reserving for its own use.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGenerateTextureNumbers(
                          int *                outTextureIDs,
                          int                  inCount);
@@ -253,6 +270,7 @@ XPLM_API void       XPLMGenerateTextureNumbers(
  * X-Plane's  weather radar.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMGetTexture(
                          XPLMTextureID        inTexture);
 
@@ -264,6 +282,7 @@ XPLM_API int        XPLMGetTexture(
  * used by X-Plane to show text files.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDrawTranslucentDarkBox(
                          int                  inLeft,
                          int                  inTop,
@@ -418,6 +437,7 @@ typedef int XPLMFontID;
  * to 1.0.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDrawString(
                          float                inColorRGB[3],
                          int                  inXOffset,
@@ -437,6 +457,7 @@ XPLM_API void       XPLMDrawString(
  * string drawn.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDrawNumber(
                          float                inColorRGB[3],
                          int                  inXOffset,
@@ -456,6 +477,7 @@ XPLM_API void       XPLMDrawNumber(
  * will be an arbitrary, hopefully average width.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetFontDimensions(
                          XPLMFontID           inFontID,
                          int *                outCharWidth,           /* Can be NULL */
@@ -473,6 +495,7 @@ XPLM_API void       XPLMGetFontDimensions(
  * for fractional pixels.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API float      XPLMMeasureString(
                          XPLMFontID           inFontID,
                          const char *         inChar,

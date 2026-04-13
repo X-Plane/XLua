@@ -99,7 +99,7 @@ XPLMInitResult = {
    https://developer.x-plane.com/article/flight-initialization-api/ for the
    JSON format  specification.
    
-   Returns an XPLMInitResult enum value specifying whether hte update
+   Returns an XPLMInitResult enum value specifying whether the update
    suceeeded (and if not, what caused  it to fail).
 ]]--
 --[[

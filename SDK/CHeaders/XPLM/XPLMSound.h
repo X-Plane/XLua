@@ -2,7 +2,7 @@
 #define _XPLMSound_h_
 
 /*
- * Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
  * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
@@ -153,6 +153,7 @@ typedef int XPLMBankID;
  * channelgroups and using the getSystem() call on that.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API FMOD_STUDIO_SYSTEM* XPLMGetFMODStudio(void);
 #endif				// _FMOD_COMMON_H
 
@@ -164,6 +165,7 @@ XPLM_API FMOD_STUDIO_SYSTEM* XPLMGetFMODStudio(void);
  * See the table above for values.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API FMOD_CHANNELGROUP* XPLMGetFMODChannelGroup(
                          XPLMAudioBus         audioType);
 #endif				// _FMOD_COMMON_H
@@ -249,6 +251,7 @@ typedef void (* XPLMPCMComplete_f)(
  * with an FMOD status code.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API FMOD_CHANNEL* XPLMPlayPCMOnBus(
                          void*                audioBuffer,
                          int                  bufferSize,
@@ -268,6 +271,7 @@ XPLM_API FMOD_CHANNEL* XPLMPlayPCMOnBus(
  * and must not be used in any future calls.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API FMOD_RESULT XPLMStopAudio(
                          FMOD_CHANNEL*        fmod_channel);
 
@@ -278,6 +282,7 @@ XPLM_API FMOD_RESULT XPLMStopAudio(
  * in local co-ordinates. This will set the sound to 3D if it is not already.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API FMOD_RESULT XPLMSetAudioPosition(
                          FMOD_CHANNEL*        fmod_channel,
                          FMOD_VECTOR*         position,
@@ -294,6 +299,7 @@ XPLM_API FMOD_RESULT XPLMSetAudioPosition(
  * max.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API FMOD_RESULT XPLMSetAudioFadeDistance(
                          FMOD_CHANNEL*        fmod_channel,
                          float                min_fade_distance,
@@ -308,6 +314,7 @@ XPLM_API FMOD_RESULT XPLMSetAudioFadeDistance(
  * a sound.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API FMOD_RESULT XPLMSetAudioVolume(
                          FMOD_CHANNEL*        fmod_channel,
                          float                source_volume);
@@ -318,6 +325,7 @@ XPLM_API FMOD_RESULT XPLMSetAudioVolume(
  * Change the current pitch of an active FMOD channel.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API FMOD_RESULT XPLMSetAudioPitch(
                          FMOD_CHANNEL*        fmod_channel,
                          float                audio_pitch_hz);
@@ -330,6 +338,7 @@ XPLM_API FMOD_RESULT XPLMSetAudioPitch(
  * already.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API FMOD_RESULT XPLMSetAudioCone(
                          FMOD_CHANNEL*        fmod_channel,
                          float                inside_angle,

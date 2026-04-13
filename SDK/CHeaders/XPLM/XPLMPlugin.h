@@ -2,7 +2,7 @@
 #define _XPLMPlugin_h_
 
 /*
- * Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
  * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
@@ -45,6 +45,7 @@ extern "C" {
  * get your own ID.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMPluginID XPLMGetMyID(void);
 
 /*
@@ -54,6 +55,7 @@ XPLM_API XPLMPluginID XPLMGetMyID(void);
  * disabled and enabled.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMCountPlugins(void);
 
 /*
@@ -64,6 +66,7 @@ XPLM_API int        XPLMCountPlugins(void);
  * order.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMPluginID XPLMGetNthPlugin(
                          int                  inIndex);
 
@@ -75,6 +78,7 @@ XPLM_API XPLMPluginID XPLMGetNthPlugin(
  * path does not point to a currently loaded plug-in.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMPluginID XPLMFindPluginByPath(
                          const char *         inPath);
 
@@ -89,6 +93,7 @@ XPLM_API XPLMPluginID XPLMFindPluginByPath(
  * locate another plugin that your plugin interoperates with
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API XPLMPluginID XPLMFindPluginBySignature(
                          const char *         inSignature);
 
@@ -105,6 +110,7 @@ XPLM_API XPLMPluginID XPLMFindPluginBySignature(
  * human-readable description of this plug-in.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMGetPluginInfo(
                          XPLMPluginID         inPlugin,
                          char                 outName[256],           /* Can be NULL */
@@ -128,6 +134,7 @@ XPLM_API void       XPLMGetPluginInfo(
  * Returns whether the specified plug-in is enabled for running.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMIsPluginEnabled(
                          XPLMPluginID         inPluginID);
 
@@ -140,6 +147,7 @@ XPLM_API int        XPLMIsPluginEnabled(
  * acquired) by returning false from their XPluginEnable callback.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMEnablePlugin(
                          XPLMPluginID         inPluginID);
 
@@ -149,6 +157,7 @@ XPLM_API int        XPLMEnablePlugin(
  * This routine disables an enabled plug-in.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDisablePlugin(
                          XPLMPluginID         inPluginID);
 
@@ -162,6 +171,7 @@ XPLM_API void       XPLMDisablePlugin(
  * up.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMReloadPlugins(void);
 
 /*
@@ -173,6 +183,7 @@ XPLM_API void       XPLMReloadPlugins(void);
  * works identically to XPLMReloadPlugins().
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMReloadThisPlugin(
                          int                  forReplacement);
 
@@ -330,6 +341,7 @@ XPLM_API void       XPLMReloadThisPlugin(
  * a message receive function receive the message.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMSendMessageToPlugin(
                          XPLMPluginID         inPlugin,
                          int                  inMessage,
@@ -428,6 +440,7 @@ typedef void (* XPLMFeatureEnumerator_f)(
  * 0 if it does not.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMHasFeature(
                          const char *         inFeature);
 
@@ -439,6 +452,7 @@ XPLM_API int        XPLMHasFeature(
  * feature.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMIsFeatureEnabled(
                          const char *         inFeature);
 
@@ -450,6 +464,7 @@ XPLM_API int        XPLMIsFeatureEnabled(
  * depending on the feature.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMEnableFeature(
                          const char *         inFeature,
                          int                  inEnable);
@@ -462,6 +477,7 @@ XPLM_API void       XPLMEnableFeature(
  * the features that X-Plane can support.
  *
  */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMEnumerateFeatures(
                          XPLMFeatureEnumerator_f inEnumerator,           /* Can be NULL */
                          void*                inRef);

@@ -2,7 +2,7 @@
 #define _XPLMDefs_h_
 
 /*
- * Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
  * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
@@ -389,7 +389,7 @@ typedef int XPLMMouseStatus;
 /* X-Plane itself                                                             */
 #define XPLM_PLUGIN_XPLANE   (0)
 
-/*                 The current XPLM revision is 4.2.1 (421).                  */
+/*                 The current XPLM revision is 4.3.0 (430).                  */
 #define kXPLM_Version        (421)
 
 /*

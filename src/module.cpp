@@ -611,7 +611,14 @@ bool module::_XPluginStart(void)
 		// In our case we're not going to pass through the parameters though, they're irrelevant.
 		if (0 == fmt_pcall_stdvars(m_interp, m_debug_proc, true, ""))
 		{
-			res = xlua_checkboolean(m_interp, -1);
+			if (lua_isboolean(m_interp, -1))
+			{
+				res = lua_toboolean(m_interp, -1);
+			}
+			else
+			{
+				log_message(m_interp, "XPluginStart did not return a boolean. Disabling this script.");
+			}
 		}
 	}
 
@@ -643,11 +650,18 @@ bool module::_XPluginEnable(void)
 	else
 	{
 		// In our case we're not going to pass through the parameters though, they're irrelevant.
-		m_enabled = false;		// They've defined an XPluginStart function. Assume it fails - they now need to return true from working code to continue.
+		m_enabled = false;		// They've defined an XPluginEnable function. Assume it fails - they now need to return true from working code to continue.
 
 		if (0 == fmt_pcall_stdvars(m_interp, m_debug_proc, true, ""))
 		{
-			m_enabled = xlua_checkboolean(m_interp, -1);
+			if (lua_isboolean(m_interp, -1))
+			{
+				m_enabled = lua_toboolean(m_interp, -1);
+			}
+			else
+			{
+				log_message(m_interp, "XPluginEnable did not return a boolean. Disabling this script.");
+			}
 		}
 	}
 
