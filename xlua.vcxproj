@@ -36,6 +36,7 @@
     <ClCompile Include="SDK\XLua_glue\XPLMMap_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMMenus_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMNavigation_glue.cpp" />
+    <ClCompile Include="SDK\XLua_glue\XPLMPanelGraphics_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMPlanes_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMPlugin_glue.cpp" />
     <ClCompile Include="SDK\XLua_glue\XPLMProcessing_glue.cpp" />
@@ -75,6 +76,7 @@
     <ClInclude Include="SDK\CHeaders\XPLM\XPLMMap.h" />
     <ClInclude Include="SDK\CHeaders\XPLM\XPLMMenus.h" />
     <ClInclude Include="SDK\CHeaders\XPLM\XPLMNavigation.h" />
+    <ClInclude Include="SDK\CHeaders\XPLM\XPLMPanelGraphics.h" />
     <ClInclude Include="SDK\CHeaders\XPLM\XPLMPlanes.h" />
     <ClInclude Include="SDK\CHeaders\XPLM\XPLMPlugin.h" />
     <ClInclude Include="SDK\CHeaders\XPLM\XPLMProcessing.h" />
