@@ -32,6 +32,7 @@ SOURCES = \
 	SDK/XLua_glue/XPLMPlanes_glue.cpp \
 	SDK/XLua_glue/XPLMPlugin_glue.cpp \
 	SDK/XLua_glue/XPLMProcessing_glue.cpp \
+	SDK/XLua_glue/XPLMPanelGraphics_glue.cpp \
 	SDK/XLua_glue/XPLMScenery_glue.cpp \
 	SDK/XLua_glue/XPLMSound_glue.cpp \
 	SDK/XLua_glue/XPLMUtilities_glue.cpp \
