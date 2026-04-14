@@ -9,7 +9,7 @@ project(xlua
 # ─────────────────────────────────────────────────────────────────────────────
 # Global C++ standard (matches -std=c++11 / CLANG_CXX_LANGUAGE_STANDARD=c++0x)
 # ─────────────────────────────────────────────────────────────────────────────
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -39,6 +39,8 @@ add_library(xlua MODULE
 	imgui/imgui_tables.cpp
 	imgui/imgui_widgets.cpp
 )
+
+target_compile_definitions(xlua PRIVATE XPLM200=1 XPLM210=1 XPLM300=1 XPLM301=1 XPLM302=1 XPLM303=1 XPLM400=1 XPLM410=1 XPLM420=1 XPLM430=1 XPLM440=1)
 
 # Strip the default "lib" prefix and use .xpl on all platforms.
 set_target_properties(xlua PROPERTIES
