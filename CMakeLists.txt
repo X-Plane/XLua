@@ -18,13 +18,26 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # X-Plane loads .xpl files via dlopen/LoadLibrary, so MODULE is the right type.
 # ─────────────────────────────────────────────────────────────────────────────
 add_library(xlua MODULE
-    src/xlua.cpp
-    src/module.cpp
-    src/lua_helpers.cpp
-    src/xpcommands.cpp
-    src/xpdatarefs.cpp
-    src/xpfuncs.cpp
-    src/xptimers.cpp
+	src/xlua.cpp
+	src/module.cpp
+	src/lua_helpers.cpp
+	src/shared_lua_helpers.cpp
+	src/xpcommands.cpp
+	src/xpdatarefs.cpp
+	src/shared_xpfuncs.cpp
+	src/xpfuncs.cpp
+	src/xptimers.cpp
+
+	src/FloatingWindows/FloatingWindow.cpp
+	src/FloatingWindows/FLWIntegration.cpp
+	src/FloatingWindows/ImGUIIntegration.cpp
+
+	imgui_lua_bindings/imgui_lua_bindings.cpp
+	imgui/imgui.cpp
+	imgui/imgui_demo.cpp
+	imgui/imgui_draw.cpp
+	imgui/imgui_tables.cpp
+	imgui/imgui_widgets.cpp
 )
 
 # Strip the default "lib" prefix and use .xpl on all platforms.
@@ -37,6 +50,8 @@ target_include_directories(xlua PRIVATE
     "${CMAKE_SOURCE_DIR}/lua_sdk"
     "${CMAKE_SOURCE_DIR}/SDK/CHeaders/XPLM"
     "${CMAKE_SOURCE_DIR}/SDK/CHeaders/Widgets"
+    "${CMAKE_SOURCE_DIR}/imgui"
+    "${CMAKE_SOURCE_DIR}/src/FloatingWindows"
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
