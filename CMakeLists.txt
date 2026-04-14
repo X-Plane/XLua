@@ -151,9 +151,13 @@ elseif(UNIX)
     target_link_options(xlua PRIVATE
         -m64
         -static-libgcc
-        # Restrict exported symbols to those listed in exports.txt
-        -Wl,--version-script="${CMAKE_SOURCE_DIR}/exports.txt"
-        -Wl,--no-undefined
+        # Restrict exported symbols to those listed in exports.txt.
+        # No quotes around the path — CMake escapes them, causing ld to treat
+        # the quotes as part of the filename.  The path contains no spaces so
+        # quoting is unnecessary.
+        -Wl,--version-script=${CMAKE_SOURCE_DIR}/exports.txt
+        # --no-undefined is omitted intentionally: XPLM symbols are unresolved
+        # at link time and resolved at runtime by X-Plane (matches Makefile).
     )
 
 else()
