@@ -2,24 +2,20 @@
 //	This source code is licensed under the MIT open source license.
 //	See LICENSE.txt for the full terms of the license.
 
+#include "module.h"
+#include "xpdatarefs.h"
+#include "xpcommands.h"
+#include "xptimers.h"
+#include "xpfuncs.h"
+#include "shared_xpfuncs.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include <vector>
-#include <memory>
-#include <algorithm>
-#include <array>
-#include <filesystem>
-#include <regex>
-
-#ifndef XPLM200
-#define XPLM200
+#if !MOBILE
+	#include "ImGUIIntegration.h"
 #endif
 
-#ifndef XPLM210
-#define XPLM210
-#endif
+extern "C" {
+	#include "lua.h"
+}
 
 #include <XPLMPlugin.h>
 #include <XPLMDataAccess.h>
@@ -28,23 +24,15 @@
 #include <XPLMMenus.h>
 #include <XPLMPlanes.h>
 
-#include "module.h"
-#include "xpdatarefs.h"
-#include "xpcommands.h"
-#include "xptimers.h"
-#include "xpfuncs.h"
-
-#if !MOBILE
-#include "ImGUIIntegration.h"
-#endif
+#include <cassert>
+#include <vector>
+#include <memory>
+#include <algorithm>
+#include <array>
+#include <filesystem>
+#include <regex>
 
 using std::vector;
-
-extern "C" {
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
 
 std::map<int, char const*> gXPMessageParamTypes;
 

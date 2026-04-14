@@ -9,17 +9,16 @@
 //	See LICENSE.txt for the full terms of the license.
 
 #include "module.h"
-#include <XPLMUtilities.h>
-#include <XPLMPlugin.h>
 #include "xpfuncs.h"
-#include <stdlib.h>
-#include <assert.h>
+#include "shared_xpfuncs.h"
+#include "lua_helpers.h"
+
+#include <XPLMUtilities.h>
+
+#include <regex>
+#include <cassert>
 #include <string>
 #include <string_view>
-#include "log.h"
-#include "lua_helpers.h"
-#include <lua.h>
-#include <regex>
 
 #if MOBILE
 	#include "xmap.h"
@@ -35,6 +34,7 @@
 	}
 
 	void add_xplm_to_interp(lua_State* L);
+
 	class	xmap_class {
 	public:
 		xmap_class(const string& in_file_name);

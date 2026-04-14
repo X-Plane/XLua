@@ -12,9 +12,11 @@
 #define xpcommands_h
 
 #include "lua.h"
+
+#include <XPLMUtilities.h>
+
 #include <memory>
 #include <string>
-#include "XPLMUtilities.h"
 
 class	notify_cb_t;
 struct xlua_cmd;

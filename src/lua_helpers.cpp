@@ -1,4 +1,10 @@
 #include "lua_helpers.h"
+#include "module.h"
+
+#include <XPLMDataAccess.h>
+
+extern XPLMDataRef g_replay_active;
+extern XPLMDataRef g_sim_period;
 
 void setup_std_vars(lua_State * L, int dbg)
 {

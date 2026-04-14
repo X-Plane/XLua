@@ -8,20 +8,19 @@
 //	This source code is licensed under the MIT open source license.
 //	See LICENSE.txt for the full terms of the license.
 
-#include <cstdlib>
 
 #include "xpfuncs.h"
+#include "shared_xpfuncs.h"
+#include "shared_lua_helpers.h"
 #include "xpdatarefs.h"
 #include "xpcommands.h"
 #include "xptimers.h"
 #include "module.h"
 
-#include <string.h>
-#include <stdio.h>
-#include <assert.h>
-
 #include <XPLMUtilities.h>
 #include <XPLMDataAccess.h>
+
+#include <cassert>
 
 /*
 	TODO: figure out when we have to resync our datarefs

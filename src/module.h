@@ -15,24 +15,20 @@
 
 #define NOMINMAX
 
-#include <stddef.h>
-#include <sys/types.h>
-#include <stdint.h>
 #if defined(_MSC_VER)
 	typedef int64_t ssize_t;
 #endif
 
+#include <XPLMDefs.h>
+
 extern "C" {
 #include <lua.h>
-#include <lualib.h>
 #include <lauxlib.h>
 }
 
 #include <string>
 #include <map>
 #include <array>
-
-#include "XPLMDefs.h"
 
 using std::string;
 

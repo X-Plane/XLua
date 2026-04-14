@@ -8,19 +8,16 @@
 //	This source code is licensed under the MIT open source license.
 //	See LICENSE.txt for the full terms of the license.
 
-#include <cstdio>
-#include <stdlib.h>
-#include <stdio.h>
-#include <assert.h>
-#include <list>
-#include <XPLMProcessing.h>
-#include <XPLMDataAccess.h>
-#include <memory>
-
 #include "xptimers.h"
 #include "module.h"
 #include "log.h"
 #include "xpfuncs.h"
+#include "shared_xpfuncs.h"
+
+#include <XPLMDataAccess.h>
+
+#include <list>
+#include <memory>
 
 class notify_cb_t;
 class xlua_timer

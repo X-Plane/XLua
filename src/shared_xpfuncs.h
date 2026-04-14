@@ -6,6 +6,8 @@ extern "C" {
 	#include <lauxlib.h>
 }
 
+#include <string>
+#include <algorithm>
 #include <map>
 
 // This is kind of a mess - Lua [annoyingly] doesn't give you a way to store a closure/Lua interpreter function

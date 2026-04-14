@@ -2,7 +2,8 @@
 
 #include "XPLMUtilities.h"
 
-#include <assert.h>
+#include <memory>
+#include <cassert>
 
 int notify_cb_t::nilRefCount = -1;
 
