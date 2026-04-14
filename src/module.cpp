@@ -121,8 +121,11 @@ module::module(
 							void *				in_alloc_ref) :
 	m_interp(NULL),
 	m_memory(NULL),
-	m_path(in_module_path)
+	m_path(in_module_path),
+	m_log_path(),
+	m_debug_proc(0)
 {
+	m_callout_refs.fill(LUA_NOREF);
 	int boiler_plate_paths = length_of_dir(in_init_script);
 	m_log_path = in_module_script + boiler_plate_paths;
 
@@ -168,6 +171,23 @@ module::module(
 	
 	int module_run_result = lua_pcall(m_interp, 1, 0, m_debug_proc);
 	CTOR_FAIL(module_run_result,"run module");
+
+	const struct {
+		CalloutId	id;
+		const char* name;
+	} kCallouts[] = {
+		{ kCalloutAircraftLoad, "aircraft_load" },
+		{ kCalloutAircraftUnload, "aircraft_unload" },
+		{ kCalloutFlightStart, "flight_start" },
+		{ kCalloutFlightCrash, "flight_crash" },
+		{ kCalloutBeforePhysics, "before_physics" },
+		{ kCalloutAfterPhysics, "after_physics" },
+		{ kCalloutAfterReplay, "after_replay" },
+	};
+	for (const auto& callout : kCallouts)
+	{
+		m_callout_refs[callout.id] = capture_callout(callout.name);
+	}
 }
 
 int module::load_module_relative_path(const string& path)
@@ -211,53 +231,101 @@ void *		module::module_alloc_tracked(size_t amount)
 
 void		module::acf_load()
 {
-	do_callout("aircraft_load");
+	invoke_callout(kCalloutAircraftLoad);
 }
 
 void		module::acf_unload()
 {
-	do_callout("aircraft_unload");
+	invoke_callout(kCalloutAircraftUnload);
 }
 
 void		module::flight_start()
 {
-	do_callout("flight_start");
+	invoke_callout(kCalloutFlightStart);
 }
 
 void		module::flight_crash()
 {
-	do_callout("flight_crash");
+	invoke_callout(kCalloutFlightCrash);
 }
 
 void		module::pre_physics()
 {
-	do_callout("before_physics");
+	invoke_callout(kCalloutBeforePhysics);
 }
 
 void		module::post_physics()
 {
-	do_callout("after_physics");
+	invoke_callout(kCalloutAfterPhysics);
 }
 
 void		module::post_replay()
 {
-	do_callout("after_replay");
+	invoke_callout(kCalloutAfterReplay);
 }
 
-void module::do_callout(const char * f)
+int module::capture_callout(const char * call_name)
 {
-	if(m_interp == NULL)
-		return;
+	if (m_interp == NULL)
+		return LUA_NOREF;
 
-	lua_getfield(m_interp, LUA_GLOBALSINDEX, "do_callout");
-	if (!lua_isfunction(m_interp, -1))
+	lua_getglobal(m_interp, "n");
+	if (!lua_istable(m_interp, -1))
 	{
 		lua_pop(m_interp, 1);
+		return LUA_NOREF;
+	}
+
+	lua_getfield(m_interp, -1, call_name);
+	int ref = LUA_NOREF;
+	if (lua_isfunction(m_interp, -1))
+	{
+		const int func_index = lua_gettop(m_interp);
+		register_callout_with_stp(func_index, call_name);
+		ref = luaL_ref(m_interp, LUA_REGISTRYINDEX);
 	}
 	else
 	{
-		fmt_pcall_stdvars(m_interp,m_debug_proc,"s",f);
+		lua_pop(m_interp, 1);
 	}
+	lua_pop(m_interp, 1);
+	return ref;
+}
+
+void module::register_callout_with_stp(int func_index, const char * call_name)
+{
+	lua_getglobal(m_interp, "STP");
+	if (!lua_istable(m_interp, -1))
+	{
+		lua_pop(m_interp, 1);
+		return;
+	}
+
+	lua_getfield(m_interp, -1, "add_known_function");
+	if (!lua_isfunction(m_interp, -1))
+	{
+		lua_pop(m_interp, 2);
+		return;
+	}
+
+	lua_pushvalue(m_interp, func_index);
+	lua_pushstring(m_interp, call_name);
+	if (lua_pcall(m_interp, 2, 0, m_debug_proc) != 0)
+	{
+		lua_pop(m_interp, 1);
+	}
+	lua_pop(m_interp, 1);
+}
+
+void module::invoke_callout(CalloutId which)
+{
+	if (m_interp == NULL)
+		return;
+	const int ref = m_callout_refs[which];
+	if (ref == LUA_NOREF)
+		return;
+	lua_rawgeti(m_interp, LUA_REGISTRYINDEX, ref);
+	fmt_pcall_stdvars(m_interp, m_debug_proc, "");
 }
 
 module::~module()

@@ -5,3 +5,14 @@ xlua.xcodeproj/*
 /Release/**
 /.vs/*
 /xlua.vcxproj.user
+.codex.contexts.json
+.DS_Store
+*/.DS_Store
+build/
+build/**/*
+deploy/
+deploy/**/*
+DerivedData/
+XLua.xcarchive/
+jenkins/build_products/
+jenkins/build_products/**/*

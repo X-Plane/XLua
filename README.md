@@ -9,6 +9,41 @@ XLua is developed internally by Laminar Research and is intended to help our int
 XLua is **not** meant to be an "official" Lua plugin for X-Plane, and it definitely does not replace any of the existing Lua plugins, all of which have significantly more features than XLua itself.
 
 ## Release Notes
+**1.3.7r3 - 04/14/2026**
+* Restore forced full reload behavior for `XLuaReloadOnFlightChange()`.
+* Fix repeated-log deduplication so identical messages collapse correctly again.
+
+**1.3.7r2 - 02/24/2026**
+* Fix memory corruption in module allocation.
+* Rebuild required for all three platforms (mac/win/lin).
+
+**1.3.7r1 - 11/26/2025**
+* Clear cached command lookups on shutdown/reload to prevent stale handles after script reloads (fixes default commands breaking post-reload).
+* Added opt-in LuaJIT toggles: dataref `xlua/jit_enabled` (default 0) and command `xlua/jit_toggle` to flip JIT at runtime without editing scripts.
+
+**1.3.7b1 - 11/25/2025**
+* First release with runtime JIT controls: opt-in dataref and command to toggle LuaJIT in flight for profiling/testing without script edits.
+
+**1.3.6r1 - 11/24/2025**
+* Reload guard: skip reloading modules when scripts/ mtimes are unchanged to avoid needless reloads.
+
+**1.3.5r1 - 11/23/2025**
+* Cached command lookups and cached dataref type/dimension queries to cut per-frame overhead in heavy scripts.
+* Safety/cleanup: snprintf use for logging, warning cleanup, and small handler/array type-caching optimizations.
+
+**1.3.4r1 - 11/22/2025**
+* Runtime logging toggle: dataref `xlua/logging_enabled` (default 1) and command `xlua/logging_toggle` to silence/restore XLua logging without repacking scripts.
+* Build pipeline tweaks (codesign opt-out, Windows toolset) to keep cross-platform builds consistent.
+
+**1.3.3r1 - 11/19/2025**
+* Cached Lua callback references per module to avoid repeated name lookups each frame.
+* Faster namespace/dataref lookups to reduce interpreter overhead in script-heavy aircraft.
+
+**1.3.2r1 - 11/18/2025**
+* Script discovery cache (`.xlua_manifest`) for faster, deterministic module enumeration on load/reload.
+* Hook filtering: only call modules that actually implement `before_physics`, `after_physics`, or `after_replay`, removing redundant per-frame Lua calls.
+* Log deduplication and orderly shutdown flush to cut log spam while retaining last messages.
+
 **1.3.0r2 - 09/05/2024**
 * Adds `get_timer_remaining` stub to init.lua.
 
@@ -79,6 +114,15 @@ The adf module has a second lua file - for this file to be used, it must be “i
 Sub-folders in the scripts folder are not allowed - all modules must be within “scripts”.
 
 The file “init.lua” is part of the XLua plugin itself and should not be edited or removed.
+
+### Runtime controls: logging & JIT
+
+These controls let you toggle expensive diagnostics and JIT at runtime without touching scripts:
+
+* Dataref `xlua/logging_enabled` (int, default 1): set to 0 to suppress XLua’s log chatter; set back to 1 to re-enable. Command `xlua/logging_toggle` flips it.
+* Dataref `xlua/jit_enabled` (int, default 0): opt-in toggle for LuaJIT; set to 1 to enable JIT, 0 to disable. Command `xlua/jit_toggle` flips it in flight.
+
+Both datarefs are writable; the commands are useful for keybindings or testing without repackaging scripts.
 
 ### How a Module Script Runs
 
@@ -251,4 +295,3 @@ On some complex aircraft, you might also need to reset your scripts if the "Star
 
 * _**Is there a way to compile a XLua script in a binary plugin (xpl file)?**_
   * No. If you want or need to encrypt Lua scripts, you need to use SASL.
-

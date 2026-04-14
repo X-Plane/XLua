@@ -5,6 +5,9 @@ if [ -z "${PLATFORM}" ]; then
 	exit 1
 fi
 
+WANT_CODESIGN="${WANT_CODESIGN:-NO}"
+DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-$(pwd)/DerivedData}"
+
 function clean() {
 	rm -rf xlua.xcarchive
 	rm -rf xlua_mac.zip
@@ -29,11 +32,27 @@ case "$PLATFORM" in
 	;;
 "APL")
 	
+	CODE_SIGN_ARGS=()
+	if [ "${WANT_CODESIGN}" == "YES" ]; then
+		CODE_SIGN_ARGS=(
+			CODE_SIGN_STYLE="Manual"
+			CODE_SIGN_IDENTITY="Developer ID Application: Laminar Research (LPH4NFE92D)"
+		)
+	else
+		CODE_SIGN_ARGS=(
+			CODE_SIGNING_ALLOWED=NO
+			CODE_SIGN_STYLE="Manual"
+			CODE_SIGN_IDENTITY=""
+		)
+	fi
+
 	echo Cleaning...
 	xcodebuild \
 		-scheme xlua \
 		-config Release \
 		-project xlua.xcodeproj \
+		-derivedDataPath "${DERIVED_DATA_PATH}" \
+		"${CODE_SIGN_ARGS[@]}" \
 		clean
 
 	echo Compiling...
@@ -42,11 +61,11 @@ case "$PLATFORM" in
 		-config Release \
 		-project xlua.xcodeproj \
 		-archivePath XLua.xcarchive \
-		CODE_SIGN_STYLE="Manual" \
-		CODE_SIGN_IDENTITY="Developer ID Application: Laminar Research (LPH4NFE92D)" \
+		-derivedDataPath "${DERIVED_DATA_PATH}" \
+		"${CODE_SIGN_ARGS[@]}" \
 		archive
 
-	if [ $WANT_CODESIGN == "YES" ]; then
+	if [ "${WANT_CODESIGN}" == "YES" ]; then
 		echo Notarizing...
 		./build-tools/mac/notarization.sh \
 				xlua_mac.zip \

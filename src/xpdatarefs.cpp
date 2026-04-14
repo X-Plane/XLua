@@ -17,12 +17,16 @@
 #include <vector>
 #include <assert.h>
 #include <algorithm>
+#include <memory>
+#include <unordered_map>
 
 #include "log.h"
 
 using std::min;
 using std::max;
 using std::vector;
+using std::unique_ptr;
+using std::unordered_map;
 
 #define MSG_ADD_DATAREF 0x01000000
 #if !MOBILE
@@ -42,6 +46,7 @@ struct	xlua_dref {
 	int						m_ours;		// 1 if we made, 0 if system
 	xlua_dref_notify_f		m_notify_func;
 	void *					m_notify_ref;
+	int						m_array_dim = -1; // cache for array length when known
 	
 	// IF we made the dataref, this is where our storage is!
 	double					m_number_storage;
@@ -49,7 +54,8 @@ struct	xlua_dref {
 	string					m_string_storage;
 };
 
-static xlua_dref *		s_drefs = NULL;
+using dref_ptr = unique_ptr<xlua_dref>;
+static unordered_map<string, dref_ptr> s_drefs;
 
 // For nunmbers
 static int	xlua_geti(void * ref)
@@ -263,8 +269,9 @@ void			xlua_validate_drefs()
 {
 #if MOBILE
 	bool dref_missing = false;
-	for(xlua_dref * f = s_drefs; f; f = f->m_next)
+	for (auto& entry : s_drefs)
 	{
+		xlua_dref* f = entry.second.get();
 		if(f->m_dref == NULL)
 		{
 			dref_missing = true;
@@ -275,8 +282,9 @@ void			xlua_validate_drefs()
 	assert(!dref_missing);
 	
 #else
-	for(xlua_dref * f = s_drefs; f; f = f->m_next)
+	for (auto& entry : s_drefs)
 	{
+		xlua_dref* f = entry.second.get();
 		if (f->m_dref == NULL) {
 			log_message(nullptr, "WARNING: dataref %s is used but not defined.\n", f->m_name.c_str());
 		}
@@ -286,21 +294,22 @@ void			xlua_validate_drefs()
 
 xlua_dref *		xlua_find_dref(const char * name)
 {
-	for(xlua_dref * f = s_drefs; f; f = f->m_next)
-	if(f->m_name == name)
+	auto existing = s_drefs.find(name);
+	if (existing != s_drefs.end())
 	{
-		TRACE_DATAREFS("Found %s as %p\n", name,f);
-		return f;
+		TRACE_DATAREFS("Found %s as %p\n", name, existing->second.get());
+		return existing->second.get();
 	}
 	// We have never tried to find this dref before - make a new record
-	xlua_dref * d = new xlua_dref;
-	d->m_next = s_drefs;
-	s_drefs = d;
+	auto record = dref_ptr(new xlua_dref);
+	xlua_dref * d = record.get();
+	d->m_next = NULL;
 	d->m_name = name;
 	d->m_dref = NULL;
 	d->m_index = -1;
 	d->m_types = 0;
 	d->m_ours = 0;
+	d->m_array_dim = -1;
 	d->m_notify_func = NULL;
 	d->m_notify_ref = NULL;
 	d->m_number_storage = 0;
@@ -308,6 +317,7 @@ xlua_dref *		xlua_find_dref(const char * name)
 	resolve_dref(d);
 
 	TRACE_DATAREFS("Speculating %s as %p\n", name,d);
+	s_drefs.emplace(d->m_name, std::move(record));
 
 	return d;
 }
@@ -338,10 +348,11 @@ xlua_dref *		xlua_create_dref(lua_State* L, const char * name, xlua_dref_type ty
 	}
 
 	string n(name);
-	xlua_dref * f;
-	for(f = s_drefs; f; f = f->m_next)
-	if(f->m_name == n)
+	xlua_dref * f = NULL;
+	auto it = s_drefs.find(n);
+	if (it != s_drefs.end())
 	{
+		f = it->second.get();
 		if (f->m_ours || f->m_dref)
 		{
 			log_message(L, "ERROR: %s is already a dataref.\n", name);
@@ -349,7 +360,6 @@ xlua_dref *		xlua_create_dref(lua_State* L, const char * name, xlua_dref_type ty
 		}
 
 		TRACE_DATAREFS("Reusing %s as %p\n", name, f);
-		break;
 	}
 	
 	if(n.find('[') != n.npos)
@@ -368,9 +378,10 @@ xlua_dref *		xlua_create_dref(lua_State* L, const char * name, xlua_dref_type ty
 	xlua_dref * d = f;
 	if(!d)
 	{
-		d = new xlua_dref;
-		d->m_next = s_drefs;
-		s_drefs = d;
+		auto record = dref_ptr(new xlua_dref);
+		d = record.get();
+		d->m_next = NULL;
+		s_drefs.emplace(n, std::move(record));
 		TRACE_DATAREFS("Creating %s as %p\n", name,d);
 	}
 	d->m_name = name;
@@ -380,6 +391,7 @@ xlua_dref *		xlua_create_dref(lua_State* L, const char * name, xlua_dref_type ty
 	d->m_notify_ref = ref;
 	d->m_number_storage = 0;
 	d->m_types = type_mask;
+	d->m_array_dim = (type == xlua_array) ? dim : -1;
 
 	switch(type) {
 	case xlua_number:
@@ -443,11 +455,17 @@ int	xlua_dref_get_dim(xlua_dref * who)
 		return  1;
 	if(who->m_types & xplmType_FloatArray)
 	{
-		return XPLMGetDatavf(who->m_dref, NULL, 0, 0);
+		if (who->m_array_dim >= 0)
+			return who->m_array_dim;
+		who->m_array_dim = XPLMGetDatavf(who->m_dref, NULL, 0, 0);
+		return who->m_array_dim;
 	}
 	if(who->m_types & xplmType_IntArray)
 	{
-		return XPLMGetDatavi(who->m_dref, NULL, 0, 0);
+		if (who->m_array_dim >= 0)
+			return who->m_array_dim;
+		who->m_array_dim = XPLMGetDatavi(who->m_dref, NULL, 0, 0);
+		return who->m_array_dim;
 	}
 	if(who->m_types & (xplmType_Int|xplmType_Float|xplmType_Double))
 		return 1;
@@ -627,8 +645,9 @@ void			xlua_relink_all_drefs()
 		dre = XPLM_NO_PLUGIN_ID;
 	}
 #endif
-	for(xlua_dref * d = s_drefs; d; d = d->m_next)
+	for (auto& entry : s_drefs)
 	{
+		xlua_dref* d = entry.second.get();
 		if(d->m_dref == NULL)
 		{
 			assert(!d->m_ours);
@@ -647,20 +666,16 @@ void			xlua_relink_all_drefs()
 
 void			xlua_dref_cleanup()
 {
-	while(s_drefs)
+	for (auto& entry : s_drefs)
 	{
-		xlua_dref *	kill = s_drefs;
-		s_drefs = s_drefs->m_next;
-		
+		xlua_dref *	kill = entry.second.get();
 		if(kill->m_dref && kill->m_ours)
 		{
 			XPLMUnregisterDataAccessor(kill->m_dref);
 		}
-		
-		delete kill;
 	}
 
-	assert(s_drefs == nullptr);
+	s_drefs.clear();
 }
 
 

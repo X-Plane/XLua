@@ -16,6 +16,7 @@
 #include <XPLMProcessing.h>
 #include <assert.h>
 #include <string>
+#include <unordered_map>
 
 #include "log.h"
 
@@ -44,6 +45,7 @@ struct xlua_cmd {
 };
 
 static xlua_cmd *		s_cmds = NULL;
+static std::unordered_map<std::string, xlua_cmd*> s_cmd_lookup;
 
 static int xlua_std_pre_filter(XPLMCommandRef c, XPLMCommandPhase phase, void* ref)
 {
@@ -150,9 +152,18 @@ static int xlua_std_post_handler(XPLMCommandRef c, XPLMCommandPhase phase, void*
 
 xlua_cmd * xlua_find_cmd(const char * name)
 {
-	for(xlua_cmd * i = s_cmds; i; i = i->m_next)
-	if(i->m_name == name)
-		return i;
+	auto cached = s_cmd_lookup.find(name);
+	if (cached != s_cmd_lookup.end())
+		return cached->second;
+
+	for (xlua_cmd* i = s_cmds; i; i = i->m_next)
+	{
+		if (i->m_name == name)
+		{
+			s_cmd_lookup[i->m_name] = i;
+			return i;
+		}
+	}
 		
 	XPLMCommandRef c = XPLMFindCommand(name);	
 	if(c == NULL) return NULL;	
@@ -162,6 +173,7 @@ xlua_cmd * xlua_find_cmd(const char * name)
 	s_cmds = nc;
 	nc->m_name = name;
 	nc->m_cmd = c;
+	s_cmd_lookup[nc->m_name] = nc;
 	return nc;
 }
 
@@ -196,6 +208,7 @@ xlua_cmd * xlua_create_cmd(lua_State* L, const char * name, const char * desc)
 	nc->m_name = name;
 	nc->m_cmd = XPLMCreateCommand(name,desc);
 	nc->m_ours = 1;
+	s_cmd_lookup[nc->m_name] = nc;
 	return nc;
 }
 
@@ -298,6 +311,7 @@ void xlua_cmd_cleanup()
 	}
 
 	assert(s_cmds == nullptr);
+	s_cmd_lookup.clear();
 }
 
 void xlua_cmd_mark_reload_on_change()

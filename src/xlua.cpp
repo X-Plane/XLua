@@ -3,11 +3,13 @@
 //	See LICENSE.txt for the full terms of the license.
 
 
-#define VERSION "1.3.0r1"
+#define VERSION "1.3.7r3"
 
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <algorithm>
+#include <fstream>
 #include <vector>
 
 #ifndef XPLM200
@@ -24,8 +26,14 @@
 #include <XPLMProcessing.h>
 #include <XPLMMenus.h>
 #include <XPLMPlanes.h>
+#if IBM
+#include <sys/stat.h>
+#else
+#include <sys/stat.h>
+#endif
 
 #include "module.h"
+#include "xpfuncs.h"
 #include "xpdatarefs.h"
 #include "xpcommands.h"
 #include "xptimers.h"
@@ -54,12 +62,173 @@ static vector<module *>g_modules;
 static XPLMFlightLoopID	g_pre_loop = NULL;
 static XPLMFlightLoopID	g_post_loop = NULL;
 static bool				g_is_acf_inited = false;
+static vector<string>    g_loaded_module_names;
 XPLMDataRef				g_replay_active = NULL;
 XPLMDataRef				g_sim_period = NULL;
 XPLMCommandRef			reset_cmd = nullptr;
 XPLMMenuID				PluginMenu = 0;
 
 static string plugin_base_path;
+static time_t g_scripts_dir_mtime = 0;
+static time_t g_init_script_mtime = 0;
+static time_t g_max_script_mtime = 0;
+static bool   g_has_script_signature = false;
+static bool   g_jit_runtime_enabled = false;
+
+enum ResetStateFlags {
+	kResetStateSkipAirportLoadedCallback = 1 << 0,
+	kResetStateForceReload = 1 << 1
+};
+
+#if IBM
+#define XLUA_STAT_STRUCT struct _stat
+#define XLUA_STAT _stat
+#else
+#define XLUA_STAT_STRUCT struct stat
+#define XLUA_STAT stat
+#endif
+
+static bool file_exists(const string& path)
+{
+	FILE* f = fopen(path.c_str(), "rb");
+	if (f == nullptr)
+		return false;
+	fclose(f);
+	return true;
+}
+
+static bool get_mod_time(const string& path, time_t& mod_time)
+{
+	XLUA_STAT_STRUCT info = {};
+	if (XLUA_STAT(path.c_str(), &info) != 0)
+		return false;
+	mod_time = info.st_mtime;
+	return true;
+}
+
+static bool compute_script_signature(time_t& scripts_dir_mtime,
+									 time_t& init_mtime,
+									 time_t& max_script_mtime)
+{
+	time_t dir_mtime = 0;
+	time_t init_time = 0;
+	time_t max_time = 0;
+
+	string scripts_dir_path(plugin_base_path);
+	scripts_dir_path += "scripts";
+	if (!get_mod_time(scripts_dir_path, dir_mtime))
+		return false;
+
+	string init_script_path(plugin_base_path);
+	init_script_path += "init.lua";
+	if (!get_mod_time(init_script_path, init_time))
+		return false;
+
+	for (const string& module_name : g_loaded_module_names)
+	{
+		string script_path(scripts_dir_path);
+		script_path += "/";
+		script_path += module_name;
+		script_path += "/";
+		script_path += module_name;
+		script_path += ".lua";
+
+		time_t script_time = 0;
+		if (!get_mod_time(script_path, script_time))
+			return false;
+		if (script_time > max_time)
+			max_time = script_time;
+	}
+
+	scripts_dir_mtime = dir_mtime;
+	init_mtime = init_time;
+	max_script_mtime = max_time;
+	return true;
+}
+
+static void apply_jit_setting_to_state(lua_State* L, bool enable)
+{
+	if (L == nullptr)
+		return;
+
+	if (luaL_dostring(L,
+			enable ?
+			"local ok, jitmod = pcall(require, 'jit'); if ok and jitmod then jitmod.on(); jitmod.flush(true); end" :
+			"local ok, jitmod = pcall(require, 'jit'); if ok and jitmod then jitmod.off(); end"))
+	{
+		// swallow errors silently; JIT optional
+		lua_pop(L, 1);
+	}
+}
+
+void xlua_apply_jit_setting(bool enable)
+{
+	g_jit_runtime_enabled = enable;
+	for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+	{
+		apply_jit_setting_to_state((*m)->interp(), enable);
+	}
+}
+
+static bool read_manifest(const string& manifest_path,
+						  const string& scripts_dir_path,
+						  vector<string>& module_names)
+{
+	time_t scripts_mtime = 0;
+	time_t manifest_mtime = 0;
+	if (!get_mod_time(scripts_dir_path, scripts_mtime))
+		return false;
+	if (!get_mod_time(manifest_path, manifest_mtime))
+		return false;
+	if (manifest_mtime < scripts_mtime)
+		return false;
+
+	std::ifstream input(manifest_path.c_str());
+	if (!input.is_open())
+		return false;
+
+	string line;
+	while (std::getline(input, line))
+	{
+		if (!line.empty() && line.back() == '\r')
+			line.pop_back();
+
+		if (line.empty() || line[0] == '#')
+			continue;
+
+		string script_path(scripts_dir_path);
+		script_path += "/";
+		script_path += line;
+		script_path += "/";
+		script_path += line;
+		script_path += ".lua";
+
+		if (!file_exists(script_path))
+		{
+			module_names.clear();
+			return false;
+		}
+
+		module_names.emplace_back(line);
+	}
+
+	return !module_names.empty();
+}
+
+static void write_manifest(const string& manifest_path, const vector<string>& module_names)
+{
+	FILE* manifest = fopen(manifest_path.c_str(), "w");
+	if (manifest == nullptr)
+		return;
+
+	fputs("# XLua module manifest v1\n", manifest);
+	for (const string& name : module_names)
+	{
+		fputs(name.c_str(), manifest);
+		fputc('\n', manifest);
+	}
+	fclose(manifest);
+}
 
 struct lua_alloc_request_t {
 			void *	ud;
@@ -128,7 +297,10 @@ static float xlua_pre_timer_master_cb(
 	if(XPLMGetDatai(g_replay_active) == 0)
 	if(XPLMGetDataf(g_sim_period) > 0.0f)	
 	for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)	
-		(*m)->pre_physics();
+	{
+		if((*m)->has_pre_physics())
+			(*m)->pre_physics();
+	}
 	return -1;
 }
 
@@ -142,11 +314,17 @@ static float xlua_post_timer_master_cb(
 	{
 		if(XPLMGetDataf(g_sim_period) > 0.0f)
 		for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)		
-			(*m)->post_physics();
+		{
+			if((*m)->has_post_physics())
+				(*m)->post_physics();
+		}
 	}
 	else
 	for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)		
-		(*m)->post_replay();
+	{
+		if((*m)->has_post_replay())
+			(*m)->post_replay();
+	}
 	return -1;
 }
 
@@ -160,45 +338,96 @@ void InitScripts(void)
 
 	scripts_dir_path += "scripts";
 
-	int offset = 0;
-	int mf, fcount;
-	while (1)
+	vector<string> module_names;
+	const string manifest_path = scripts_dir_path + "/.xlua_manifest";
+	bool manifest_loaded = read_manifest(manifest_path, scripts_dir_path, module_names);
+
+	if (!manifest_loaded)
 	{
-		char fname_buf[2048];
-		char* fptr;
-		XPLMGetDirectoryContents(
-			scripts_dir_path.c_str(),
-			offset,
-			fname_buf,
-			sizeof(fname_buf),
-			&fptr,
-			1,
-			&mf,
-			&fcount);
-		if (fcount == 0)
-			break;
-
-		if (strcmp(fptr, ".DS_Store") != 0)
+		constexpr int kBatchSize = 16;
+		int offset = 0;
+		int mf = 0;
+		int fcount = 0;
+		do
 		{
-			string mod_path(scripts_dir_path);
-			mod_path += "/";
-			mod_path += fptr;
-			mod_path += "/";
-			string script_path(mod_path);
-			script_path += fptr;
-			script_path += ".lua";
+			char fname_buf[4096];
+			char* name_ptrs[kBatchSize] = { nullptr };
+			XPLMGetDirectoryContents(
+				scripts_dir_path.c_str(),
+				offset,
+				fname_buf,
+				sizeof(fname_buf),
+				name_ptrs,
+				kBatchSize,
+				&mf,
+				&fcount);
+			if (fcount == 0)
+				break;
 
-			g_modules.push_back(new module(
-				mod_path.c_str(),
-				init_script_path.c_str(),
-				script_path.c_str(),
-				lj_alloc_f,
-				NULL));
+			for (int i = 0; i < fcount; ++i)
+			{
+				const char* entry = name_ptrs[i];
+				if (entry == nullptr)
+					continue;
+
+				if (strcmp(entry, ".DS_Store") != 0)
+				{
+					module_names.emplace_back(entry);
+				}
+			}
+
+			offset += fcount;
+		} while (offset < mf);
+
+		std::sort(module_names.begin(), module_names.end());
+		if (!module_names.empty())
+			write_manifest(manifest_path, module_names);
+	}
+	else
+	{
+		std::sort(module_names.begin(), module_names.end());
+	}
+	g_loaded_module_names = module_names;
+	for (const string& module_name : module_names)
+	{
+		string mod_path(scripts_dir_path);
+		mod_path += "/";
+		mod_path += module_name;
+		mod_path += "/";
+		string script_path(mod_path);
+		script_path += module_name;
+		script_path += ".lua";
+
+		if (!file_exists(script_path))
+		{
+			string warn("XLua: skipping module '");
+			warn += module_name;
+			warn += "' (missing ";
+			warn += script_path;
+			warn += ")\n";
+			XPLMDebugString(warn.c_str());
+			continue;
 		}
 
-		++offset;
-		if (offset == mf)
-			break;
+		g_modules.push_back(new module(
+			mod_path.c_str(),
+			init_script_path.c_str(),
+			script_path.c_str(),
+			lj_alloc_f,
+			NULL));
+	}
+
+	time_t dir_time = 0, init_time = 0, max_script_time = 0;
+	if (compute_script_signature(dir_time, init_time, max_script_time))
+	{
+		g_scripts_dir_mtime = dir_time;
+		g_init_script_mtime = init_time;
+		g_max_script_mtime = max_script_time;
+		g_has_script_signature = true;
+	}
+	else
+	{
+		g_has_script_signature = false;
 	}
 }
 
@@ -226,6 +455,24 @@ int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefco
 	// command in init.lua for example...
 	if (inPhase == xplm_CommandBegin && g_is_acf_inited)
 	{
+		const intptr_t flags = reinterpret_cast<intptr_t>(inRefcon);
+		const bool skip_airport_loaded_callback = (flags & kResetStateSkipAirportLoadedCallback) != 0;
+		const bool force_reload = (inRefcon == nullptr) || ((flags & kResetStateForceReload) != 0);
+		if (!force_reload && g_has_script_signature)
+		{
+			time_t dir_time = 0, init_time = 0, max_script_time = 0;
+			if (compute_script_signature(dir_time, init_time, max_script_time))
+			{
+				if (dir_time == g_scripts_dir_mtime &&
+					init_time == g_init_script_mtime &&
+					max_script_time == g_max_script_mtime)
+				{
+					// No changes detected; skip reload.
+					return 0;
+				}
+			}
+		}
+
 		// Set to false to clear state on this too. Provided the XLuaReloadOnFlightChange() call is still in the scripts,
 		// it will be immediately set back to true from the XPLM_MSG_AIRPORT_LOADED code below.
 		g_bReloadOnFlightChange = false;
@@ -233,7 +480,7 @@ int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefco
 		CleanupScripts();
 		InitScripts();
 
-		if (!(intptr_t)inRefcon)	// Recursion block - ResetState() can be called from XPluginReceiveMessage().
+		if (!skip_airport_loaded_callback)	// Recursion block - ResetState() can be called from XPluginReceiveMessage().
 		{
 			XPluginReceiveMessage(XPLM_PLUGIN_XPLANE, XPLM_MSG_AIRPORT_LOADED, nullptr);
 		}
@@ -353,6 +600,7 @@ PLUGIN_API void	XPluginStop(void)
 	}
 
 	CleanupScripts();
+	xlua_flush_log_queue();
 	
 	XPLMDestroyFlightLoop(g_pre_loop);
 	XPLMDestroyFlightLoop(g_post_loop);
@@ -395,7 +643,11 @@ PLUGIN_API void XPluginReceiveMessage(
 	case XPLM_MSG_AIRPORT_LOADED:
 		if (g_bReloadOnFlightChange && g_is_acf_inited)
 		{
-			ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)1);
+			ResetState(
+				reset_cmd,
+				xplm_CommandBegin,
+				reinterpret_cast<void*>(static_cast<intptr_t>(
+					kResetStateSkipAirportLoadedCallback | kResetStateForceReload)));
 		}
 
 		if (!g_is_acf_inited)
@@ -406,6 +658,12 @@ PLUGIN_API void XPluginReceiveMessage(
 			
 			for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
 				(*m)->acf_load();
+
+			if (g_jit_runtime_enabled)
+			{
+				for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+					apply_jit_setting_to_state((*m)->interp(), true);
+			}
 
 			g_is_acf_inited = true;
 		}

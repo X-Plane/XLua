@@ -40,5 +40,6 @@ void xlua_pushuserdata(lua_State * state, T data)
 
 void InitScripts(void);
 void CleanupScripts(void);
+void xlua_flush_log_queue(void);
 
 #endif /* xpfuncs_h */
