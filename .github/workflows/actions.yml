@@ -14,33 +14,26 @@ jobs:
       with:
         submodules: true
 
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Configure
+      run: cmake -B build -A x64
 
     - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      # Add additional options to the MSBuild command line here (like platform or verbosity level).
-      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: |
-        msbuild xlua.vcxproj /p:Platform=x64 /p:Configuration=Release /m
-        mkdir jenkins\build_products
-        move Release\plugins\win_x64/xlua.pdb jenkins\build_products\xlua_win.pdb
-        move Release\plugins\win_x64/xlua.xpl jenkins\build_products\xlua_win.xpl
-      
+      run: cmake --build build --config Release
+
     - name: Archive production artifacts
       uses: actions/upload-artifact@v3
       with:
         name: xlua_win
-        path: |
-          jenkins\build_products
+        path: build/win_x64/xlua.xpl
         if-no-files-found: error
-          
+
   build-mac:
     runs-on: macos-11
     env:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -48,20 +41,40 @@ jobs:
           submodules: yes
       - name: Setup Credentials
         uses: apple-actions/import-codesign-certs@v1
-        with: 
+        with:
           p12-file-base64: ${{ secrets.APPLE_DEV_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_DEV_CERTIFICATE_PASSWORD }}
+
+      - name: Configure
+        run: cmake -B build
+
       - name: Build
+        run: cmake --build build
+
+      - name: Sign
         run: |
-          ./jenkins_driver.sh
+          codesign --sign "Developer ID Application: Laminar Research (LPH4NFE92D)" \
+                   --timestamp \
+                   --options runtime \
+                   build/mac_x64/mac.xpl
+
+      - name: Notarize
+        run: |
+          zip -r xlua_mac.zip build/mac_x64/mac.xpl
+          xcrun notarytool submit xlua_mac.zip \
+              --apple-id "${APPLE_ID}" \
+              --team-id "${APPLE_TEAM_ID}" \
+              --password "${APP_SPECIFIC_PASSWORD}" \
+              --wait \
+              --timeout 10m
+
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         with:
           name: xlua_mac
-          path: |
-            jenkins/build_products/xlua_mac.xpl
+          path: build/mac_x64/mac.xpl
           if-no-files-found: error
-          
+
   build-linux:
     runs-on: ubuntu-latest
     container:
@@ -72,13 +85,15 @@ jobs:
         with:
           submodules: true
 
+      - name: Configure
+        run: cmake -B build
+
       - name: Build
-        run: |
-          ./jenkins_driver.sh
+        run: cmake --build build
+
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         with:
           name: xlua_lin
-          path: |
-            jenkins/build_products/xlua_lin.xpl
+          path: build/lin_x64/lin.xpl
           if-no-files-found: error
