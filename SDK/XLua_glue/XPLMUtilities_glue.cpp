@@ -15,13 +15,17 @@
 
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
-#define XPLM_DEPRECATED
+#if MOBILE
+	#define XPLM_DEPRECATED
+#endif
 #include "XPLMUtilities.h"
-#undef XPLM_DEPRECATED
+#if MOBILE
+	#undef XPLM_DEPRECATED
+#endif
 
-#include "xpfuncs.h"
+#include "shared_xpfuncs.h"
 #include "module.h"
-#include "lua_helpers.h"
+#include "shared_lua_helpers.h"
 
 extern "C" {
 
@@ -86,14 +90,6 @@ int XLuaSaveDataFile(lua_State* L)
 	const char * inFilePath = xlua_checkstring(L, 2);
 
 	int res = XPLMSaveDataFile(inFileType, inFilePath);
-	lua_pushboolean(L, res);
-
-	return 1;
-}
-
-int XLuaInitialized(lua_State* L)
-{
-	int res = XPLMInitialized();
 	lua_pushboolean(L, res);
 
 	return 1;
@@ -345,43 +341,6 @@ int XLuaUnregisterCommandHandler(lua_State* L)
 	bool inBefore = xlua_checkboolean(L, 3);
 
 	XPLMUnregisterCommandHandler(inComand, cb_XPLMCommandCallback_f, inBefore, cb_capture_0.get());
-
-	return 0;
-}
-
-int XLuaSimulateKeyPress(lua_State* L)
-{
-	int inKeyType = xlua_checkinteger(L, 1);
-	int inKey = xlua_checkinteger(L, 2);
-
-	XPLMSimulateKeyPress(inKeyType, inKey);
-
-	return 0;
-}
-
-int XLuaCommandKeyStroke(lua_State* L)
-{
-	XPLMCommandKeyID inKey = xlua_checkinteger(L, 1);
-
-	XPLMCommandKeyStroke(inKey);
-
-	return 0;
-}
-
-int XLuaCommandButtonPress(lua_State* L)
-{
-	XPLMCommandButtonID inButton = xlua_checkinteger(L, 1);
-
-	XPLMCommandButtonPress(inButton);
-
-	return 0;
-}
-
-int XLuaCommandButtonRelease(lua_State* L)
-{
-	XPLMCommandButtonID inButton = xlua_checkinteger(L, 1);
-
-	XPLMCommandButtonRelease(inButton);
 
 	return 0;
 }

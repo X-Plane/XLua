@@ -15,13 +15,17 @@
 
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
-#define XPLM_DEPRECATED
+#if MOBILE
+	#define XPLM_DEPRECATED
+#endif
 #include "XPLMWeather.h"
-#undef XPLM_DEPRECATED
+#if MOBILE
+	#undef XPLM_DEPRECATED
+#endif
 
-#include "xpfuncs.h"
+#include "shared_xpfuncs.h"
 #include "module.h"
-#include "lua_helpers.h"
+#include "shared_lua_helpers.h"
 
 extern "C" {
 

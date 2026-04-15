@@ -15,13 +15,17 @@
 
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
-#define XPLM_DEPRECATED
+#if MOBILE
+	#define XPLM_DEPRECATED
+#endif
 #include "XPLMPlanes.h"
-#undef XPLM_DEPRECATED
+#if MOBILE
+	#undef XPLM_DEPRECATED
+#endif
 
-#include "xpfuncs.h"
+#include "shared_xpfuncs.h"
 #include "module.h"
-#include "lua_helpers.h"
+#include "shared_lua_helpers.h"
 
 extern "C" {
 
@@ -33,8 +37,6 @@ extern "C" {
 //
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
-XPLMPlaneDrawState_t XPLMPlaneDrawState_t_from_table(lua_State* L, int stackpos);
-void XPLMPlaneDrawState_t_to_table(lua_State* L, XPLMPlaneDrawState_t const& src);
 
 //
 // Typedefs
@@ -92,149 +94,6 @@ int XLuaPlaceUserAtLocation(lua_State* L)
 
 	return 0;
 }
-/*
- * XPLMPlaneDrawState_t
- * 
- * Creation and transfer between C struct and Lua table
- *
- */
-
-XPLMPlaneDrawState_t XPLMPlaneDrawState_t_from_table(lua_State* L, int stackpos)
-{
-	XPLMPlaneDrawState_t out = {};
-
-	luaL_checktype(L, stackpos, LUA_TTABLE);
-	out.structSize = sizeof(out);
-
-	lua_getfield(L, stackpos, "gearPosition");
-	if (!lua_isnil(L, -1))
-	{
-		out.gearPosition = static_cast<float>(luaL_checknumber(L, -1));
-	}
-	lua_pop(L, 1);
-
-	lua_getfield(L, stackpos, "flapRatio");
-	if (!lua_isnil(L, -1))
-	{
-		out.flapRatio = static_cast<float>(luaL_checknumber(L, -1));
-	}
-	lua_pop(L, 1);
-
-	lua_getfield(L, stackpos, "spoilerRatio");
-	if (!lua_isnil(L, -1))
-	{
-		out.spoilerRatio = static_cast<float>(luaL_checknumber(L, -1));
-	}
-	lua_pop(L, 1);
-
-	lua_getfield(L, stackpos, "speedBrakeRatio");
-	if (!lua_isnil(L, -1))
-	{
-		out.speedBrakeRatio = static_cast<float>(luaL_checknumber(L, -1));
-	}
-	lua_pop(L, 1);
-
-	lua_getfield(L, stackpos, "slatRatio");
-	if (!lua_isnil(L, -1))
-	{
-		out.slatRatio = static_cast<float>(luaL_checknumber(L, -1));
-	}
-	lua_pop(L, 1);
-
-	lua_getfield(L, stackpos, "wingSweep");
-	if (!lua_isnil(L, -1))
-	{
-		out.wingSweep = static_cast<float>(luaL_checknumber(L, -1));
-	}
-	lua_pop(L, 1);
-
-	lua_getfield(L, stackpos, "thrust");
-	if (!lua_isnil(L, -1))
-	{
-		out.thrust = static_cast<float>(luaL_checknumber(L, -1));
-	}
-	lua_pop(L, 1);
-
-	lua_getfield(L, stackpos, "yokePitch");
-	if (!lua_isnil(L, -1))
-	{
-		out.yokePitch = static_cast<float>(luaL_checknumber(L, -1));
-	}
-	lua_pop(L, 1);
-
-	lua_getfield(L, stackpos, "yokeHeading");
-	if (!lua_isnil(L, -1))
-	{
-		out.yokeHeading = static_cast<float>(luaL_checknumber(L, -1));
-	}
-	lua_pop(L, 1);
-
-	lua_getfield(L, stackpos, "yokeRoll");
-	if (!lua_isnil(L, -1))
-	{
-		out.yokeRoll = static_cast<float>(luaL_checknumber(L, -1));
-	}
-	lua_pop(L, 1);
-
-	return out;
-}
-
-void XPLMPlaneDrawState_t_to_table(lua_State* L, XPLMPlaneDrawState_t const& src)
-{
-	lua_newtable(L);
-
-	lua_pushstring(L, "gearPosition");
-	lua_pushnumber(L, src.gearPosition);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "flapRatio");
-	lua_pushnumber(L, src.flapRatio);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "spoilerRatio");
-	lua_pushnumber(L, src.spoilerRatio);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "speedBrakeRatio");
-	lua_pushnumber(L, src.speedBrakeRatio);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "slatRatio");
-	lua_pushnumber(L, src.slatRatio);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "wingSweep");
-	lua_pushnumber(L, src.wingSweep);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "thrust");
-	lua_pushnumber(L, src.thrust);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "yokePitch");
-	lua_pushnumber(L, src.yokePitch);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "yokeHeading");
-	lua_pushnumber(L, src.yokeHeading);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "yokeRoll");
-	lua_pushnumber(L, src.yokeRoll);
-	lua_settable(L, -3);
-}
-
-int MakeXPLMPlaneDrawState_t(lua_State* L)
-{
-	XPLMPlaneDrawState_t out = {};
-	out.structSize = sizeof(XPLMPlaneDrawState_t);
-	XPLMPlaneDrawState_t_to_table(L, out);
-	return 1;
-}
-/*
- * END Creation and transfer between C struct and Lua table
- *
- */
 
 int XLuaCountAircraft(lua_State* L)
 {

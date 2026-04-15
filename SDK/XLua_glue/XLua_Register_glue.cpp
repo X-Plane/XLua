@@ -42,10 +42,7 @@ extern "C"
 	int XLuaClearFMSFlightPlanEntry(lua_State* L);
 	int XLuaClearStencilMask(lua_State* L);
 	int XLuaCommandBegin(lua_State* L);
-	int XLuaCommandButtonPress(lua_State* L);
-	int XLuaCommandButtonRelease(lua_State* L);
 	int XLuaCommandEnd(lua_State* L);
-	int XLuaCommandKeyStroke(lua_State* L);
 	int XLuaCommandOnce(lua_State* L);
 	int XLuaControlCamera(lua_State* L);
 	int XLuaCountAircraft(lua_State* L);
@@ -166,7 +163,6 @@ extern "C"
 	int XLuaHasAvionicsKeyboardFocus(lua_State* L);
 	int XLuaHasFeature(lua_State* L);
 	int XLuaInitFlight(lua_State* L);
-	int XLuaInitialized(lua_State* L);
 	int XLuaInstanceSetAutoShift(lua_State* L);
 	int XLuaInstanceSetPosition(lua_State* L);
 	int XLuaInstanceSetPositionDouble(lua_State* L);
@@ -208,7 +204,6 @@ extern "C"
 	int XLuaMeasureString(lua_State* L);
 	int XLuaPlaceUserAtAirport(lua_State* L);
 	int XLuaPlaceUserAtLocation(lua_State* L);
-	int MakeXPLMPlaneDrawState_t(lua_State* L);
 	int XLuaPolygon(lua_State* L);
 	int XLuaPolygonWithWidth(lua_State* L);
 	int XLuaPolygonc(lua_State* L);
@@ -266,7 +261,6 @@ extern "C"
 	int XLuaSetUsersAircraft(lua_State* L);
 	int XLuaSetWeatherAtAirport(lua_State* L);
 	int XLuaSetWeatherAtLocation(lua_State* L);
-	int XLuaSimulateKeyPress(lua_State* L);
 	int XLuaSpeakString(lua_State* L);
 	int XLuaTakeAvionicsKeyboardFocus(lua_State* L);
 	int XLuaTextureAtlasAddImage(lua_State* L);
@@ -358,10 +352,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMClearFMSFlightPlanEntry", XLuaClearFMSFlightPlanEntry);
 	lua_register(L, "XPLMClearStencilMask", XLuaClearStencilMask);
 	lua_register(L, "XPLMCommandBegin", XLuaCommandBegin);
-	lua_register(L, "XPLMCommandButtonPress", XLuaCommandButtonPress);
-	lua_register(L, "XPLMCommandButtonRelease", XLuaCommandButtonRelease);
 	lua_register(L, "XPLMCommandEnd", XLuaCommandEnd);
-	lua_register(L, "XPLMCommandKeyStroke", XLuaCommandKeyStroke);
 	lua_register(L, "XPLMCommandOnce", XLuaCommandOnce);
 	lua_register(L, "XPLMControlCamera", XLuaControlCamera);
 	lua_register(L, "XPLMCountAircraft", XLuaCountAircraft);
@@ -482,7 +473,6 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMHasAvionicsKeyboardFocus", XLuaHasAvionicsKeyboardFocus);
 	lua_register(L, "XPLMHasFeature", XLuaHasFeature);
 	lua_register(L, "XPLMInitFlight", XLuaInitFlight);
-	lua_register(L, "XPLMInitialized", XLuaInitialized);
 	lua_register(L, "XPLMInstanceSetAutoShift", XLuaInstanceSetAutoShift);
 	lua_register(L, "XPLMInstanceSetPosition", XLuaInstanceSetPosition);
 	lua_register(L, "XPLMInstanceSetPositionDouble", XLuaInstanceSetPositionDouble);
@@ -524,7 +514,6 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMMeasureString", XLuaMeasureString);
 	lua_register(L, "XPLMPlaceUserAtAirport", XLuaPlaceUserAtAirport);
 	lua_register(L, "XPLMPlaceUserAtLocation", XLuaPlaceUserAtLocation);
-	lua_register(L, "XPLMPlaneDrawState_t", MakeXPLMPlaneDrawState_t);
 	lua_register(L, "XPLMPolygon", XLuaPolygon);
 	lua_register(L, "XPLMPolygonWithWidth", XLuaPolygonWithWidth);
 	lua_register(L, "XPLMPolygonc", XLuaPolygonc);
@@ -582,7 +571,6 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMSetUsersAircraft", XLuaSetUsersAircraft);
 	lua_register(L, "XPLMSetWeatherAtAirport", XLuaSetWeatherAtAirport);
 	lua_register(L, "XPLMSetWeatherAtLocation", XLuaSetWeatherAtLocation);
-	lua_register(L, "XPLMSimulateKeyPress", XLuaSimulateKeyPress);
 	lua_register(L, "XPLMSpeakString", XLuaSpeakString);
 	lua_register(L, "XPLMTakeAvionicsKeyboardFocus", XLuaTakeAvionicsKeyboardFocus);
 	lua_register(L, "XPLMTextureAtlasAddImage", XLuaTextureAtlasAddImage);
