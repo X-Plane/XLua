@@ -46,7 +46,7 @@ jobs:
           p12-password: ${{ secrets.APPLE_DEV_CERTIFICATE_PASSWORD }}
 
       - name: Configure
-        run: cmake -B build
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build
@@ -86,7 +86,7 @@ jobs:
           submodules: true
 
       - name: Configure
-        run: cmake -B build
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build
