@@ -97,3 +97,42 @@ jobs:
           name: xlua_lin
           path: build/lin_x64/lin.xpl
           if-no-files-found: error
+
+  package:
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-mac, build-linux]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: xlua_win
+          path: xlua/win_x64
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: xlua_mac
+          path: xlua/mac_x64
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: xlua_lin
+          path: xlua/lin_x64
+
+      - name: Rename platform binaries to xlua.xpl
+        run: |
+          mv xlua/mac_x64/mac.xpl xlua/mac_x64/xlua.xpl
+          mv xlua/lin_x64/lin.xpl xlua/lin_x64/xlua.xpl
+
+      - name: Copy init.lua
+        run: cp deploy/init.lua xlua/init.lua
+
+      - name: Create zip
+        run: zip -r xlua.zip xlua/
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: xlua
+          path: xlua.zip
+          if-no-files-found: error
