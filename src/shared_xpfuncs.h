@@ -6,9 +6,12 @@ extern "C" {
 	#include <lauxlib.h>
 }
 
+#include <cstring>
 #include <string>
 #include <algorithm>
 #include <map>
+#include <memory>
+#include <optional>
 
 // This is kind of a mess - Lua [annoyingly] doesn't give you a way to store a closure/Lua interpreter function
 // in C space.  The hack is to use luaL_ref to fill a new key in the registry table with a copy of ANY value from
