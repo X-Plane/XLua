@@ -10,7 +10,7 @@ jobs:
     runs-on: windows-2022
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: true
 
@@ -21,7 +21,7 @@ jobs:
       run: cmake --build build --config Release
 
     - name: Archive production artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: xlua_win
         path: build/win_x64/xlua.xpl
@@ -36,7 +36,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: yes
       - name: Setup Credentials
@@ -69,7 +69,7 @@ jobs:
               --timeout 10m
 
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: xlua_mac
           path: build/mac_x64/mac.xpl
@@ -81,7 +81,7 @@ jobs:
         image: ghcr.io/x-plane/xlua_builder:latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -92,7 +92,7 @@ jobs:
         run: cmake --build build
 
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: xlua_lin
           path: build/lin_x64/lin.xpl
