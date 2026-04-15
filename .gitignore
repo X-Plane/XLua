@@ -1,7 +1,8 @@
-xlua.xcodeproj/*
-!xlua.xcodeproj/project.pbxproj
-!xlua.xcodeproj/xcshareddata/
-/Debug/**
-/Release/**
+/.idea/*
 /.vs/*
-/xlua.vcxproj.user
+
+/build/**
+/cmake_build_debug/**
+/cmake_build_minsizerel/**
+/cmake_build_release/**
+/cmake_build_relwithdebinfo/**
