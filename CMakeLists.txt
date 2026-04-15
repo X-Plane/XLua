@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.19)
 
 project(xlua
     VERSION 2.0
@@ -9,7 +9,7 @@ project(xlua
 # ─────────────────────────────────────────────────────────────────────────────
 # Global C++ standard (matches -std=c++11 / CLANG_CXX_LANGUAGE_STANDARD=c++0x)
 # ─────────────────────────────────────────────────────────────────────────────
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
