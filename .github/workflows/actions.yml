@@ -82,8 +82,6 @@ jobs:
 
   build-linux:
     runs-on: ubuntu-latest
-    container:
-        image: ghcr.io/x-plane/xlua_builder:latest
 
     steps:
       - uses: actions/checkout@v5
@@ -136,6 +134,7 @@ jobs:
           mv xlua/mac_x64/mac.xpl xlua/mac_x64/xlua.xpl
           mv xlua/lin_x64/lin.xpl xlua/lin_x64/xlua.xpl
           cp deploy/init.lua xlua/init.lua
+          cp -r deploy/include xlua/include
 
       - name: Create zip
         run: zip -r xlua.zip xlua/

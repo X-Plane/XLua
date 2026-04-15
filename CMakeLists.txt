@@ -88,6 +88,7 @@ target_include_directories(xlua PRIVATE
     "${CMAKE_SOURCE_DIR}/imgui"
     "${CMAKE_SOURCE_DIR}/src"
     "${CMAKE_SOURCE_DIR}/src/FloatingWindows"
+    "${CMAKE_SOURCE_DIR}/src/FloatingWindows/GL"
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
