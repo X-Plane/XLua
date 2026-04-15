@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.19)
 
 project(xlua
     VERSION 2.0
@@ -9,7 +9,7 @@ project(xlua
 # ─────────────────────────────────────────────────────────────────────────────
 # Global C++ standard (matches -std=c++11 / CLANG_CXX_LANGUAGE_STANDARD=c++0x)
 # ─────────────────────────────────────────────────────────────────────────────
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -18,29 +18,62 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # X-Plane loads .xpl files via dlopen/LoadLibrary, so MODULE is the right type.
 # ─────────────────────────────────────────────────────────────────────────────
 add_library(xlua MODULE
-	src/xlua.cpp
-	src/module.cpp
-	src/lua_helpers.cpp
+    src/xlua.cpp
+    src/module.cpp
+    src/lua_helpers.cpp
 	src/shared_lua_helpers.cpp
-	src/xpcommands.cpp
-	src/xpdatarefs.cpp
+    src/xpcommands.cpp
+    src/xpdatarefs.cpp
+    src/xpfuncs.cpp
 	src/shared_xpfuncs.cpp
-	src/xpfuncs.cpp
-	src/xptimers.cpp
+    src/xptimers.cpp
 
-	src/FloatingWindows/FloatingWindow.cpp
-	src/FloatingWindows/FLWIntegration.cpp
-	src/FloatingWindows/ImGUIIntegration.cpp
+    src/FloatingWindows/FLWIntegration.cpp
+    src/FloatingWindows/FloatingWindow.cpp
+    src/FloatingWindows/ImGUIIntegration.cpp
 
-	imgui_lua_bindings/imgui_lua_bindings.cpp
-	imgui/imgui.cpp
+    imgui_lua_bindings/imgui_lua_bindings.cpp
+    imgui/imgui.cpp
 	imgui/imgui_demo.cpp
-	imgui/imgui_draw.cpp
-	imgui/imgui_tables.cpp
-	imgui/imgui_widgets.cpp
+    imgui/imgui_draw.cpp
+    imgui/imgui_tables.cpp
+    imgui/imgui_widgets.cpp
+
+	SDK/XLua_glue/XLua_Register_glue.cpp
+	SDK/XLua_glue/XPLMCamera_glue.cpp
+	SDK/XLua_glue/XPLMDataAccess_glue.cpp
+	SDK/XLua_glue/XPLMDefs_glue.cpp
+	SDK/XLua_glue/XPLMDisplay_glue.cpp
+	SDK/XLua_glue/XPLMGraphics_glue.cpp
+	SDK/XLua_glue/XPLMInstance_glue.cpp
+	SDK/XLua_glue/XPLMMap_glue.cpp
+	SDK/XLua_glue/XPLMMenus_glue.cpp
+	SDK/XLua_glue/XPLMNavigation_glue.cpp
+	SDK/XLua_glue/XPLMPlanes_glue.cpp
+	SDK/XLua_glue/XPLMPlugin_glue.cpp
+	SDK/XLua_glue/XPLMProcessing_glue.cpp
+	SDK/XLua_glue/XPLMPanelGraphics_glue.cpp
+	SDK/XLua_glue/XPLMScenery_glue.cpp
+	SDK/XLua_glue/XPLMSound_glue.cpp
+	SDK/XLua_glue/XPLMUtilities_glue.cpp
+	SDK/XLua_glue/XPLMWeather_glue.cpp
 )
 
-target_compile_definitions(xlua PRIVATE XPLM200=1 XPLM210=1 XPLM300=1 XPLM301=1 XPLM302=1 XPLM303=1 XPLM400=1 XPLM410=1 XPLM420=1 XPLM430=1 XPLM440=1)
+target_compile_definitions(xlua PRIVATE
+    XPLM200=1
+    XPLM210=1
+    XPLM300=1
+    XPLM301=1
+    XPLM302=1
+    XPLM303=1
+    XPLM400=1
+    XPLM410=1
+    XPLM420=1
+    XPLM430=1
+    XPLM440=1
+    XPLMPG1=1
+    -DLUA_BINDINGS_LOCAL_STATE
+)
 
 # Strip the default "lib" prefix and use .xpl on all platforms.
 set_target_properties(xlua PROPERTIES
@@ -53,6 +86,7 @@ target_include_directories(xlua PRIVATE
     "${CMAKE_SOURCE_DIR}/SDK/CHeaders/XPLM"
     "${CMAKE_SOURCE_DIR}/SDK/CHeaders/Widgets"
     "${CMAKE_SOURCE_DIR}/imgui"
+    "${CMAKE_SOURCE_DIR}/src"
     "${CMAKE_SOURCE_DIR}/src/FloatingWindows"
 )
 
@@ -60,6 +94,11 @@ target_include_directories(xlua PRIVATE
 # Windows (x64 only — 32-bit X-Plane is discontinued)
 # ─────────────────────────────────────────────────────────────────────────────
 if(WIN32)
+    target_include_directories(xlua PRIVATE
+        "${CMAKE_SOURCE_DIR}/fmod/win/studio/inc"
+        "${CMAKE_SOURCE_DIR}/fmod/win/core/inc"
+    )
+
     set_target_properties(xlua PROPERTIES
         OUTPUT_NAME "xlua"
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/win_x64"
@@ -97,6 +136,11 @@ if(WIN32)
 # macOS — universal binary (x86_64 + arm64), Mach-O bundle (mh_bundle)
 # ─────────────────────────────────────────────────────────────────────────────
 elseif(APPLE)
+    target_include_directories(xlua PRIVATE
+        "${CMAKE_SOURCE_DIR}/fmod/mac/studio/inc"
+        "${CMAKE_SOURCE_DIR}/fmod/mac/core/inc"
+    )
+
     set_target_properties(xlua PROPERTIES
         OUTPUT_NAME "mac"
         LIBRARY_OUTPUT_DIRECTORY            "${CMAKE_BINARY_DIR}/mac_x64"
@@ -147,6 +191,11 @@ elseif(APPLE)
 # Linux (x86_64 only)
 # ─────────────────────────────────────────────────────────────────────────────
 elseif(UNIX)
+    target_include_directories(xlua PRIVATE
+        "${CMAKE_SOURCE_DIR}/fmod/lin/studio/inc"
+        "${CMAKE_SOURCE_DIR}/fmod/lin/core/inc"
+    )
+
     set_target_properties(xlua PROPERTIES
         OUTPUT_NAME "lin"
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lin_x64"
@@ -160,8 +209,11 @@ elseif(UNIX)
         -fvisibility=hidden
     )
 
+    find_package(OpenGL REQUIRED)
+
     # LuaJIT static lib from lua_sdk/
     target_link_libraries(xlua PRIVATE
+        OpenGL::GL
         "${CMAKE_SOURCE_DIR}/lua_sdk/libluajit.a"
     )
 
