@@ -10,7 +10,7 @@ jobs:
     runs-on: windows-2022
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -36,11 +36,11 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: yes
       - name: Setup Credentials
-        uses: apple-actions/import-codesign-certs@v1
+        uses: apple-actions/import-codesign-certs@v3
         with:
           p12-file-base64: ${{ secrets.APPLE_DEV_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_DEV_CERTIFICATE_PASSWORD }}
@@ -81,7 +81,7 @@ jobs:
         image: ghcr.io/x-plane/xlua_builder:latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
