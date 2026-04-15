@@ -24,7 +24,9 @@ jobs:
       uses: actions/upload-artifact@v6
       with:
         name: xlua_win
-        path: build/win_x64/xlua.xpl
+        path: |
+          build/win_x64/xlua.xpl
+          build/win_x64/xlua.pdb
         if-no-files-found: error
 
   build-mac:
@@ -108,7 +110,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: xlua_win
-          path: xlua/win_x64
+          path: staging/win_x64
 
       - uses: actions/download-artifact@v8
         with:
@@ -120,13 +122,13 @@ jobs:
           name: xlua_lin
           path: xlua/lin_x64
 
-      - name: Rename platform binaries to xlua.xpl
+      - name: Assemble package tree
         run: |
+          mkdir -p xlua/win_x64
+          cp staging/win_x64/xlua.xpl xlua/win_x64/xlua.xpl
           mv xlua/mac_x64/mac.xpl xlua/mac_x64/xlua.xpl
           mv xlua/lin_x64/lin.xpl xlua/lin_x64/xlua.xpl
-
-      - name: Copy init.lua
-        run: cp deploy/init.lua xlua/init.lua
+          cp deploy/init.lua xlua/init.lua
 
       - name: Create zip
         run: zip -r xlua.zip xlua/
