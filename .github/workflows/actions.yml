@@ -10,75 +10,131 @@ jobs:
     runs-on: windows-2022
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v5
       with:
         submodules: true
 
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Configure
+      run: cmake -B build -A x64
 
     - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      # Add additional options to the MSBuild command line here (like platform or verbosity level).
-      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: |
-        msbuild xlua.vcxproj /p:Platform=x64 /p:Configuration=Release /m
-        mkdir jenkins\build_products
-        move Release\plugins\win_x64/xlua.pdb jenkins\build_products\xlua_win.pdb
-        move Release\plugins\win_x64/xlua.xpl jenkins\build_products\xlua_win.xpl
-      
+      run: cmake --build build --config Release
+
     - name: Archive production artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v6
       with:
         name: xlua_win
         path: |
-          jenkins\build_products
+          build/win_x64/xlua.xpl
+          build/win_x64/xlua.pdb
         if-no-files-found: error
-          
+
   build-mac:
-    runs-on: macos-11
+    runs-on: macos-15
     env:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           submodules: yes
       - name: Setup Credentials
-        uses: apple-actions/import-codesign-certs@v1
-        with: 
+        uses: apple-actions/import-codesign-certs@v6
+        with:
           p12-file-base64: ${{ secrets.APPLE_DEV_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_DEV_CERTIFICATE_PASSWORD }}
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
       - name: Build
+        run: cmake --build build
+
+      - name: Sign
         run: |
-          ./jenkins_driver.sh
+          codesign --sign "Developer ID Application: Laminar Research (LPH4NFE92D)" \
+                   --timestamp \
+                   --options runtime \
+                   build/mac_x64/mac.xpl
+
+      - name: Notarize
+        run: |
+          zip -r xlua_mac.zip build/mac_x64/mac.xpl
+          xcrun notarytool submit xlua_mac.zip \
+              --apple-id "${APPLE_ID}" \
+              --team-id "${APPLE_TEAM_ID}" \
+              --password "${APP_SPECIFIC_PASSWORD}" \
+              --wait \
+              --timeout 10m
+
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: xlua_mac
-          path: |
-            jenkins/build_products/xlua_mac.xpl
+          path: build/mac_x64/mac.xpl
           if-no-files-found: error
-          
+
   build-linux:
     runs-on: ubuntu-latest
     container:
         image: ghcr.io/x-plane/xlua_builder:latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
       - name: Build
-        run: |
-          ./jenkins_driver.sh
+        run: cmake --build build
+
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: xlua_lin
-          path: |
-            jenkins/build_products/xlua_lin.xpl
+          path: build/lin_x64/lin.xpl
+          if-no-files-found: error
+
+  package:
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-mac, build-linux]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: xlua_win
+          path: staging/win_x64
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: xlua_mac
+          path: xlua/mac_x64
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: xlua_lin
+          path: xlua/lin_x64
+
+      - name: Assemble package tree
+        run: |
+          mkdir -p xlua/win_x64
+          cp staging/win_x64/xlua.xpl xlua/win_x64/xlua.xpl
+          mv xlua/mac_x64/mac.xpl xlua/mac_x64/xlua.xpl
+          mv xlua/lin_x64/lin.xpl xlua/lin_x64/xlua.xpl
+          cp deploy/init.lua xlua/init.lua
+
+      - name: Create zip
+        run: zip -r xlua.zip xlua/
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: xlua
+          path: xlua.zip
           if-no-files-found: error
