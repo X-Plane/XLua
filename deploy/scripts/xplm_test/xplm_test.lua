@@ -960,8 +960,6 @@ function XPluginDisable()
 		g_AcfObjectPath = nil
 		instanceRefs = {}
 	end
-
-	return true
 end
 
 function XPluginReceiveMessage(inFromWho, inMessage, param)
