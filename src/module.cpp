@@ -25,12 +25,14 @@
 	extern "C"
 	{
 		#include "../luajit/src/luajit.h"
+		#include "../luajit/src/lualib.h"
 	}
 #else
 	#include "FLWIntegration.h"
 	extern "C"
 	{
 		#include "../luajit/src/luajit.h"
+		#include "../luajit/src/lualib.h"
 	}
 
 	void add_xplm_to_interp(lua_State* L);
