@@ -135,6 +135,8 @@ jobs:
           mv xlua/lin_x64/lin.xpl xlua/lin_x64/xlua.xpl
           cp deploy/init.lua xlua/init.lua
           cp -r deploy/include xlua/include
+          cp -r deploy/example_scripts xlua/example_scripts
+          cp -r deploy/scripts xlua/scripts
 
       - name: Create zip
         run: zip -r xlua.zip xlua/
