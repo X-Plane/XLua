@@ -926,7 +926,7 @@ function XPluginStop()
 
 	if g_pre_fl_handle ~= nil then
 		XPLMDestroyFlightLoop(g_pre_fl_handle)
-		g_post_fl_handle = nil
+		g_pre_fl_handle = nil
 	end
 
 	if g_post_fl_handle ~= nil then
