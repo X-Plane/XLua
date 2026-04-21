@@ -137,6 +137,7 @@ jobs:
           cp -r deploy/include xlua/include
           cp -r deploy/example_scripts xlua/example_scripts
           cp -r deploy/scripts xlua/scripts
+          cp -r deploy/docs xlua/docs
 
       - name: Create zip
         run: zip -r xlua.zip xlua/
