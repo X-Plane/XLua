@@ -30,6 +30,7 @@ extern "C"
 	int XLuaAppendMenuItemWithCommand(lua_State* L);
 	int XLuaAppendMenuSeparator(lua_State* L);
 	int XLuaAvionicsNeedsDrawing(lua_State* L);
+	int XLuaAvionicsSetTouchEventHandler(lua_State* L);
 	int XLuaBeginRetainedDrawing(lua_State* L);
 	int XLuaBeginSetupStencilMask(lua_State* L);
 	int XLuaBeginWeatherUpdate(lua_State* L);
@@ -257,7 +258,6 @@ extern "C"
 	int XLuaSetFMSFlightPlanEntryLatLonWithId(lua_State* L);
 	int XLuaSetHotKeyCombination(lua_State* L);
 	int XLuaSetMenuItemName(lua_State* L);
-	int XLuaSetTouchEventHandler(lua_State* L);
 	int XLuaSetUsersAircraft(lua_State* L);
 	int XLuaSetWeatherAtAirport(lua_State* L);
 	int XLuaSetWeatherAtLocation(lua_State* L);
@@ -294,6 +294,7 @@ extern "C"
 	int MakeXPLMWeatherInfoClouds_t(lua_State* L);
 	int MakeXPLMWeatherInfoWinds_t(lua_State* L);
 	int MakeXPLMWeatherInfo_t(lua_State* L);
+	int XLuaWindowSetTouchEventHandler(lua_State* L);
 	int XLuaWorldToLocal(lua_State* L);
 
 	// Typedefs
@@ -340,6 +341,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMAppendMenuItemWithCommand", XLuaAppendMenuItemWithCommand);
 	lua_register(L, "XPLMAppendMenuSeparator", XLuaAppendMenuSeparator);
 	lua_register(L, "XPLMAvionicsNeedsDrawing", XLuaAvionicsNeedsDrawing);
+	lua_register(L, "XPLMAvionicsSetTouchEventHandler", XLuaAvionicsSetTouchEventHandler);
 	lua_register(L, "XPLMBeginRetainedDrawing", XLuaBeginRetainedDrawing);
 	lua_register(L, "XPLMBeginSetupStencilMask", XLuaBeginSetupStencilMask);
 	lua_register(L, "XPLMBeginWeatherUpdate", XLuaBeginWeatherUpdate);
@@ -567,7 +569,6 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMSetFMSFlightPlanEntryLatLonWithId", XLuaSetFMSFlightPlanEntryLatLonWithId);
 	lua_register(L, "XPLMSetHotKeyCombination", XLuaSetHotKeyCombination);
 	lua_register(L, "XPLMSetMenuItemName", XLuaSetMenuItemName);
-	lua_register(L, "XPLMSetTouchEventHandler", XLuaSetTouchEventHandler);
 	lua_register(L, "XPLMSetUsersAircraft", XLuaSetUsersAircraft);
 	lua_register(L, "XPLMSetWeatherAtAirport", XLuaSetWeatherAtAirport);
 	lua_register(L, "XPLMSetWeatherAtLocation", XLuaSetWeatherAtLocation);
@@ -604,6 +605,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMWeatherInfoClouds_t", MakeXPLMWeatherInfoClouds_t);
 	lua_register(L, "XPLMWeatherInfoWinds_t", MakeXPLMWeatherInfoWinds_t);
 	lua_register(L, "XPLMWeatherInfo_t", MakeXPLMWeatherInfo_t);
+	lua_register(L, "XPLMWindowSetTouchEventHandler", XLuaWindowSetTouchEventHandler);
 	lua_register(L, "XPLMWorldToLocal", XLuaWorldToLocal);
 
 	// Userdata types
@@ -625,7 +627,7 @@ void add_xplm_to_interp(lua_State* L)
 	RegType_XPLMTextureAtlasRef(L);
 
 	// Event types
-	xlua_register_event(XPLM_MSG_DATAREFS_ADDED, "*i");
+	xlua_register_event(XPLM_MSG_DATAREFS_ADDED, "*u");
 	xlua_register_event(XPLM_MSG_FMOD_BANK_LOADED, "extdata<XPLMBankID>");
 	xlua_register_event(XPLM_MSG_FMOD_BANK_UNLOADING, "extdata<XPLMBankID>");
 	xlua_register_event(XPLM_MSG_LIVERY_LOADED, "i");

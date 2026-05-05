@@ -17,13 +17,6 @@
 #ifndef FLOATINGWINDOWS_IMGUIINTEGRATION_H_
 #define FLOATINGWINDOWS_IMGUIINTEGRATION_H_
 
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#include <GL/glext.h>
-#endif
-
 #include <memory>
 #include <string>
 #include "FloatingWindow.h"
@@ -48,7 +41,7 @@ protected:
     XPLMCursorStatus getCursor(int x, int y) override;
     void onKey(char key, XPLMKeyFlags flags, char virtualKey, bool losingFocus) override;
 private:
-    GLuint fontTextureId{};
+    void* fontTexture{};
     ImGuiContext *imGuiContext{};
     int mLeft{}, mTop{}, mRight{}, mBottom{};
     ErrorHandler onError;
