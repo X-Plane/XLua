@@ -926,7 +926,7 @@ function XPluginStop()
 
 	if g_pre_fl_handle ~= nil then
 		XPLMDestroyFlightLoop(g_pre_fl_handle)
-		g_post_fl_handle = nil
+		g_pre_fl_handle = nil
 	end
 
 	if g_post_fl_handle ~= nil then
@@ -960,8 +960,6 @@ function XPluginDisable()
 		g_AcfObjectPath = nil
 		instanceRefs = {}
 	end
-
-	return true
 end
 
 function XPluginReceiveMessage(inFromWho, inMessage, param)

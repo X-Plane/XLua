@@ -250,6 +250,7 @@ void CleanupScripts(void)
 	g_modules.clear();
 }
 
+#if !MOBILE
 int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
 {
 	// Don't allow this to be called if the aircraft isn't ready, just in case somebody puts the LUA
@@ -265,7 +266,7 @@ int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefco
 
 	return 0;
 }
-#if !MOBILE
+
 void ShowProfiler(void)
 {
 	using namespace flwnd;
@@ -710,8 +711,10 @@ PLUGIN_API void XPluginReceiveMessage(
 			case XPLM_MSG_AIRPORT_LOADED:
 				if (g_bReloadOnFlightChange && g_is_acf_inited)
 				{
+#if !MOBILE
 					// This triggers a full reload of the plugin. No point in doing any other setup.
 					ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)1);
+#endif
 				}
 				else
 				{
