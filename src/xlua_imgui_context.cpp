@@ -289,12 +289,27 @@ void XplmImguiContext::OnKey(char key, XPLMKeyFlags flags, char vkey, int losing
     io.AddKeyEvent(ImGuiMod_Ctrl,  (flags & xplm_ControlFlag) != 0);
     io.AddKeyEvent(ImGuiMod_Alt,   (flags & xplm_OptionAltFlag) != 0);
 
+    // XPLM dispatches three flavours of key callback:
+    //   Down   = initial press        (xplm_DownFlag)
+    //   Up     = release              (xplm_UpFlag)
+    //   Repeat = OS auto-repeat       (neither flag set; gfx_window_cocoa.mm:452
+    //            deliberately strips xplm_DownFlag for isARepeat events)
+    const bool is_down   = (flags & xplm_DownFlag) != 0;
+    const bool is_up     = (flags & xplm_UpFlag)   != 0;
+    const bool is_repeat = !is_down && !is_up;
+
     const ImGuiKey ik = XPLM_VK_to_ImGuiKey(static_cast<unsigned char>(vkey));
     if (ik != ImGuiKey_None) {
-        io.AddKeyEvent(ik, (flags & xplm_DownFlag) != 0);
+        if (is_down)        io.AddKeyEvent(ik, true);
+        else if (is_up)     io.AddKeyEvent(ik, false);
+        // Repeat: leave the key state alone. The initial Down already told
+        // ImGui the key is held; its own KeyRepeatDelay/Rate timers drive
+        // non-text repeat (Backspace, arrows, Delete in InputText).
     }
+    // Forward typed characters on Down AND Repeat so InputText sees the
+    // OS-auto-repeated 'aaaaa…' stream when a printable key is held.
     const unsigned char ukey = static_cast<unsigned char>(key);
-    if ((flags & xplm_DownFlag) != 0 && ukey >= 0x20 && ukey < 0x7f) {
+    if ((is_down || is_repeat) && ukey >= 0x20 && ukey < 0x7f) {
         io.AddInputCharacter(static_cast<unsigned int>(ukey));
     }
 }

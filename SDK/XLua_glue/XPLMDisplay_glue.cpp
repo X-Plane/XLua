@@ -138,7 +138,7 @@ static int cb_XPLMAvionicsKeyboard_f(char inKey, XPLMKeyFlags inFlags, char inVi
 	if (L)
 	{
 
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "sisrb", inKey, inFlags, inVirtualKey, inRefcon_cb->get_capture(), static_cast<bool>(losingFocus)))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiirb", inKey, inFlags, inVirtualKey, inRefcon_cb->get_capture(), static_cast<bool>(losingFocus)))
 		{
 			res = xlua_checkboolean(L, -1) ? 1 : 0;
 			lua_pop(L, 1);
@@ -1366,7 +1366,7 @@ static void cb_XPLMHandleKey_f(XPLMWindowID inWindowID, char inKey, XPLMKeyFlags
 	if (L)
 	{
 
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "usisrb", inWindowID, inKey, inFlags, inVirtualKey, inRefcon_cb->get_capture(), static_cast<bool>(losingFocus)))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "uiiirb", inWindowID, inKey, inFlags, inVirtualKey, inRefcon_cb->get_capture(), static_cast<bool>(losingFocus)))
 		{
 		}
 	}

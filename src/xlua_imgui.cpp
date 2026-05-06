@@ -22,6 +22,12 @@
 #include <XPLMDefs.h>
 #include <XPLMDisplay.h>
 
+#include <imgui.h>
+
+#include <algorithm>
+#include <cstring>
+#include <vector>
+
 extern "C" {
     #include <lauxlib.h>
 }
@@ -152,12 +158,112 @@ int impl_HandleKey(lua_State* L) {
     const int flags = static_cast<int>(luaL_checkinteger(L, 3));
     const int vkey  = static_cast<int>(luaL_checkinteger(L, 4));
     // 5 = refcon (unused).
-    const int losing_focus = static_cast<int>(luaL_optinteger(L, 6, 0));
+    // The auto-glue's format string for XPLMHandleKey_f pushes losingFocus as
+    // a Lua boolean (format 'b' → lua_pushboolean), so use lua_toboolean here
+    // — luaL_optinteger errors on a boolean.
+    const int losing_focus = lua_toboolean(L, 6);
     st->OnKey(static_cast<char>(key),
               static_cast<XPLMKeyFlags>(flags),
               static_cast<char>(vkey),
               losing_focus);
     return 0;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// imgui.InputText / InputTextWithHint / InputTextMultiline — bound by hand
+// because the upstream iterator's argument macros don't have a shape for
+// `(char* buf, size_t buf_size)`. The Lua-side contract matches every other
+// Input* widget: returns (changed, new_text). The buffer is short-lived per
+// call — ImGui keeps editing state (cursor, selection, undo) in
+// ImGuiInputTextState keyed by widget ID, independent of the buffer pointer.
+// Lua holds the canonical string between frames.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Allocate a buffer of at least `requested` bytes that comfortably holds `cur`,
+// seeded with `cur` and NUL-terminated. Returns the buffer.
+std::vector<char> MakeInputBuf(const char* cur, size_t cur_len, int requested) {
+    if (requested < 1) requested = 1;
+    if (static_cast<size_t>(requested) <= cur_len) {
+        requested = static_cast<int>(cur_len + 1);
+    }
+    std::vector<char> buf(static_cast<size_t>(requested));
+    const size_t copy_len = std::min(cur_len, buf.size() - 1);
+    std::memcpy(buf.data(), cur, copy_len);
+    buf[copy_len] = '\0';
+    return buf;
+}
+
+// On the no-context path we still return (false, current_text) so a caller
+// pattern of `local _, t = imgui.InputText(...)` always assigns back cleanly.
+int InputTextNoContextReturn(lua_State* L, int text_arg_idx) {
+    lua_pushboolean(L, 0);
+    lua_pushvalue(L, text_arg_idx);
+    return 2;
+}
+
+// imgui.InputText(label, current_text, [max_len=256], [flags=0])
+int impl_InputText(lua_State* L) {
+    const char* label = luaL_checkstring(L, 1);
+    size_t cur_len = 0;
+    const char* cur = luaL_checklstring(L, 2, &cur_len);
+    const int max_len = static_cast<int>(luaL_optinteger(L, 3, 256));
+    const int flags   = static_cast<int>(luaL_optinteger(L, 4, 0));
+
+    auto* st = GetExistingImguiState(L);
+    if (st == nullptr) return InputTextNoContextReturn(L, 2);
+    ImGui::SetCurrentContext(st->raw_context());
+
+    auto buf = MakeInputBuf(cur, cur_len, max_len);
+    const bool changed = ImGui::InputText(label, buf.data(), buf.size(),
+                                          static_cast<ImGuiInputTextFlags>(flags));
+    lua_pushboolean(L, changed);
+    lua_pushstring(L, buf.data());
+    return 2;
+}
+
+// imgui.InputTextWithHint(label, hint, current_text, [max_len=256], [flags=0])
+int impl_InputTextWithHint(lua_State* L) {
+    const char* label = luaL_checkstring(L, 1);
+    const char* hint  = luaL_checkstring(L, 2);
+    size_t cur_len = 0;
+    const char* cur = luaL_checklstring(L, 3, &cur_len);
+    const int max_len = static_cast<int>(luaL_optinteger(L, 4, 256));
+    const int flags   = static_cast<int>(luaL_optinteger(L, 5, 0));
+
+    auto* st = GetExistingImguiState(L);
+    if (st == nullptr) return InputTextNoContextReturn(L, 3);
+    ImGui::SetCurrentContext(st->raw_context());
+
+    auto buf = MakeInputBuf(cur, cur_len, max_len);
+    const bool changed = ImGui::InputTextWithHint(label, hint, buf.data(), buf.size(),
+                                                  static_cast<ImGuiInputTextFlags>(flags));
+    lua_pushboolean(L, changed);
+    lua_pushstring(L, buf.data());
+    return 2;
+}
+
+// imgui.InputTextMultiline(label, current_text, [max_len=4096], [width=0], [height=0], [flags=0])
+// (default max_len is larger than InputText since multiline content is usually longer.)
+int impl_InputTextMultiline(lua_State* L) {
+    const char* label = luaL_checkstring(L, 1);
+    size_t cur_len = 0;
+    const char* cur = luaL_checklstring(L, 2, &cur_len);
+    const int   max_len = static_cast<int>(luaL_optinteger(L, 3, 4096));
+    const float width   = static_cast<float>(luaL_optnumber(L, 4, 0.0));
+    const float height  = static_cast<float>(luaL_optnumber(L, 5, 0.0));
+    const int   flags   = static_cast<int>(luaL_optinteger(L, 6, 0));
+
+    auto* st = GetExistingImguiState(L);
+    if (st == nullptr) return InputTextNoContextReturn(L, 2);
+    ImGui::SetCurrentContext(st->raw_context());
+
+    auto buf = MakeInputBuf(cur, cur_len, max_len);
+    const bool changed = ImGui::InputTextMultiline(label, buf.data(), buf.size(),
+                                                   ImVec2(width, height),
+                                                   static_cast<ImGuiInputTextFlags>(flags));
+    lua_pushboolean(L, changed);
+    lua_pushstring(L, buf.data());
+    return 2;
 }
 
 } // namespace
@@ -183,6 +289,10 @@ void LoadXLuaImguiBindings(lua_State* L) {
         {"HandleCursor",          impl_HandleCursor},
         {"HandleMouseWheel",      impl_HandleMouseWheel},
         {"HandleKey",             impl_HandleKey},
+        // Hand-rolled because the vendored iterator can't bind buf+size APIs.
+        {"InputText",             impl_InputText},
+        {"InputTextWithHint",     impl_InputTextWithHint},
+        {"InputTextMultiline",    impl_InputTextMultiline},
         {nullptr, nullptr},
     };
     luaL_setfuncs(L, kXplmEntries, 0);
