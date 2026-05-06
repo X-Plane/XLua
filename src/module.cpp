@@ -40,6 +40,7 @@
 
 	class	xmap_class {
 	public:
+		xmap_class(std::filesystem::path const& in_file_name);
 		xmap_class(const string& in_file_name);
 		~xmap_class()				{ if (m_buffer != nullptr) free(m_buffer); }
 		bool exists() const			{ return m_buffer != nullptr; }
@@ -244,11 +245,11 @@ bool module::get_jit_mode(void)
 }
 
 module::module(
-							const char *		in_module_path,
-							const char *		in_init_script,
-							const char *		in_module_script,
-							void *				(* in_alloc_func)(void *msp, void *ptr, size_t osize, size_t nsize),
-							void *				in_alloc_ref) :
+	std::filesystem::path const& in_module_path,
+	std::filesystem::path const& in_init_script,
+	std::filesystem::path const& in_module_script,
+	void* (*in_alloc_func)(void* msp, void* ptr, size_t osize, size_t nsize),
+	void* in_alloc_ref) :
 	m_interp(NULL),
 	m_memory(NULL),
 	m_path(in_module_path),
@@ -256,8 +257,7 @@ module::module(
 	m_enabled(true),
 	m_xlua_compat({ 1, 0, 0 })
 {
-	int boiler_plate_paths = length_of_dir(in_init_script);
-	m_log_path = in_module_script + boiler_plate_paths;
+	m_log_path = std::filesystem::relative(in_module_script, std::filesystem::path(in_init_script).remove_filename()).generic_string();
 
 	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
 	// we need to load the Lua script from an already allocated memory buffer.
@@ -319,7 +319,7 @@ module::module(
 	{
 		cur_path += ";";
 	}
-	lua_pushstring(m_interp, (cur_path + m_path + "../../include/?.lua").c_str());
+	lua_pushstring(m_interp, (cur_path / m_path / "../../include/?.lua").generic_string().c_str());
 	lua_setfield(m_interp, -2, "path");
 	lua_pop(m_interp, 1); // Remove the package table from the stack
 
@@ -357,7 +357,7 @@ module::module(
 	CTOR_FAIL(load_result, "set jit defaults")
 	int script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
 
-	load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), in_init_script + boiler_plate_paths);
+	load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), in_init_script.generic_string().c_str());
 	CTOR_FAIL(load_result, "load init script")
 
 	script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
@@ -389,10 +389,9 @@ module::module(
 
 int module::load_module_relative_path(const string& path)
 {
-	string rel_path(m_path);
-	string script_path = rel_path + path;
+	std::filesystem::path script_path(m_path / path);
 	
-	xmap_class	script_text(script_path);
+	xmap_class script_text(script_path);
 	
 	if(!script_text.exists())
 	{
@@ -687,6 +686,10 @@ std::wstring utf8_decode(const std::string &str)
 //-----
 
 #endif
+
+xmap_class::xmap_class(std::filesystem::path const& in_file_name) : xmap_class(in_file_name.generic_string())
+{
+}
 
 xmap_class::xmap_class(const string& in_file_name) :
 	m_buffer(NULL), m_size(0)

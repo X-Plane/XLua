@@ -41,7 +41,7 @@ std::string const kCommandCallbackSig("CmdCallback");
 
 static int l_my_print(lua_State* L);
 
-std::string get_current_script_path(lua_State* L)
+std::filesystem::path get_current_script_path(lua_State* L)
 {
 	return module::module_from_interp(L)->get_script_path();
 }
