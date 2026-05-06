@@ -7,3 +7,4 @@
 /cmake_build_minsizerel/**
 /cmake_build_release/**
 /cmake_build_relwithdebinfo/**
+/xlua.vcproj.filters

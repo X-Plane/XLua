@@ -8,6 +8,10 @@
 //	This source code is licensed under the MIT open source license.
 //	See LICENSE.txt for the full terms of the license.
 
+#include <cstdio>
+#include <cstdlib>
+#include <optional>
+#include <filesystem>
 
 #include "xpfuncs.h"
 #include "shared_xpfuncs.h"
@@ -749,6 +753,23 @@ static const struct luaL_Reg printlib[] = {
 	{ NULL, NULL } /* end of array */
 };
 
+static int dofile(lua_State* L)
+{
+	// A shim to restore XLua V1's behaviour where dofile() is always relative to the script, not the process CWD.
+	module* mod = ::module::module_from_interp(L);
+	if (mod != nullptr)
+	{
+		const char* file = luaL_checkstring(L, 1);
+
+		std::filesystem::path fullPath(mod->get_script_path());
+		fullPath = std::filesystem::absolute(fullPath / file);
+
+		luaL_dofile(L, fullPath.generic_string().c_str());
+	}
+
+	return 0;
+}
+
 void	add_xlua_funcs_to_interp(lua_State * L, int compat_version)
 {
 	#define FUNC(x) lua_register(L,#x,x);
@@ -759,6 +780,11 @@ void	add_xlua_funcs_to_interp(lua_State * L, int compat_version)
 	if (compat_version == 1)
 	{
 		XLUA1_FUNC_LIST;
+	}
+	else
+	{
+		// Reinstate script-relative dofile() operation, same as V1.
+		FUNC(dofile);
 	}
 
 	// For logging
