@@ -390,7 +390,7 @@ typedef int XPLMMouseStatus;
 #define XPLM_PLUGIN_XPLANE   (0)
 
 /*                 The current XPLM revision is 4.3.0 (430).                  */
-#define kXPLM_Version        (421)
+#define kXPLM_Version        (430)
 
 /*
  * XPLMFixedString150_t

@@ -28,7 +28,8 @@
 		#include "../luajit/src/lualib.h"
 	}
 #else
-	#include "FLWIntegration.h"
+	#include "xlua_imgui.h"
+
 	extern "C"
 	{
 		#include "../luajit/src/luajit.h"
@@ -306,6 +307,7 @@ module::module(
 	{
 		// XLua 2.x functions.
 		add_xplm_to_interp(m_interp);
+		LoadXLuaImguiBindings(m_interp);
 	}
 #endif
 
@@ -322,10 +324,6 @@ module::module(
 	lua_pop(m_interp, 1); // Remove the package table from the stack
 
 	log_message(m_interp, "Running %s\n", m_log_path.c_str());
-
-#if !MOBILE
-	flwnd::initFloatingWindowSupport(m_interp);
-#endif
 
 	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
 	// we need to load the Lua script from an already allocated memory buffer.
@@ -474,10 +472,6 @@ void		module::post_physics()
 	{
 		do_callout("after_physics");
 	}
-
-#if !MOBILE
-	flwnd::onFlightLoop(m_interp);
-#endif
 }
 
 void		module::post_replay()
@@ -583,9 +577,6 @@ void module::shutdown_lua(void)
 		_XPluginStop();
 
 		luaJIT_profile_stop(m_interp);
-#if !MOBILE
-		flwnd::deinitFloatingWindowSupport(m_interp);
-#endif
 		lua_close(m_interp);
 		m_interp = nullptr;
 	}

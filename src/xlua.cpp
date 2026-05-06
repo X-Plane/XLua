@@ -10,7 +10,8 @@
 #include "shared_xpfuncs.h"
 
 #if !MOBILE
-	#include "ImGUIIntegration.h"
+	#include "xlua_imgui_context.h"
+	#include "XPLMDisplay.h"
 #endif
 
 extern "C" {
@@ -23,6 +24,10 @@ extern "C" {
 #include <XPLMProcessing.h>
 #include <XPLMMenus.h>
 #include <XPLMPlanes.h>
+
+#if !MOBILE
+	#include <imgui.h>
+#endif
 
 #include <cassert>
 #include <vector>
@@ -72,7 +77,19 @@ enum eMenuItems : int
 bool g_bReloadOnFlightChange = false;
 
 #if !MOBILE
-std::shared_ptr<flwnd::ImGUIWindow> profilerWnd;
+struct window_deleter
+{
+	using pointer = XPLMWindowID;
+	void operator()(XPLMWindowID window)
+	{
+		XPLMDestroyWindow(window);
+	}
+};
+// Declaration order matters: profilerImguiCtx is destroyed AFTER profilerWnd
+// (reverse of declaration order), so any in-flight draw callback finishes
+// against a live ImGui context.
+std::unique_ptr<XplmImguiContext>             profilerImguiCtx;
+std::unique_ptr<XPLMWindowID, window_deleter> profilerWnd;
 #endif
 
 PLUGIN_API void XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void* inParam);
@@ -153,13 +170,12 @@ static float xlua_post_timer_master_cb(
 	}
 
 #if !MOBILE
-	if (profilerWnd)
+	// XPLM has no close-callback API; clicking the X just toggles visibility.
+	// Detect that here and tear the window + ImGui context down.
+	if (profilerWnd && !XPLMGetWindowIsVisible(profilerWnd.get()))
 	{
-		if (!profilerWnd->isVisible())
-		{
-			profilerWnd->reportClose();
-			profilerWnd.reset();
-		}
+		profilerWnd.reset();          // XPLMDestroyWindow — no further callbacks
+		profilerImguiCtx.reset();
 	}
 	if (!g_modules.empty())
 	{
@@ -267,216 +283,243 @@ int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefco
 	return 0;
 }
 
-void ShowProfiler(void)
+static void ProfilerBuildUI()
 {
-	using namespace flwnd;
+	static int module_selected_idx = 0, profiler_mode = 0, last_profiler_mode = 0;
+	static bool profiler_running = false, last_profiler_running = false, show_as_percent = true;
+	static module* last_selected_module = nullptr;
 
-	if (!profilerWnd)
+	module* selected_module = nullptr;
+	if (module_selected_idx >= 0 && module_selected_idx < g_modules.size())
 	{
-		profilerWnd = std::make_shared<ImGUIWindow>(800, 300, xplm_WindowDecorationRoundRectangle);
+		selected_module = g_modules.at(module_selected_idx);
 
-		profilerWnd->setTitle("XLua Profiler");
-		profilerWnd->setBuildCallback([](ImGUIWindow& wnd) -> void
-									  {
-										  static int module_selected_idx = 0, profiler_mode = 0, last_profiler_mode = 0;
-										  static bool profiler_running = false, last_profiler_running = false, show_as_percent = true;
-										  static module* last_selected_module = nullptr;
+		if (profiler_running != last_profiler_running)
+		{
+			if (selected_module != nullptr)
+			{
+				if (profiler_running)
+				{
+					selected_module->start_profile();
+				}
+				else
+				{
+					selected_module->stop_profile();
+				}
+			}
 
-										  module* selected_module = nullptr;
-										  if (module_selected_idx >= 0 && module_selected_idx < g_modules.size())
-										  {
-											  selected_module = g_modules.at(module_selected_idx);
-
-											  if (profiler_running != last_profiler_running)
-											  {
-												  if (selected_module != nullptr)
-												  {
-													  if (profiler_running)
-													  {
-														  selected_module->start_profile();
-													  }
-													  else
-													  {
-														  selected_module->stop_profile();
-													  }
-												  }
-
-												  last_profiler_running = profiler_running;
-											  }
-										  }
-
-										  if (selected_module != last_selected_module)
-										  {
-											  if (profiler_running)
-											  {
-												  if (last_selected_module != nullptr && std::find(g_modules.begin(), g_modules.end(), last_selected_module) != g_modules.end())
-												  {
-													  last_selected_module->stop_profile();
-												  }
-
-												  selected_module->start_profile();
-											  }
-
-											  last_selected_module = selected_module;
-										  }
-
-										  if (ImGui::BeginCombo("##modules", (selected_module == nullptr ? "" : selected_module->get_log_path().c_str()), 
-																ImGuiComboFlags_::ImGuiComboFlags_None))
-										  {
-											  for (size_t i=0; i < g_modules.size(); ++i)
-											  {
-												  if (ImGui::Selectable(g_modules[i]->get_log_path().c_str(), g_modules[i] == selected_module))
-												  {
-													  // Was selected?
-													  module_selected_idx = static_cast<int>(i);
-												  }
-											  }
-
-											  ImGui::EndCombo();
-										  }
-
-										  if (ImGui::BeginCombo("Mode", profiler_mode == 0 ? "Function" : "Line", ImGuiComboFlags_::ImGuiComboFlags_WidthFitPreview))
-										  {
-											  static const std::array<std::pair<char const*, int>, 2> kModes{ 
-												  std::pair<char const*, int>{ "Function", 0 }, 
-												  std::pair<char const*, int>{ "Line", 1 }
-											  };
-
-											  for (auto const& [t, i] : kModes)
-											  {
-												  if (ImGui::Selectable(t, profiler_mode == 0))
-												  {
-													  // Need to clear all results.
-													  for (auto& mod : g_modules)
-													  {
-														  mod->clear_profile();
-													  }
-
-													  profiler_mode = i;
-
-													  if (selected_module != nullptr)
-													  {
-														  selected_module->m_profile_line_level = (profiler_mode == 1);
-													  }
-												  }
-											  }
-
-											  ImGui::EndCombo();
-										  }
-
-										  ImGui::SameLine(0, 20);
-										  ImGui::Checkbox("Show as %", &show_as_percent);
-
-										  ImGui::Checkbox("Run Profiler", &profiler_running);
-
-										  ImGui::SameLine(0, 20);
-										  ImGui::BeginDisabled(selected_module == nullptr || selected_module->m_profile.empty());
-										  if (selected_module != nullptr && ImGui::Button("Dump to Log"))
-										  {
-											  selected_module->dump_profile();
-										  }
-										  ImGui::SameLine();
-										  if (selected_module != nullptr && ImGui::Button("Clear"))
-										  {
-											  selected_module->clear_profile();
-										  }
-										  ImGui::EndDisabled();
-
-										  if (ImGui::BeginTable("Results", 3, ImGuiTableFlags_::ImGuiTableFlags_Borders | ImGuiTableFlags_::ImGuiTableFlags_Resizable | ImGuiTableFlags_::ImGuiTableFlags_Sortable))
-										  {
-											  ImGui::TableSetupColumn("Call Site");
-											  ImGui::TableSetupColumn("Inclusive");
-											  ImGui::TableSetupColumn("Self");
-											  ImGui::TableHeadersRow();
-
-											  if (selected_module != nullptr)
-											  {
-												  typedef decltype(module::m_profile)::const_iterator prof_type;
-
-												  std::vector<prof_type> profile_iterators_vec;
-												  profile_iterators_vec.reserve(selected_module->m_profile.size());
-												  size_t total_self = 0;
-												  for (prof_type i = selected_module->m_profile.cbegin(); i != selected_module->m_profile.cend(); ++i)
-												  {
-													  profile_iterators_vec.emplace_back(i);
-													  total_self += i->second.self;
-												  }
-
-												  // Sort our data if sort specs have been changed!
-												  if (ImGuiTableSortSpecs* sort_specs = ImGui::TableGetSortSpecs())
-												  {
-													  // Sadly our data is potentially changing per-frame so the sort also needs to be per-frame.
-													  //if (sort_specs->SpecsDirty)
-													  //{
-														 // MyItem::SortWithSortSpecs(sort_specs, items.Data, items.Size);
-														 // sort_specs->SpecsDirty = false;
-													  //}
-
-													  std::sort(profile_iterators_vec.begin(), profile_iterators_vec.end(),
-																		[sort_specs](prof_type const& lhs, prof_type const& rhs) -> bool
-																		{
-																			for (int n = 0; n < sort_specs->SpecsCount; n++)
-																			{
-																				ImGuiTableColumnSortSpecs const* sort_spec = &sort_specs->Specs[n];
-
-																				int delta = 0;
-																				if (sort_spec->ColumnIndex == 0)
-																					delta = lhs->first.compare(rhs->first);
-																				else if (sort_spec->ColumnIndex == 1)
-																					delta = (lhs->second.cumulative - rhs->second.cumulative);
-																				else
-																					delta = (lhs->second.self - rhs->second.self);
-
-																				if (delta > 0)
-																					return (sort_spec->SortDirection == ImGuiSortDirection_Ascending);
-																				if (delta < 0)
-																					return (sort_spec->SortDirection != ImGuiSortDirection_Ascending);
-																			}
-
-																			return lhs->first.compare(rhs->first) < 0;
-																		});
-												  }
-
-												  for (auto const &it : profile_iterators_vec)
-												  {
-													  const auto& [site, count] = *it;
-													  ImGui::TableNextRow();
-
-													  ImGui::TableNextColumn();
-													  ImGui::Text("%s", site.c_str());
-
-													  if (show_as_percent)
-													  {
-														  ImGui::TableNextColumn();
-														  ImGui::Text("%0.3f%%", 100 * static_cast<float>(count.cumulative) / total_self);
-
-														  ImGui::TableNextColumn();
-														  ImGui::Text("%0.3f%%", 100 * static_cast<float>(count.self) / total_self);
-													  }
-													  else
-													  {
-														  ImGui::TableNextColumn();
-														  ImGui::Text("%zu", count.cumulative);
-
-														  ImGui::TableNextColumn();
-														  ImGui::Text("%zu", count.self);
-													  }
-												  }
-											  }
-
-											  ImGui::EndTable();
-										  }
-									  });
-
-		profilerWnd->setCloseCallback([](FloatingWindow& wnd) -> void
-									  {
-										  wnd.setVisible(false);
-									  });
+			last_profiler_running = profiler_running;
+		}
 	}
-	else
+
+	if (selected_module != last_selected_module)
 	{
-		profilerWnd->setVisible(true);
+		if (profiler_running)
+		{
+			if (last_selected_module != nullptr && std::find(g_modules.begin(), g_modules.end(), last_selected_module) != g_modules.end())
+			{
+				last_selected_module->stop_profile();
+			}
+
+			selected_module->start_profile();
+		}
+
+		last_selected_module = selected_module;
 	}
+
+	if (ImGui::BeginCombo("##modules", (selected_module == nullptr ? "" : selected_module->get_log_path().c_str()),
+						  ImGuiComboFlags_::ImGuiComboFlags_None))
+	{
+		for (size_t i=0; i < g_modules.size(); ++i)
+		{
+			if (ImGui::Selectable(g_modules[i]->get_log_path().c_str(), g_modules[i] == selected_module))
+			{
+				module_selected_idx = static_cast<int>(i);
+			}
+		}
+
+		ImGui::EndCombo();
+	}
+
+	if (ImGui::BeginCombo("Mode", profiler_mode == 0 ? "Function" : "Line", ImGuiComboFlags_::ImGuiComboFlags_WidthFitPreview))
+	{
+		static const std::array<std::pair<char const*, int>, 2> kModes{
+			std::pair<char const*, int>{ "Function", 0 },
+			std::pair<char const*, int>{ "Line", 1 }
+		};
+
+		for (auto const& [t, i] : kModes)
+		{
+			if (ImGui::Selectable(t, profiler_mode == 0))
+			{
+				// Need to clear all results.
+				for (auto& mod : g_modules)
+				{
+					mod->clear_profile();
+				}
+
+				profiler_mode = i;
+
+				if (selected_module != nullptr)
+				{
+					selected_module->m_profile_line_level = (profiler_mode == 1);
+				}
+			}
+		}
+
+		ImGui::EndCombo();
+	}
+
+	ImGui::SameLine(0, 20);
+	ImGui::Checkbox("Show as %", &show_as_percent);
+
+	ImGui::Checkbox("Run Profiler", &profiler_running);
+
+	ImGui::SameLine(0, 20);
+	ImGui::BeginDisabled(selected_module == nullptr || selected_module->m_profile.empty());
+	if (selected_module != nullptr && ImGui::Button("Dump to Log"))
+	{
+		selected_module->dump_profile();
+	}
+	ImGui::SameLine();
+	if (selected_module != nullptr && ImGui::Button("Clear"))
+	{
+		selected_module->clear_profile();
+	}
+	ImGui::EndDisabled();
+
+	if (ImGui::BeginTable("Results", 3, ImGuiTableFlags_::ImGuiTableFlags_Borders | ImGuiTableFlags_::ImGuiTableFlags_Resizable | ImGuiTableFlags_::ImGuiTableFlags_Sortable))
+	{
+		ImGui::TableSetupColumn("Call Site");
+		ImGui::TableSetupColumn("Inclusive");
+		ImGui::TableSetupColumn("Self");
+		ImGui::TableHeadersRow();
+
+		if (selected_module != nullptr)
+		{
+			typedef decltype(module::m_profile)::const_iterator prof_type;
+
+			std::vector<prof_type> profile_iterators_vec;
+			profile_iterators_vec.reserve(selected_module->m_profile.size());
+			size_t total_self = 0;
+			for (prof_type i = selected_module->m_profile.cbegin(); i != selected_module->m_profile.cend(); ++i)
+			{
+				profile_iterators_vec.emplace_back(i);
+				total_self += i->second.self;
+			}
+
+			// Sort our data if sort specs have been changed!
+			if (ImGuiTableSortSpecs* sort_specs = ImGui::TableGetSortSpecs())
+			{
+				std::sort(profile_iterators_vec.begin(), profile_iterators_vec.end(),
+								[sort_specs](prof_type const& lhs, prof_type const& rhs) -> bool
+								{
+									for (int n = 0; n < sort_specs->SpecsCount; n++)
+									{
+										ImGuiTableColumnSortSpecs const* sort_spec = &sort_specs->Specs[n];
+
+										int delta = 0;
+										if (sort_spec->ColumnIndex == 0)
+											delta = lhs->first.compare(rhs->first);
+										else if (sort_spec->ColumnIndex == 1)
+											delta = (lhs->second.cumulative - rhs->second.cumulative);
+										else
+											delta = (lhs->second.self - rhs->second.self);
+
+										if (delta > 0)
+											return (sort_spec->SortDirection == ImGuiSortDirection_Ascending);
+										if (delta < 0)
+											return (sort_spec->SortDirection != ImGuiSortDirection_Ascending);
+									}
+
+									return lhs->first.compare(rhs->first) < 0;
+								});
+			}
+
+			for (auto const &it : profile_iterators_vec)
+			{
+				const auto& [site, count] = *it;
+				ImGui::TableNextRow();
+
+				ImGui::TableNextColumn();
+				ImGui::Text("%s", site.c_str());
+
+				if (show_as_percent)
+				{
+					ImGui::TableNextColumn();
+					ImGui::Text("%0.3f%%", 100 * static_cast<float>(count.cumulative) / total_self);
+
+					ImGui::TableNextColumn();
+					ImGui::Text("%0.3f%%", 100 * static_cast<float>(count.self) / total_self);
+				}
+				else
+				{
+					ImGui::TableNextColumn();
+					ImGui::Text("%zu", count.cumulative);
+
+					ImGui::TableNextColumn();
+					ImGui::Text("%zu", count.self);
+				}
+			}
+		}
+
+		ImGui::EndTable();
+	}
+}
+
+static void ProfilerDraw(XPLMWindowID win, void* refcon)
+{
+	auto* ctx = static_cast<XplmImguiContext*>(refcon);
+	int l, t, r, b;
+	XPLMGetWindowGeometry(win, &l, &t, &r, &b);
+	const int w = r - l;
+	const int h = t - b;
+
+	ctx->BeginFrame(w, h, win);
+
+	ImGui::SetNextWindowPos(ImVec2(0, 0));
+	ImGui::SetNextWindowSize(ImVec2(static_cast<float>(w), static_cast<float>(h)));
+	if (ImGui::Begin("XLua Profiler", nullptr,
+					 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+					 ImGuiWindowFlags_NoMove    | ImGuiWindowFlags_NoCollapse |
+					 ImGuiWindowFlags_NoBringToFrontOnFocus))
+	{
+		ProfilerBuildUI();
+	}
+	ImGui::End();
+
+	ctx->EndFrame();
+}
+
+void ShowProfiler()
+{
+	// The post-loop poll destroys the window when the user clicks X, so this
+	// is always a fresh creation.
+	if (profilerWnd)
+		return;
+
+	profilerImguiCtx = std::make_unique<XplmImguiContext>();
+
+	XPLMCreateWindow_t params		= {};
+	params.structSize          		= sizeof(params);
+	params.left                		= 100;
+	params.top                 		= 600;
+	params.right               		= 900;
+	params.bottom              		= 300;
+	params.visible             		= 1;
+	params.drawWindowFunc      		= &ProfilerDraw;
+	params.handleMouseClickFunc 	= &XplmImguiContext::HandleMouseClick;
+	params.handleKeyFunc        	= &XplmImguiContext::HandleKey;
+	params.handleCursorFunc     	= &XplmImguiContext::HandleCursor;
+	params.handleMouseWheelFunc 	= &XplmImguiContext::HandleMouseWheel;
+	params.refcon					= profilerImguiCtx.get();
+	params.decorateAsFloatingWindow = xplm_WindowDecorationRoundRectangle;
+	params.layer                    = xplm_WindowLayerFloatingWindows;
+	params.handleRightClickFunc     = &XplmImguiContext::HandleRightClick;
+	params.windowContentType		= xplm_WindowContentTypePanelGraphics;
+
+	profilerWnd.reset(XPLMCreateWindowEx(&params));
+	XPLMSetWindowTitle(profilerWnd.get(), "XLua Profiler");
 }
 
 static void MenuHandler(void* menuRef, void* itemRef)
@@ -562,6 +605,11 @@ PLUGIN_API void	XPluginStop(void)
 PLUGIN_API void XPluginDisable(void)
 {
 #if !MOBILE
+	// Order matters: the window's draw callback dereferences profilerImguiCtx,
+	// so destroy the window first so no further callbacks can fire.
+	profilerWnd.reset();
+	profilerImguiCtx.reset();
+
 	if (PluginMenu != nullptr)
 	{
 		XPLMRemoveMenuItem(XPLMFindPluginsMenu(), PluginMenuItem);

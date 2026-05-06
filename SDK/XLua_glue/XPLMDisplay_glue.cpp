@@ -37,6 +37,8 @@ extern "C" {
 //
 XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos);
 void XPLMCreateAvionics_t_to_table(lua_State* L, XPLMCreateAvionics_t const& src);
+XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos);
+void XPLMCreateWindow_t_to_table(lua_State* L, XPLMCreateWindow_t const& src);
 XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int stackpos);
 void XPLMCustomizeAvionics_t_to_table(lua_State* L, XPLMCustomizeAvionics_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
@@ -48,6 +50,7 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 XPLMAvionicsID* Make_XPLMAvionicsID(lua_State* L, XPLMAvionicsID const& init);
 XPLMHotKeyID* Make_XPLMHotKeyID(lua_State* L, XPLMHotKeyID const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
+XPLMWindowID* Make_XPLMWindowID(lua_State* L, XPLMWindowID const& init);
 
 
 static int cb_XPLMAvionicsCallback_f(XPLMDeviceID inDeviceID, int inIsBefore, void* inRefcon)
@@ -1291,6 +1294,1018 @@ int XLuaSetAvionicsGeometryOS(lua_State* L)
 	XPLMSetAvionicsGeometryOS(inHandle, inLeft, inTop, inRight, inBottom);
 
 	return 0;
+}
+
+XPLMWindowID* Make_XPLMWindowID(lua_State* L, XPLMWindowID const& init)
+{
+	XPLMWindowID* ud = static_cast<XPLMWindowID*>(lua_newuserdata(L, sizeof(XPLMWindowID)));
+	memcpy(ud, &init, sizeof(XPLMWindowID));
+
+	luaL_getmetatable(L, "_mt_XPLMWindowID");
+	lua_setmetatable(L, -2);
+
+	return ud;
+}
+
+static int _XPLMWindowID_Constructor(lua_State* L)
+{
+	Make_XPLMWindowID(L, nullptr);
+	return 1;
+}
+
+static int _XPLMWindowID_compare(lua_State* L)
+{
+	XPLMWindowID const test1 = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	XPLMWindowID const test2 = xlua_checkuserdata<XPLMWindowID>(L, 2, "Expected XPLMWindowID");
+
+	lua_pushboolean(L, test1 == test2);
+	return 1;
+}
+
+void RegType_XPLMWindowID(lua_State* L)
+{
+	luaL_newmetatable(L, "_mt_XPLMWindowID");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+
+	lua_pushstring(L, "XPLMWindowID");
+	lua_setfield(L, -2, "__name");
+
+#ifdef HAVE_XPLMWindowID_tostring
+	lua_pushcfunction(L, _XPLMWindowID_tostring);
+	lua_setfield(L, -2, "__tostring");
+#endif
+
+	lua_pushcfunction(L, _XPLMWindowID_compare);
+	lua_setfield(L, -2, "__eq");
+
+	lua_register(L, "XPLMWindowID", _XPLMWindowID_Constructor);
+
+	lua_pop(L, 1);
+}
+
+static void cb_XPLMDrawWindow_f(XPLMWindowID inWindowID, void* inRefcon)
+{
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMDrawWindow_f");
+	if (L)
+	{
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ur", inWindowID, inRefcon_cb->get_capture()))
+		{
+		}
+	}
+}
+
+static void cb_XPLMHandleKey_f(XPLMWindowID inWindowID, char inKey, XPLMKeyFlags inFlags, char inVirtualKey, void* inRefcon, int losingFocus)
+{
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMHandleKey_f");
+	if (L)
+	{
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "usisrb", inWindowID, inKey, inFlags, inVirtualKey, inRefcon_cb->get_capture(), static_cast<bool>(losingFocus)))
+		{
+		}
+	}
+}
+
+static int cb_XPLMHandleMouseClick_f(XPLMWindowID inWindowID, int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
+{
+	int res = {};
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMHandleMouseClick_f");
+	if (L)
+	{
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uiiir", inWindowID, x, y, inMouse, inRefcon_cb->get_capture()))
+		{
+			res = luaL_checkinteger(L, -1);
+			lua_pop(L, 1);
+		}
+	}
+
+	return res;
+}
+
+static XPLMCursorStatus cb_XPLMHandleCursor_f(XPLMWindowID inWindowID, int x, int y, void* inRefcon)
+{
+	XPLMCursorStatus res = {};
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMHandleCursor_f");
+	if (L)
+	{
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uiir", inWindowID, x, y, inRefcon_cb->get_capture()))
+		{
+			res = luaL_checkinteger(L, -1);
+			lua_pop(L, 1);
+		}
+	}
+
+	return res;
+}
+
+static int cb_XPLMHandleMouseWheel_f(XPLMWindowID inWindowID, int x, int y, int wheel, int clicks, void* inRefcon)
+{
+	int res = {};
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMHandleMouseWheel_f");
+	if (L)
+	{
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uiiiir", inWindowID, x, y, wheel, clicks, inRefcon_cb->get_capture()))
+		{
+			res = xlua_checkboolean(L, -1) ? 1 : 0;
+			lua_pop(L, 1);
+		}
+	}
+
+	return res;
+}
+
+static void cb_XPLMBrowserNavigation_f(XPLMWindowID inWindow, const char * inURL, int inSuccess, const char * inError, void* inRefcon)
+{
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMBrowserNavigation_f");
+	if (L)
+	{
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "usbsr", inWindow, inURL, static_cast<bool>(inSuccess), inError, inRefcon_cb->get_capture()))
+		{
+		}
+	}
+}
+/*
+ * XPLMCreateWindow_t
+ * 
+ * Creation and transfer between C struct and Lua table
+ *
+ */
+
+XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos)
+{
+	XPLMCreateWindow_t out = {};
+
+	luaL_checktype(L, stackpos, LUA_TTABLE);
+
+	lua_getfield(L, stackpos, "refcon");
+	std::shared_ptr<notify_cb_t> refcon_cb = capture_lua_value(L, -1);
+	lua_pop(L, 1);
+	xlua_persist_userref(L, refcon_cb);
+	out.refcon = refcon_cb.get();
+
+	out.structSize = sizeof(out);
+
+	lua_getfield(L, stackpos, "left");
+	if (!lua_isnil(L, -1))
+	{
+		out.left = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "top");
+	if (!lua_isnil(L, -1))
+	{
+		out.top = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "right");
+	if (!lua_isnil(L, -1))
+	{
+		out.right = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "bottom");
+	if (!lua_isnil(L, -1))
+	{
+		out.bottom = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "visible");
+	if (!lua_isnil(L, -1))
+	{
+		out.visible = static_cast<int>(xlua_checkboolean(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "drawWindowFunc");
+	if (wrap_next_lua_func(refcon_cb, -1, false, "XPLMDrawWindow_f"))
+	{
+		out.drawWindowFunc = cb_XPLMDrawWindow_f;
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "handleMouseClickFunc");
+	if (wrap_next_lua_func(refcon_cb, -1, true, "handleMouseClickFunc"))
+	{
+		out.handleMouseClickFunc = [](XPLMWindowID inWindowID, int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
+		{
+			int res = {};
+			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+			lua_State* L = setup_lua_callback(inRefcon_cb, "handleMouseClickFunc");
+			if (L)
+			{
+
+				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uiiir", inWindowID, x, y, inMouse, inRefcon_cb->get_capture()))
+				{
+					res = luaL_checkinteger(L, -1);
+					lua_pop(L, 1);
+				}
+			}
+
+			return res;
+		};
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "handleKeyFunc");
+	if (wrap_next_lua_func(refcon_cb, -1, false, "XPLMHandleKey_f"))
+	{
+		out.handleKeyFunc = cb_XPLMHandleKey_f;
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "handleCursorFunc");
+	if (wrap_next_lua_func(refcon_cb, -1, false, "XPLMHandleCursor_f"))
+	{
+		out.handleCursorFunc = cb_XPLMHandleCursor_f;
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "handleMouseWheelFunc");
+	if (wrap_next_lua_func(refcon_cb, -1, false, "XPLMHandleMouseWheel_f"))
+	{
+		out.handleMouseWheelFunc = cb_XPLMHandleMouseWheel_f;
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "decorateAsFloatingWindow");
+	if (!lua_isnil(L, -1))
+	{
+		out.decorateAsFloatingWindow = static_cast<XPLMWindowDecoration>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "layer");
+	if (!lua_isnil(L, -1))
+	{
+		out.layer = static_cast<XPLMWindowLayer>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "handleRightClickFunc");
+	if (wrap_next_lua_func(refcon_cb, -1, true, "handleRightClickFunc"))
+	{
+		out.handleRightClickFunc = [](XPLMWindowID inWindowID, int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
+		{
+			int res = {};
+			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+			lua_State* L = setup_lua_callback(inRefcon_cb, "handleRightClickFunc");
+			if (L)
+			{
+
+				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uiiir", inWindowID, x, y, inMouse, inRefcon_cb->get_capture()))
+				{
+					res = luaL_checkinteger(L, -1);
+					lua_pop(L, 1);
+				}
+			}
+
+			return res;
+		};
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "windowContentType");
+	if (!lua_isnil(L, -1))
+	{
+		out.windowContentType = static_cast<XPLMWindowContentType>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "browserNavigationFunc");
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMBrowserNavigation_f"))
+	{
+		out.browserNavigationFunc = cb_XPLMBrowserNavigation_f;
+	}
+	lua_pop(L, 1);
+
+	return out;
+}
+
+void XPLMCreateWindow_t_to_table(lua_State* L, XPLMCreateWindow_t const& src)
+{
+	lua_newtable(L);
+
+	lua_pushstring(L, "left");
+	lua_pushinteger(L, src.left);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "top");
+	lua_pushinteger(L, src.top);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "right");
+	lua_pushinteger(L, src.right);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "bottom");
+	lua_pushinteger(L, src.bottom);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "visible");
+	lua_pushboolean(L, src.visible);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "drawWindowFunc");
+	luaL_loadstring(L, "function() end");
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "handleKeyFunc");
+	luaL_loadstring(L, "function() end");
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "refcon");
+	xlua_pushuserdata<void*>(L, src.refcon);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "decorateAsFloatingWindow");
+	lua_pushinteger(L, src.decorateAsFloatingWindow);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "layer");
+	lua_pushinteger(L, src.layer);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "windowContentType");
+	lua_pushinteger(L, src.windowContentType);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "browserNavigationFunc");
+	luaL_loadstring(L, "function() end");
+	lua_settable(L, -3);
+}
+
+int MakeXPLMCreateWindow_t(lua_State* L)
+{
+	XPLMCreateWindow_t out = {};
+	out.structSize = sizeof(XPLMCreateWindow_t);
+	XPLMCreateWindow_t_to_table(L, out);
+	return 1;
+}
+/*
+ * END Creation and transfer between C struct and Lua table
+ *
+ */
+
+int XLuaCreateWindowEx(lua_State* L)
+{
+	XPLMCreateWindow_t inParams = XPLMCreateWindow_t_from_table(L, 1);
+
+	XPLMWindowID res = XPLMCreateWindowEx(&inParams);
+	if (res == nullptr)
+	{
+		lua_pushnil(L);
+	}
+	else
+	{
+		Make_XPLMWindowID(L, res);
+	}
+
+	return 1;
+}
+
+int XLuaCreateWindow(lua_State* L)
+{
+	int inLeft = xlua_checkinteger(L, 1);
+	int inTop = xlua_checkinteger(L, 2);
+	int inRight = xlua_checkinteger(L, 3);
+	int inBottom = xlua_checkinteger(L, 4);
+	bool inIsVisible = xlua_checkboolean(L, 5);
+
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 9);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 6, false, "XPLMDrawWindow_f");
+	wrap_next_lua_func(cb_capture_0, 7, false, "XPLMHandleKey_f");
+	wrap_next_lua_func(cb_capture_0, 8, false, "XPLMHandleMouseClick_f");
+
+	XPLMWindowID res = XPLMCreateWindow(inLeft, inTop, inRight, inBottom, inIsVisible, cb_XPLMDrawWindow_f, cb_XPLMHandleKey_f, cb_XPLMHandleMouseClick_f, cb_capture_0.get());
+	if (res == nullptr)
+	{
+		lua_pushnil(L);
+	}
+	else
+	{
+		Make_XPLMWindowID(L, res);
+	}
+
+	return 1;
+}
+
+int XLuaDestroyWindow(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+
+	XPLMDestroyWindow(inWindowID);
+
+	return 0;
+}
+
+int XLuaWindowSetURL(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	const char * inURL = xlua_checkstring(L, 2);
+
+	XPLMWindowSetURL(inWindowID, inURL);
+
+	return 0;
+}
+
+int XLuaWindowRefresh(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	bool inIgnoreCache = xlua_checkboolean(L, 2);
+
+	XPLMWindowRefresh(inWindowID, inIgnoreCache);
+
+	return 0;
+}
+
+int XLuaWindowInjectScript(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	const char * inScript = xlua_checkstring(L, 2);
+
+	XPLMWindowInjectScript(inWindowID, inScript);
+
+	return 0;
+}
+
+int XLuaReturnString(lua_State* L)
+{
+	const char * inString = xlua_checkstring(L, 1);
+
+	const char * res = XPLMReturnString(inString);
+	lua_pushstring(L, res);
+
+	return 1;
+}
+
+static const char * cb_XPLMBrowserCallback_f(XPLMWindowID inWindowID, const char * inJSON, void* inRefcon)
+{
+	const char * res = {};
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMBrowserCallback_f");
+	if (L)
+	{
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "usr", inWindowID, inJSON, inRefcon_cb->get_capture()))
+		{
+			res = luaL_checkstring(L, -1);
+			lua_pop(L, 1);
+		}
+	}
+
+	return res;
+}
+
+int XLuaWindowAddBrowserFunction(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	const char * inName = xlua_checkstring(L, 2);
+
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 4);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 3, false, "XPLMBrowserCallback_f");
+
+	XPLMWindowAddBrowserFunction(inWindowID, inName, cb_XPLMBrowserCallback_f, cb_capture_0.get());
+
+	return 0;
+}
+
+int XLuaGetScreenSize(lua_State* L)
+{
+	int outWidth = {};
+	int outHeight = {};
+	XPLMGetScreenSize(&outWidth, &outHeight);
+
+	lua_createtable(L, 0, 2);
+
+	lua_pushstring(L, "outWidth");
+	lua_pushinteger(L, outWidth);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outHeight");
+	lua_pushinteger(L, outHeight);
+	lua_settable(L, -3);
+
+	return 1;
+}
+
+int XLuaGetScreenBoundsGlobal(lua_State* L)
+{
+	int outLeft = {};
+	int outTop = {};
+	int outRight = {};
+	int outBottom = {};
+	XPLMGetScreenBoundsGlobal(&outLeft, &outTop, &outRight, &outBottom);
+
+	lua_createtable(L, 0, 4);
+
+	lua_pushstring(L, "outLeft");
+	lua_pushinteger(L, outLeft);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outTop");
+	lua_pushinteger(L, outTop);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outRight");
+	lua_pushinteger(L, outRight);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outBottom");
+	lua_pushinteger(L, outBottom);
+	lua_settable(L, -3);
+
+	return 1;
+}
+
+static void cb_XPLMReceiveMonitorBoundsGlobal_f(int inMonitorIndex, int inLeftBx, int inTopBx, int inRightBx, int inBottomBx, void* inRefcon)
+{
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMReceiveMonitorBoundsGlobal_f");
+	if (L)
+	{
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "iiiiir", inMonitorIndex, inLeftBx, inTopBx, inRightBx, inBottomBx, inRefcon_cb->get_capture()))
+		{
+		}
+	}
+}
+
+int XLuaGetAllMonitorBoundsGlobal(lua_State* L)
+{
+
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 2);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 1, false, "XPLMReceiveMonitorBoundsGlobal_f");
+
+	XPLMGetAllMonitorBoundsGlobal(cb_XPLMReceiveMonitorBoundsGlobal_f, cb_capture_0.get());
+
+	return 0;
+}
+
+static void cb_XPLMReceiveMonitorBoundsOS_f(int inMonitorIndex, int inLeftPx, int inTopPx, int inRightPx, int inBottomPx, void* inRefcon)
+{
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMReceiveMonitorBoundsOS_f");
+	if (L)
+	{
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "iiiiir", inMonitorIndex, inLeftPx, inTopPx, inRightPx, inBottomPx, inRefcon_cb->get_capture()))
+		{
+		}
+	}
+}
+
+int XLuaGetAllMonitorBoundsOS(lua_State* L)
+{
+
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 2);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 1, false, "XPLMReceiveMonitorBoundsOS_f");
+
+	XPLMGetAllMonitorBoundsOS(cb_XPLMReceiveMonitorBoundsOS_f, cb_capture_0.get());
+
+	return 0;
+}
+
+int XLuaGetMouseLocation(lua_State* L)
+{
+	int outX = {};
+	int outY = {};
+	XPLMGetMouseLocation(&outX, &outY);
+
+	lua_createtable(L, 0, 2);
+
+	lua_pushstring(L, "outX");
+	lua_pushinteger(L, outX);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outY");
+	lua_pushinteger(L, outY);
+	lua_settable(L, -3);
+
+	return 1;
+}
+
+int XLuaGetMouseLocationGlobal(lua_State* L)
+{
+	int outX = {};
+	int outY = {};
+	XPLMGetMouseLocationGlobal(&outX, &outY);
+
+	lua_createtable(L, 0, 2);
+
+	lua_pushstring(L, "outX");
+	lua_pushinteger(L, outX);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outY");
+	lua_pushinteger(L, outY);
+	lua_settable(L, -3);
+
+	return 1;
+}
+
+int XLuaGetWindowGeometry(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	int outLeft = {};
+	int outTop = {};
+	int outRight = {};
+	int outBottom = {};
+
+	XPLMGetWindowGeometry(inWindowID, &outLeft, &outTop, &outRight, &outBottom);
+
+	lua_createtable(L, 0, 4);
+
+	lua_pushstring(L, "outLeft");
+	lua_pushinteger(L, outLeft);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outTop");
+	lua_pushinteger(L, outTop);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outRight");
+	lua_pushinteger(L, outRight);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outBottom");
+	lua_pushinteger(L, outBottom);
+	lua_settable(L, -3);
+
+	return 1;
+}
+
+int XLuaSetWindowGeometry(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	int inLeft = xlua_checkinteger(L, 2);
+	int inTop = xlua_checkinteger(L, 3);
+	int inRight = xlua_checkinteger(L, 4);
+	int inBottom = xlua_checkinteger(L, 5);
+
+	XPLMSetWindowGeometry(inWindowID, inLeft, inTop, inRight, inBottom);
+
+	return 0;
+}
+
+int XLuaGetWindowGeometryOS(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	int outLeft = {};
+	int outTop = {};
+	int outRight = {};
+	int outBottom = {};
+
+	XPLMGetWindowGeometryOS(inWindowID, &outLeft, &outTop, &outRight, &outBottom);
+
+	lua_createtable(L, 0, 4);
+
+	lua_pushstring(L, "outLeft");
+	lua_pushinteger(L, outLeft);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outTop");
+	lua_pushinteger(L, outTop);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outRight");
+	lua_pushinteger(L, outRight);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outBottom");
+	lua_pushinteger(L, outBottom);
+	lua_settable(L, -3);
+
+	return 1;
+}
+
+int XLuaSetWindowGeometryOS(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	int inLeft = xlua_checkinteger(L, 2);
+	int inTop = xlua_checkinteger(L, 3);
+	int inRight = xlua_checkinteger(L, 4);
+	int inBottom = xlua_checkinteger(L, 5);
+
+	XPLMSetWindowGeometryOS(inWindowID, inLeft, inTop, inRight, inBottom);
+
+	return 0;
+}
+
+int XLuaGetWindowGeometryVR(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	int outWidthBoxels = {};
+	int outHeightBoxels = {};
+
+	XPLMGetWindowGeometryVR(inWindowID, &outWidthBoxels, &outHeightBoxels);
+
+	lua_createtable(L, 0, 2);
+
+	lua_pushstring(L, "outWidthBoxels");
+	lua_pushinteger(L, outWidthBoxels);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outHeightBoxels");
+	lua_pushinteger(L, outHeightBoxels);
+	lua_settable(L, -3);
+
+	return 1;
+}
+
+int XLuaSetWindowGeometryVR(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	int widthBoxels = xlua_checkinteger(L, 2);
+	int heightBoxels = xlua_checkinteger(L, 3);
+
+	XPLMSetWindowGeometryVR(inWindowID, widthBoxels, heightBoxels);
+
+	return 0;
+}
+
+int XLuaGetWindowIsVisible(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+
+	int res = XPLMGetWindowIsVisible(inWindowID);
+	lua_pushboolean(L, res);
+
+	return 1;
+}
+
+int XLuaSetWindowIsVisible(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	bool inIsVisible = xlua_checkboolean(L, 2);
+
+	XPLMSetWindowIsVisible(inWindowID, inIsVisible);
+
+	return 0;
+}
+
+int XLuaWindowIsPoppedOut(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+
+	int res = XPLMWindowIsPoppedOut(inWindowID);
+	lua_pushboolean(L, res);
+
+	return 1;
+}
+
+int XLuaWindowIsInVR(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+
+	int res = XPLMWindowIsInVR(inWindowID);
+	lua_pushboolean(L, res);
+
+	return 1;
+}
+
+int XLuaSetWindowGravity(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	float inLeftGravity = xlua_checknumber(L, 2);
+	float inTopGravity = xlua_checknumber(L, 3);
+	float inRightGravity = xlua_checknumber(L, 4);
+	float inBottomGravity = xlua_checknumber(L, 5);
+
+	XPLMSetWindowGravity(inWindowID, inLeftGravity, inTopGravity, inRightGravity, inBottomGravity);
+
+	return 0;
+}
+
+int XLuaSetWindowResizingLimits(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	int inMinWidthBoxels = xlua_checkinteger(L, 2);
+	int inMinHeightBoxels = xlua_checkinteger(L, 3);
+	int inMaxWidthBoxels = xlua_checkinteger(L, 4);
+	int inMaxHeightBoxels = xlua_checkinteger(L, 5);
+
+	XPLMSetWindowResizingLimits(inWindowID, inMinWidthBoxels, inMinHeightBoxels, inMaxWidthBoxels, inMaxHeightBoxels);
+
+	return 0;
+}
+
+int XLuaSetWindowPositioningMode(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	XPLMWindowPositioningMode inPositioningMode = xlua_checkinteger(L, 2);
+	int inMonitorIndex = xlua_checkinteger(L, 3);
+
+	XPLMSetWindowPositioningMode(inWindowID, inPositioningMode, inMonitorIndex);
+
+	return 0;
+}
+
+int XLuaSetWindowTitle(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+	const char * inWindowTitle = xlua_checkstring(L, 2);
+
+	XPLMSetWindowTitle(inWindowID, inWindowTitle);
+
+	return 0;
+}
+
+int XLuaGetWindowRefCon(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+
+	void* res = XPLMGetWindowRefCon(inWindowID);
+	if (res == nullptr)
+	{
+		lua_pushnil(L);
+	}
+	else
+	{
+		xlua_pushuserdata<void*>(L, res);
+	}
+
+	return 1;
+}
+
+int XLuaSetWindowRefCon(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+
+	std::shared_ptr<notify_cb_t> inRefcon_cb = capture_lua_value(L, 2);
+	xlua_persist_userref(L, inRefcon_cb);
+
+	XPLMSetWindowRefCon(inWindowID, inRefcon_cb.get());
+
+	return 0;
+}
+
+int XLuaTakeKeyboardFocus(lua_State* L)
+{
+	XPLMWindowID inWindow = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindow = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+
+	XPLMTakeKeyboardFocus(inWindow);
+
+	return 0;
+}
+
+int XLuaHasKeyboardFocus(lua_State* L)
+{
+	XPLMWindowID inWindow = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindow = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+
+	int res = XPLMHasKeyboardFocus(inWindow);
+	lua_pushboolean(L, res);
+
+	return 1;
+}
+
+int XLuaBringWindowToFront(lua_State* L)
+{
+	XPLMWindowID inWindow = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindow = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+
+	XPLMBringWindowToFront(inWindow);
+
+	return 0;
+}
+
+int XLuaIsWindowInFront(lua_State* L)
+{
+	XPLMWindowID inWindow = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindow = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+
+	int res = XPLMIsWindowInFront(inWindow);
+	lua_pushboolean(L, res);
+
+	return 1;
 }
 
 static void cb_XPLMHotKey_f(void* inRefcon)

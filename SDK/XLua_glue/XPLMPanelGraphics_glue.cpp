@@ -39,6 +39,8 @@ extern "C" {
 //
 XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos);
 void XPLMCreateAvionics_t_to_table(lua_State* L, XPLMCreateAvionics_t const& src);
+XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos);
+void XPLMCreateWindow_t_to_table(lua_State* L, XPLMCreateWindow_t const& src);
 XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int stackpos);
 void XPLMCustomizeAvionics_t_to_table(lua_State* L, XPLMCustomizeAvionics_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
@@ -64,6 +66,7 @@ XPLMHotKeyID* Make_XPLMHotKeyID(lua_State* L, XPLMHotKeyID const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 XPLMRetainedDrawing_t* Make_XPLMRetainedDrawing_t(lua_State* L, XPLMRetainedDrawing_t const& init);
 XPLMTextureAtlasRef* Make_XPLMTextureAtlasRef(lua_State* L, XPLMTextureAtlasRef const& init);
+XPLMWindowID* Make_XPLMWindowID(lua_State* L, XPLMWindowID const& init);
 
 /*
  * XPLMVertex_t
@@ -1360,7 +1363,7 @@ int XLuaTextureAtlasAddImage(lua_State* L)
 	const unsigned char * inImage = {};
 	if (lua_isuserdata(L, 2))
 	{
-		inImage = xlua_checkuserdata<unsigned char *>(L, 2, "Expected unsigned char *");
+		inImage = xlua_checkuserdata<const unsigned char *>(L, 2, "Expected const unsigned char *");
 	}
 	int inWidth = xlua_checkinteger(L, 3);
 	int inHeight = xlua_checkinteger(L, 4);
@@ -1797,7 +1800,7 @@ int XLuaAccumulateTouchZone(lua_State* L)
 	return 1;
 }
 
-int XLuaSetTouchEventHandler(lua_State* L)
+int XLuaAvionicsSetTouchEventHandler(lua_State* L)
 {
 	XPLMAvionicsID avionic = {};
 	if (lua_isuserdata(L, 1))
@@ -1809,7 +1812,24 @@ int XLuaSetTouchEventHandler(lua_State* L)
 	xlua_persist_userref(L, cb_capture_0);
 	wrap_next_lua_func(cb_capture_0, 2, true, "XPLMTouchEvent_f");
 
-	XPLMSetTouchEventHandler(avionic, (cb_capture_0 ? cb_XPLMTouchEvent_f : nullptr), cb_capture_0.get());
+	XPLMAvionicsSetTouchEventHandler(avionic, (cb_capture_0 ? cb_XPLMTouchEvent_f : nullptr), cb_capture_0.get());
+
+	return 0;
+}
+
+int XLuaWindowSetTouchEventHandler(lua_State* L)
+{
+	XPLMWindowID window = {};
+	if (lua_isuserdata(L, 1))
+	{
+		window = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 3);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 2, true, "XPLMTouchEvent_f");
+
+	XPLMWindowSetTouchEventHandler(window, (cb_capture_0 ? cb_XPLMTouchEvent_f : nullptr), cb_capture_0.get());
 
 	return 0;
 }

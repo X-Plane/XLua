@@ -27,10 +27,8 @@ add_library(xlua MODULE
     src/xpfuncs.cpp
 	src/shared_xpfuncs.cpp
     src/xptimers.cpp
-
-    src/FloatingWindows/FLWIntegration.cpp
-    src/FloatingWindows/FloatingWindow.cpp
-    src/FloatingWindows/ImGUIIntegration.cpp
+    src/xlua_imgui.cpp
+    src/xlua_imgui_context.cpp
 
     imgui_lua_bindings/imgui_lua_bindings.cpp
     imgui/imgui.cpp
@@ -87,8 +85,6 @@ target_include_directories(xlua PRIVATE
     "${CMAKE_SOURCE_DIR}/SDK/CHeaders/Widgets"
     "${CMAKE_SOURCE_DIR}/imgui"
     "${CMAKE_SOURCE_DIR}/src"
-    "${CMAKE_SOURCE_DIR}/src/FloatingWindows"
-    "${CMAKE_SOURCE_DIR}/src/FloatingWindows/GL"
 )
 
 # ─────────────────────────────────────────────────────────────────────────────

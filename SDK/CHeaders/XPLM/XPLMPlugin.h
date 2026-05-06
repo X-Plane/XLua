@@ -174,6 +174,7 @@ XPLM_API void       XPLMDisablePlugin(
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMReloadPlugins(void);
 
+#if defined(XPLM440)
 /*
  * XPLMReloadThisPlugin
  * 
@@ -186,6 +187,7 @@ XPLM_API void       XPLMReloadPlugins(void);
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMReloadThisPlugin(
                          int                  forReplacement);
+#endif /* XPLM440 */
 
 /***************************************************************************
  * INTERPLUGIN MESSAGING

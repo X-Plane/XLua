@@ -1331,6 +1331,17 @@ typedef int (* XPLMHandleMouseWheel_f)(
                          void*                inRefcon);
 #endif /* XPLM200 */
 
+/*
+ * XPLMBrowserNavigation_f
+ *
+ */
+typedef void (* XPLMBrowserNavigation_f)(
+                         XPLMWindowID         inWindow,
+                         const char *         inURL,
+                         int                  inSuccess,
+                         const char *         inError,                /* Can be NULL */
+                         void*                inRefcon);
+
 #if defined(XPLM300)
 /*
  * XPLMWindowLayer
@@ -1417,6 +1428,33 @@ enum {
 typedef int XPLMWindowDecoration;
 #endif /* XPLM301 */
 
+#if defined(XPLM420)
+/*
+ * XPLMWindowContentType
+ * 
+ * XPLMWindowContentType describes how content for this window is provided.
+ *
+ */
+enum {
+
+    /* The window is drawn by calling back your plugin, which will draw using     *
+     * OpenGL and XPLM APIs. You provide mouse and keyboard hooks for interaction.*/
+    xplm_WindowContentTypeOpenGL             = 0,
+
+
+    /* The window is drawn by calling back your plugin, which will draw using     *
+     * panel graphics APIs. You provide mouse and keyboard hooks for interaction. */
+    xplm_WindowContentTypePanelGraphics      = 1,
+
+
+    /* The window content is specified using a web page.                          */
+    xplm_WindowContentTypeBrowser            = 2,
+
+
+};
+typedef int XPLMWindowContentType;
+#endif /* XPLM420 */
+
 #if defined(XPLM200)
 /*
  * XPLMCreateWindow_t
@@ -1501,6 +1539,15 @@ typedef struct {
      * ignore right clicks)                                                       */
      XPLMHandleMouseClick_f    handleRightClickFunc;
 #endif /* XPLM300 */
+
+#if defined(XPLM420)
+    /* The source of content for this Window (OpenGL, Panel Graphics, CEF, etc.)  */
+     XPLMWindowContentType     windowContentType;
+#endif /* XPLM420 */
+
+#if defined(XPLM420)
+     XPLMBrowserNavigation_f   browserNavigationFunc;
+#endif /* XPLM420 */
 } XPLMCreateWindow_t;
 #endif /* XPLM200 */
 
@@ -1566,6 +1613,86 @@ XPLM_API XPLMWindowID XPLMCreateWindow(
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDestroyWindow(
                          XPLMWindowID         inWindowID);
+
+/*
+ * XPLMWindowSetURL
+ * 
+ * Loads a URL into a browser-content-type window. Safe to call before the
+ * underlying webview has finished initialising; the load is queued and
+ * applied as soon as the browser is ready, so plugins may call this
+ * immediately after `XPLMCreateWindowEx`. Subsequent calls replace the
+ * pending or current page.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMWindowSetURL(
+                         XPLMWindowID         inWindowID,
+                         const char *         inURL);
+
+/*
+ * XPLMWindowRefresh
+ * 
+ * Reloads the current URL in a browser-content-type window. Pass true for
+ * `inIgnoreCache` to bypass the HTTP cache (the equivalent of a
+ *  shift-reload).
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMWindowRefresh(
+                         XPLMWindowID         inWindowID,
+                         int                  inIgnoreCache);
+
+/*
+ * XPLMWindowInjectScript
+ * 
+ * Executes a JavaScript snippet in the browser window's main frame. The
+ * script is run once; it has access to the same `xplane.*` namespace exposed
+ * to the page itself (so it can call functions registered via
+ * `XPLMWindowAddBrowserFunction`). If injected before the page has finished
+ *  loading, the script may run against an empty document.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMWindowInjectScript(
+                         XPLMWindowID         inWindowID,
+                         const char *         inScript);
+
+/*
+ * XPLMReturnString
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API const char * XPLMReturnString(
+                         const char *         inString);
+
+/*
+ * XPLMBrowserCallback_f
+ *
+ */
+typedef const char * (* XPLMBrowserCallback_f)(
+                         XPLMWindowID         inWindowID,
+                         const char *         inJSON,
+                         void*                inRefcon);
+
+/*
+ * XPLMWindowAddBrowserFunction
+ * 
+ * Registers a callback that the page running in this browser window can
+ * invoke as `xplane.<inName>(arg)`. The JS call returns a Promise that
+ * resolves to the value your `XPLMBrowserCallback_f` returns (parsed as JSON
+ * -- see that callback's desc for the contract).
+ * 
+ * Multiple registrations against the same name on the same window overwrite
+ * each other. Each window has its own independent `xplane.*` namespace;
+ * functions registered on window A are not callable from window B.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMWindowAddBrowserFunction(
+                         XPLMWindowID         inWindowID,
+                         const char *         inName,
+                         XPLMBrowserCallback_f inFunction,
+                         void*                inRefcon);
 
 /*
  * XPLMGetScreenSize

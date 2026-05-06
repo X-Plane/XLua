@@ -340,6 +340,7 @@ XPLMWeatherInfo_t XPLMWeatherInfo_t_from_table(lua_State* L, int stackpos)
 	}
 	lua_pop(L, 1);
 
+	lua_getfield(L, stackpos, "wind_layers");
 	for (size_t i = 0; i < 13; ++i)
 	{
 		lua_rawgeti(L, -1, i + 1);
@@ -355,6 +356,7 @@ XPLMWeatherInfo_t XPLMWeatherInfo_t_from_table(lua_State* L, int stackpos)
 	}
 	lua_pop(L, 1);
 
+	lua_getfield(L, stackpos, "cloud_layers");
 	for (size_t i = 0; i < 3; ++i)
 	{
 		lua_rawgeti(L, -1, i + 1);
@@ -370,6 +372,7 @@ XPLMWeatherInfo_t XPLMWeatherInfo_t_from_table(lua_State* L, int stackpos)
 	}
 	lua_pop(L, 1);
 
+	lua_getfield(L, stackpos, "temp_layers");
 	for (size_t i = 0; i < 13; ++i)
 	{
 		lua_rawgeti(L, -1, i + 1);
@@ -385,6 +388,7 @@ XPLMWeatherInfo_t XPLMWeatherInfo_t_from_table(lua_State* L, int stackpos)
 	}
 	lua_pop(L, 1);
 
+	lua_getfield(L, stackpos, "dewp_layers");
 	for (size_t i = 0; i < 13; ++i)
 	{
 		lua_rawgeti(L, -1, i + 1);

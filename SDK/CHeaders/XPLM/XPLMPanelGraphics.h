@@ -118,7 +118,7 @@ typedef struct {
  * low byte).
  *
  */
-/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+/* Thread-safe. This call may be used from threads.                              */
 XPLM_API uint32_t   XPLMMakeColor(
                          float                red,
                          float                green,
@@ -1351,7 +1351,7 @@ XPLM_API void       XPLMClearStencilMask(void);
  * XPLMAccumulateTouchZone during your drawing callback to declare rectangular
  * regions that respond to mouse clicks or touches. Each zone can either fire
  * an X-Plane command automatically or deliver raw touch events to a callback
- * you register with XPLMSetTouchEventHandler.
+ * you register with XPLMAvionicsSetTouchEventHandler.
  *
  */
 
@@ -1374,7 +1374,8 @@ enum {
 
 
     /* The zone delivers touch events to the callback registered via              *
-     * XPLMSetTouchEventHandler, identified by the zone's identifier field.       */
+     * XPLMAvionicsSetTouchEventHandler, identified by the zone's identifier      *
+     * field.                                                                     */
     xplm_TouchZone_Identifier                = 2,
 
 
@@ -1455,7 +1456,7 @@ XPLM_API int        XPLMAccumulateTouchZone(
                          XPLMTouchZoneSpec_t * inSpec);
 
 /*
- * XPLMSetTouchEventHandler
+ * XPLMAvionicsSetTouchEventHandler
  * 
  * This function registers a callback to receive touch events for zones of
  * type xplm_TouchZone_Identifier on a specific avionics device. When the user
@@ -1468,9 +1469,19 @@ XPLM_API int        XPLMAccumulateTouchZone(
  * - ref: a reference pointer passed through to your callback.
  *
  */
-/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
-XPLM_API void       XPLMSetTouchEventHandler(
+/* Thread-safe. This call may be used from threads.                              */
+XPLM_API void       XPLMAvionicsSetTouchEventHandler(
                          XPLMAvionicsID       avionic,
+                         XPLMTouchEvent_f     handler,                /* Can be NULL */
+                         void*                ref);
+
+/*
+ * XPLMWindowSetTouchEventHandler
+ *
+ */
+/* Thread-safe. This call may be used from threads.                              */
+XPLM_API void       XPLMWindowSetTouchEventHandler(
+                         XPLMWindowID         window,
                          XPLMTouchEvent_f     handler,                /* Can be NULL */
                          void*                ref);
 #endif /* XPLMPG1 */
@@ -1551,6 +1562,146 @@ XPLM_API void       XPLMDrawRetained(
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDestroyRetainedDrawing(
                          XPLMRetainedDrawing_t drawing);
+#endif /* XPLMPG1 */
+
+#if defined(XPLMPG1)
+/***************************************************************************
+ * IMGUI HELPERS
+ ***************************************************************************/
+/*
+ * These routines let panel-graphics-content-type windows render textured
+ * indexed triangle meshes that exactly match the layout produced by Dear
+ * ImGui's `ImDrawData`, so a plugin can plug an ImGui frame straight into
+ * X-Plane panel graphics.
+ * 
+ * Coordinate system: positions are in window-LOCAL pixels with TOP-LEFT
+ * origin (matches Dear ImGui). Scissors are in the same coordinate space. The
+ * host translates these against the current panel-graphics origin and flips Y
+ * for you.
+ * 
+ * Vertex layout (matches `ImDrawVert` exactly): each vertex is 5 floats =
+ * 20 bytes, in this order: pos.x, pos.y, uv.x, uv.y, RGBA8 packed as a
+ *  uint32_t in little-endian byte order (R is the low byte). The vertex
+ *  stride passed in `XPLMMesh_t::vertices` must be 5 floats per vertex.
+ * 
+ * Color and alpha: vertex colors and texture pixels are interpreted as
+ * **pre-multiplied alpha**. If you have straight-alpha source data, multiply
+ *   RGB by alpha (and divide by 255 if integers) before submitting.
+ * 
+ * Sampler: bilinear filter, clamp-to-edge in both dimensions, no mipmaps. UV
+ * coordinates outside [0,1] sample the edge texels (no wrap).
+ * 
+ * Scissor: the per-`XPLMDrawCall_t` scissor rect is in {left, top, right,
+ * bottom} order (top-left origin). Zero-width or zero-height rects produce no
+ * output. The scissor state is automatically saved on entry to
+ * `XPLMDrawCalls` and restored on exit, so subsequent panel-graphics calls in
+ *  the same frame are unaffected.
+ * 
+ * Plugin-callable from inside a panel-graphics window's draw callback only.
+ *
+ */
+
+
+/*
+ * XPLMDrawCall_t
+ * 
+ * A single draw call within an `XPLMMesh_t`. Each call binds a texture and a
+ * scissor rect, then draws `element_count` indices starting at
+ * `idx_offset`. `vtx_offset` is added to each fetched index by the GPU
+ *  (matching `glDrawElementsBaseVertex` semantics) -- this lets a single mesh
+ *  hold multiple sub-meshes whose indices are written relative to their own
+ *  start.
+ *
+ */
+typedef struct {
+
+    /* Texture handle from XPLMCreateTexture, or any pointer the host returned for*
+     * a texture.                                                                 */
+     void *                    tex_ref;
+
+    /* Clip rect: {left, top, right, bottom} in window-local top-left coords.     */
+     float                     scissors[4];
+
+    /* First index into XPLMMesh_t::indices to use.                               */
+     int                       idx_offset;
+
+    /* Number of indices to consume (must be a multiple of 3 for triangles). Zero *
+     * is allowed and produces no output.                                         */
+     int                       element_count;
+
+    /* Added to each fetched index before vertex lookup.                          */
+     int                       vtx_offset;
+} XPLMDrawCall_t;
+
+/*
+ * XPLMMesh_t
+ * 
+ * A vertex/index buffer pair shared across one or more `XPLMDrawCall_t`
+ * entries. The `vertices` array must be `5 * vertex_count` floats long
+ * matching the layout described in the IMGUI HELPERS component desc. Indices
+ * are 16-bit unsigned, matching `ImDrawIdx` at its default (`#define
+ * ImDrawIdx unsigned short`).
+ *
+ */
+typedef struct {
+
+     int                       vertex_count;
+
+    /* Pointer to vertex_count * 5 floats.                                        */
+     const float *             vertices;
+
+     int                       index_count;
+
+     const uint16_t*           indices;
+} XPLMMesh_t;
+
+/*
+ * XPLMCreateTexture
+ * 
+ * Creates a GPU texture from a contiguous RGBA8 byte buffer. The buffer is
+ * read top-to-bottom, with byte order R, G, B, A per pixel. Any width and
+ * height are accepted, including non-power-of-two and 1-pixel-wide strips;
+ * the host does not require power-of-two dimensions.
+ * 
+ * The returned handle is opaque; pass it to `XPLMDrawCall_t::tex_ref` and
+ * free it with `XPLMDestroyTexture` when done. The sampler used at draw time
+ * is bilinear, clamp-to-edge, no mipmaps.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void *     XPLMCreateTexture(
+                         const unsigned char * rgba_image,
+                         int                  width,
+                         int                  height);
+
+/*
+ * XPLMDestroyTexture
+ * 
+ * Frees a texture obtained from `XPLMCreateTexture`. Do not use the handle
+ * after calling this. It is safe to create and destroy textures every frame.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMDestroyTexture(
+                         void *               tex_ref);
+
+/*
+ * XPLMDrawCalls
+ * 
+ * Renders `inCount` draw calls against the shared `inMesh`. Issues one GPU
+ * dispatch per call (each can rebind texture and scissor) but uploads the
+ * mesh only once. `inCount = 0` is a no-op. `element_count = 0` on a specific
+ * draw call is also a no-op for that call.
+ * 
+ * The scissor state is saved on entry and restored on exit; subsequent
+ * panel-graphics primitives in the same frame are unaffected.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMDrawCalls(
+                         const XPLMMesh_t *   inMesh,
+                         int                  inCount,
+                         const XPLMDrawCall_t inDrawCalls[]);
 #endif /* XPLMPG1 */
 #ifdef __cplusplus
 }
