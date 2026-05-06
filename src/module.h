@@ -57,6 +57,7 @@ public:
 	static int			debug_proc_from_interp(lua_State * interp);
 	bool				is_started(void) const { return m_interp != nullptr; }
 	bool				is_enabled(void) const { return m_enabled; }
+	lua_State *			get_interp(void) const { return m_interp; }
 	version_triplet const& get_required_version(void) const { return m_xlua_compat; }
 
 			void *		module_alloc_tracked(size_t amount);

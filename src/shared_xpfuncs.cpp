@@ -182,9 +182,15 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 
 static std::map<int, std::shared_ptr<notify_cb_t>> s_RegisteredCallbacks;
 
-void xlua_callback_cleanup()
+void xlua_callback_cleanup(lua_State* L)
 {
-	s_RegisteredCallbacks.clear();
+	for (auto it = s_RegisteredCallbacks.begin(); it != s_RegisteredCallbacks.end(); )
+	{
+		if (it->second && it->second->L == L)
+			it = s_RegisteredCallbacks.erase(it);
+		else
+			++it;
+	}
 }
 
 void xlua_remove_callback(std::shared_ptr<notify_cb_t> cb)
