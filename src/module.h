@@ -26,6 +26,7 @@ extern "C" {
 #include <string>
 #include <map>
 #include <array>
+#include <filesystem>
 
  #if defined(_MSC_VER)
 	typedef int64_t ssize_t;
@@ -46,9 +47,9 @@ class module {
 public:
 
 						 module(
-							const char *		in_module_path,
-							const char *		in_init_script,
-							const char *		in_module_script,
+							std::filesystem::path const& in_module_path,
+							std::filesystem::path const& in_init_script,
+							std::filesystem::path const& in_module_script,
 							void *				(* in_alloc_func)(void *msp, void *ptr, size_t osize, size_t nsize),
 							void *				in_alloc_ref);
 						~module();
@@ -65,7 +66,7 @@ public:
 			// Pushes error string or chunk onto interp stack, returns error code or 0.  
 			int			load_module_relative_path(const string& path);
 	std::string const&	get_log_path(void) const { return m_log_path; }
-	std::string const&	get_script_path(void) const { return m_path; }
+	std::filesystem::path const&	get_script_path(void) const { return m_path; }
 
 	void		acf_load();
 	void		acf_unload();
@@ -107,7 +108,7 @@ private:
 
 	lua_State *				m_interp;
 	module_alloc_block *	m_memory;
-	string					m_path;
+	std::filesystem::path	m_path;
 	string					m_log_path;
 	int						m_debug_proc;
 	bool					m_enabled;

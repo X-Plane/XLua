@@ -12,6 +12,7 @@ extern "C" {
 #include <map>
 #include <memory>
 #include <optional>
+#include <filesystem>
 
 // This is kind of a mess - Lua [annoyingly] doesn't give you a way to store a closure/Lua interpreter function
 // in C space.  The hack is to use luaL_ref to fill a new key in the registry table with a copy of ANY value from
@@ -35,7 +36,7 @@ private:
 };
 
 std::string get_log_prefix(char l='I');
-std::string get_current_script_path(lua_State* L);
+std::filesystem::path get_current_script_path(lua_State* L);
 
 int log_message(lua_State *L, char const* format, ...);
 

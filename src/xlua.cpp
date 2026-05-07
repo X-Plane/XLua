@@ -216,24 +216,25 @@ void InitScripts(void)
 
 		if (strcmp(fptr, ".DS_Store") != 0)
 		{
-			string mod_path(scripts_dir_path);
-			mod_path += "/";
-			mod_path += fptr;
-			mod_path += "/";
-			string script_path(mod_path);
-			script_path += fptr;
+			std::filesystem::path mod_path(scripts_dir_path);
+			mod_path /= fptr;
+
+			std::filesystem::path script_path(mod_path / fptr);
 			script_path += ".lua";
 
-			g_modules.push_back(new module(
-				mod_path.c_str(),
-				init_script_path.c_str(),
-				script_path.c_str(),
-				lj_alloc_f,
-				NULL));
-
-			if (!g_modules.back()->is_started())
+			if (std::filesystem::exists(script_path) && !std::filesystem::is_directory(script_path))
 			{
-				g_modules.pop_back();
+				g_modules.push_back(new module(
+					mod_path.generic_string().c_str(),
+					init_script_path.c_str(),
+					script_path.generic_string().c_str(),
+					lj_alloc_f,
+					NULL));
+
+				if (!g_modules.back()->is_started())
+				{
+					g_modules.pop_back();
+				}
 			}
 		}
 
