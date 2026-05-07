@@ -290,6 +290,7 @@ module::module(
 		XPLMDebugString("Unable to set up Lua.");
 		return;
 	}
+	xlua_install_panic_handler(m_interp);
 	luaL_openlibs(m_interp);
 
     xlua_pushuserdata(m_interp, this);

@@ -263,3 +263,30 @@ std::optional<int> xlua_checkoptint(lua_State* L, int narg)
 
 	return std::make_optional<int>(static_cast<int>(luaL_checkinteger(L, narg)));
 }
+
+// ---------------------------------------------------------------------------
+// Panic handler
+//
+// LuaJIT calls the panic function whenever a Lua error is thrown with no
+// pcall on the stack to catch it. After panic returns, LuaJIT calls abort()
+// — the state is undefined and execution can't safely continue. So our
+// handler can't recover; what it can do is identify the offending script
+// and surface the error message before the abort, turning a silent exit
+// into a filable crash report.
+// ---------------------------------------------------------------------------
+static int xlua_panic_handler(lua_State* L)
+{
+	const char * msg = lua_tostring(L, -1);
+	log_message(L, "FATAL: unprotected Lua error escaped to panic handler.\n");
+	log_message(L, "FATAL:   message: %s\n", msg ? msg : "(no message on stack)");
+	log_message(L, "FATAL: this is a host bug -- Lua errors should never reach panic.\n");
+	log_message(L, "FATAL: please report with the lua script path above and the X-Plane version.\n");
+	// Returning continues to LuaJIT's default abort(); the log lines above
+	// turn that abort from a mystery into actionable diagnostics.
+	return 0;
+}
+
+void xlua_install_panic_handler(lua_State* L)
+{
+	lua_atpanic(L, xlua_panic_handler);
+}

@@ -86,4 +86,14 @@ void xlua_pushuserdata(lua_State * state, T data)
 void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb);
 void xlua_callback_cleanup(lua_State* L);
 
+// Install a panic handler that logs the unprotected-Lua-error context (the
+// error message, the script path) before LuaJIT's default abort fires. Call
+// this once on every fresh lua_State produced by luaL_newstate().
+//
+// Without this, an unprotected Lua throw (a luaL_check* called outside any
+// pcall, a lua_error from a bad host binding, etc.) hits LuaJIT's default
+// panic which exit()s the sim with no diagnostic — silently killing the
+// process mid-frame and obscuring which script triggered the fault.
+void xlua_install_panic_handler(lua_State* L);
+
 #endif
