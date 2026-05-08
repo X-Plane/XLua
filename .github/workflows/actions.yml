@@ -1,4 +1,4 @@
-name: XLua Build
+name: XLua2 Build
 
 on: [push]
 
@@ -24,10 +24,10 @@ jobs:
     - name: Archive production artifacts
       uses: actions/upload-artifact@v6
       with:
-        name: xlua_win
+        name: xlua2_win
         path: |
-          build/win_x64/xlua.xpl
-          build/win_x64/xlua.pdb
+          build/win_x64/xlua2.xpl
+          build/win_x64/xlua2.pdb
         if-no-files-found: error
 
   build-mac:
@@ -65,8 +65,8 @@ jobs:
 
       - name: Notarize
         run: |
-          zip -r xlua_mac.zip build/mac_x64/mac.xpl
-          xcrun notarytool submit xlua_mac.zip \
+          zip -r xlua2_mac.zip build/mac_x64/mac.xpl
+          xcrun notarytool submit xlua2_mac.zip \
               --apple-id "${APPLE_ID}" \
               --team-id "${APPLE_TEAM_ID}" \
               --password "${APP_SPECIFIC_PASSWORD}" \
@@ -76,7 +76,7 @@ jobs:
       - name: Archive production artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: xlua_mac
+          name: xlua2_mac
           path: build/mac_x64/mac.xpl
           if-no-files-found: error
 
@@ -101,7 +101,7 @@ jobs:
       - name: Archive production artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: xlua_lin
+          name: xlua2_lin
           path: build/lin_x64/lin.xpl
           if-no-files-found: error
 
@@ -114,36 +114,36 @@ jobs:
 
       - uses: actions/download-artifact@v8
         with:
-          name: xlua_win
+          name: xlua2_win
           path: staging/win_x64
 
       - uses: actions/download-artifact@v8
         with:
-          name: xlua_mac
-          path: xlua/mac_x64
+          name: xlua2_mac
+          path: xlua2/mac_x64
 
       - uses: actions/download-artifact@v8
         with:
-          name: xlua_lin
-          path: xlua/lin_x64
+          name: xlua2_lin
+          path: xlua2/lin_x64
 
       - name: Assemble package tree
         run: |
-          mkdir -p xlua/win_x64
-          cp staging/win_x64/xlua.xpl xlua/win_x64/xlua.xpl
-          mv xlua/mac_x64/mac.xpl xlua/mac_x64/xlua.xpl
-          mv xlua/lin_x64/lin.xpl xlua/lin_x64/xlua.xpl
-          cp deploy/init.lua xlua/init.lua
-          cp -r deploy/include xlua/include
-          cp -r deploy/example_scripts xlua/example_scripts
-          cp -r deploy/scripts xlua/scripts
-          cp -r deploy/docs xlua/docs
+          mkdir -p xlua2/win_x64
+          cp staging/win_x64/xlua.xpl xlua2/win_x64/xlua2.xpl
+          mv xlua2/mac_x64/mac.xpl xlua2/mac_x64/xlua2.xpl
+          mv xlua2/lin_x64/lin.xpl xlua2/lin_x64/xlua2.xpl
+          cp deploy/init.lua xlua2/init.lua
+          cp -r deploy/include xlua2/include
+          cp -r deploy/example_scripts xlua2/example_scripts
+          cp -r deploy/scripts xlua2/scripts
+          cp -r deploy/docs xlua2/docs
 
       - name: Create zip
-        run: zip -r xlua.zip xlua/
+        run: zip -r xlua2.zip xlua2/
 
       - uses: actions/upload-artifact@v6
         with:
-          name: xlua
-          path: xlua.zip
+          name: xlua2
+          path: xlua2.zip
           if-no-files-found: error
