@@ -130,7 +130,7 @@ jobs:
       - name: Assemble package tree
         run: |
           mkdir -p xlua2/win_x64
-          cp staging/win_x64/xlua.xpl xlua2/win_x64/xlua2.xpl
+          cp staging/win_x64/xlua2.xpl xlua2/win_x64/xlua2.xpl
           mv xlua2/mac_x64/mac.xpl xlua2/mac_x64/xlua2.xpl
           mv xlua2/lin_x64/lin.xpl xlua2/lin_x64/xlua2.xpl
           cp deploy/init.lua xlua2/init.lua
