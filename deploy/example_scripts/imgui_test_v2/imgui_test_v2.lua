@@ -1,28 +1,19 @@
 -- imgui_test_v2.lua
 --
--- ImGui-on-panel-graphics test plugin written against the XPLM API directly.
--- Loadable two ways without modification:
---   * As an XLua module: place this file at scripts/imgui_test_v2/imgui_test_v2.lua
---     (XLua's discovery scans scripts/<name>/<name>.lua).
---   * As a host-loaded Lua plugin: place this file at
---     Resources/plugins/imgui_test_v2/main.lua (DEV builds only).
+-- Example XLua-2 script showing an imgui-on-panel-graphics window. Place at
+-- scripts/imgui_test_v2/imgui_test_v2.lua under the XLua deployment to load
+-- it as a standalone module.
 --
--- The window is a panel-graphics window; widgets are issued between explicit
--- imgui.NewFrame(width, height) and imgui.Render() calls. imgui.Render() walks
--- ImDrawData and calls XPLMDrawCalls under the hood — no FloatingWindow shim.
+-- The draw callback below is just widget code. The C wrapper inside
+-- XLuaCreateImguiWindow opens and closes the imgui frame around it (using
+-- XPLMGetWindowGeometry to derive the DisplaySize), so the Lua side never
+-- touches NewFrame / Render.
 --
 -- imgui_test_v2 mirrors the widget breadth of XLua's older imgui_test.lua
 -- (text, buttons, sliders, table, draw-list lines, styled text).
 
--- ─────────────────────────────────────────────────────────────────────────────
--- XPLM enum values (not auto-registered as Lua globals; use the raw integers
--- from XPLMDisplay.h). See the comments alongside each constant if changing.
--- ─────────────────────────────────────────────────────────────────────────────
 local XPLM = {
-    WindowLayerFloatingWindows         = 1,
     WindowDecorationRoundRectangle     = 1,
-    WindowContentTypePanelGraphics     = 1,
-    CursorDefault                      = 0,
 }
 
 local g_window  = nil
@@ -34,16 +25,7 @@ local g_tab     = 1
 local g_in_int  = 0
 local g_in_flt  = 1.5
 
-local function draw_window(win_id, refcon)
-    -- Window geometry → ImGui DisplaySize. Coordinates are window-local
-    -- (top-left origin); the host translates against the panel-graphics origin.
-    -- XPLMGetWindowGeometry returns a single table with the four out params.
-    local geom = XPLMGetWindowGeometry(win_id)
-    local w = geom.outRight - geom.outLeft
-    local h = geom.outTop - geom.outBottom
-
-    imgui.NewFrame(w, h, win_id)
-
+local function draw_window(win_id, w, h, refcon)
     -- Fill the entire window with one ImGui::Begin window so widget positions
     -- come out predictable.
     imgui.SetNextWindowPos(0, 0)
@@ -65,9 +47,6 @@ local function draw_window(win_id, refcon)
                 local _, cv = imgui.Checkbox("checkbox", g_check)
                 g_check = cv
 
-                -- Text input — keyboard focus is auto-managed: clicking these
-                -- widgets makes ImGui set io.WantTextInput=true, which the
-                -- host-side wrapper translates to XPLMTakeKeyboardFocus.
                 local _, iv = imgui.InputInt("input int", g_in_int)
                 g_in_int = iv
                 local _, fv = imgui.InputFloat("input float", g_in_flt, 0.1, 1.0, "%.3f")
@@ -122,29 +101,17 @@ local function draw_window(win_id, refcon)
         end
     end
     imgui.End()
-
-    imgui.Render()
 end
 
--- Drop-in mouse/keyboard handlers from imgui_lua_bindings — each has the exact
--- signature of the corresponding XPLMCreateWindow_t callback field.
-
 function XPluginStart()
-    g_window = XPLMCreateWindowEx({
+    g_window = XLuaCreateImguiWindow({
         left   = 100,
         top    = 600,
         right  = 600,
         bottom = 200,
         visible                  = true,
         drawWindowFunc           = draw_window,
-        handleMouseClickFunc     = imgui.HandleMouseClick,
-        handleRightClickFunc     = imgui.HandleMouseRightClick,
-        handleKeyFunc            = imgui.HandleKey,
-        handleCursorFunc         = imgui.HandleCursor,
-        handleMouseWheelFunc     = imgui.HandleMouseWheel,
-        layer                    = XPLM.WindowLayerFloatingWindows,
         decorateAsFloatingWindow = XPLM.WindowDecorationRoundRectangle,
-        windowContentType        = XPLM.WindowContentTypePanelGraphics,
     })
     XPLMSetWindowTitle(g_window, "imgui_test_v2")
     return "imgui_test_v2", "com.x-plane.test.imgui-lua-v2", "Lua imgui test plugin"
@@ -159,7 +126,7 @@ end
 
 function XPluginStop()
     if g_window ~= nil then
-        XPLMDestroyWindow(g_window)
+        XLuaDestroyImguiWindow(g_window)
         g_window = nil
     end
 end

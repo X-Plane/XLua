@@ -1,26 +1,24 @@
-// X-Plane integration layer on top of imgui_lua_bindings.
+// X-Plane integration layer for the vendored imgui Lua bindings.
 //
 // imgui_lua_bindings/imgui_lua_bindings.cpp is a vendored submodule (upstream:
-// https://github.com/casssoft/imgui_lua_bindings) that has no concept of the
-// XPLM API and produces a self-contained `imgui.*` table of widget bindings.
-// This file extends that table with frame management (NewFrame, Render) and
-// XPLMCreateWindow_t-callback drop-ins (HandleMouseClick etc.) that depend on
-// XPLM headers — code that has no business living inside the upstream sources.
+// https://github.com/casssoft/imgui_lua_bindings) that produces a self-contained
+// `imgui.*` widget table with no XPLM knowledge. This file provides:
 //
-// Public API: LoadXLuaImguiBindings(lua_State*). It calls the vendored
-// LoadImguiBindings internally, then adds the X-Plane entries on the same
-// imgui table — so call sites need only this one entry point.
+//   - the per-lua_State XplmImguiContext (font texture, ImGuiIO bookkeeping,
+//     the actual ImGui::NewFrame/Render calls that walk ImDrawData and
+//     dispatch through XPLMDrawCalls);
+//   - C-callable XPLMCreateWindow_t-callback shims that route input straight
+//     into that context;
+//   - hand-rolled imgui.InputText* widgets that the vendored macro iterator
+//     can't bind (it has no shape for `(char* buf, size_t buf_size)`).
 //
-// State: each lua_State owns one XplmImguiContext stored as userdata in the
-// Lua registry under kImguiStateKey. The same class is used by xlua.cpp's
-// profiler window (different instance, no Lua state involved).
+// Frame management is not exposed to Lua scripts — XLuaCreateImguiWindow
+// installs the BeginFrame/EndFrame bracket and the input handlers in C; the
+// script body is pure widget code, plus the InputText widgets registered
+// below.
 
-#include "shared_xpfuncs.h"
 #include "xlua_imgui.h"
 #include "xlua_imgui_context.h"
-
-#include <XPLMDefs.h>
-#include <XPLMDisplay.h>
 
 #include <imgui.h>
 
@@ -31,9 +29,6 @@
 extern "C" {
     #include <lauxlib.h>
 }
-
-// Vendored upstream — exported but has no header.
-extern void LoadImguiBindings(lua_State* L);
 
 namespace {
 
@@ -75,9 +70,9 @@ XplmImguiContext* GetOrCreateImguiState(lua_State* L) {
     return st;
 }
 
-// Returns the per-lua_State context if NewFrame has already created it; nullptr
-// otherwise. Used by input dispatchers — they should not lazily create a context
-// on input arriving before the first frame.
+// Returns the per-lua_State context if a frame has been opened on it; nullptr
+// otherwise. Used by input dispatchers — they should not lazily create a
+// context for input arriving before the first frame.
 XplmImguiContext* GetExistingImguiState(lua_State* L) {
     lua_pushstring(L, kImguiStateKey);
     lua_gettable(L, LUA_REGISTRYINDEX);
@@ -87,100 +82,69 @@ XplmImguiContext* GetExistingImguiState(lua_State* L) {
     return st;
 }
 
-int impl_NewFrame(lua_State* L) {
-    const int w = static_cast<int>(luaL_checkinteger(L, 1));
-    const int h = static_cast<int>(luaL_checkinteger(L, 2));
-    XPLMWindowID win = nullptr;
-    if (lua_isuserdata(L, 3)) {
-        win = xlua_checkuserdata<XPLMWindowID>(L, 3, "Expected XPLMWindowID");
-    }
+} // anonymous namespace
 
-    auto* st = GetOrCreateImguiState(L);
-    st->BeginFrame(w, h, win);
-    return 0;
+void xplm_imgui_begin_frame(lua_State* L, int w, int h, XPLMWindowID win) {
+    GetOrCreateImguiState(L)->BeginFrame(w, h, win);
 }
 
-int impl_Render(lua_State* L) {
-    auto* st = GetOrCreateImguiState(L);
-    st->EndFrame();
-    return 0;
+void xplm_imgui_end_frame(lua_State* L) {
+    GetOrCreateImguiState(L)->EndFrame();
 }
 
-int impl_HandleMouseClick(lua_State* L) {
-    auto* st = GetExistingImguiState(L);
-    if (st == nullptr) { lua_pushinteger(L, 0); return 1; }
-    XPLMWindowID win = lua_isuserdata(L, 1)
-        ? xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID") : nullptr;
-    const int x = static_cast<int>(luaL_checkinteger(L, 2));
-    const int y = static_cast<int>(luaL_checkinteger(L, 3));
-    const int status = static_cast<int>(luaL_checkinteger(L, 4));
-    lua_pushinteger(L, st->OnMouseButton(win, x, y, static_cast<XPLMMouseStatus>(status), 0));
-    return 1;
-}
-
-int impl_HandleMouseRightClick(lua_State* L) {
-    auto* st = GetExistingImguiState(L);
-    if (st == nullptr) { lua_pushinteger(L, 0); return 1; }
-    XPLMWindowID win = lua_isuserdata(L, 1)
-        ? xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID") : nullptr;
-    const int x = static_cast<int>(luaL_checkinteger(L, 2));
-    const int y = static_cast<int>(luaL_checkinteger(L, 3));
-    const int status = static_cast<int>(luaL_checkinteger(L, 4));
-    lua_pushinteger(L, st->OnMouseButton(win, x, y, static_cast<XPLMMouseStatus>(status), 1));
-    return 1;
-}
-
-int impl_HandleCursor(lua_State* L) {
-    // Position update happens in NewFrame; the cursor callback only needs to
-    // tell X-Plane what cursor to show. Default = let X-Plane pick.
-    lua_pushinteger(L, xplm_CursorDefault);
-    return 1;
-}
-
-int impl_HandleMouseWheel(lua_State* L) {
-    auto* st = GetExistingImguiState(L);
-    if (st == nullptr) { lua_pushinteger(L, 0); return 1; }
-    XPLMWindowID win = lua_isuserdata(L, 1)
-        ? xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID") : nullptr;
-    const int x = static_cast<int>(luaL_checkinteger(L, 2));
-    const int y = static_cast<int>(luaL_checkinteger(L, 3));
-    const int wheel = static_cast<int>(luaL_checkinteger(L, 4));   // 0=vertical, 1=horizontal
-    const int clicks = static_cast<int>(luaL_checkinteger(L, 5));
-    lua_pushinteger(L, st->OnMouseWheel(win, x, y, wheel, clicks));
-    return 1;
-}
-
-int impl_HandleKey(lua_State* L) {
+int xplm_imgui_handle_mouse_click(XPLMWindowID win, int x, int y,
+                                  XPLMMouseStatus status, void* refcon) {
+    auto* L = static_cast<lua_State*>(refcon);
+    if (L == nullptr) return 0;
     auto* st = GetExistingImguiState(L);
     if (st == nullptr) return 0;
-    // (win_id at 1 is unused — keys aren't position-dependent.)
-    const int key   = static_cast<int>(luaL_checkinteger(L, 2));    // unicode char or 0
-    const int flags = static_cast<int>(luaL_checkinteger(L, 3));
-    const int vkey  = static_cast<int>(luaL_checkinteger(L, 4));
-    // 5 = refcon (unused).
-    // The auto-glue's format string for XPLMHandleKey_f pushes losingFocus as
-    // a Lua boolean (format 'b' → lua_pushboolean), so use lua_toboolean here
-    // — luaL_optinteger errors on a boolean.
-    const int losing_focus = lua_toboolean(L, 6);
-    st->OnKey(static_cast<char>(key),
-              static_cast<XPLMKeyFlags>(flags),
-              static_cast<char>(vkey),
-              losing_focus);
-    return 0;
+    return st->OnMouseButton(win, x, y, status, 0);
+}
+
+int xplm_imgui_handle_right_click(XPLMWindowID win, int x, int y,
+                                  XPLMMouseStatus status, void* refcon) {
+    auto* L = static_cast<lua_State*>(refcon);
+    if (L == nullptr) return 0;
+    auto* st = GetExistingImguiState(L);
+    if (st == nullptr) return 0;
+    return st->OnMouseButton(win, x, y, status, 1);
+}
+
+void xplm_imgui_handle_key(XPLMWindowID, char key, XPLMKeyFlags flags,
+                           char vkey, void* refcon, int losingFocus) {
+    auto* L = static_cast<lua_State*>(refcon);
+    if (L == nullptr) return;
+    auto* st = GetExistingImguiState(L);
+    if (st == nullptr) return;
+    st->OnKey(key, flags, vkey, losingFocus);
+}
+
+XPLMCursorStatus xplm_imgui_handle_cursor(XPLMWindowID, int, int, void*) {
+    return xplm_CursorDefault;
+}
+
+int xplm_imgui_handle_mouse_wheel(XPLMWindowID win, int x, int y,
+                                  int wheel, int clicks, void* refcon) {
+    auto* L = static_cast<lua_State*>(refcon);
+    if (L == nullptr) return 0;
+    auto* st = GetExistingImguiState(L);
+    if (st == nullptr) return 0;
+    return st->OnMouseWheel(win, x, y, wheel, clicks);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // imgui.InputText / InputTextWithHint / InputTextMultiline — bound by hand
-// because the upstream iterator's argument macros don't have a shape for
-// `(char* buf, size_t buf_size)`. The Lua-side contract matches every other
-// Input* widget: returns (changed, new_text). The buffer is short-lived per
-// call — ImGui keeps editing state (cursor, selection, undo) in
-// ImGuiInputTextState keyed by widget ID, independent of the buffer pointer.
-// Lua holds the canonical string between frames.
+// because the vendored iterator can't bind buf+size APIs. The Lua-side
+// contract matches every other Input* widget: returns (changed, new_text).
+// The buffer is short-lived per call — ImGui keeps editing state (cursor,
+// selection, undo) in ImGuiInputTextState keyed by widget ID, independent
+// of the buffer pointer. Lua holds the canonical string between frames.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Allocate a buffer of at least `requested` bytes that comfortably holds `cur`,
-// seeded with `cur` and NUL-terminated. Returns the buffer.
+namespace {
+
+// Allocate a buffer of at least `requested` bytes that comfortably holds
+// `cur`, seeded with `cur` and NUL-terminated. Returns the buffer.
 std::vector<char> MakeInputBuf(const char* cur, size_t cur_len, int requested) {
     if (requested < 1) requested = 1;
     if (static_cast<size_t>(requested) <= cur_len) {
@@ -193,8 +157,8 @@ std::vector<char> MakeInputBuf(const char* cur, size_t cur_len, int requested) {
     return buf;
 }
 
-// On the no-context path we still return (false, current_text) so a caller
-// pattern of `local _, t = imgui.InputText(...)` always assigns back cleanly.
+// On the no-context path return (false, current_text) so a caller pattern
+// of `local _, t = imgui.InputText(...)` always assigns back cleanly.
 int InputTextNoContextReturn(lua_State* L, int text_arg_idx) {
     lua_pushboolean(L, 0);
     lua_pushvalue(L, text_arg_idx);
@@ -268,33 +232,18 @@ int impl_InputTextMultiline(lua_State* L) {
 
 } // namespace
 
-void LoadXLuaImguiBindings(lua_State* L) {
-    // 1. Vendored upstream: creates the imgui.* widget table + constants and
-    //    sets it as the global "imgui".
-    LoadImguiBindings(L);
-
-    // 2. Re-fetch the imgui table the vendored function just made global, and
-    //    add the X-Plane-specific entries to it.
+void register_xlua_imgui_text_inputs(lua_State* L) {
     lua_getglobal(L, "imgui");
     if (!lua_istable(L, -1)) {
         lua_pop(L, 1);
         return;
     }
-
-    static const luaL_Reg kXplmEntries[] = {
-        {"NewFrame",              impl_NewFrame},
-        {"Render",                impl_Render},
-        {"HandleMouseClick",      impl_HandleMouseClick},
-        {"HandleMouseRightClick", impl_HandleMouseRightClick},
-        {"HandleCursor",          impl_HandleCursor},
-        {"HandleMouseWheel",      impl_HandleMouseWheel},
-        {"HandleKey",             impl_HandleKey},
-        // Hand-rolled because the vendored iterator can't bind buf+size APIs.
-        {"InputText",             impl_InputText},
-        {"InputTextWithHint",     impl_InputTextWithHint},
-        {"InputTextMultiline",    impl_InputTextMultiline},
+    static const luaL_Reg kEntries[] = {
+        {"InputText",          impl_InputText},
+        {"InputTextWithHint",  impl_InputTextWithHint},
+        {"InputTextMultiline", impl_InputTextMultiline},
         {nullptr, nullptr},
     };
-    luaL_setfuncs(L, kXplmEntries, 0);
+    luaL_setfuncs(L, kEntries, 0);
     lua_pop(L, 1);
 }

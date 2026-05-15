@@ -29,6 +29,7 @@ add_library(xlua2 MODULE
     src/xptimers.cpp
     src/xlua_imgui.cpp
     src/xlua_imgui_context.cpp
+    src/xlua2_window_helpers.cpp
 
     imgui_lua_bindings/imgui_lua_bindings.cpp
     imgui/imgui.cpp

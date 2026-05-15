@@ -29,6 +29,7 @@
 	}
 #else
 	#include "xlua_imgui.h"
+	#include "xlua2_window_helpers.h"
 
 	extern "C"
 	{
@@ -308,7 +309,9 @@ module::module(
 	{
 		// XLua 2.x functions.
 		add_xplm_to_interp(m_interp);
-		LoadXLuaImguiBindings(m_interp);
+		LoadImguiBindings(m_interp);
+		register_xlua_imgui_text_inputs(m_interp);
+		register_xlua2_window_helpers(m_interp);
 	}
 #endif
 
