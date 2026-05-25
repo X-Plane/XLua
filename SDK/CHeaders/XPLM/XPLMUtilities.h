@@ -233,6 +233,26 @@ XPLM_API int        XPLMSaveDataFile(
 
 
 /*
+ * XPLMReturnString
+ * 
+ * Copies `inString` into the host-managed return slot for the current
+ * callback and returns a pointer that remains valid for the duration of the
+ * host's use of the callback's result. This is the only sanctioned way for an
+ * XPLM callback whose return type is `const char *` to hand a string back to
+ * X-Plane: returning a stack buffer, a string literal, or any other pointer
+ * is a contract violation and may corrupt the result.
+ * 
+ * The host pushes a return slot before invoking each `const char *` callback
+ * and pops it afterwards, so callbacks must call
+ * `XPLMReturnString` at most once per invocation and must not retain the
+ *  returned pointer past the callback's return.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API const char * XPLMReturnString(
+                         const char *         inString);
+
+/*
  * XPLMHostApplicationID
  * 
  * While the plug-in SDK is only accessible to plugins running inside X-Plane,

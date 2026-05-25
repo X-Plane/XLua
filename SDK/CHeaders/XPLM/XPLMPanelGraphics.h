@@ -1145,6 +1145,86 @@ XPLM_API void       XPLMTextureAtlasDrawMesh(
 
 #if defined(XPLMPG1)
 /***************************************************************************
+ * PANEL GRAPHICS radar texture
+ ***************************************************************************/
+/*
+ * These routines draw stock simulator textures, such as weather radar
+ * displays, into your avionics panel. Unlike texture atlas images which are
+ * loaded from files you provide, texture sources are live textures rendered
+ * by the simulator each frame. If the aircraft does not have the requested
+ * hardware (e.g. no weather radar installed), the draw call is silently
+ * skipped.
+ *
+ */
+
+
+/*
+ * XPLMTextureSource
+ * 
+ * An XPLMTextureSource identifies a stock simulator texture that can be drawn
+ * with the texture source drawing functions.
+ *
+ */
+enum {
+
+    /* The pilot-side weather radar display.                                      */
+    xplm_Texture_WeatherRadar1               = 0,
+
+
+    /* The copilot-side weather radar display.                                    */
+    xplm_Texture_WeatherRadar2               = 1,
+
+
+};
+typedef int XPLMTextureSource;
+
+/*
+ * XPLMTextureSourceDrawIn
+ * 
+ * This function draws a texture source scaled to fill a rectangular region.
+ * The texture is stretched or compressed to exactly match the specified
+ * bounds.
+ * 
+ * - tex: the texture source to draw.
+ * - tint: a color that is multiplied with the texture. Use XPLMMakeColor(1,
+ *   1, 1, 1) for no tinting.
+ * - left, top, right, bottom: the bounding rectangle in panel coordinates.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMTextureSourceDrawIn(
+                         XPLMTextureSource    tex,
+                         uint32_t             tint,
+                         int                  left,
+                         int                  top,
+                         int                  right,
+                         int                  bottom);
+
+/*
+ * XPLMTextureSourceDrawMesh
+ * 
+ * This function draws a texture source onto an arbitrary triangle-strip mesh.
+ * Each vertex specifies both a panel-space position and a normalized texture
+ * coordinate (0.0 to 1.0) within the source texture. This gives you full
+ * control over how the texture is mapped onto geometry.
+ * 
+ * - tex: the texture source to draw.
+ * - tint: a color that is multiplied with the texture.
+ * - mesh: an array of XPLMTextureVertex_t vertices defining the triangle
+ *   strip.
+ * - count: the number of vertices. Must be at least 3.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMTextureSourceDrawMesh(
+                         XPLMTextureSource    tex,
+                         uint32_t             tint,
+                         const XPLMTextureVertex_t mesh[],
+                         int                  count);
+#endif /* XPLMPG1 */
+
+#if defined(XPLMPG1)
+/***************************************************************************
  * PANEL_GRAPHICS transform/scissors/masks
  ***************************************************************************/
 /*
@@ -1562,6 +1642,397 @@ XPLM_API void       XPLMDrawRetained(
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDestroyRetainedDrawing(
                          XPLMRetainedDrawing_t drawing);
+#endif /* XPLMPG1 */
+
+#if defined(XPLMPG1)
+/***************************************************************************
+ * PANEL GRAPHICS synthetic vision
+ ***************************************************************************/
+/*
+ * These routines let you draw the simulator's Synthetic Vision Technology
+ * (SVT) terrain rendering into your avionics panel. SVT provides a 3-D
+ * perspective view of terrain, runways, obstacles, and optional overlays such
+ * as flight path hoops, traffic, and airport signs. The view is always
+ * centered on the user aircraft and uses the selected AHRS source for
+ * attitude.
+ * 
+ * Create an SVT display with XPLMCreateSVTDisplay and draw it with
+ * XPLMSVTDisplayDrawIn. Each display instance manages its own terrain tile
+ * loading and GPU state, so you can have multiple independent SVT views (e.g.
+ * pilot and copilot PFDs with different feature flags).
+ * 
+ * SVT rendering works on any aircraft, regardless of whether the stock
+ * cockpit has a G1000 or other SVT-capable avionics installed.
+ *
+ */
+
+
+/*
+ * XPLMSVTFeatures
+ * 
+ * Bit flags that control which visual layers an SVT display renders. Combine
+ * flags with bitwise OR to enable multiple layers.
+ *
+ */
+enum {
+
+    /* 3-D terrain mesh with elevation coloring.                                  */
+    xplm_SVT_Terrain                         = 1,
+
+
+    /* Runway outlines, centerline stripes, and numbers.                          */
+    xplm_SVT_Runways                         = 2,
+
+
+    /* Obstacle markers (towers, masts, etc.).                                    */
+    xplm_SVT_Obstacles                       = 4,
+
+
+    /* Flight path guidance hoops along the active route.                         */
+    xplm_SVT_FlightPath                      = 8,
+
+
+    /* TCAS traffic symbols.                                                      */
+    xplm_SVT_Traffic                         = 16,
+
+
+    /* Airport identification signs near airports.                                */
+    xplm_SVT_AirportSigns                    = 32,
+
+
+    /* ILS approach guidance hoops.                                               */
+    xplm_SVT_ILSHoops                        = 64,
+
+
+    /* Horizon line and heading reference.                                        */
+    xplm_SVT_HorizonHeading                  = 128,
+
+
+    /* All visual layers enabled.                                                 */
+    xplm_SVT_All                             = 255,
+
+
+};
+typedef int XPLMSVTFeatures;
+
+/*
+ * XPLMCreateSVT_t
+ * 
+ * Parameters for creating an SVT display. Set structSize to the size of your
+ * struct so that future SDK versions can add fields without breaking existing
+ * plugins.
+ *
+ */
+typedef struct {
+
+    /* Set to sizeof(XPLMCreateSVT_t).                                            */
+     int                       structSize;
+
+    /* Bitwise OR of XPLMSVTFeatures flags to enable.                             */
+     XPLMSVTFeatures           features;
+
+    /* 0 for pilot-side AHRS, 1 for copilot-side AHRS.                            */
+     int                       pilotIndex;
+} XPLMCreateSVT_t;
+
+/*
+ * XPLMSVTDisplayRef
+ * 
+ * An opaque handle to an SVT display instance. Create one with
+ * XPLMCreateSVTDisplay and destroy it with XPLMDestroySVTDisplay.
+ *
+ */
+typedef void * XPLMSVTDisplayRef;
+
+/*
+ * XPLMCreateSVTDisplay
+ * 
+ * This function creates a new SVT display instance. The display begins
+ * loading terrain tiles for the current aircraft position immediately. You
+ * can draw it as soon as tiles are available; before that, the draw call is a
+ * no-op.
+ * 
+ * The returned handle must be destroyed with XPLMDestroySVTDisplay when no
+ * longer needed. Handles are automatically destroyed when the owning plugin
+ * is unloaded.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API XPLMSVTDisplayRef XPLMCreateSVTDisplay(
+                         XPLMCreateSVT_t *    params);
+
+/*
+ * XPLMDestroySVTDisplay
+ * 
+ * This function destroys an SVT display and frees all associated resources.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMDestroySVTDisplay(
+                         XPLMSVTDisplayRef    svt);
+
+/*
+ * XPLMSVTCustomData_t
+ *
+ */
+typedef struct {
+
+    /* pitch override (degrees).                                                  */
+     float                     pitchDeg;
+
+    /* roll/bank override (degrees).                                              */
+     float                     rollDeg;
+
+    /* magnetic heading override (degrees).                                       */
+     float                     headingMagDeg;
+
+    /* magnetic variation override (degrees).                                     */
+     float                     magVarDeg;
+
+    /* indicated altitude override (feet).                                        */
+     float                     indicatedAltFt;
+
+    /* altimeter setting override ( inHg).                                        */
+     float                     baroSettingInHg;
+
+    /* HSI source override.                                                       */
+     int                       hsiSource;
+
+    /* horizontal CDI deviation override (float).                                 */
+     float                     hdefDots;
+
+    /* vertical GS deviation override (float).                                    */
+     float                     vdefDots;
+} XPLMSVTCustomData_t;
+
+/*
+ * XPLMSVTDisplayDrawIn
+ * 
+ * This function renders the SVT display directly into the active panel
+ * surface within the specified rectangular region. SVT sets up its own 3-D
+ * perspective projection to fit the rectangle, so no transform stack
+ * manipulation is needed.
+ * 
+ * The features parameter controls which visual layers are rendered for this
+ * draw call. Pass a bitwise OR of XPLMSVTFeatures flags.
+ * 
+ * This function must be called from within an avionics drawing callback. If
+ * terrain tiles have not finished loading yet, this function does nothing.
+ * 
+ * - svt: the SVT display handle.
+ * - features: bitwise OR of XPLMSVTFeatures flags to enable for this draw
+ *   call.
+ * - left, top, right, bottom: the bounding rectangle in panel coordinates.
+ * - dataOverrides. Pass nullptr for default sim state.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSVTDisplayDrawIn(
+                         XPLMSVTDisplayRef    svt,
+                         XPLMSVTFeatures      features,
+                         int                  left,
+                         int                  top,
+                         int                  right,
+                         int                  bottom,
+                         XPLMSVTCustomData_t* dataOverrides);         /* Can be NULL */
+#endif /* XPLMPG1 */
+
+#if defined(XPLMPG1)
+/***************************************************************************
+ * PANEL GRAPHICS map display
+ ***************************************************************************/
+/*
+ * These routines let you draw the base map for a navigation display (ND) or 
+ * multi-function display (MFD) into your avionics panel. The base map
+ * provides  layers for terrain, topography, bodies of water, EGPWS terrain
+ * warnings,  airport taxi layouts, NEXRAD and cloud tops. These are drawn
+ * with a  stereographic projectionwhere the pole is the current user aircraft
+ * position.
+ * 
+ * Create a map display with XPLMCreateMapDisplay and draw it with
+ * XPLMMapDisplayDrawIn. Each map instance manages its own terrain tile
+ * loading and GPU state, so you can have multiple independent views (e.g.
+ * pilot and copilot PFDs with different layers visible).
+ * 
+ * The base map works on any aircraft, regardless of whether the stock cockpit
+ * has an FMS or other avionics installed.
+ *
+ */
+
+
+/*
+ * XPLMMapLayers
+ * 
+ * Bit flags that control which visual layers a map display renders. Combine
+ * flags with bitwise OR to enable multiple layers. NOTE: Not all layers can
+ * be combined. You can display terrain and water and taxiways at the same 
+ * time, but you cannot display weather radar and EGPWS at the same time. 
+ * Only one of NEXRAD or Cloud IR can be displayed. Airport details (taxiways)
+ * are only visible at close-in zoom levels.
+ *
+ */
+enum {
+
+    /* Radar composite reflectivity.                                              */
+    xplm_Map_Nexrad                          = 1,
+
+
+    /* Infrared false-color cloud tops.                                           */
+    xplm_Map_IR                              = 2,
+
+
+    /* Topography (elevation color scale, not taking aircraft altitude into       *
+     * account).                                                                  */
+    xplm_Map_Topo                            = 4,
+
+
+    /* Terrain (terrain elevation relative to aircraft altitude).                 */
+    xplm_Map_Terrain                         = 8,
+
+
+    /* Bodies of water.                                                           */
+    xplm_Map_Water                           = 16,
+
+
+    /* Terrain warnings (relative to aircraft altitude, trajectory and landing    *
+     * gear position).                                                            */
+    xplm_Map_EGPWS                           = 32,
+
+
+    /* Raw 0-255 texture of terrain elevation for plugin use.                     */
+    xplm_Map_raw_elev                        = 64,
+
+
+    /* Airport runway and taxiway layouts.                                        */
+    xplm_Map_safe_taxi                       = 128,
+
+
+};
+typedef int XPLMMapLayers;
+
+/*
+ * XPLMMapCustomData_t
+ *
+ */
+typedef struct {
+
+    /* datum lat (degrees).                                                       */
+     float                     datLat;
+
+    /* datum lon (degrees).                                                       */
+     float                     datLon;
+
+    /* map center x coordinate (pixels).                                          */
+     int                       ctrX;
+
+    /* map center y coordinate (pixels).                                          */
+     int                       ctrY;
+
+    /* outer compass rose diameter (pixels).                                      */
+     int                       roseDiameter;
+
+    /* map range center to compass rose (nautical miles).                         */
+     float                     mapRange;
+
+    /* map orientation (0=north up, 1=Track up, 2=Hdg up).                        */
+     int                       orientation;
+
+    /* terrain warning altitude (red, feet).                                      */
+     float                     terrainWarn;
+
+    /* terrain caution altitude (yellow, feet).                                   */
+     float                     terrainCaution;
+
+    /* ownship altitude (feet).                                                   */
+     float                     acfAlt;
+
+    /* ownship gear status (1=gear down).                                         */
+     int                       gearDown;
+} XPLMMapCustomData_t;
+
+/*
+ * XPLMCreateMap_t
+ * 
+ * Parameters for creating a base map display. Set structSize to the size of
+ * your struct so that future SDK versions can add fields without breaking
+ * existing plugins.
+ *
+ */
+typedef struct {
+
+    /* Set to sizeof(XPLMCreateSVT_t).                                            */
+     int                       structSize;
+
+    /* 0 for pilot-side GPS position, 1 for copilot-side GPS position.            */
+     int                       pilotIndex;
+} XPLMCreateMap_t;
+
+/*
+ * XPLMMapDisplayRef
+ * 
+ * An opaque handle to a map display instance. Create one with
+ * XPLMCreateMapDisplay and destroy it with XPLMDestroyMapDisplay.
+ *
+ */
+typedef void * XPLMMapDisplayRef;
+
+/*
+ * XPLMCreateMapDisplay
+ * 
+ * This function creates a new map display instance. The display begins
+ * loading terrain tiles for the current aircraft position immediately. You
+ * can draw it as soon as tiles are available; before that, the draw call is a
+ * no-op.
+ * 
+ * The returned handle must be destroyed with XPLMDestroyMapDisplay when no
+ * longer needed. Handles are automatically destroyed when the owning plugin
+ * is unloaded.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API XPLMMapDisplayRef XPLMCreateMapDisplay(
+                         XPLMCreateMap_t *    params);
+
+/*
+ * XPLMDestroyMapDisplay
+ * 
+ * This function destroys a map display and frees all associated resources.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMDestroyMapDisplay(
+                         XPLMMapDisplayRef    map);
+
+/*
+ * XPLMMapDisplayDrawIn
+ * 
+ * This function renders the map display directly into the active panel
+ * surface within the specified rectangular region. Map sets up its own
+ * stereographic projection to fit the rectangle, so no transform stack
+ * manipulation is needed.
+ * 
+ * The layers parameter controls which visual layers are rendered for this
+ * draw call. Pass a bitwise OR of XPLMMapLayers flags. Note that some layers
+ * are mutually exclusive, such as NEXRAD and EGPWS or NEXRAD and IR.  The
+ * airport details layer is only visible at very close zoom levels.
+ * 
+ * This function must be called from within an avionics drawing callback. If
+ * terrain tiles have not finished loading yet, this function does nothing.
+ * 
+ * - map: the map display handle.
+ * - layers: bitwise OR of XPLMMapLayers flags to enable for this draw call.
+ * - left, top, right, bottom: the bounding rectangle in panel coordinates.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMMapDisplayDrawIn(
+                         XPLMMapDisplayRef    map,
+                         XPLMMapLayers        layers,
+                         int                  left,
+                         int                  top,
+                         int                  right,
+                         int                  bottom,
+                         XPLMMapCustomData_t* dataOverrides);         /* Can be NULL */
 #endif /* XPLMPG1 */
 
 #if defined(XPLMPG1)

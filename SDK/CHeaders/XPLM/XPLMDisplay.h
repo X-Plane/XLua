@@ -842,13 +842,20 @@ typedef struct {
 
     /* A null-terminated string to give a user-readable name to your device, which*
      * can be presented in UI dialogs.                                            */
-     char const *              deviceName;
+     char const*               deviceName;
 
     /* A reference which will be passed into your draw and mouse callbacks. Use   *
      * this to pass information to yourself as needed.                            */
      void*                     refcon;
 
      int                       native;
+
+#if defined(XPLM430)
+    /* If set to true (1), X-Plane will draw the chrome with the close and pop-out*
+     * buttons outside of your bezel, rather than having the buttons steal pixels *
+     * from your bezel.                                                           */
+     int                       windowWithChrome;
+#endif /* XPLM430 */
 } XPLMCreateAvionics_t;
 #endif /* XPLM410 */
 
@@ -995,6 +1002,11 @@ XPLM_API void       XPLMAvionicsNeedsDrawing(
  * XPLMSetAvionicsPopupVisible
  * 
  * Shows or hides the popup window for a cockpit device.
+ * 
+ * Visibility is independent of where the popup is drawn (in the X-Plane
+ * window, popped out as an OS window, or mapped to a VR floating window): the
+ * popup always remains in whichever target mode you most recently selected,
+ * and toggling visibility just shows or hides it there.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -1019,7 +1031,12 @@ XPLM_API int        XPLMIsAvionicsPopupVisible(
 /*
  * XPLMPopOutAvionics
  * 
- * Pops out the window for a cockpit device.
+ * Pops out the window for a cockpit device, making it a first-class window in
+ * the operating system, separate from the X-Plane window.
+ * 
+ * Popping out and being mapped to VR are mutually exclusive: if the device is
+ * currently mapped to VR (XPLMIsAvionicsMappedToVR() is true), calling this
+ * routine clears its VR mapping before popping out.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -1031,13 +1048,68 @@ XPLM_API void       XPLMPopOutAvionics(
 /*
  * XPLMIsAvionicsPoppedOut
  * 
- * Returns true (1) if the popup window for a cockpit device is popped out.
+ * Returns true (1) if the popup window for a cockpit device is popped out as
+ * a first-class OS window.
+ * 
+ * This is true if and only if you have most recently asked the popup to be
+ * popped out (via XPLMPopOutAvionics()) and it has not since been mapped to
+ * VR (via XPLMSetAvionicsMappedToVR()).
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API int        XPLMIsAvionicsPoppedOut(
                          XPLMAvionicsID       inHandle);
 #endif /* XPLM410 */
+
+#if defined(XPLM440)
+/*
+ * XPLMSetAvionicsMappedToVR
+ * 
+ * Maps a custom cockpit device's popup window to a VR floating window in the
+ * headset, or returns it from VR back to the X-Plane window. Pass 1 to map to
+ * VR, 0 to unmap.
+ * 
+ * The VR window shows the device's bezel and screen at their intrinsic size,
+ * as supplied via XPLMCreateAvionicsEx(). Avionics in VR are not
+ * user-resizable.
+ * 
+ * Mapping to VR and being popped out as an OS window are mutually exclusive:
+ * calling this with inMapped=1 on a popped-out device clears its pop-out
+ * state, and calling XPLMPopOutAvionics() on a VR-mapped device clears its VR
+ * mapping. This mirrors the relationship between xplm_WindowPopOut and
+ * xplm_WindowVR for XPLMWindow.
+ * 
+ * VR mapping is independent of popup visibility
+ * (XPLMSetAvionicsPopupVisible). Mapping a hidden popup to VR leaves it
+ * hidden until you make it visible.
+ * 
+ * Has no effect (and logs a warning) if VR is not currently running on the
+ * headset, or if the device was not created via XPLMCreateAvionicsEx()
+ * (built-in avionics cannot be VR-mapped).
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetAvionicsMappedToVR(
+                         XPLMAvionicsID       inHandle,
+                         int                  inMapped);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMIsAvionicsMappedToVR
+ * 
+ * Returns true (1) if the popup window for a cockpit device is currently
+ * mapped to a VR floating window.
+ * 
+ * This is true if and only if you have most recently asked the device to be
+ * mapped to VR (via XPLMSetAvionicsMappedToVR()) and it has not since been
+ * unmapped, popped out, or had VR shut down beneath it.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMIsAvionicsMappedToVR(
+                         XPLMAvionicsID       inHandle);
+#endif /* XPLM440 */
 
 #if defined(XPLM410)
 /*
@@ -1508,16 +1580,22 @@ typedef struct {
 
      int                       visible;
 
+    /* A callback to draw your window's contents (or NULL, e.g. for               *
+     * browser/panel-graphics content where the window draws itself)              */
      XPLMDrawWindow_f          drawWindowFunc;
 
     /* A callback to handle the user left-clicking within your window (or NULL to *
      * ignore left clicks)                                                        */
      XPLMHandleMouseClick_f    handleMouseClickFunc;
 
+    /* A callback to handle keyboard input (or NULL to ignore keyboard input)     */
      XPLMHandleKey_f           handleKeyFunc;
 
+    /* A callback to determine the cursor shape over your window (or NULL for the *
+     * default cursor)                                                            */
      XPLMHandleCursor_f        handleCursorFunc;
 
+    /* A callback to handle scroll-wheel events (or NULL to ignore them)          */
      XPLMHandleMouseWheel_f    handleMouseWheelFunc;
 
     /* A reference which will be passed into each of your window callbacks. Use   *
@@ -1561,6 +1639,11 @@ typedef struct {
  * used.  Also, you must provide functions for every callback---you may not
  * leave them null!  (If you do not support the cursor or mouse wheel, use
  * functions that return the default values.)
+ * 
+ * NOTE: Lua scripts must use XLuaCreateImguiWindow() or
+ * XLuaCreateBrowserWindow() instead of XPLMCreateWindowEx -- those wrappers
+ * pre-wire the correct content type and input handlers for their respective
+ * window flavours.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -1608,6 +1691,9 @@ XPLM_API XPLMWindowID XPLMCreateWindow(
  * This routine destroys a window.  The window's callbacks are not called
  * after this call. Keyboard focus is removed from the window before
  * destroying it.
+ * 
+ * NOTE: Lua scripts must use XLuaDestroyImguiWindow() or
+ * XLuaDestroyBrowserWindow() instead of XPLMDestroyWindow.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -1656,14 +1742,6 @@ XPLM_API void       XPLMWindowRefresh(
 XPLM_API void       XPLMWindowInjectScript(
                          XPLMWindowID         inWindowID,
                          const char *         inScript);
-
-/*
- * XPLMReturnString
- *
- */
-/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
-XPLM_API const char * XPLMReturnString(
-                         const char *         inString);
 
 /*
  * XPLMBrowserCallback_f

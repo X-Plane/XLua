@@ -32,6 +32,19 @@ SDK website explains this process in more detail.
 
 This section contains per-release notes for the history of the X-Plane SDK.
 
+X-Plane SDK Release 4.4.0 5/5/2026
+
+The 4.4.0 SDK includes new API functionality:
+
+ - Plugin-created custom avionics devices can now be mapped to a VR floating
+   window via the new XPLMSetAvionicsMappedToVR and XPLMIsAvionicsMappedToVR
+   APIs in XPLMDisplay.
+   
+ - The new XPLMReloadThisPlugin API in XPLMPlugin reloads only the calling
+   plugin.
+
+This version of the SDK requires X-Plane 12.4.3 or newer.
+
 X-Plane SDK Release 4.3.0 2/21/2026
 
 The 4.3.0 SDK includes new API functionality:

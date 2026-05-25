@@ -147,23 +147,11 @@ enum {
 #endif /* XPLM420 */
 
 #if defined(XPLM420)
-    /*         The weather radar instrument texture as controlled by the          *
-     *         copilot-side radar controls                                        */
+    /* The weather radar instrument texture as controlled by the copilot-side     *
+     * radar controls                                                             */
     xplm_Tex_Radar_Copilot                   = 4,
 
 #endif /* XPLM420 */
-
-#if defined(XPLM440)
-    /*           The SVT instrument texture as seen by pilot-side instruments     */
-    xplm_Tex_SVT_Pilot                       = 5,
-
-#endif /* XPLM440 */
-
-#if defined(XPLM440)
-    /*           The SVT instrument texture as seen by copilot-side instruments   */
-    xplm_Tex_SVT_Copilot                     = 6,
-
-#endif /* XPLM440 */
 
 };
 typedef int XPLMTextureID;
