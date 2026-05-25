@@ -83,7 +83,7 @@ INTERFACE
 }
 
 USES
-    XPLMDefs;
+    XPLMDefs, XPLMUtilities;
    {$A4}
 {___________________________________________________________________________
  * DRAWING CALLBACKS

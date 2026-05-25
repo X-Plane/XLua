@@ -91,6 +91,8 @@
 
 #include "XPLMDefs.h"
 
+#include "XPLMUtilities.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
