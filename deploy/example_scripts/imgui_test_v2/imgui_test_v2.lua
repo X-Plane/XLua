@@ -1,3 +1,5 @@
+--[[ XLua 2.0 ]]
+
 -- imgui_test_v2.lua
 --
 -- Example XLua-2 script showing an imgui-on-panel-graphics window. Place at
@@ -114,11 +116,12 @@ function XPluginStart()
         decorateAsFloatingWindow = XPLM.WindowDecorationRoundRectangle,
     })
     XPLMSetWindowTitle(g_window, "imgui_test_v2")
-    return "imgui_test_v2", "com.x-plane.test.imgui-lua-v2", "Lua imgui test plugin"
+    return true
+    -- return "imgui_test_v2", "com.x-plane.test.imgui-lua-v2", "Lua imgui test plugin"
 end
 
 function XPluginEnable()
-    return 1
+    return true
 end
 
 function XPluginDisable()

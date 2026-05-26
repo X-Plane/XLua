@@ -625,7 +625,7 @@ function XPluginEnable()
 
 	s_avionic = XPLMCreateAvionicsEx(cavio)
 	XPLMSetAvionicsPopupVisible(s_avionic, true)
-	XPLMSetTouchEventHandler(s_avionic, touch_event_cb)
+	XPLMAvionicsSetTouchEventHandler(s_avionic, touch_event_cb)
 
 	return true
 end
