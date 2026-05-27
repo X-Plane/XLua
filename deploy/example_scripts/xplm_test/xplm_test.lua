@@ -181,8 +181,6 @@ function FlightStarted()
 	local saved_sit = XPLMSaveDataFile(XPLMDataFileType.xplm_DataFile_Situation, "Output/situations/test_lua.sit")
 	print("Save situation: " .. (saved_sit and "OK" or "FAILED"))
 
-	print("Initialised: " .. (XPLMInitialized() and "YES" or "NO"))
-
 	local versions = XPLMGetVersions()
 	print("Host " .. versions.outHostID .. " has version " .. versions.outXPlaneVersion .. ", XPLM version " .. versions.outXPLMVersion)
 
