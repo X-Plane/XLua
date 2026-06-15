@@ -24,6 +24,10 @@ extern "C"
 	#include "XPLMUtilities.h"
 	#include "XPLMWeather.h"
 
+	int XLuaCreateBrowserWindow(lua_State* L);
+	int XLuaCreateImguiWindow(lua_State* L);
+	int XLuaDestroyBrowserWindow(lua_State* L);
+	int XLuaDestroyImguiWindow(lua_State* L);
 	int XLuaAccumulateTouchZone(lua_State* L);
 	int XLuaAcquirePlanes(lua_State* L);
 	int XLuaAppendMenuItem(lua_State* L);
@@ -418,6 +422,10 @@ extern "C"
 
 void add_xplm_to_interp(lua_State* L)
 {
+	lua_register(L, "XLuaCreateBrowserWindow", XLuaCreateBrowserWindow);
+	lua_register(L, "XLuaCreateImguiWindow", XLuaCreateImguiWindow);
+	lua_register(L, "XLuaDestroyBrowserWindow", XLuaDestroyBrowserWindow);
+	lua_register(L, "XLuaDestroyImguiWindow", XLuaDestroyImguiWindow);
 	lua_register(L, "XPLMAccumulateTouchZone", XLuaAccumulateTouchZone);
 	lua_register(L, "XPLMAcquirePlanes", XLuaAcquirePlanes);
 	lua_register(L, "XPLMAppendMenuItem", XLuaAppendMenuItem);

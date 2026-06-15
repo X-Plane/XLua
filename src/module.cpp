@@ -311,7 +311,12 @@ module::module(
 		add_xplm_to_interp(m_interp);
 		LoadImguiBindings(m_interp);
 		register_xlua_imgui_text_inputs(m_interp);
-		register_xlua2_window_helpers(m_interp);
+		// XLuaCreate/DestroyImguiWindow + XLuaCreate/DestroyBrowserWindow are now
+		// registered by add_xplm_to_interp() above (declared in XPLMDisplay.xml
+		// with lua_impl="external"), so the old register_xlua2_window_helpers()
+		// call has been removed. imgui text inputs stay hand-registered because
+		// their imgui table is created by LoadImguiBindings(), after the
+		// generated registration runs.
 	}
 #endif
 

@@ -3,6 +3,13 @@
 // defaults and pre-installed handlers. See header for the registration
 // contract; rationale for hiding XPLMCreateWindowEx itself lives in the
 // exclude="lua" comment on the XPLMDisplay.xml master.
+//
+// These four functions are declared in XPLMDisplay.xml with lua_impl="external"
+// and exclude="c|pascal|php", so header_parser does NOT auto-generate their
+// bodies — it only emits the EmmyLua type stub and a registration entry in the
+// generated XLua_Register_glue.cpp that points at the hand-written extern "C"
+// definitions below. The generated forward declaration must match these
+// signatures exactly, so any drift becomes a link/compile error.
 
 #include "shared_lua_helpers.h"
 #include "shared_xpfuncs.h"
@@ -178,7 +185,27 @@ void apply_geometry(lua_State* L, int tbl, XPLMCreateWindow_t& p) {
         field_int(L, tbl, "layer", xplm_WindowLayerFloatingWindows));
 }
 
-int XLuaCreateImguiWindow(lua_State* L) {
+// Shared destroyer for both imgui and browser windows. The bodies are
+// identical (read ctx out of the refcon, destroy the window, delete ctx); the
+// only reason we expose two Lua names is API symmetry with the two
+// constructors and script-side legibility.
+int destroy_window(lua_State* L) {
+    XPLMWindowID win = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+    auto* ctx = static_cast<window_ctx*>(XPLMGetWindowRefCon(win));
+    XPLMDestroyWindow(win);
+    delete ctx;   // ~window_ctx drops the persisted-callback references
+    return 0;
+}
+
+} // namespace
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Public Lua entry points. extern "C" + exact names so they link against the
+// forward declarations emitted into XLua_Register_glue.cpp for the
+// lua_impl="external" functions in XPLMDisplay.xml.
+// ─────────────────────────────────────────────────────────────────────────────
+
+extern "C" int XLuaCreateImguiWindow(lua_State* L) {
     luaL_checktype(L, 1, LUA_TTABLE);
 
     XPLMCreateWindow_t p = {};
@@ -211,7 +238,7 @@ int XLuaCreateImguiWindow(lua_State* L) {
     return 1;
 }
 
-int XLuaCreateBrowserWindow(lua_State* L) {
+extern "C" int XLuaCreateBrowserWindow(lua_State* L) {
     luaL_checktype(L, 1, LUA_TTABLE);
 
     XPLMCreateWindow_t p = {};
@@ -248,23 +275,10 @@ int XLuaCreateBrowserWindow(lua_State* L) {
     return 1;
 }
 
-// Shared destroyer for both imgui and browser windows. The bodies are
-// identical (read ctx out of the refcon, destroy the window, delete ctx);
-// the only reason we expose two Lua names is API symmetry with the two
-// constructors and script-side legibility.
-int destroy_xlua_window(lua_State* L) {
-    XPLMWindowID win = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
-    auto* ctx = static_cast<window_ctx*>(XPLMGetWindowRefCon(win));
-    XPLMDestroyWindow(win);
-    delete ctx;   // ~window_ctx drops the persisted-callback references
-    return 0;
+extern "C" int XLuaDestroyImguiWindow(lua_State* L) {
+    return destroy_window(L);
 }
 
-} // namespace
-
-void register_xlua2_window_helpers(lua_State* L) {
-    lua_register(L, "XLuaCreateImguiWindow",    XLuaCreateImguiWindow);
-    lua_register(L, "XLuaCreateBrowserWindow",  XLuaCreateBrowserWindow);
-    lua_register(L, "XLuaDestroyImguiWindow",   destroy_xlua_window);
-    lua_register(L, "XLuaDestroyBrowserWindow", destroy_xlua_window);
+extern "C" int XLuaDestroyBrowserWindow(lua_State* L) {
+    return destroy_window(L);
 }
