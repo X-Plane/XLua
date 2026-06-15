@@ -236,8 +236,8 @@ TYPE
     every time you need to read or write it.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMFindDataRef(
-                                        inDataRefName       : Pchar *);
+   FUNCTION XPLMFindDataRef(
+                                        inDataRefName       : Pchar *) : ;
     cdecl; external XPLM_DLL;
 
    {
@@ -664,7 +664,7 @@ TYPE
     this dataref to unregister your data later or read or write from it.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMRegisterDataAccessor(
+   FUNCTION XPLMRegisterDataAccessor(
                                         inDataName          : Pchar *;
                                         inDataType          : XPLMDataTypeID;
                                         inIsWritable        : Integer;
@@ -681,7 +681,7 @@ TYPE
                                         inReadData          : PXPLMGetDatab_f;    { Can be nil }
                                         inWriteData         : PXPLMSetDatab_f;    { Can be nil }
                                         inReadRefcon        : Pvoid*;    { Can be nil }
-                                        inWriteRefcon       : Pvoid*);    { Can be nil }
+                                        inWriteRefcon       : Pvoid*) : ;    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {

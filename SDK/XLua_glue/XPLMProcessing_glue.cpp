@@ -19,6 +19,10 @@
 	#define XPLM_DEPRECATED
 #endif
 #include "XPLMProcessing.h"
+// XPLMUtilities.h supplies XPLMReturnString, which the codegen emits inside
+// every const-char*-returning callback wrapper to round-trip through the
+// host-managed return slot.
+#include "XPLMUtilities.h"
 #if MOBILE
 	#undef XPLM_DEPRECATED
 #endif
@@ -46,6 +50,16 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 XPLMFlightLoopID* Make_XPLMFlightLoopID(lua_State* L, XPLMFlightLoopID const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
+
+void RegEnum_XPLMFlightLoopPhaseType(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_FlightLoop_Phase_BeforeFlightModel");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_FlightLoop_Phase_AfterFlightModel");
+	lua_setglobal(L, "XPLMFlightLoopPhaseType");
+}
 
 XPLMFlightLoopID* Make_XPLMFlightLoopID(lua_State* L, XPLMFlightLoopID const& init)
 {
@@ -106,7 +120,10 @@ static float cb_XPLMFlightLoop_f(float inElapsedSinceLastCall, float inElapsedTi
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "ddir", inElapsedSinceLastCall, inElapsedTimeSinceLastFlightLoop, inCounter, inRefcon_cb->get_capture()))
 		{
-			res = luaL_checknumber(L, -1);
+			{
+				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMFlightLoop_f returned %s; expected number\n", luaL_typename(L, -1));
+				res = lua_tonumber(L, -1);
+			}
 			lua_pop(L, 1);
 		}
 	}

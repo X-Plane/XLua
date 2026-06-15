@@ -19,6 +19,10 @@
 	#define XPLM_DEPRECATED
 #endif
 #include "XPLMNavigation.h"
+// XPLMUtilities.h supplies XPLMReturnString, which the codegen emits inside
+// every const-char*-returning callback wrapper to round-trip through the
+// host-managed return slot.
+#include "XPLMUtilities.h"
 #if MOBILE
 	#undef XPLM_DEPRECATED
 #endif
@@ -97,6 +101,40 @@ void RegType_XPLMNavRef(lua_State* L)
 	lua_register(L, "XPLMNavRef", _XPLMNavRef_Constructor);
 
 	lua_pop(L, 1);
+}
+
+void RegEnum_XPLMNavType(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_Nav_Unknown");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_Nav_Airport");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_Nav_NDB");
+	lua_pushinteger(L, 4);
+	lua_setfield(L, -2, "xplm_Nav_VOR");
+	lua_pushinteger(L, 8);
+	lua_setfield(L, -2, "xplm_Nav_ILS");
+	lua_pushinteger(L, 16);
+	lua_setfield(L, -2, "xplm_Nav_Localizer");
+	lua_pushinteger(L, 32);
+	lua_setfield(L, -2, "xplm_Nav_GlideSlope");
+	lua_pushinteger(L, 64);
+	lua_setfield(L, -2, "xplm_Nav_OuterMarker");
+	lua_pushinteger(L, 128);
+	lua_setfield(L, -2, "xplm_Nav_MiddleMarker");
+	lua_pushinteger(L, 256);
+	lua_setfield(L, -2, "xplm_Nav_InnerMarker");
+	lua_pushinteger(L, 512);
+	lua_setfield(L, -2, "xplm_Nav_Fix");
+	lua_pushinteger(L, 1024);
+	lua_setfield(L, -2, "xplm_Nav_DME");
+	lua_pushinteger(L, 2048);
+	lua_setfield(L, -2, "xplm_Nav_LatLon");
+	lua_pushinteger(L, 4096);
+	lua_setfield(L, -2, "xplm_Nav_TACAN");
+	lua_setglobal(L, "XPLMNavType");
 }
 
 int XLuaGetFirstNavAid(lua_State* L)
@@ -335,6 +373,24 @@ int XLuaClearFMSEntry(lua_State* L)
 	return 0;
 }
 
+void RegEnum_XPLMNavFlightPlan(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_Fpl_Pilot_Primary");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_Fpl_CoPilot_Primary");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_Fpl_Pilot_Approach");
+	lua_pushinteger(L, 3);
+	lua_setfield(L, -2, "xplm_Fpl_CoPilot_Approach");
+	lua_pushinteger(L, 4);
+	lua_setfield(L, -2, "xplm_Fpl_Pilot_Temporary");
+	lua_pushinteger(L, 5);
+	lua_setfield(L, -2, "xplm_Fpl_CoPilot_Temporary");
+	lua_setglobal(L, "XPLMNavFlightPlan");
+}
+
 int XLuaCountFMSFlightPlanEntries(lua_State* L)
 {
 	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
@@ -516,6 +572,12 @@ int XLuaGetGPSDestination(lua_State* L)
 	Make_XPLMNavRef(L, res);
 
 	return 1;
+}
+
+void RegDefines_XPLMNavigation(lua_State* L)
+{
+	lua_pushinteger(L, -1);
+	lua_setglobal(L, "XPLM_NAV_NOT_FOUND");
 }
 
 #ifdef __cplusplus

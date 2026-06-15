@@ -19,6 +19,10 @@
 	#define XPLM_DEPRECATED
 #endif
 #include "XPLMUtilities.h"
+// XPLMUtilities.h supplies XPLMReturnString, which the codegen emits inside
+// every const-char*-returning callback wrapper to round-trip through the
+// host-managed return slot.
+#include "XPLMUtilities.h"
 #if MOBILE
 	#undef XPLM_DEPRECATED
 #endif
@@ -44,6 +48,16 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 XPLMCommandRef* Make_XPLMCommandRef(lua_State* L, XPLMCommandRef const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
+
+void RegEnum_XPLMDataFileType(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_DataFile_Situation");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_DataFile_ReplayMovie");
+	lua_setglobal(L, "XPLMDataFileType");
+}
 
 int XLuaGetSystemPath(lua_State* L)
 {
@@ -93,6 +107,46 @@ int XLuaSaveDataFile(lua_State* L)
 	lua_pushboolean(L, res);
 
 	return 1;
+}
+
+void RegEnum_XPLMHostApplicationID(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_Host_Unknown");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_Host_XPlane");
+	lua_setglobal(L, "XPLMHostApplicationID");
+}
+
+void RegEnum_XPLMLanguageCode(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_Language_Unknown");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_Language_English");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_Language_French");
+	lua_pushinteger(L, 3);
+	lua_setfield(L, -2, "xplm_Language_German");
+	lua_pushinteger(L, 4);
+	lua_setfield(L, -2, "xplm_Language_Italian");
+	lua_pushinteger(L, 5);
+	lua_setfield(L, -2, "xplm_Language_Spanish");
+	lua_pushinteger(L, 6);
+	lua_setfield(L, -2, "xplm_Language_Korean");
+	lua_pushinteger(L, 7);
+	lua_setfield(L, -2, "xplm_Language_Russian");
+	lua_pushinteger(L, 8);
+	lua_setfield(L, -2, "xplm_Language_Greek");
+	lua_pushinteger(L, 9);
+	lua_setfield(L, -2, "xplm_Language_Japanese");
+	lua_pushinteger(L, 10);
+	lua_setfield(L, -2, "xplm_Language_Chinese");
+	lua_pushinteger(L, 11);
+	lua_setfield(L, -2, "xplm_Language_Ukrainian");
+	lua_setglobal(L, "XPLMLanguageCode");
 }
 
 int XLuaGetVersions(lua_State* L)
@@ -168,6 +222,18 @@ int XLuaReloadScenery(lua_State* L)
 	return 0;
 }
 
+void RegEnum_XPLMCommandPhase(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_CommandBegin");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_CommandContinue");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_CommandEnd");
+	lua_setglobal(L, "XPLMCommandPhase");
+}
+
 XPLMCommandRef* Make_XPLMCommandRef(lua_State* L, XPLMCommandRef const& init)
 {
 	XPLMCommandRef* ud = static_cast<XPLMCommandRef*>(lua_newuserdata(L, sizeof(XPLMCommandRef)));
@@ -224,12 +290,15 @@ static int cb_XPLMCommandCallback_f(XPLMCommandRef inCommand, XPLMCommandPhase i
 	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMCommandCallback_f");
 	if (L)
 	{
+		Make_XPLMCommandRef(L, inCommand);
+		int inCommand_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uir", inCommand, inPhase, inRefcon_cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "rir", inCommand_typed_ref, inPhase, inRefcon_cb->get_capture()))
 		{
-			res = xlua_checkboolean(L, -1) ? 1 : 0;
+			res = lua_toboolean(L, -1) ? 1 : 0;
 			lua_pop(L, 1);
 		}
+		luaL_unref(L, LUA_REGISTRYINDEX, inCommand_typed_ref);
 	}
 
 	return res;

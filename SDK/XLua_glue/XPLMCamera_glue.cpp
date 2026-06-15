@@ -19,6 +19,10 @@
 	#define XPLM_DEPRECATED
 #endif
 #include "XPLMCamera.h"
+// XPLMUtilities.h supplies XPLMReturnString, which the codegen emits inside
+// every const-char*-returning callback wrapper to round-trip through the
+// host-managed return slot.
+#include "XPLMUtilities.h"
 #if MOBILE
 	#undef XPLM_DEPRECATED
 #endif
@@ -45,6 +49,16 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 //
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
+
+void RegEnum_XPLMCameraControlDuration(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_ControlCameraUntilViewChanges");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_ControlCameraForever");
+	lua_setglobal(L, "XPLMCameraControlDuration");
+}
 /*
  * XPLMCameraPosition_t
  * 
@@ -167,7 +181,7 @@ static int cb_XPLMCameraControl_f(XPLMCameraPosition_t * outCameraPosition, int 
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "rbr", outCameraPosition_ref, static_cast<bool>(inIsLosingControl), inRefcon_cb->get_capture()))
 		{
-			res = xlua_checkboolean(L, -1) ? 1 : 0;
+			res = lua_toboolean(L, -1) ? 1 : 0;
 			lua_pop(L, 1);
 		}
 

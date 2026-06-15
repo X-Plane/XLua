@@ -19,6 +19,10 @@
 	#define XPLM_DEPRECATED
 #endif
 #include "XPLMGraphics.h"
+// XPLMUtilities.h supplies XPLMReturnString, which the codegen emits inside
+// every const-char*-returning callback wrapper to round-trip through the
+// host-managed return slot.
+#include "XPLMUtilities.h"
 #if MOBILE
 	#undef XPLM_DEPRECATED
 #endif
@@ -98,6 +102,16 @@ int XLuaLocalToWorld(lua_State* L)
 	lua_settable(L, -3);
 
 	return 1;
+}
+
+void RegEnum_XPLMFontID(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplmFont_Basic");
+	lua_pushinteger(L, 18);
+	lua_setfield(L, -2, "xplmFont_Proportional");
+	lua_setglobal(L, "XPLMFontID");
 }
 
 int XLuaDrawString(lua_State* L)

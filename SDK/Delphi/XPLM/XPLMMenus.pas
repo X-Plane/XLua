@@ -88,7 +88,7 @@ TYPE
     at startup.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMFindPluginsMenu;
+   FUNCTION XPLMFindPluginsMenu: ;
     cdecl; external XPLM_DLL;
 
 {$IFDEF XPLM300}
@@ -107,7 +107,7 @@ TYPE
     attempts to add menu items to it will fail.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMFindAircraftMenu;
+   FUNCTION XPLMFindAircraftMenu: ;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM300}
 
@@ -126,12 +126,12 @@ TYPE
     a submenu where the title is not visible.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMCreateMenu(
+   FUNCTION XPLMCreateMenu(
                                         inName              : Pchar *;
                                    VAR  inParentMenu        : ;
                                         inParentItem        : Integer;
                                         inHandler           : PXPLMMenuHandler_f;    { Can be nil }
-                                        inMenuRef           : Pvoid*);    { Can be nil }
+                                        inMenuRef           : Pvoid*) : ;    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {

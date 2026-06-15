@@ -350,8 +350,8 @@ TYPE
     opened in X-Plane, at which time you can create layers in it.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMCreateMapLayer(
-                                        inParams            : PXPLMCreateMapLayer_t *);
+   FUNCTION XPLMCreateMapLayer(
+                                        inParams            : PXPLMCreateMapLayer_t *) : ;
     cdecl; external XPLM_DLL;
 
    {

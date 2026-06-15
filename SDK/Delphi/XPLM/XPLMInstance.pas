@@ -73,9 +73,9 @@ TYPE
       the array itself.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMCreateInstance(
+   FUNCTION XPLMCreateInstance(
                                         obj                 : XPLMObjectRef;
-                                        datarefs[]          : P*);
+                                        datarefs[]          : P*) : ;
     cdecl; external XPLM_DLL;
 
 {$IFDEF XPLM420}

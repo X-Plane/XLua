@@ -19,6 +19,10 @@
 	#define XPLM_DEPRECATED
 #endif
 #include "XPLMWeather.h"
+// XPLMUtilities.h supplies XPLMReturnString, which the codegen emits inside
+// every const-char*-returning callback wrapper to round-trip through the
+// host-managed return slot.
+#include "XPLMUtilities.h"
 #if MOBILE
 	#undef XPLM_DEPRECATED
 #endif
@@ -661,6 +665,22 @@ int XLuaEraseWeatherAtAirport(lua_State* L)
 	XPLMEraseWeatherAtAirport(airport_id);
 
 	return 0;
+}
+
+void RegDefines_XPLMWeather(lua_State* L)
+{
+	lua_pushinteger(L, 10000);
+	lua_setglobal(L, "XPLM_DEFAULT_WXR_LIMIT_MSL_FT");
+	lua_pushinteger(L, 30);
+	lua_setglobal(L, "XPLM_DEFAULT_WXR_RADIUS_NM");
+	lua_pushinteger(L, 3);
+	lua_setglobal(L, "XPLM_NUM_CLOUD_LAYERS");
+	lua_pushinteger(L, 13);
+	lua_setglobal(L, "XPLM_NUM_TEMPERATURE_LAYERS");
+	lua_pushinteger(L, 13);
+	lua_setglobal(L, "XPLM_NUM_WIND_LAYERS");
+	lua_pushinteger(L, -1);
+	lua_setglobal(L, "XPLM_WIND_UNDEFINED_LAYER");
 }
 
 #ifdef __cplusplus

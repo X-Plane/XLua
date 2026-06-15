@@ -629,8 +629,8 @@ TYPE
     reference or NULL if the command does not exist.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMFindCommand(
-                                        inName              : Pchar *);
+   FUNCTION XPLMFindCommand(
+                                        inName              : Pchar *) : ;
     cdecl; external XPLM_DLL;
 
    {
@@ -679,9 +679,9 @@ TYPE
     screen.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMCreateCommand(
+   FUNCTION XPLMCreateCommand(
                                         inName              : Pchar *;
-                                        inDescription       : Pchar *);
+                                        inDescription       : Pchar *) : ;
     cdecl; external XPLM_DLL;
 
    {

@@ -20,6 +20,10 @@
 	#define XPLM_DEPRECATED
 #endif
 #include "XPLMPlugin.h"
+// XPLMUtilities.h supplies XPLMReturnString, which the codegen emits inside
+// every const-char*-returning callback wrapper to round-trip through the
+// host-managed return slot.
+#include "XPLMUtilities.h"
 #if MOBILE
 	#undef XPLM_DEPRECATED
 #endif
@@ -256,6 +260,38 @@ int XLuaEnumerateFeatures(lua_State* L)
 	XPLMEnumerateFeatures((cb_capture_0 ? cb_XPLMFeatureEnumerator_f : nullptr), cb_capture_0.get());
 
 	return 0;
+}
+
+void RegDefines_XPLMPlugin(lua_State* L)
+{
+	lua_pushinteger(L, 105);
+	lua_setglobal(L, "XPLM_MSG_AIRPLANE_COUNT_CHANGED");
+	lua_pushinteger(L, 103);
+	lua_setglobal(L, "XPLM_MSG_AIRPORT_LOADED");
+	lua_pushinteger(L, 114);
+	lua_setglobal(L, "XPLM_MSG_DATAREFS_ADDED");
+	lua_pushinteger(L, 109);
+	lua_setglobal(L, "XPLM_MSG_ENTERED_VR");
+	lua_pushinteger(L, 110);
+	lua_setglobal(L, "XPLM_MSG_EXITING_VR");
+	lua_pushinteger(L, 112);
+	lua_setglobal(L, "XPLM_MSG_FMOD_BANK_LOADED");
+	lua_pushinteger(L, 113);
+	lua_setglobal(L, "XPLM_MSG_FMOD_BANK_UNLOADING");
+	lua_pushinteger(L, 108);
+	lua_setglobal(L, "XPLM_MSG_LIVERY_LOADED");
+	lua_pushinteger(L, 101);
+	lua_setglobal(L, "XPLM_MSG_PLANE_CRASHED");
+	lua_pushinteger(L, 102);
+	lua_setglobal(L, "XPLM_MSG_PLANE_LOADED");
+	lua_pushinteger(L, 106);
+	lua_setglobal(L, "XPLM_MSG_PLANE_UNLOADED");
+	lua_pushinteger(L, 111);
+	lua_setglobal(L, "XPLM_MSG_RELEASE_PLANES");
+	lua_pushinteger(L, 104);
+	lua_setglobal(L, "XPLM_MSG_SCENERY_LOADED");
+	lua_pushinteger(L, 107);
+	lua_setglobal(L, "XPLM_MSG_WILL_WRITE_PREFS");
 }
 
 #ifdef __cplusplus

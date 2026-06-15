@@ -20,6 +20,10 @@
 	#define XPLM_DEPRECATED
 #endif
 #include "XPLMMenus.h"
+// XPLMUtilities.h supplies XPLMReturnString, which the codegen emits inside
+// every const-char*-returning callback wrapper to round-trip through the
+// host-managed return slot.
+#include "XPLMUtilities.h"
 #if MOBILE
 	#undef XPLM_DEPRECATED
 #endif
@@ -46,6 +50,18 @@ XPLMCommandRef* Make_XPLMCommandRef(lua_State* L, XPLMCommandRef const& init);
 XPLMMenuID* Make_XPLMMenuID(lua_State* L, XPLMMenuID const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
+
+void RegEnum_XPLMMenuCheck(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_Menu_NoCheck");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_Menu_Unchecked");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_Menu_Checked");
+	lua_setglobal(L, "XPLMMenuCheck");
+}
 
 XPLMMenuID* Make_XPLMMenuID(lua_State* L, XPLMMenuID const& init)
 {

@@ -556,8 +556,8 @@ TYPE
     Returns an opaque font handle.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMCreateFont(
-                                        charset             : XPLMCharSet_t);
+   FUNCTION XPLMCreateFont(
+                                        charset             : XPLMCharSet_t) : ;
     cdecl; external XPLM_DLL;
 
    {
@@ -826,7 +826,7 @@ TYPE
     Returns an opaque atlas handle.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMCreateTextureAtlas;
+   FUNCTION XPLMCreateTextureAtlas: ;
     cdecl; external XPLM_DLL;
 
    {
@@ -1561,7 +1561,7 @@ TYPE
     Returns an opaque handle to the retained drawing.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMEndRetainedDrawing;
+   FUNCTION XPLMEndRetainedDrawing: ;
     cdecl; external XPLM_DLL;
 
    {
@@ -1686,8 +1686,8 @@ TYPE
     is unloaded.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMCreateSVTDisplay(
-                                        params              : PXPLMCreateSVT_t *);
+   FUNCTION XPLMCreateSVTDisplay(
+                                        params              : PXPLMCreateSVT_t *) : ;
     cdecl; external XPLM_DLL;
 
    {
@@ -1837,7 +1837,7 @@ TYPE
      roseDiameter             : Integer;
      { map range center to compass rose (nautical miles).                         }
      mapRange                 : Single;
-     { map orientation (0=north up, 1=Track up, 2=Hdg up).                        }
+     { map orientation (0=north up, 1=Track up, 2=Hdg up, 3=custom).              }
      orientation              : Integer;
      { terrain warning altitude (red, feet).                                      }
      terrainWarn              : Single;
@@ -1847,6 +1847,9 @@ TYPE
      acfAlt                   : Single;
      { ownship gear status (1=gear down).                                         }
      gearDown                 : Integer;
+     { if map orientation is custom, the rotation in degrees counter-clockwise    }
+     { from true north.                                                           }
+     trueRotation             : Single;
    END;
    PXPLMMapCustomData_t = ^XPLMMapCustomData_t;
 
@@ -1887,8 +1890,8 @@ TYPE
     is unloaded.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMCreateMapDisplay(
-                                        params              : PXPLMCreateMap_t *);
+   FUNCTION XPLMCreateMapDisplay(
+                                        params              : PXPLMCreateMap_t *) : ;
     cdecl; external XPLM_DLL;
 
    {

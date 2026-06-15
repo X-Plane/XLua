@@ -227,8 +227,8 @@ TYPE
     unscheduled. Use XPLMScheduleFlightLoop to schedule it.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMCreateFlightLoop(
-                                        inParams            : PXPLMCreateFlightLoop_t *);
+   FUNCTION XPLMCreateFlightLoop(
+                                        inParams            : PXPLMCreateFlightLoop_t *) : ;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM210}
 

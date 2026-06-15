@@ -133,8 +133,8 @@ TYPE
     Creates a new probe object of a given type and returns.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMCreateProbe(
-                                        inProbeType         : XPLMProbeType);
+   FUNCTION XPLMCreateProbe(
+                                        inProbeType         : XPLMProbeType) : ;
     cdecl; external XPLM_DLL;
 
    {
@@ -339,8 +339,8 @@ TYPE
     to defer object loading until the sim has fully started.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMLoadObject(
-                                        inPath              : Pchar *);
+   FUNCTION XPLMLoadObject(
+                                        inPath              : Pchar *) : ;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM200}
 

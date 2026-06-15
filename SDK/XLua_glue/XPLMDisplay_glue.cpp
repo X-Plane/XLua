@@ -12,6 +12,7 @@
  ***************************************************************************/
 #include <optional>
 #include "XPLMDefs.h"
+#include "XPLMUtilities.h"
 
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
@@ -19,6 +20,10 @@
 	#define XPLM_DEPRECATED
 #endif
 #include "XPLMDisplay.h"
+// XPLMUtilities.h supplies XPLMReturnString, which the codegen emits inside
+// every const-char*-returning callback wrapper to round-trip through the
+// host-managed return slot.
+#include "XPLMUtilities.h"
 #if MOBILE
 	#undef XPLM_DEPRECATED
 #endif
@@ -48,10 +53,58 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 // Typedefs
 //
 XPLMAvionicsID* Make_XPLMAvionicsID(lua_State* L, XPLMAvionicsID const& init);
-XPLMHotKeyID* Make_XPLMHotKeyID(lua_State* L, XPLMHotKeyID const& init);
+XPLMCommandRef* Make_XPLMCommandRef(lua_State* L, XPLMCommandRef const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 XPLMWindowID* Make_XPLMWindowID(lua_State* L, XPLMWindowID const& init);
 
+
+void RegEnum_XPLMDeviceID(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_device_GNS430_1");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_device_GNS430_2");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_device_GNS530_1");
+	lua_pushinteger(L, 3);
+	lua_setfield(L, -2, "xplm_device_GNS530_2");
+	lua_pushinteger(L, 4);
+	lua_setfield(L, -2, "xplm_device_CDU739_1");
+	lua_pushinteger(L, 5);
+	lua_setfield(L, -2, "xplm_device_CDU739_2");
+	lua_pushinteger(L, 6);
+	lua_setfield(L, -2, "xplm_device_G1000_PFD_1");
+	lua_pushinteger(L, 7);
+	lua_setfield(L, -2, "xplm_device_G1000_MFD");
+	lua_pushinteger(L, 8);
+	lua_setfield(L, -2, "xplm_device_G1000_PFD_2");
+	lua_pushinteger(L, 9);
+	lua_setfield(L, -2, "xplm_device_CDU815_1");
+	lua_pushinteger(L, 10);
+	lua_setfield(L, -2, "xplm_device_CDU815_2");
+	lua_pushinteger(L, 11);
+	lua_setfield(L, -2, "xplm_device_Primus_PFD_1");
+	lua_pushinteger(L, 12);
+	lua_setfield(L, -2, "xplm_device_Primus_PFD_2");
+	lua_pushinteger(L, 13);
+	lua_setfield(L, -2, "xplm_device_Primus_MFD_1");
+	lua_pushinteger(L, 14);
+	lua_setfield(L, -2, "xplm_device_Primus_MFD_2");
+	lua_pushinteger(L, 15);
+	lua_setfield(L, -2, "xplm_device_Primus_MFD_3");
+	lua_pushinteger(L, 16);
+	lua_setfield(L, -2, "xplm_device_Primus_RMU_1");
+	lua_pushinteger(L, 17);
+	lua_setfield(L, -2, "xplm_device_Primus_RMU_2");
+	lua_pushinteger(L, 18);
+	lua_setfield(L, -2, "xplm_device_MCDU_1");
+	lua_pushinteger(L, 19);
+	lua_setfield(L, -2, "xplm_device_MCDU_2");
+	lua_pushinteger(L, 24);
+	lua_setfield(L, -2, "xplm_device_MCDU_3");
+	lua_setglobal(L, "XPLMDeviceID");
+}
 
 static int cb_XPLMAvionicsCallback_f(XPLMDeviceID inDeviceID, int inIsBefore, void* inRefcon)
 {
@@ -64,7 +117,7 @@ static int cb_XPLMAvionicsCallback_f(XPLMDeviceID inDeviceID, int inIsBefore, vo
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "ibr", inDeviceID, static_cast<bool>(inIsBefore), inRefcon_cb->get_capture()))
 		{
-			res = xlua_checkboolean(L, -1) ? 1 : 0;
+			res = lua_toboolean(L, -1) ? 1 : 0;
 			lua_pop(L, 1);
 		}
 	}
@@ -83,7 +136,7 @@ static int cb_XPLMAvionicsMouse_f(int x, int y, XPLMMouseStatus inMouse, void* i
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiir", x, y, inMouse, inRefcon_cb->get_capture()))
 		{
-			res = xlua_checkboolean(L, -1) ? 1 : 0;
+			res = lua_toboolean(L, -1) ? 1 : 0;
 			lua_pop(L, 1);
 		}
 	}
@@ -102,7 +155,7 @@ static int cb_XPLMAvionicsMouseWheel_f(int x, int y, int wheel, int clicks, void
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiiir", x, y, wheel, clicks, inRefcon_cb->get_capture()))
 		{
-			res = xlua_checkboolean(L, -1) ? 1 : 0;
+			res = lua_toboolean(L, -1) ? 1 : 0;
 			lua_pop(L, 1);
 		}
 	}
@@ -121,7 +174,10 @@ static XPLMCursorStatus cb_XPLMAvionicsCursor_f(int x, int y, void* inRefcon)
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iir", x, y, inRefcon_cb->get_capture()))
 		{
-			res = luaL_checkinteger(L, -1);
+			{
+				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMAvionicsCursor_f returned %s; expected integer\n", luaL_typename(L, -1));
+				res = lua_tointeger(L, -1);
+			}
 			lua_pop(L, 1);
 		}
 	}
@@ -140,7 +196,7 @@ static int cb_XPLMAvionicsKeyboard_f(char inKey, XPLMKeyFlags inFlags, char inVi
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiirb", inKey, inFlags, inVirtualKey, inRefcon_cb->get_capture(), static_cast<bool>(losingFocus)))
 		{
-			res = xlua_checkboolean(L, -1) ? 1 : 0;
+			res = lua_toboolean(L, -1) ? 1 : 0;
 			lua_pop(L, 1);
 		}
 	}
@@ -237,7 +293,7 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "ibr", inDeviceID, static_cast<bool>(inIsBefore), inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -261,7 +317,7 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "ibr", inDeviceID, static_cast<bool>(inIsBefore), inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -285,7 +341,7 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiir", x, y, inMouse, inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -309,7 +365,7 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiir", x, y, inMouse, inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -333,7 +389,7 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiiir", x, y, wheel, clicks, inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -357,7 +413,10 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iir", x, y, inRefcon_cb->get_capture()))
 				{
-					res = luaL_checkinteger(L, -1);
+					{
+						if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback bezelCursorCallback returned %s; expected integer\n", luaL_typename(L, -1));
+						res = lua_tointeger(L, -1);
+					}
 					lua_pop(L, 1);
 				}
 			}
@@ -381,7 +440,7 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiir", x, y, inMouse, inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -405,7 +464,7 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiir", x, y, inMouse, inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -429,7 +488,7 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiiir", x, y, wheel, clicks, inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -453,7 +512,10 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iir", x, y, inRefcon_cb->get_capture()))
 				{
-					res = luaL_checkinteger(L, -1);
+					{
+						if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback screenCursorCallback returned %s; expected integer\n", luaL_typename(L, -1));
+						res = lua_tointeger(L, -1);
+					}
 					lua_pop(L, 1);
 				}
 			}
@@ -595,7 +657,10 @@ static float cb_XPLMAvionicsBrightness_f(float inRheoValue, float inAmbiantBrigh
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "dddr", inRheoValue, inAmbiantBrightness, inBusVoltsRatio, inRefcon_cb->get_capture()))
 		{
-			res = luaL_checknumber(L, -1);
+			{
+				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMAvionicsBrightness_f returned %s; expected number\n", luaL_typename(L, -1));
+				res = lua_tonumber(L, -1);
+			}
 			lua_pop(L, 1);
 		}
 	}
@@ -700,7 +765,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiir", x, y, inMouse, inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -724,7 +789,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiir", x, y, inMouse, inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -748,7 +813,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiiir", x, y, wheel, clicks, inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -772,7 +837,10 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iir", x, y, inRefcon_cb->get_capture()))
 				{
-					res = luaL_checkinteger(L, -1);
+					{
+						if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback bezelCursorCallback returned %s; expected integer\n", luaL_typename(L, -1));
+						res = lua_tointeger(L, -1);
+					}
 					lua_pop(L, 1);
 				}
 			}
@@ -796,7 +864,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiir", x, y, inMouse, inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -820,7 +888,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiir", x, y, inMouse, inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -844,7 +912,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iiiir", x, y, wheel, clicks, inRefcon_cb->get_capture()))
 				{
-					res = xlua_checkboolean(L, -1) ? 1 : 0;
+					res = lua_toboolean(L, -1) ? 1 : 0;
 					lua_pop(L, 1);
 				}
 			}
@@ -868,7 +936,10 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iir", x, y, inRefcon_cb->get_capture()))
 				{
-					res = luaL_checkinteger(L, -1);
+					{
+						if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback screenCursorCallback returned %s; expected integer\n", luaL_typename(L, -1));
+						res = lua_tointeger(L, -1);
+					}
 					lua_pop(L, 1);
 				}
 			}
@@ -902,7 +973,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_getfield(L, stackpos, "deviceName");
 	if (!lua_isnil(L, -1))
 	{
-		out.deviceName = static_cast<char const *>(luaL_checkstring(L, -1));
+		out.deviceName = static_cast<char const*>(luaL_checkstring(L, -1));
 	}
 	lua_pop(L, 1);
 
@@ -910,6 +981,13 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	if (!lua_isnil(L, -1))
 	{
 		out.native = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "windowWithChrome");
+	if (!lua_isnil(L, -1))
+	{
+		out.windowWithChrome = static_cast<int>(luaL_checkinteger(L, -1));
 	}
 	lua_pop(L, 1);
 
@@ -970,6 +1048,10 @@ void XPLMCreateAvionics_t_to_table(lua_State* L, XPLMCreateAvionics_t const& src
 
 	lua_pushstring(L, "native");
 	lua_pushinteger(L, src.native);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "windowWithChrome");
+	lua_pushinteger(L, src.windowWithChrome);
 	lua_settable(L, -3);
 }
 
@@ -1165,6 +1247,34 @@ int XLuaIsAvionicsPoppedOut(lua_State* L)
 	return 1;
 }
 
+int XLuaSetAvionicsMappedToVR(lua_State* L)
+{
+	XPLMAvionicsID inHandle = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
+	}
+	bool inMapped = xlua_checkboolean(L, 2);
+
+	XPLMSetAvionicsMappedToVR(inHandle, inMapped);
+
+	return 0;
+}
+
+int XLuaIsAvionicsMappedToVR(lua_State* L)
+{
+	XPLMAvionicsID inHandle = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inHandle = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
+	}
+
+	int res = XPLMIsAvionicsMappedToVR(inHandle);
+	lua_pushboolean(L, res);
+
+	return 1;
+}
+
 int XLuaTakeAvionicsKeyboardFocus(lua_State* L)
 {
 	XPLMAvionicsID inHandle = {};
@@ -1351,10 +1461,13 @@ static void cb_XPLMDrawWindow_f(XPLMWindowID inWindowID, void* inRefcon)
 	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMDrawWindow_f");
 	if (L)
 	{
+		Make_XPLMWindowID(L, inWindowID);
+		int inWindowID_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ur", inWindowID, inRefcon_cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rr", inWindowID_typed_ref, inRefcon_cb->get_capture()))
 		{
 		}
+		luaL_unref(L, LUA_REGISTRYINDEX, inWindowID_typed_ref);
 	}
 }
 
@@ -1365,10 +1478,13 @@ static void cb_XPLMHandleKey_f(XPLMWindowID inWindowID, char inKey, XPLMKeyFlags
 	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMHandleKey_f");
 	if (L)
 	{
+		Make_XPLMWindowID(L, inWindowID);
+		int inWindowID_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "uiiirb", inWindowID, inKey, inFlags, inVirtualKey, inRefcon_cb->get_capture(), static_cast<bool>(losingFocus)))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "riiirb", inWindowID_typed_ref, inKey, inFlags, inVirtualKey, inRefcon_cb->get_capture(), static_cast<bool>(losingFocus)))
 		{
 		}
+		luaL_unref(L, LUA_REGISTRYINDEX, inWindowID_typed_ref);
 	}
 }
 
@@ -1380,12 +1496,18 @@ static int cb_XPLMHandleMouseClick_f(XPLMWindowID inWindowID, int x, int y, XPLM
 	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMHandleMouseClick_f");
 	if (L)
 	{
+		Make_XPLMWindowID(L, inWindowID);
+		int inWindowID_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uiiir", inWindowID, x, y, inMouse, inRefcon_cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "riiir", inWindowID_typed_ref, x, y, inMouse, inRefcon_cb->get_capture()))
 		{
-			res = luaL_checkinteger(L, -1);
+			{
+				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMHandleMouseClick_f returned %s; expected integer\n", luaL_typename(L, -1));
+				res = lua_tointeger(L, -1);
+			}
 			lua_pop(L, 1);
 		}
+		luaL_unref(L, LUA_REGISTRYINDEX, inWindowID_typed_ref);
 	}
 
 	return res;
@@ -1399,12 +1521,18 @@ static XPLMCursorStatus cb_XPLMHandleCursor_f(XPLMWindowID inWindowID, int x, in
 	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMHandleCursor_f");
 	if (L)
 	{
+		Make_XPLMWindowID(L, inWindowID);
+		int inWindowID_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uiir", inWindowID, x, y, inRefcon_cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "riir", inWindowID_typed_ref, x, y, inRefcon_cb->get_capture()))
 		{
-			res = luaL_checkinteger(L, -1);
+			{
+				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMHandleCursor_f returned %s; expected integer\n", luaL_typename(L, -1));
+				res = lua_tointeger(L, -1);
+			}
 			lua_pop(L, 1);
 		}
+		luaL_unref(L, LUA_REGISTRYINDEX, inWindowID_typed_ref);
 	}
 
 	return res;
@@ -1418,12 +1546,15 @@ static int cb_XPLMHandleMouseWheel_f(XPLMWindowID inWindowID, int x, int y, int 
 	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMHandleMouseWheel_f");
 	if (L)
 	{
+		Make_XPLMWindowID(L, inWindowID);
+		int inWindowID_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uiiiir", inWindowID, x, y, wheel, clicks, inRefcon_cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "riiiir", inWindowID_typed_ref, x, y, wheel, clicks, inRefcon_cb->get_capture()))
 		{
-			res = xlua_checkboolean(L, -1) ? 1 : 0;
+			res = lua_toboolean(L, -1) ? 1 : 0;
 			lua_pop(L, 1);
 		}
+		luaL_unref(L, LUA_REGISTRYINDEX, inWindowID_typed_ref);
 	}
 
 	return res;
@@ -1436,11 +1567,52 @@ static void cb_XPLMBrowserNavigation_f(XPLMWindowID inWindow, const char * inURL
 	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMBrowserNavigation_f");
 	if (L)
 	{
+		Make_XPLMWindowID(L, inWindow);
+		int inWindow_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "usbsr", inWindow, inURL, static_cast<bool>(inSuccess), inError, inRefcon_cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rsbsr", inWindow_typed_ref, inURL, static_cast<bool>(inSuccess), inError, inRefcon_cb->get_capture()))
 		{
 		}
+		luaL_unref(L, LUA_REGISTRYINDEX, inWindow_typed_ref);
 	}
+}
+
+void RegEnum_XPLMWindowLayer(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_WindowLayerFlightOverlay");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_WindowLayerFloatingWindows");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_WindowLayerModal");
+	lua_pushinteger(L, 3);
+	lua_setfield(L, -2, "xplm_WindowLayerGrowlNotifications");
+	lua_setglobal(L, "XPLMWindowLayer");
+}
+
+void RegEnum_XPLMWindowDecoration(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_WindowDecorationNone");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_WindowDecorationRoundRectangle");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_WindowDecorationSelfDecorated");
+	lua_pushinteger(L, 3);
+	lua_setfield(L, -2, "xplm_WindowDecorationSelfDecoratedResizable");
+	lua_setglobal(L, "XPLMWindowDecoration");
+}
+
+void RegEnum_XPLMWindowContentType(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_WindowContentTypePanelGraphics");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_WindowContentTypeBrowser");
+	lua_setglobal(L, "XPLMWindowContentType");
 }
 /*
  * XPLMCreateWindow_t
@@ -1499,7 +1671,7 @@ XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "drawWindowFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "XPLMDrawWindow_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMDrawWindow_f"))
 	{
 		out.drawWindowFunc = cb_XPLMDrawWindow_f;
 	}
@@ -1516,12 +1688,18 @@ XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos)
 			lua_State* L = setup_lua_callback(inRefcon_cb, "handleMouseClickFunc");
 			if (L)
 			{
+				Make_XPLMWindowID(L, inWindowID);
+				int inWindowID_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uiiir", inWindowID, x, y, inMouse, inRefcon_cb->get_capture()))
+				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "riiir", inWindowID_typed_ref, x, y, inMouse, inRefcon_cb->get_capture()))
 				{
-					res = luaL_checkinteger(L, -1);
+					{
+						if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback handleMouseClickFunc returned %s; expected integer\n", luaL_typename(L, -1));
+						res = lua_tointeger(L, -1);
+					}
 					lua_pop(L, 1);
 				}
+				luaL_unref(L, LUA_REGISTRYINDEX, inWindowID_typed_ref);
 			}
 
 			return res;
@@ -1530,21 +1708,21 @@ XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "handleKeyFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "XPLMHandleKey_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMHandleKey_f"))
 	{
 		out.handleKeyFunc = cb_XPLMHandleKey_f;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "handleCursorFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "XPLMHandleCursor_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMHandleCursor_f"))
 	{
 		out.handleCursorFunc = cb_XPLMHandleCursor_f;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "handleMouseWheelFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "XPLMHandleMouseWheel_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMHandleMouseWheel_f"))
 	{
 		out.handleMouseWheelFunc = cb_XPLMHandleMouseWheel_f;
 	}
@@ -1575,12 +1753,18 @@ XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos)
 			lua_State* L = setup_lua_callback(inRefcon_cb, "handleRightClickFunc");
 			if (L)
 			{
+				Make_XPLMWindowID(L, inWindowID);
+				int inWindowID_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "uiiir", inWindowID, x, y, inMouse, inRefcon_cb->get_capture()))
+				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "riiir", inWindowID_typed_ref, x, y, inMouse, inRefcon_cb->get_capture()))
 				{
-					res = luaL_checkinteger(L, -1);
+					{
+						if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback handleRightClickFunc returned %s; expected integer\n", luaL_typename(L, -1));
+						res = lua_tointeger(L, -1);
+					}
 					lua_pop(L, 1);
 				}
+				luaL_unref(L, LUA_REGISTRYINDEX, inWindowID_typed_ref);
 			}
 
 			return res;
@@ -1670,63 +1854,6 @@ int MakeXPLMCreateWindow_t(lua_State* L)
  *
  */
 
-int XLuaCreateWindowEx(lua_State* L)
-{
-	XPLMCreateWindow_t inParams = XPLMCreateWindow_t_from_table(L, 1);
-
-	XPLMWindowID res = XPLMCreateWindowEx(&inParams);
-	if (res == nullptr)
-	{
-		lua_pushnil(L);
-	}
-	else
-	{
-		Make_XPLMWindowID(L, res);
-	}
-
-	return 1;
-}
-
-int XLuaCreateWindow(lua_State* L)
-{
-	int inLeft = xlua_checkinteger(L, 1);
-	int inTop = xlua_checkinteger(L, 2);
-	int inRight = xlua_checkinteger(L, 3);
-	int inBottom = xlua_checkinteger(L, 4);
-	bool inIsVisible = xlua_checkboolean(L, 5);
-
-	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 9);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 6, false, "XPLMDrawWindow_f");
-	wrap_next_lua_func(cb_capture_0, 7, false, "XPLMHandleKey_f");
-	wrap_next_lua_func(cb_capture_0, 8, false, "XPLMHandleMouseClick_f");
-
-	XPLMWindowID res = XPLMCreateWindow(inLeft, inTop, inRight, inBottom, inIsVisible, cb_XPLMDrawWindow_f, cb_XPLMHandleKey_f, cb_XPLMHandleMouseClick_f, cb_capture_0.get());
-	if (res == nullptr)
-	{
-		lua_pushnil(L);
-	}
-	else
-	{
-		Make_XPLMWindowID(L, res);
-	}
-
-	return 1;
-}
-
-int XLuaDestroyWindow(lua_State* L)
-{
-	XPLMWindowID inWindowID = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
-	}
-
-	XPLMDestroyWindow(inWindowID);
-
-	return 0;
-}
-
 int XLuaWindowSetURL(lua_State* L)
 {
 	XPLMWindowID inWindowID = {};
@@ -1769,16 +1896,6 @@ int XLuaWindowInjectScript(lua_State* L)
 	return 0;
 }
 
-int XLuaReturnString(lua_State* L)
-{
-	const char * inString = xlua_checkstring(L, 1);
-
-	const char * res = XPLMReturnString(inString);
-	lua_pushstring(L, res);
-
-	return 1;
-}
-
 static const char * cb_XPLMBrowserCallback_f(XPLMWindowID inWindowID, const char * inJSON, void* inRefcon)
 {
 	const char * res = {};
@@ -1787,12 +1904,19 @@ static const char * cb_XPLMBrowserCallback_f(XPLMWindowID inWindowID, const char
 	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMBrowserCallback_f");
 	if (L)
 	{
+		Make_XPLMWindowID(L, inWindowID);
+		int inWindowID_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "usr", inWindowID, inJSON, inRefcon_cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "rsr", inWindowID_typed_ref, inJSON, inRefcon_cb->get_capture()))
 		{
-			res = luaL_checkstring(L, -1);
+			{
+				const char * s = lua_tostring(L, -1);
+				if (s == nullptr) log_message(L, "warn: lua callback XPLMBrowserCallback_f returned %s; expected string\n", luaL_typename(L, -1));
+				res = XPLMReturnString(s ? s : "");
+			}
 			lua_pop(L, 1);
 		}
+		luaL_unref(L, LUA_REGISTRYINDEX, inWindowID_typed_ref);
 	}
 
 	return res;
@@ -1914,25 +2038,6 @@ int XLuaGetAllMonitorBoundsOS(lua_State* L)
 	XPLMGetAllMonitorBoundsOS(cb_XPLMReceiveMonitorBoundsOS_f, cb_capture_0.get());
 
 	return 0;
-}
-
-int XLuaGetMouseLocation(lua_State* L)
-{
-	int outX = {};
-	int outY = {};
-	XPLMGetMouseLocation(&outX, &outY);
-
-	lua_createtable(L, 0, 2);
-
-	lua_pushstring(L, "outX");
-	lua_pushinteger(L, outX);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "outY");
-	lua_pushinteger(L, outY);
-	lua_settable(L, -3);
-
-	return 1;
 }
 
 int XLuaGetMouseLocationGlobal(lua_State* L)
@@ -2188,6 +2293,24 @@ int XLuaSetWindowResizingLimits(lua_State* L)
 	return 0;
 }
 
+void RegEnum_XPLMWindowPositioningMode(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_WindowPositionFree");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_WindowCenterOnMonitor");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_WindowFullScreenOnMonitor");
+	lua_pushinteger(L, 3);
+	lua_setfield(L, -2, "xplm_WindowFullScreenOnAllMonitors");
+	lua_pushinteger(L, 4);
+	lua_setfield(L, -2, "xplm_WindowPopOut");
+	lua_pushinteger(L, 5);
+	lua_setfield(L, -2, "xplm_WindowVR");
+	lua_setglobal(L, "XPLMWindowPositioningMode");
+}
+
 int XLuaSetWindowPositioningMode(lua_State* L)
 {
 	XPLMWindowID inWindowID = {};
@@ -2306,191 +2429,6 @@ int XLuaIsWindowInFront(lua_State* L)
 	lua_pushboolean(L, res);
 
 	return 1;
-}
-
-static void cb_XPLMHotKey_f(void* inRefcon)
-{
-	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
-
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMHotKey_f");
-	if (L)
-	{
-
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "r", inRefcon_cb->get_capture()))
-		{
-		}
-	}
-}
-
-XPLMHotKeyID* Make_XPLMHotKeyID(lua_State* L, XPLMHotKeyID const& init)
-{
-	XPLMHotKeyID* ud = static_cast<XPLMHotKeyID*>(lua_newuserdata(L, sizeof(XPLMHotKeyID)));
-	memcpy(ud, &init, sizeof(XPLMHotKeyID));
-
-	luaL_getmetatable(L, "_mt_XPLMHotKeyID");
-	lua_setmetatable(L, -2);
-
-	return ud;
-}
-
-static int _XPLMHotKeyID_Constructor(lua_State* L)
-{
-	Make_XPLMHotKeyID(L, nullptr);
-	return 1;
-}
-
-static int _XPLMHotKeyID_compare(lua_State* L)
-{
-	XPLMHotKeyID const test1 = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected XPLMHotKeyID");
-	XPLMHotKeyID const test2 = xlua_checkuserdata<XPLMHotKeyID>(L, 2, "Expected XPLMHotKeyID");
-
-	lua_pushboolean(L, test1 == test2);
-	return 1;
-}
-
-void RegType_XPLMHotKeyID(lua_State* L)
-{
-	luaL_newmetatable(L, "_mt_XPLMHotKeyID");
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -2, "__index");
-
-	lua_pushstring(L, "XPLMHotKeyID");
-	lua_setfield(L, -2, "__name");
-
-#ifdef HAVE_XPLMHotKeyID_tostring
-	lua_pushcfunction(L, _XPLMHotKeyID_tostring);
-	lua_setfield(L, -2, "__tostring");
-#endif
-
-	lua_pushcfunction(L, _XPLMHotKeyID_compare);
-	lua_setfield(L, -2, "__eq");
-
-	lua_register(L, "XPLMHotKeyID", _XPLMHotKeyID_Constructor);
-
-	lua_pop(L, 1);
-}
-
-int XLuaRegisterHotKey(lua_State* L)
-{
-	std::string inVirtualKey_s = luaL_checkstring(L, 1);
-	if (inVirtualKey_s.size() != 1)
-	{
-		luaL_argerror(L, 1, "inVirtualKey must be exactly one character");				// Never returns.
-		return 0;
-	}
-	char inVirtualKey = inVirtualKey_s[0];
-	XPLMKeyFlags inFlags = xlua_checkinteger(L, 2);
-	const char * inDescription = xlua_checkstring(L, 3);
-
-	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 5);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 4, false, "XPLMHotKey_f");
-
-	XPLMHotKeyID res = XPLMRegisterHotKey(inVirtualKey, inFlags, inDescription, cb_XPLMHotKey_f, cb_capture_0.get());
-	if (res == nullptr)
-	{
-		lua_pushnil(L);
-	}
-	else
-	{
-		Make_XPLMHotKeyID(L, res);
-	}
-
-	return 1;
-}
-
-int XLuaUnregisterHotKey(lua_State* L)
-{
-	XPLMHotKeyID inHotKey = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inHotKey = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected XPLMHotKeyID");
-	}
-
-	XPLMUnregisterHotKey(inHotKey);
-
-	return 0;
-}
-
-int XLuaCountHotKeys(lua_State* L)
-{
-	int res = XPLMCountHotKeys();
-	lua_pushinteger(L, res);
-
-	return 1;
-}
-
-int XLuaGetNthHotKey(lua_State* L)
-{
-	int inIndex = xlua_checkinteger(L, 1);
-
-	XPLMHotKeyID res = XPLMGetNthHotKey(inIndex);
-	if (res == nullptr)
-	{
-		lua_pushnil(L);
-	}
-	else
-	{
-		Make_XPLMHotKeyID(L, res);
-	}
-
-	return 1;
-}
-
-int XLuaGetHotKeyInfo(lua_State* L)
-{
-	XPLMHotKeyID inHotKey = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inHotKey = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected XPLMHotKeyID");
-	}
-	char outVirtualKey[1] = {};
-	XPLMKeyFlags outFlags = {};
-	char outDescription[512] = {};
-	XPLMPluginID outPlugin = {};
-
-	XPLMGetHotKeyInfo(inHotKey, outVirtualKey, &outFlags, outDescription, &outPlugin);
-
-	lua_createtable(L, 0, 4);
-
-	lua_pushstring(L, "outVirtualKey");
-	lua_pushstring(L, outVirtualKey);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "outFlags");
-	lua_pushinteger(L, outFlags);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "outDescription");
-	lua_pushstring(L, outDescription);
-	lua_settable(L, -3);
-
-	lua_pushstring(L, "outPlugin");
-	xlua_pushuserdata<XPLMPluginID>(L, outPlugin);
-	lua_settable(L, -3);
-
-	return 1;
-}
-
-int XLuaSetHotKeyCombination(lua_State* L)
-{
-	XPLMHotKeyID inHotKey = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inHotKey = xlua_checkuserdata<XPLMHotKeyID>(L, 1, "Expected XPLMHotKeyID");
-	}
-	std::string inVirtualKey_s = luaL_checkstring(L, 2);
-	if (inVirtualKey_s.size() != 1)
-	{
-		luaL_argerror(L, 2, "inVirtualKey must be exactly one character");				// Never returns.
-		return 0;
-	}
-	char inVirtualKey = inVirtualKey_s[0];
-	XPLMKeyFlags inFlags = xlua_checkinteger(L, 3);
-
-	XPLMSetHotKeyCombination(inHotKey, inVirtualKey, inFlags);
-
-	return 0;
 }
 
 #ifdef __cplusplus

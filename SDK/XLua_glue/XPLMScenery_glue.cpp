@@ -19,6 +19,10 @@
 	#define XPLM_DEPRECATED
 #endif
 #include "XPLMScenery.h"
+// XPLMUtilities.h supplies XPLMReturnString, which the codegen emits inside
+// every const-char*-returning callback wrapper to round-trip through the
+// host-managed return slot.
+#include "XPLMUtilities.h"
 #if MOBILE
 	#undef XPLM_DEPRECATED
 #endif
@@ -51,6 +55,26 @@ XPLMObjectRef* Make_XPLMObjectRef(lua_State* L, XPLMObjectRef const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 XPLMProbeRef* Make_XPLMProbeRef(lua_State* L, XPLMProbeRef const& init);
 
+
+void RegEnum_XPLMProbeType(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_ProbeY");
+	lua_setglobal(L, "XPLMProbeType");
+}
+
+void RegEnum_XPLMProbeResult(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_ProbeHitTerrain");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_ProbeError");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_ProbeMissed");
+	lua_setglobal(L, "XPLMProbeResult");
+}
 
 XPLMProbeRef* Make_XPLMProbeRef(lua_State* L, XPLMProbeRef const& init)
 {
@@ -576,10 +600,13 @@ static void cb_XPLMObjectLoaded_f(XPLMObjectRef inObject, void* inRefcon)
 	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMObjectLoaded_f");
 	if (L)
 	{
+		Make_XPLMObjectRef(L, inObject);
+		int inObject_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "ur", inObject, inRefcon_cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rr", inObject_typed_ref, inRefcon_cb->get_capture()))
 		{
 		}
+		luaL_unref(L, LUA_REGISTRYINDEX, inObject_typed_ref);
 	}
 }
 

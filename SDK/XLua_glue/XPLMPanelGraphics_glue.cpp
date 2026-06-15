@@ -21,6 +21,10 @@
 	#define XPLM_DEPRECATED
 #endif
 #include "XPLMPanelGraphics.h"
+// XPLMUtilities.h supplies XPLMReturnString, which the codegen emits inside
+// every const-char*-returning callback wrapper to round-trip through the
+// host-managed return slot.
+#include "XPLMUtilities.h"
 #if MOBILE
 	#undef XPLM_DEPRECATED
 #endif
@@ -39,6 +43,10 @@ extern "C" {
 //
 XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos);
 void XPLMCreateAvionics_t_to_table(lua_State* L, XPLMCreateAvionics_t const& src);
+XPLMCreateMap_t XPLMCreateMap_t_from_table(lua_State* L, int stackpos);
+void XPLMCreateMap_t_to_table(lua_State* L, XPLMCreateMap_t const& src);
+XPLMCreateSVT_t XPLMCreateSVT_t_from_table(lua_State* L, int stackpos);
+void XPLMCreateSVT_t_to_table(lua_State* L, XPLMCreateSVT_t const& src);
 XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos);
 void XPLMCreateWindow_t_to_table(lua_State* L, XPLMCreateWindow_t const& src);
 XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int stackpos);
@@ -47,6 +55,10 @@ XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos)
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
 XPLMFontMetrics_t XPLMFontMetrics_t_from_table(lua_State* L, int stackpos);
 void XPLMFontMetrics_t_to_table(lua_State* L, XPLMFontMetrics_t const& src);
+XPLMMapCustomData_t XPLMMapCustomData_t_from_table(lua_State* L, int stackpos);
+void XPLMMapCustomData_t_to_table(lua_State* L, XPLMMapCustomData_t const& src);
+XPLMSVTCustomData_t XPLMSVTCustomData_t_from_table(lua_State* L, int stackpos);
+void XPLMSVTCustomData_t_to_table(lua_State* L, XPLMSVTCustomData_t const& src);
 XPLMTextureVertex_t XPLMTextureVertex_t_from_table(lua_State* L, int stackpos);
 void XPLMTextureVertex_t_to_table(lua_State* L, XPLMTextureVertex_t const& src);
 XPLMTouchZoneSpec_t XPLMTouchZoneSpec_t_from_table(lua_State* L, int stackpos);
@@ -62,9 +74,10 @@ void XPLMVertex_t_to_table(lua_State* L, XPLMVertex_t const& src);
 XPLMAvionicsID* Make_XPLMAvionicsID(lua_State* L, XPLMAvionicsID const& init);
 XPLMCommandRef* Make_XPLMCommandRef(lua_State* L, XPLMCommandRef const& init);
 XPLMFontHandle* Make_XPLMFontHandle(lua_State* L, XPLMFontHandle const& init);
-XPLMHotKeyID* Make_XPLMHotKeyID(lua_State* L, XPLMHotKeyID const& init);
+XPLMMapDisplayRef* Make_XPLMMapDisplayRef(lua_State* L, XPLMMapDisplayRef const& init);
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 XPLMRetainedDrawing_t* Make_XPLMRetainedDrawing_t(lua_State* L, XPLMRetainedDrawing_t const& init);
+XPLMSVTDisplayRef* Make_XPLMSVTDisplayRef(lua_State* L, XPLMSVTDisplayRef const& init);
 XPLMTextureAtlasRef* Make_XPLMTextureAtlasRef(lua_State* L, XPLMTextureAtlasRef const& init);
 XPLMWindowID* Make_XPLMWindowID(lua_State* L, XPLMWindowID const& init);
 
@@ -848,6 +861,30 @@ int XLuaQuadstripcWithWidth(lua_State* L)
 
 	return 0;
 }
+
+void RegEnum_XPLMCharSet_t(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_CharSetDigits");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_CharSetASCII");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_CharSetUnicode");
+	lua_setglobal(L, "XPLMCharSet_t");
+}
+
+void RegEnum_XPLMJustification_t(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_JustLeft");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_JustCenter");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_JustRight");
+	lua_setglobal(L, "XPLMJustification_t");
+}
 /*
  * XPLMFontMetrics_t
  * 
@@ -1549,6 +1586,59 @@ int XLuaTextureAtlasDrawMesh(lua_State* L)
 	return 0;
 }
 
+void RegEnum_XPLMTextureSource(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_Texture_WeatherRadar1");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_Texture_WeatherRadar2");
+	lua_setglobal(L, "XPLMTextureSource");
+}
+
+int XLuaTextureSourceDrawIn(lua_State* L)
+{
+	XPLMTextureSource tex = xlua_checkinteger(L, 1);
+	uint32_t tint = xlua_checkinteger(L, 2);
+	int left = xlua_checkinteger(L, 3);
+	int top = xlua_checkinteger(L, 4);
+	int right = xlua_checkinteger(L, 5);
+	int bottom = xlua_checkinteger(L, 6);
+
+	XPLMTextureSourceDrawIn(tex, tint, left, top, right, bottom);
+
+	return 0;
+}
+
+int XLuaTextureSourceDrawMesh(lua_State* L)
+{
+	XPLMTextureSource tex = xlua_checkinteger(L, 1);
+	uint32_t tint = xlua_checkinteger(L, 2);
+	luaL_checktype(L, 3, LUA_TTABLE);
+
+	int count = xlua_checkinteger(L, 4);
+
+	int mesh_len = lua_objlen(L, 3);
+	mesh_len = std::min(mesh_len, static_cast<int>(count));
+	XPLMTextureVertex_t* mesh = new XPLMTextureVertex_t[mesh_len + 1]{};		// Some APIs expect null-terminated arrays.
+
+	for (int i = 0; i < mesh_len; ++i)
+	{
+		lua_rawgeti(L, 3, i + 1);
+		mesh[i] = XPLMTextureVertex_t_from_table(L, -1);
+		lua_pop(L, 1);
+	}
+	
+	XPLMTextureSourceDrawMesh(tex, tint, mesh, count);
+
+	if (mesh != nullptr)
+	{
+		delete[] mesh;
+	}
+
+	return 0;
+}
+
 int XLuaTransformPush(lua_State* L)
 {
 	XPLMTransformPush();
@@ -1664,6 +1754,18 @@ int XLuaClearStencilMask(lua_State* L)
 	XPLMClearStencilMask();
 
 	return 0;
+}
+
+void RegEnum_XPLMTouchZone(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_TouchZone_Nothing");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_TouchZone_Command");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_TouchZone_Identifier");
+	lua_setglobal(L, "XPLMTouchZone");
 }
 
 static void cb_XPLMTouchEvent_f(int identifier, XPLMMouseStatus status, int x, int y, int dx, int dy, int button, void* ref)
@@ -1926,6 +2028,646 @@ int XLuaDestroyRetainedDrawing(lua_State* L)
 	}
 
 	XPLMDestroyRetainedDrawing(drawing);
+
+	return 0;
+}
+
+void RegEnum_XPLMSVTFeatures(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_SVT_Terrain");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_SVT_Runways");
+	lua_pushinteger(L, 4);
+	lua_setfield(L, -2, "xplm_SVT_Obstacles");
+	lua_pushinteger(L, 8);
+	lua_setfield(L, -2, "xplm_SVT_FlightPath");
+	lua_pushinteger(L, 16);
+	lua_setfield(L, -2, "xplm_SVT_Traffic");
+	lua_pushinteger(L, 32);
+	lua_setfield(L, -2, "xplm_SVT_AirportSigns");
+	lua_pushinteger(L, 64);
+	lua_setfield(L, -2, "xplm_SVT_ILSHoops");
+	lua_pushinteger(L, 128);
+	lua_setfield(L, -2, "xplm_SVT_HorizonHeading");
+	lua_pushinteger(L, 255);
+	lua_setfield(L, -2, "xplm_SVT_All");
+	lua_setglobal(L, "XPLMSVTFeatures");
+}
+/*
+ * XPLMCreateSVT_t
+ * 
+ * Creation and transfer between C struct and Lua table
+ *
+ */
+
+XPLMCreateSVT_t XPLMCreateSVT_t_from_table(lua_State* L, int stackpos)
+{
+	XPLMCreateSVT_t out = {};
+
+	luaL_checktype(L, stackpos, LUA_TTABLE);
+	out.structSize = sizeof(out);
+
+	lua_getfield(L, stackpos, "features");
+	if (!lua_isnil(L, -1))
+	{
+		out.features = static_cast<XPLMSVTFeatures>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "pilotIndex");
+	if (!lua_isnil(L, -1))
+	{
+		out.pilotIndex = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	return out;
+}
+
+void XPLMCreateSVT_t_to_table(lua_State* L, XPLMCreateSVT_t const& src)
+{
+	lua_newtable(L);
+
+	lua_pushstring(L, "features");
+	lua_pushinteger(L, src.features);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "pilotIndex");
+	lua_pushinteger(L, src.pilotIndex);
+	lua_settable(L, -3);
+}
+
+int MakeXPLMCreateSVT_t(lua_State* L)
+{
+	XPLMCreateSVT_t out = {};
+	out.structSize = sizeof(XPLMCreateSVT_t);
+	XPLMCreateSVT_t_to_table(L, out);
+	return 1;
+}
+/*
+ * END Creation and transfer between C struct and Lua table
+ *
+ */
+
+XPLMSVTDisplayRef* Make_XPLMSVTDisplayRef(lua_State* L, XPLMSVTDisplayRef const& init)
+{
+	XPLMSVTDisplayRef* ud = static_cast<XPLMSVTDisplayRef*>(lua_newuserdata(L, sizeof(XPLMSVTDisplayRef)));
+	memcpy(ud, &init, sizeof(XPLMSVTDisplayRef));
+
+	luaL_getmetatable(L, "_mt_XPLMSVTDisplayRef");
+	lua_setmetatable(L, -2);
+
+	return ud;
+}
+
+static int _XPLMSVTDisplayRef_Constructor(lua_State* L)
+{
+	Make_XPLMSVTDisplayRef(L, nullptr);
+	return 1;
+}
+
+static int _XPLMSVTDisplayRef_compare(lua_State* L)
+{
+	XPLMSVTDisplayRef const test1 = xlua_checkuserdata<XPLMSVTDisplayRef>(L, 1, "Expected XPLMSVTDisplayRef");
+	XPLMSVTDisplayRef const test2 = xlua_checkuserdata<XPLMSVTDisplayRef>(L, 2, "Expected XPLMSVTDisplayRef");
+
+	lua_pushboolean(L, test1 == test2);
+	return 1;
+}
+
+void RegType_XPLMSVTDisplayRef(lua_State* L)
+{
+	luaL_newmetatable(L, "_mt_XPLMSVTDisplayRef");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+
+	lua_pushstring(L, "XPLMSVTDisplayRef");
+	lua_setfield(L, -2, "__name");
+
+#ifdef HAVE_XPLMSVTDisplayRef_tostring
+	lua_pushcfunction(L, _XPLMSVTDisplayRef_tostring);
+	lua_setfield(L, -2, "__tostring");
+#endif
+
+	lua_pushcfunction(L, _XPLMSVTDisplayRef_compare);
+	lua_setfield(L, -2, "__eq");
+
+	lua_register(L, "XPLMSVTDisplayRef", _XPLMSVTDisplayRef_Constructor);
+
+	lua_pop(L, 1);
+}
+
+int XLuaCreateSVTDisplay(lua_State* L)
+{
+	XPLMCreateSVT_t params = XPLMCreateSVT_t_from_table(L, 1);
+
+	XPLMSVTDisplayRef res = XPLMCreateSVTDisplay(&params);
+	if (res == nullptr)
+	{
+		lua_pushnil(L);
+	}
+	else
+	{
+		Make_XPLMSVTDisplayRef(L, res);
+	}
+
+	return 1;
+}
+
+int XLuaDestroySVTDisplay(lua_State* L)
+{
+	XPLMSVTDisplayRef svt = {};
+	if (lua_isuserdata(L, 1))
+	{
+		svt = xlua_checkuserdata<XPLMSVTDisplayRef>(L, 1, "Expected XPLMSVTDisplayRef");
+	}
+
+	XPLMDestroySVTDisplay(svt);
+
+	return 0;
+}
+/*
+ * XPLMSVTCustomData_t
+ * 
+ * Creation and transfer between C struct and Lua table
+ *
+ */
+
+XPLMSVTCustomData_t XPLMSVTCustomData_t_from_table(lua_State* L, int stackpos)
+{
+	XPLMSVTCustomData_t out = {};
+
+	luaL_checktype(L, stackpos, LUA_TTABLE);
+
+	lua_getfield(L, stackpos, "pitchDeg");
+	if (!lua_isnil(L, -1))
+	{
+		out.pitchDeg = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "rollDeg");
+	if (!lua_isnil(L, -1))
+	{
+		out.rollDeg = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "headingMagDeg");
+	if (!lua_isnil(L, -1))
+	{
+		out.headingMagDeg = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "magVarDeg");
+	if (!lua_isnil(L, -1))
+	{
+		out.magVarDeg = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "indicatedAltFt");
+	if (!lua_isnil(L, -1))
+	{
+		out.indicatedAltFt = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "baroSettingInHg");
+	if (!lua_isnil(L, -1))
+	{
+		out.baroSettingInHg = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "hsiSource");
+	if (!lua_isnil(L, -1))
+	{
+		out.hsiSource = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "hdefDots");
+	if (!lua_isnil(L, -1))
+	{
+		out.hdefDots = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "vdefDots");
+	if (!lua_isnil(L, -1))
+	{
+		out.vdefDots = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	return out;
+}
+
+void XPLMSVTCustomData_t_to_table(lua_State* L, XPLMSVTCustomData_t const& src)
+{
+	lua_newtable(L);
+
+	lua_pushstring(L, "pitchDeg");
+	lua_pushnumber(L, src.pitchDeg);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "rollDeg");
+	lua_pushnumber(L, src.rollDeg);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "headingMagDeg");
+	lua_pushnumber(L, src.headingMagDeg);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "magVarDeg");
+	lua_pushnumber(L, src.magVarDeg);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "indicatedAltFt");
+	lua_pushnumber(L, src.indicatedAltFt);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "baroSettingInHg");
+	lua_pushnumber(L, src.baroSettingInHg);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "hsiSource");
+	lua_pushinteger(L, src.hsiSource);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "hdefDots");
+	lua_pushnumber(L, src.hdefDots);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "vdefDots");
+	lua_pushnumber(L, src.vdefDots);
+	lua_settable(L, -3);
+}
+
+int MakeXPLMSVTCustomData_t(lua_State* L)
+{
+	XPLMSVTCustomData_t out = {};
+	XPLMSVTCustomData_t_to_table(L, out);
+	return 1;
+}
+/*
+ * END Creation and transfer between C struct and Lua table
+ *
+ */
+
+int XLuaSVTDisplayDrawIn(lua_State* L)
+{
+	XPLMSVTDisplayRef svt = {};
+	if (lua_isuserdata(L, 1))
+	{
+		svt = xlua_checkuserdata<XPLMSVTDisplayRef>(L, 1, "Expected XPLMSVTDisplayRef");
+	}
+	XPLMSVTFeatures features = xlua_checkinteger(L, 2);
+	int left = xlua_checkinteger(L, 3);
+	int top = xlua_checkinteger(L, 4);
+	int right = xlua_checkinteger(L, 5);
+	int bottom = xlua_checkinteger(L, 6);
+	std::optional<XPLMSVTCustomData_t> dataOverrides;
+	if (!lua_isnoneornil(L, 7))
+	{
+		dataOverrides = XPLMSVTCustomData_t_from_table(L, 7);
+	}
+
+	XPLMSVTDisplayDrawIn(svt, features, left, top, right, bottom, (dataOverrides ? &*dataOverrides : nullptr));
+
+	return 0;
+}
+
+void RegEnum_XPLMMapLayers(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_Map_Nexrad");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_Map_IR");
+	lua_pushinteger(L, 4);
+	lua_setfield(L, -2, "xplm_Map_Topo");
+	lua_pushinteger(L, 8);
+	lua_setfield(L, -2, "xplm_Map_Terrain");
+	lua_pushinteger(L, 16);
+	lua_setfield(L, -2, "xplm_Map_Water");
+	lua_pushinteger(L, 32);
+	lua_setfield(L, -2, "xplm_Map_EGPWS");
+	lua_pushinteger(L, 64);
+	lua_setfield(L, -2, "xplm_Map_raw_elev");
+	lua_pushinteger(L, 128);
+	lua_setfield(L, -2, "xplm_Map_safe_taxi");
+	lua_setglobal(L, "XPLMMapLayers");
+}
+/*
+ * XPLMMapCustomData_t
+ * 
+ * Creation and transfer between C struct and Lua table
+ *
+ */
+
+XPLMMapCustomData_t XPLMMapCustomData_t_from_table(lua_State* L, int stackpos)
+{
+	XPLMMapCustomData_t out = {};
+
+	luaL_checktype(L, stackpos, LUA_TTABLE);
+
+	lua_getfield(L, stackpos, "datLat");
+	if (!lua_isnil(L, -1))
+	{
+		out.datLat = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "datLon");
+	if (!lua_isnil(L, -1))
+	{
+		out.datLon = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "ctrX");
+	if (!lua_isnil(L, -1))
+	{
+		out.ctrX = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "ctrY");
+	if (!lua_isnil(L, -1))
+	{
+		out.ctrY = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "roseDiameter");
+	if (!lua_isnil(L, -1))
+	{
+		out.roseDiameter = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "mapRange");
+	if (!lua_isnil(L, -1))
+	{
+		out.mapRange = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "orientation");
+	if (!lua_isnil(L, -1))
+	{
+		out.orientation = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "terrainWarn");
+	if (!lua_isnil(L, -1))
+	{
+		out.terrainWarn = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "terrainCaution");
+	if (!lua_isnil(L, -1))
+	{
+		out.terrainCaution = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "acfAlt");
+	if (!lua_isnil(L, -1))
+	{
+		out.acfAlt = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "gearDown");
+	if (!lua_isnil(L, -1))
+	{
+		out.gearDown = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "trueRotation");
+	if (!lua_isnil(L, -1))
+	{
+		out.trueRotation = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	return out;
+}
+
+void XPLMMapCustomData_t_to_table(lua_State* L, XPLMMapCustomData_t const& src)
+{
+	lua_newtable(L);
+
+	lua_pushstring(L, "datLat");
+	lua_pushnumber(L, src.datLat);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "datLon");
+	lua_pushnumber(L, src.datLon);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "ctrX");
+	lua_pushinteger(L, src.ctrX);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "ctrY");
+	lua_pushinteger(L, src.ctrY);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "roseDiameter");
+	lua_pushinteger(L, src.roseDiameter);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "mapRange");
+	lua_pushnumber(L, src.mapRange);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "orientation");
+	lua_pushinteger(L, src.orientation);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "terrainWarn");
+	lua_pushnumber(L, src.terrainWarn);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "terrainCaution");
+	lua_pushnumber(L, src.terrainCaution);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "acfAlt");
+	lua_pushnumber(L, src.acfAlt);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "gearDown");
+	lua_pushinteger(L, src.gearDown);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "trueRotation");
+	lua_pushnumber(L, src.trueRotation);
+	lua_settable(L, -3);
+}
+
+int MakeXPLMMapCustomData_t(lua_State* L)
+{
+	XPLMMapCustomData_t out = {};
+	XPLMMapCustomData_t_to_table(L, out);
+	return 1;
+}
+/*
+ * END Creation and transfer between C struct and Lua table
+ *
+ */
+/*
+ * XPLMCreateMap_t
+ * 
+ * Creation and transfer between C struct and Lua table
+ *
+ */
+
+XPLMCreateMap_t XPLMCreateMap_t_from_table(lua_State* L, int stackpos)
+{
+	XPLMCreateMap_t out = {};
+
+	luaL_checktype(L, stackpos, LUA_TTABLE);
+	out.structSize = sizeof(out);
+
+	lua_getfield(L, stackpos, "pilotIndex");
+	if (!lua_isnil(L, -1))
+	{
+		out.pilotIndex = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	return out;
+}
+
+void XPLMCreateMap_t_to_table(lua_State* L, XPLMCreateMap_t const& src)
+{
+	lua_newtable(L);
+
+	lua_pushstring(L, "pilotIndex");
+	lua_pushinteger(L, src.pilotIndex);
+	lua_settable(L, -3);
+}
+
+int MakeXPLMCreateMap_t(lua_State* L)
+{
+	XPLMCreateMap_t out = {};
+	out.structSize = sizeof(XPLMCreateMap_t);
+	XPLMCreateMap_t_to_table(L, out);
+	return 1;
+}
+/*
+ * END Creation and transfer between C struct and Lua table
+ *
+ */
+
+XPLMMapDisplayRef* Make_XPLMMapDisplayRef(lua_State* L, XPLMMapDisplayRef const& init)
+{
+	XPLMMapDisplayRef* ud = static_cast<XPLMMapDisplayRef*>(lua_newuserdata(L, sizeof(XPLMMapDisplayRef)));
+	memcpy(ud, &init, sizeof(XPLMMapDisplayRef));
+
+	luaL_getmetatable(L, "_mt_XPLMMapDisplayRef");
+	lua_setmetatable(L, -2);
+
+	return ud;
+}
+
+static int _XPLMMapDisplayRef_Constructor(lua_State* L)
+{
+	Make_XPLMMapDisplayRef(L, nullptr);
+	return 1;
+}
+
+static int _XPLMMapDisplayRef_compare(lua_State* L)
+{
+	XPLMMapDisplayRef const test1 = xlua_checkuserdata<XPLMMapDisplayRef>(L, 1, "Expected XPLMMapDisplayRef");
+	XPLMMapDisplayRef const test2 = xlua_checkuserdata<XPLMMapDisplayRef>(L, 2, "Expected XPLMMapDisplayRef");
+
+	lua_pushboolean(L, test1 == test2);
+	return 1;
+}
+
+void RegType_XPLMMapDisplayRef(lua_State* L)
+{
+	luaL_newmetatable(L, "_mt_XPLMMapDisplayRef");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+
+	lua_pushstring(L, "XPLMMapDisplayRef");
+	lua_setfield(L, -2, "__name");
+
+#ifdef HAVE_XPLMMapDisplayRef_tostring
+	lua_pushcfunction(L, _XPLMMapDisplayRef_tostring);
+	lua_setfield(L, -2, "__tostring");
+#endif
+
+	lua_pushcfunction(L, _XPLMMapDisplayRef_compare);
+	lua_setfield(L, -2, "__eq");
+
+	lua_register(L, "XPLMMapDisplayRef", _XPLMMapDisplayRef_Constructor);
+
+	lua_pop(L, 1);
+}
+
+int XLuaCreateMapDisplay(lua_State* L)
+{
+	XPLMCreateMap_t params = XPLMCreateMap_t_from_table(L, 1);
+
+	XPLMMapDisplayRef res = XPLMCreateMapDisplay(&params);
+	if (res == nullptr)
+	{
+		lua_pushnil(L);
+	}
+	else
+	{
+		Make_XPLMMapDisplayRef(L, res);
+	}
+
+	return 1;
+}
+
+int XLuaDestroyMapDisplay(lua_State* L)
+{
+	XPLMMapDisplayRef map = {};
+	if (lua_isuserdata(L, 1))
+	{
+		map = xlua_checkuserdata<XPLMMapDisplayRef>(L, 1, "Expected XPLMMapDisplayRef");
+	}
+
+	XPLMDestroyMapDisplay(map);
+
+	return 0;
+}
+
+int XLuaMapDisplayDrawIn(lua_State* L)
+{
+	XPLMMapDisplayRef map = {};
+	if (lua_isuserdata(L, 1))
+	{
+		map = xlua_checkuserdata<XPLMMapDisplayRef>(L, 1, "Expected XPLMMapDisplayRef");
+	}
+	XPLMMapLayers layers = xlua_checkinteger(L, 2);
+	int left = xlua_checkinteger(L, 3);
+	int top = xlua_checkinteger(L, 4);
+	int right = xlua_checkinteger(L, 5);
+	int bottom = xlua_checkinteger(L, 6);
+	std::optional<XPLMMapCustomData_t> dataOverrides;
+	if (!lua_isnoneornil(L, 7))
+	{
+		dataOverrides = XPLMMapCustomData_t_from_table(L, 7);
+	}
+
+	XPLMMapDisplayDrawIn(map, layers, left, top, right, bottom, (dataOverrides ? &*dataOverrides : nullptr));
 
 	return 0;
 }

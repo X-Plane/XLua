@@ -1934,7 +1934,7 @@ typedef struct {
     /* map range center to compass rose (nautical miles).                         */
      float                     mapRange;
 
-    /* map orientation (0=north up, 1=Track up, 2=Hdg up).                        */
+    /* map orientation (0=north up, 1=Track up, 2=Hdg up, 3=custom).              */
      int                       orientation;
 
     /* terrain warning altitude (red, feet).                                      */
@@ -1948,6 +1948,10 @@ typedef struct {
 
     /* ownship gear status (1=gear down).                                         */
      int                       gearDown;
+
+    /* if map orientation is custom, the rotation in degrees counter-clockwise    *
+     * from true north.                                                           */
+     float                     trueRotation;
 } XPLMMapCustomData_t;
 
 /*

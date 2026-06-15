@@ -19,6 +19,10 @@
 	#define XPLM_DEPRECATED
 #endif
 #include "XPLMDataAccess.h"
+// XPLMUtilities.h supplies XPLMReturnString, which the codegen emits inside
+// every const-char*-returning callback wrapper to round-trip through the
+// host-managed return slot.
+#include "XPLMUtilities.h"
 #if MOBILE
 	#undef XPLM_DEPRECATED
 #endif
@@ -93,6 +97,26 @@ void RegType_XPLMDataRef(lua_State* L)
 	lua_register(L, "XPLMDataRef", _XPLMDataRef_Constructor);
 
 	lua_pop(L, 1);
+}
+
+void RegEnum_XPLMDataTypeID(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplmType_Unknown");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplmType_Int");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplmType_Float");
+	lua_pushinteger(L, 4);
+	lua_setfield(L, -2, "xplmType_Double");
+	lua_pushinteger(L, 8);
+	lua_setfield(L, -2, "xplmType_FloatArray");
+	lua_pushinteger(L, 16);
+	lua_setfield(L, -2, "xplmType_IntArray");
+	lua_pushinteger(L, 32);
+	lua_setfield(L, -2, "xplmType_Data");
+	lua_setglobal(L, "XPLMDataTypeID");
 }
 /*
  * XPLMDataRefInfo_t
@@ -615,7 +639,10 @@ static int cb_XPLMGetDatai_f(void* inRefcon)
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r", inRefcon_cb->get_capture()))
 		{
-			res = luaL_checkinteger(L, -1);
+			{
+				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMGetDatai_f returned %s; expected integer\n", luaL_typename(L, -1));
+				res = lua_tointeger(L, -1);
+			}
 			lua_pop(L, 1);
 		}
 	}
@@ -648,7 +675,10 @@ static float cb_XPLMGetDataf_f(void* inRefcon)
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r", inRefcon_cb->get_capture()))
 		{
-			res = luaL_checknumber(L, -1);
+			{
+				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMGetDataf_f returned %s; expected number\n", luaL_typename(L, -1));
+				res = lua_tonumber(L, -1);
+			}
 			lua_pop(L, 1);
 		}
 	}
@@ -681,7 +711,10 @@ static double cb_XPLMGetDatad_f(void* inRefcon)
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r", inRefcon_cb->get_capture()))
 		{
-			res = luaL_checknumber(L, -1);
+			{
+				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMGetDatad_f returned %s; expected number\n", luaL_typename(L, -1));
+				res = lua_tonumber(L, -1);
+			}
 			lua_pop(L, 1);
 		}
 	}
@@ -729,7 +762,10 @@ static int cb_XPLMGetDatavi_f(void* inRefcon, int outValues[], int inOffset, int
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "rrii", inRefcon_cb->get_capture(), outValues_ref, inOffset, inMax))
 		{
-			res = luaL_checkinteger(L, -1);
+			{
+				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMGetDatavi_f returned %s; expected integer\n", luaL_typename(L, -1));
+				res = lua_tointeger(L, -1);
+			}
 			lua_pop(L, 1);
 		}
 
@@ -811,7 +847,10 @@ static int cb_XPLMGetDatavf_f(void* inRefcon, float outValues[], int inOffset, i
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "rrii", inRefcon_cb->get_capture(), outValues_ref, inOffset, inMax))
 		{
-			res = luaL_checkinteger(L, -1);
+			{
+				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMGetDatavf_f returned %s; expected integer\n", luaL_typename(L, -1));
+				res = lua_tointeger(L, -1);
+			}
 			lua_pop(L, 1);
 		}
 
@@ -893,7 +932,10 @@ static int cb_XPLMGetDatab_f(void* inRefcon, void* outValue, int inOffset, int i
 
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "rrii", inRefcon_cb->get_capture(), outValue_ref, inOffset, inMaxLength))
 		{
-			res = luaL_checkinteger(L, -1);
+			{
+				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMGetDatab_f returned %s; expected integer\n", luaL_typename(L, -1));
+				res = lua_tointeger(L, -1);
+			}
 			lua_pop(L, 1);
 		}
 

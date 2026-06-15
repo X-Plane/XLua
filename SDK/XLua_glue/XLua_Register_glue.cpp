@@ -51,7 +51,6 @@ extern "C"
 	int XLuaCountDataRefs(lua_State* L);
 	int XLuaCountFMSEntries(lua_State* L);
 	int XLuaCountFMSFlightPlanEntries(lua_State* L);
-	int XLuaCountHotKeys(lua_State* L);
 	int XLuaCountPlugins(lua_State* L);
 	int XLuaCreateAvionicsEx(lua_State* L);
 	int MakeXPLMCreateAvionics_t(lua_State* L);
@@ -60,13 +59,15 @@ extern "C"
 	int MakeXPLMCreateFlightLoop_t(lua_State* L);
 	int XLuaCreateFont(lua_State* L);
 	int XLuaCreateInstance(lua_State* L);
+	int XLuaCreateMapDisplay(lua_State* L);
 	int XLuaCreateMapLayer(lua_State* L);
 	int MakeXPLMCreateMapLayer_t(lua_State* L);
+	int MakeXPLMCreateMap_t(lua_State* L);
 	int XLuaCreateMenu(lua_State* L);
 	int XLuaCreateProbe(lua_State* L);
+	int XLuaCreateSVTDisplay(lua_State* L);
+	int MakeXPLMCreateSVT_t(lua_State* L);
 	int XLuaCreateTextureAtlas(lua_State* L);
-	int XLuaCreateWindow(lua_State* L);
-	int XLuaCreateWindowEx(lua_State* L);
 	int MakeXPLMCreateWindow_t(lua_State* L);
 	int MakeXPLMCustomizeAvionics_t(lua_State* L);
 	int MakeXPLMDataRefInfo_t(lua_State* L);
@@ -77,12 +78,13 @@ extern "C"
 	int XLuaDestroyFlightLoop(lua_State* L);
 	int XLuaDestroyFont(lua_State* L);
 	int XLuaDestroyInstance(lua_State* L);
+	int XLuaDestroyMapDisplay(lua_State* L);
 	int XLuaDestroyMapLayer(lua_State* L);
 	int XLuaDestroyMenu(lua_State* L);
 	int XLuaDestroyProbe(lua_State* L);
 	int XLuaDestroyRetainedDrawing(lua_State* L);
+	int XLuaDestroySVTDisplay(lua_State* L);
 	int XLuaDestroyTextureAtlas(lua_State* L);
-	int XLuaDestroyWindow(lua_State* L);
 	int XLuaDisableAIForPlane(lua_State* L);
 	int XLuaDisablePlugin(lua_State* L);
 	int XLuaDontControlCamera(lua_State* L);
@@ -152,17 +154,14 @@ extern "C"
 	int XLuaGetFontDimensions(lua_State* L);
 	int XLuaGetGPSDestination(lua_State* L);
 	int XLuaGetGPSDestinationType(lua_State* L);
-	int XLuaGetHotKeyInfo(lua_State* L);
 	int XLuaGetLanguage(lua_State* L);
 	int XLuaGetMETARForAirport(lua_State* L);
 	int XLuaGetMagneticVariation(lua_State* L);
-	int XLuaGetMouseLocation(lua_State* L);
 	int XLuaGetMouseLocationGlobal(lua_State* L);
 	int XLuaGetMyID(lua_State* L);
 	int XLuaGetNavAidInfo(lua_State* L);
 	int XLuaGetNextNavAid(lua_State* L);
 	int XLuaGetNthAircraftModel(lua_State* L);
-	int XLuaGetNthHotKey(lua_State* L);
 	int XLuaGetNthPlugin(lua_State* L);
 	int XLuaGetPluginInfo(lua_State* L);
 	int XLuaGetPrefsPath(lua_State* L);
@@ -185,6 +184,7 @@ extern "C"
 	int XLuaInstanceSetPosition(lua_State* L);
 	int XLuaInstanceSetPositionDouble(lua_State* L);
 	int XLuaIsAvionicsBound(lua_State* L);
+	int XLuaIsAvionicsMappedToVR(lua_State* L);
 	int XLuaIsAvionicsPoppedOut(lua_State* L);
 	int XLuaIsAvionicsPopupVisible(lua_State* L);
 	int XLuaIsCameraBeingControlled(lua_State* L);
@@ -215,6 +215,8 @@ extern "C"
 	int XLuaLocalToWorld(lua_State* L);
 	int XLuaLookupObjects(lua_State* L);
 	int XLuaMakeColor(lua_State* L);
+	int MakeXPLMMapCustomData_t(lua_State* L);
+	int XLuaMapDisplayDrawIn(lua_State* L);
 	int XLuaMapExists(lua_State* L);
 	int XLuaMapGetNorthHeading(lua_State* L);
 	int XLuaMapProject(lua_State* L);
@@ -238,14 +240,14 @@ extern "C"
 	int XLuaRegisterAvionicsCallbacksEx(lua_State* L);
 	int XLuaRegisterCommandHandler(lua_State* L);
 	int XLuaRegisterDataAccessor(lua_State* L);
-	int XLuaRegisterHotKey(lua_State* L);
 	int XLuaRegisterMapCreationHook(lua_State* L);
 	int XLuaReleasePlanes(lua_State* L);
 	int XLuaReloadPlugins(lua_State* L);
 	int XLuaReloadScenery(lua_State* L);
 	int XLuaReloadThisPlugin(lua_State* L);
 	int XLuaRemoveMenuItem(lua_State* L);
-	int XLuaReturnString(lua_State* L);
+	int MakeXPLMSVTCustomData_t(lua_State* L);
+	int XLuaSVTDisplayDrawIn(lua_State* L);
 	int XLuaSaveDataFile(lua_State* L);
 	int XLuaScheduleFlightLoop(lua_State* L);
 	int XLuaScissorPop(lua_State* L);
@@ -258,6 +260,7 @@ extern "C"
 	int XLuaSetAvionicsBrightnessRheo(lua_State* L);
 	int XLuaSetAvionicsGeometry(lua_State* L);
 	int XLuaSetAvionicsGeometryOS(lua_State* L);
+	int XLuaSetAvionicsMappedToVR(lua_State* L);
 	int XLuaSetAvionicsPopupVisible(lua_State* L);
 	int XLuaSetDatab(lua_State* L);
 	int XLuaSetDatad(lua_State* L);
@@ -275,7 +278,6 @@ extern "C"
 	int XLuaSetFMSFlightPlanEntryInfo(lua_State* L);
 	int XLuaSetFMSFlightPlanEntryLatLon(lua_State* L);
 	int XLuaSetFMSFlightPlanEntryLatLonWithId(lua_State* L);
-	int XLuaSetHotKeyCombination(lua_State* L);
 	int XLuaSetMenuItemName(lua_State* L);
 	int XLuaSetUsersAircraft(lua_State* L);
 	int XLuaSetWeatherAtAirport(lua_State* L);
@@ -304,6 +306,8 @@ extern "C"
 	int XLuaTextureAtlasGetImageHeight(lua_State* L);
 	int XLuaTextureAtlasGetImageUVMap(lua_State* L);
 	int XLuaTextureAtlasGetImageWidth(lua_State* L);
+	int XLuaTextureSourceDrawIn(lua_State* L);
+	int XLuaTextureSourceDrawMesh(lua_State* L);
 	int MakeXPLMTextureVertex_t(lua_State* L);
 	int MakeXPLMTouchZoneSpec_t(lua_State* L);
 	int XLuaTransformPop(lua_State* L);
@@ -315,7 +319,6 @@ extern "C"
 	int XLuaUnregisterAvionicsCallbacks(lua_State* L);
 	int XLuaUnregisterCommandHandler(lua_State* L);
 	int XLuaUnregisterDataAccessor(lua_State* L);
-	int XLuaUnregisterHotKey(lua_State* L);
 	int XLuaUpdateFlight(lua_State* L);
 	int XLuaUseStencilMask(lua_State* L);
 	int MakeXPLMVertexColor_t(lua_State* L);
@@ -343,10 +346,10 @@ extern "C"
 	XPLMFlightLoopID* Make_XPLMFlightLoopID(lua_State* L, XPLMFlightLoopID const& init);
 	void RegType_XPLMFontHandle(lua_State* L);
 	XPLMFontHandle* Make_XPLMFontHandle(lua_State* L, XPLMFontHandle const& init);
-	void RegType_XPLMHotKeyID(lua_State* L);
-	XPLMHotKeyID* Make_XPLMHotKeyID(lua_State* L, XPLMHotKeyID const& init);
 	void RegType_XPLMInstanceRef(lua_State* L);
 	XPLMInstanceRef* Make_XPLMInstanceRef(lua_State* L, XPLMInstanceRef const& init);
+	void RegType_XPLMMapDisplayRef(lua_State* L);
+	XPLMMapDisplayRef* Make_XPLMMapDisplayRef(lua_State* L, XPLMMapDisplayRef const& init);
 	void RegType_XPLMMapLayerID(lua_State* L);
 	XPLMMapLayerID* Make_XPLMMapLayerID(lua_State* L, XPLMMapLayerID const& init);
 	void RegType_XPLMMapProjectionID(lua_State* L);
@@ -363,10 +366,53 @@ extern "C"
 	XPLMProbeRef* Make_XPLMProbeRef(lua_State* L, XPLMProbeRef const& init);
 	void RegType_XPLMRetainedDrawing_t(lua_State* L);
 	XPLMRetainedDrawing_t* Make_XPLMRetainedDrawing_t(lua_State* L, XPLMRetainedDrawing_t const& init);
+	void RegType_XPLMSVTDisplayRef(lua_State* L);
+	XPLMSVTDisplayRef* Make_XPLMSVTDisplayRef(lua_State* L, XPLMSVTDisplayRef const& init);
 	void RegType_XPLMTextureAtlasRef(lua_State* L);
 	XPLMTextureAtlasRef* Make_XPLMTextureAtlasRef(lua_State* L, XPLMTextureAtlasRef const& init);
 	void RegType_XPLMWindowID(lua_State* L);
 	XPLMWindowID* Make_XPLMWindowID(lua_State* L, XPLMWindowID const& init);
+
+	// Enums
+	void RegEnum_XPLMCameraControlDuration(lua_State* L);
+	void RegEnum_XPLMCharSet_t(lua_State* L);
+	void RegEnum_XPLMCommandPhase(lua_State* L);
+	void RegEnum_XPLMCursorStatus(lua_State* L);
+	void RegEnum_XPLMDataFileType(lua_State* L);
+	void RegEnum_XPLMDataTypeID(lua_State* L);
+	void RegEnum_XPLMDeviceID(lua_State* L);
+	void RegEnum_XPLMFlightLoopPhaseType(lua_State* L);
+	void RegEnum_XPLMFontID(lua_State* L);
+	void RegEnum_XPLMHostApplicationID(lua_State* L);
+	void RegEnum_XPLMInitResult(lua_State* L);
+	void RegEnum_XPLMJustification_t(lua_State* L);
+	void RegEnum_XPLMKeyFlags(lua_State* L);
+	void RegEnum_XPLMLanguageCode(lua_State* L);
+	void RegEnum_XPLMMapLayerType(lua_State* L);
+	void RegEnum_XPLMMapLayers(lua_State* L);
+	void RegEnum_XPLMMapOrientation(lua_State* L);
+	void RegEnum_XPLMMapStyle(lua_State* L);
+	void RegEnum_XPLMMenuCheck(lua_State* L);
+	void RegEnum_XPLMMouseStatus(lua_State* L);
+	void RegEnum_XPLMNavFlightPlan(lua_State* L);
+	void RegEnum_XPLMNavType(lua_State* L);
+	void RegEnum_XPLMProbeResult(lua_State* L);
+	void RegEnum_XPLMProbeType(lua_State* L);
+	void RegEnum_XPLMSVTFeatures(lua_State* L);
+	void RegEnum_XPLMTextureSource(lua_State* L);
+	void RegEnum_XPLMTouchZone(lua_State* L);
+	void RegEnum_XPLMWindowContentType(lua_State* L);
+	void RegEnum_XPLMWindowDecoration(lua_State* L);
+	void RegEnum_XPLMWindowLayer(lua_State* L);
+	void RegEnum_XPLMWindowPositioningMode(lua_State* L);
+
+	// Defines
+	void RegDefines_XPLMDefs(lua_State* L);
+	void RegDefines_XPLMMap(lua_State* L);
+	void RegDefines_XPLMNavigation(lua_State* L);
+	void RegDefines_XPLMPlanes(lua_State* L);
+	void RegDefines_XPLMPlugin(lua_State* L);
+	void RegDefines_XPLMWeather(lua_State* L);
 }		// extern "C"
 
 
@@ -399,7 +445,6 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMCountDataRefs", XLuaCountDataRefs);
 	lua_register(L, "XPLMCountFMSEntries", XLuaCountFMSEntries);
 	lua_register(L, "XPLMCountFMSFlightPlanEntries", XLuaCountFMSFlightPlanEntries);
-	lua_register(L, "XPLMCountHotKeys", XLuaCountHotKeys);
 	lua_register(L, "XPLMCountPlugins", XLuaCountPlugins);
 	lua_register(L, "XPLMCreateAvionicsEx", XLuaCreateAvionicsEx);
 	lua_register(L, "XPLMCreateAvionics_t", MakeXPLMCreateAvionics_t);
@@ -408,13 +453,15 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMCreateFlightLoop_t", MakeXPLMCreateFlightLoop_t);
 	lua_register(L, "XPLMCreateFont", XLuaCreateFont);
 	lua_register(L, "XPLMCreateInstance", XLuaCreateInstance);
+	lua_register(L, "XPLMCreateMapDisplay", XLuaCreateMapDisplay);
 	lua_register(L, "XPLMCreateMapLayer", XLuaCreateMapLayer);
 	lua_register(L, "XPLMCreateMapLayer_t", MakeXPLMCreateMapLayer_t);
+	lua_register(L, "XPLMCreateMap_t", MakeXPLMCreateMap_t);
 	lua_register(L, "XPLMCreateMenu", XLuaCreateMenu);
 	lua_register(L, "XPLMCreateProbe", XLuaCreateProbe);
+	lua_register(L, "XPLMCreateSVTDisplay", XLuaCreateSVTDisplay);
+	lua_register(L, "XPLMCreateSVT_t", MakeXPLMCreateSVT_t);
 	lua_register(L, "XPLMCreateTextureAtlas", XLuaCreateTextureAtlas);
-	lua_register(L, "XPLMCreateWindow", XLuaCreateWindow);
-	lua_register(L, "XPLMCreateWindowEx", XLuaCreateWindowEx);
 	lua_register(L, "XPLMCreateWindow_t", MakeXPLMCreateWindow_t);
 	lua_register(L, "XPLMCustomizeAvionics_t", MakeXPLMCustomizeAvionics_t);
 	lua_register(L, "XPLMDataRefInfo_t", MakeXPLMDataRefInfo_t);
@@ -425,12 +472,13 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMDestroyFlightLoop", XLuaDestroyFlightLoop);
 	lua_register(L, "XPLMDestroyFont", XLuaDestroyFont);
 	lua_register(L, "XPLMDestroyInstance", XLuaDestroyInstance);
+	lua_register(L, "XPLMDestroyMapDisplay", XLuaDestroyMapDisplay);
 	lua_register(L, "XPLMDestroyMapLayer", XLuaDestroyMapLayer);
 	lua_register(L, "XPLMDestroyMenu", XLuaDestroyMenu);
 	lua_register(L, "XPLMDestroyProbe", XLuaDestroyProbe);
 	lua_register(L, "XPLMDestroyRetainedDrawing", XLuaDestroyRetainedDrawing);
+	lua_register(L, "XPLMDestroySVTDisplay", XLuaDestroySVTDisplay);
 	lua_register(L, "XPLMDestroyTextureAtlas", XLuaDestroyTextureAtlas);
-	lua_register(L, "XPLMDestroyWindow", XLuaDestroyWindow);
 	lua_register(L, "XPLMDisableAIForPlane", XLuaDisableAIForPlane);
 	lua_register(L, "XPLMDisablePlugin", XLuaDisablePlugin);
 	lua_register(L, "XPLMDontControlCamera", XLuaDontControlCamera);
@@ -500,17 +548,14 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMGetFontDimensions", XLuaGetFontDimensions);
 	lua_register(L, "XPLMGetGPSDestination", XLuaGetGPSDestination);
 	lua_register(L, "XPLMGetGPSDestinationType", XLuaGetGPSDestinationType);
-	lua_register(L, "XPLMGetHotKeyInfo", XLuaGetHotKeyInfo);
 	lua_register(L, "XPLMGetLanguage", XLuaGetLanguage);
 	lua_register(L, "XPLMGetMETARForAirport", XLuaGetMETARForAirport);
 	lua_register(L, "XPLMGetMagneticVariation", XLuaGetMagneticVariation);
-	lua_register(L, "XPLMGetMouseLocation", XLuaGetMouseLocation);
 	lua_register(L, "XPLMGetMouseLocationGlobal", XLuaGetMouseLocationGlobal);
 	lua_register(L, "XPLMGetMyID", XLuaGetMyID);
 	lua_register(L, "XPLMGetNavAidInfo", XLuaGetNavAidInfo);
 	lua_register(L, "XPLMGetNextNavAid", XLuaGetNextNavAid);
 	lua_register(L, "XPLMGetNthAircraftModel", XLuaGetNthAircraftModel);
-	lua_register(L, "XPLMGetNthHotKey", XLuaGetNthHotKey);
 	lua_register(L, "XPLMGetNthPlugin", XLuaGetNthPlugin);
 	lua_register(L, "XPLMGetPluginInfo", XLuaGetPluginInfo);
 	lua_register(L, "XPLMGetPrefsPath", XLuaGetPrefsPath);
@@ -533,6 +578,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMInstanceSetPosition", XLuaInstanceSetPosition);
 	lua_register(L, "XPLMInstanceSetPositionDouble", XLuaInstanceSetPositionDouble);
 	lua_register(L, "XPLMIsAvionicsBound", XLuaIsAvionicsBound);
+	lua_register(L, "XPLMIsAvionicsMappedToVR", XLuaIsAvionicsMappedToVR);
 	lua_register(L, "XPLMIsAvionicsPoppedOut", XLuaIsAvionicsPoppedOut);
 	lua_register(L, "XPLMIsAvionicsPopupVisible", XLuaIsAvionicsPopupVisible);
 	lua_register(L, "XPLMIsCameraBeingControlled", XLuaIsCameraBeingControlled);
@@ -563,6 +609,8 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMLocalToWorld", XLuaLocalToWorld);
 	lua_register(L, "XPLMLookupObjects", XLuaLookupObjects);
 	lua_register(L, "XPLMMakeColor", XLuaMakeColor);
+	lua_register(L, "XPLMMapCustomData_t", MakeXPLMMapCustomData_t);
+	lua_register(L, "XPLMMapDisplayDrawIn", XLuaMapDisplayDrawIn);
 	lua_register(L, "XPLMMapExists", XLuaMapExists);
 	lua_register(L, "XPLMMapGetNorthHeading", XLuaMapGetNorthHeading);
 	lua_register(L, "XPLMMapProject", XLuaMapProject);
@@ -586,14 +634,14 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMRegisterAvionicsCallbacksEx", XLuaRegisterAvionicsCallbacksEx);
 	lua_register(L, "XPLMRegisterCommandHandler", XLuaRegisterCommandHandler);
 	lua_register(L, "XPLMRegisterDataAccessor", XLuaRegisterDataAccessor);
-	lua_register(L, "XPLMRegisterHotKey", XLuaRegisterHotKey);
 	lua_register(L, "XPLMRegisterMapCreationHook", XLuaRegisterMapCreationHook);
 	lua_register(L, "XPLMReleasePlanes", XLuaReleasePlanes);
 	lua_register(L, "XPLMReloadPlugins", XLuaReloadPlugins);
 	lua_register(L, "XPLMReloadScenery", XLuaReloadScenery);
 	lua_register(L, "XPLMReloadThisPlugin", XLuaReloadThisPlugin);
 	lua_register(L, "XPLMRemoveMenuItem", XLuaRemoveMenuItem);
-	lua_register(L, "XPLMReturnString", XLuaReturnString);
+	lua_register(L, "XPLMSVTCustomData_t", MakeXPLMSVTCustomData_t);
+	lua_register(L, "XPLMSVTDisplayDrawIn", XLuaSVTDisplayDrawIn);
 	lua_register(L, "XPLMSaveDataFile", XLuaSaveDataFile);
 	lua_register(L, "XPLMScheduleFlightLoop", XLuaScheduleFlightLoop);
 	lua_register(L, "XPLMScissorPop", XLuaScissorPop);
@@ -606,6 +654,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMSetAvionicsBrightnessRheo", XLuaSetAvionicsBrightnessRheo);
 	lua_register(L, "XPLMSetAvionicsGeometry", XLuaSetAvionicsGeometry);
 	lua_register(L, "XPLMSetAvionicsGeometryOS", XLuaSetAvionicsGeometryOS);
+	lua_register(L, "XPLMSetAvionicsMappedToVR", XLuaSetAvionicsMappedToVR);
 	lua_register(L, "XPLMSetAvionicsPopupVisible", XLuaSetAvionicsPopupVisible);
 	lua_register(L, "XPLMSetDatab", XLuaSetDatab);
 	lua_register(L, "XPLMSetDatad", XLuaSetDatad);
@@ -623,7 +672,6 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMSetFMSFlightPlanEntryInfo", XLuaSetFMSFlightPlanEntryInfo);
 	lua_register(L, "XPLMSetFMSFlightPlanEntryLatLon", XLuaSetFMSFlightPlanEntryLatLon);
 	lua_register(L, "XPLMSetFMSFlightPlanEntryLatLonWithId", XLuaSetFMSFlightPlanEntryLatLonWithId);
-	lua_register(L, "XPLMSetHotKeyCombination", XLuaSetHotKeyCombination);
 	lua_register(L, "XPLMSetMenuItemName", XLuaSetMenuItemName);
 	lua_register(L, "XPLMSetUsersAircraft", XLuaSetUsersAircraft);
 	lua_register(L, "XPLMSetWeatherAtAirport", XLuaSetWeatherAtAirport);
@@ -652,6 +700,8 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMTextureAtlasGetImageHeight", XLuaTextureAtlasGetImageHeight);
 	lua_register(L, "XPLMTextureAtlasGetImageUVMap", XLuaTextureAtlasGetImageUVMap);
 	lua_register(L, "XPLMTextureAtlasGetImageWidth", XLuaTextureAtlasGetImageWidth);
+	lua_register(L, "XPLMTextureSourceDrawIn", XLuaTextureSourceDrawIn);
+	lua_register(L, "XPLMTextureSourceDrawMesh", XLuaTextureSourceDrawMesh);
 	lua_register(L, "XPLMTextureVertex_t", MakeXPLMTextureVertex_t);
 	lua_register(L, "XPLMTouchZoneSpec_t", MakeXPLMTouchZoneSpec_t);
 	lua_register(L, "XPLMTransformPop", XLuaTransformPop);
@@ -663,7 +713,6 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMUnregisterAvionicsCallbacks", XLuaUnregisterAvionicsCallbacks);
 	lua_register(L, "XPLMUnregisterCommandHandler", XLuaUnregisterCommandHandler);
 	lua_register(L, "XPLMUnregisterDataAccessor", XLuaUnregisterDataAccessor);
-	lua_register(L, "XPLMUnregisterHotKey", XLuaUnregisterHotKey);
 	lua_register(L, "XPLMUpdateFlight", XLuaUpdateFlight);
 	lua_register(L, "XPLMUseStencilMask", XLuaUseStencilMask);
 	lua_register(L, "XPLMVertexColor_t", MakeXPLMVertexColor_t);
@@ -686,8 +735,8 @@ void add_xplm_to_interp(lua_State* L)
 	RegType_XPLMDataRef(L);
 	RegType_XPLMFlightLoopID(L);
 	RegType_XPLMFontHandle(L);
-	RegType_XPLMHotKeyID(L);
 	RegType_XPLMInstanceRef(L);
+	RegType_XPLMMapDisplayRef(L);
 	RegType_XPLMMapLayerID(L);
 	RegType_XPLMMapProjectionID(L);
 	RegType_XPLMMenuID(L);
@@ -696,8 +745,50 @@ void add_xplm_to_interp(lua_State* L)
 	RegType_XPLMPluginID(L);
 	RegType_XPLMProbeRef(L);
 	RegType_XPLMRetainedDrawing_t(L);
+	RegType_XPLMSVTDisplayRef(L);
 	RegType_XPLMTextureAtlasRef(L);
 	RegType_XPLMWindowID(L);
+
+	// Enums
+	RegEnum_XPLMCameraControlDuration(L);
+	RegEnum_XPLMCharSet_t(L);
+	RegEnum_XPLMCommandPhase(L);
+	RegEnum_XPLMCursorStatus(L);
+	RegEnum_XPLMDataFileType(L);
+	RegEnum_XPLMDataTypeID(L);
+	RegEnum_XPLMDeviceID(L);
+	RegEnum_XPLMFlightLoopPhaseType(L);
+	RegEnum_XPLMFontID(L);
+	RegEnum_XPLMHostApplicationID(L);
+	RegEnum_XPLMInitResult(L);
+	RegEnum_XPLMJustification_t(L);
+	RegEnum_XPLMKeyFlags(L);
+	RegEnum_XPLMLanguageCode(L);
+	RegEnum_XPLMMapLayerType(L);
+	RegEnum_XPLMMapLayers(L);
+	RegEnum_XPLMMapOrientation(L);
+	RegEnum_XPLMMapStyle(L);
+	RegEnum_XPLMMenuCheck(L);
+	RegEnum_XPLMMouseStatus(L);
+	RegEnum_XPLMNavFlightPlan(L);
+	RegEnum_XPLMNavType(L);
+	RegEnum_XPLMProbeResult(L);
+	RegEnum_XPLMProbeType(L);
+	RegEnum_XPLMSVTFeatures(L);
+	RegEnum_XPLMTextureSource(L);
+	RegEnum_XPLMTouchZone(L);
+	RegEnum_XPLMWindowContentType(L);
+	RegEnum_XPLMWindowDecoration(L);
+	RegEnum_XPLMWindowLayer(L);
+	RegEnum_XPLMWindowPositioningMode(L);
+
+	// Defines
+	RegDefines_XPLMDefs(L);
+	RegDefines_XPLMMap(L);
+	RegDefines_XPLMNavigation(L);
+	RegDefines_XPLMPlanes(L);
+	RegDefines_XPLMPlugin(L);
+	RegDefines_XPLMWeather(L);
 
 	// Event types
 	xlua_register_event(XPLM_MSG_DATAREFS_ADDED, "*u");

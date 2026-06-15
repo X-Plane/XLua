@@ -566,8 +566,8 @@ TYPE
     another plugin has created).
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMRegisterAvionicsCallbacksEx(
-                                        inParams            : PXPLMCustomizeAvionics_t *);
+   FUNCTION XPLMRegisterAvionicsCallbacksEx(
+                                        inParams            : PXPLMCustomizeAvionics_t *) : ;
     cdecl; external XPLM_DLL;
 
    {
@@ -581,8 +581,8 @@ TYPE
     XPLMRegisterAvionicsCallbackEx() with NULL for all callbacks.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMGetAvionicsHandle(
-                                        inDeviceID          : XPLMDeviceID);
+   FUNCTION XPLMGetAvionicsHandle(
+                                        inDeviceID          : XPLMDeviceID) : ;
     cdecl; external XPLM_DLL;
 
    {
@@ -775,8 +775,8 @@ TYPE
                 XPLMDestroyAvionics().
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMCreateAvionicsEx(
-                                        inParams            : PXPLMCreateAvionics_t *);
+   FUNCTION XPLMCreateAvionicsEx(
+                                        inParams            : PXPLMCreateAvionics_t *) : ;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM410}
 
@@ -1514,8 +1514,8 @@ TYPE
     window flavours.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMCreateWindowEx(
-                                        inParams            : PXPLMCreateWindow_t *);
+   FUNCTION XPLMCreateWindowEx(
+                                        inParams            : PXPLMCreateWindow_t *) : ;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM200}
 
@@ -1541,7 +1541,7 @@ TYPE
     routines which make this easy.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMCreateWindow(
+   FUNCTION XPLMCreateWindow(
                                         inLeft              : Integer;
                                         inTop               : Integer;
                                         inRight             : Integer;
@@ -1550,7 +1550,7 @@ TYPE
                                         inDrawCallback      : PXPLMDrawWindow_f;
                                         inKeyCallback       : PXPLMHandleKey_f;
                                         inMouseCallback     : PXPLMHandleMouseClick_f;
-                                        inRefcon            : Pvoid*);    { Can be nil }
+                                        inRefcon            : Pvoid*) : ;    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -1567,6 +1567,10 @@ TYPE
    PROCEDURE XPLMDestroyWindow(
                                    VAR  inWindowID          : );
     cdecl; external XPLM_DLL;
+
+
+
+
 
    {
     XPLMWindowSetURL
@@ -2358,12 +2362,12 @@ TYPE
     may change, but you are insulated from this.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMRegisterHotKey(
+   FUNCTION XPLMRegisterHotKey(
                                         inVirtualKey        : XPLMChar;
                                         inFlags             : XPLMKeyFlags;
                                         inDescription       : Pchar *;
                                         inCallback          : PXPLMHotKey_f;
-                                        inRefcon            : Pvoid*);    { Can be nil }
+                                        inRefcon            : Pvoid*) : ;    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -2391,8 +2395,8 @@ TYPE
     Returns a hot key by index, for iteration on all hot keys.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMGetNthHotKey(
-                                        inIndex             : Integer);
+   FUNCTION XPLMGetNthHotKey(
+                                        inIndex             : Integer) : ;
     cdecl; external XPLM_DLL;
 
    {

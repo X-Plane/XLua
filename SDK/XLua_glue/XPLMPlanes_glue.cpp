@@ -19,6 +19,10 @@
 	#define XPLM_DEPRECATED
 #endif
 #include "XPLMPlanes.h"
+// XPLMUtilities.h supplies XPLMReturnString, which the codegen emits inside
+// every const-char*-returning callback wrapper to round-trip through the
+// host-managed return slot.
+#include "XPLMUtilities.h"
 #if MOBILE
 	#undef XPLM_DEPRECATED
 #endif
@@ -43,6 +47,26 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 //
 XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
+
+void RegEnum_XPLMInitResult(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_Init_Success");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_Init_Invalid");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_Init_MissingAircraft");
+	lua_pushinteger(L, 3);
+	lua_setfield(L, -2, "xplm_Init_MissingLivery");
+	lua_pushinteger(L, 4);
+	lua_setfield(L, -2, "xplm_Init_MissingAirport");
+	lua_pushinteger(L, 5);
+	lua_setfield(L, -2, "xplm_Init_MissingRamp");
+	lua_pushinteger(L, 6);
+	lua_setfield(L, -2, "xplm_Init_MissingRunway");
+	lua_setglobal(L, "XPLMInitResult");
+}
 
 int XLuaInitFlight(lua_State* L)
 {
@@ -220,6 +244,12 @@ int XLuaDisableAIForPlane(lua_State* L)
 	XPLMDisableAIForPlane(inPlaneIndex);
 
 	return 0;
+}
+
+void RegDefines_XPLMPlanes(lua_State* L)
+{
+	lua_pushinteger(L, 0);
+	lua_setglobal(L, "XPLM_USER_AIRCRAFT");
 }
 
 #ifdef __cplusplus

@@ -96,7 +96,7 @@ CONST
     empty.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMGetFirstNavAid;
+   FUNCTION XPLMGetFirstNavAid: ;
     cdecl; external XPLM_DLL;
 
    {
@@ -108,8 +108,8 @@ CONST
     across all like-typed navaids or the entire database.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMGetNextNavAid(
-                                   VAR  inNavAidRef         : );
+   FUNCTION XPLMGetNextNavAid(
+                                   VAR  inNavAidRef         : ) : ;
     cdecl; external XPLM_DLL;
 
    {
@@ -120,8 +120,8 @@ CONST
     database.  You must pass exactly one navaid type to this routine.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMFindFirstNavAidOfType(
-                                        inType              : XPLMNavType);
+   FUNCTION XPLMFindFirstNavAidOfType(
+                                        inType              : XPLMNavType) : ;
     cdecl; external XPLM_DLL;
 
    {
@@ -132,8 +132,8 @@ CONST
     database.  You must pass exactly one navaid type to this routine.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMFindLastNavAidOfType(
-                                        inType              : XPLMNavType);
+   FUNCTION XPLMFindLastNavAidOfType(
+                                        inType              : XPLMNavType) : ;
     cdecl; external XPLM_DLL;
 
    {
@@ -164,13 +164,13 @@ CONST
     * Find the nearest airport whose name contains "Chicago".
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMFindNavAid(
+   FUNCTION XPLMFindNavAid(
                                         inNameFragment      : Pchar *;    { Can be nil }
                                         inIDFragment        : Pchar *;    { Can be nil }
                                         inLat               : Pfloat *;    { Can be nil }
                                         inLon               : Pfloat *;    { Can be nil }
                                         inFrequency         : Pint *;    { Can be nil }
-                                        inType              : XPLMNavType);
+                                        inType              : XPLMNavType) : ;
     cdecl; external XPLM_DLL;
 
    {
@@ -612,7 +612,7 @@ TYPE
     This routine returns the current GPS destination.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMGetGPSDestination;
+   FUNCTION XPLMGetGPSDestination: ;
     cdecl; external XPLM_DLL;
 
 {___________________________________________________________________________
