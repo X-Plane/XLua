@@ -2,14 +2,12 @@
 
 -- imgui_test_v2.lua
 --
--- Example XLua-2 script showing an imgui-on-panel-graphics window. Place at
--- scripts/imgui_test_v2/imgui_test_v2.lua under the XLua deployment to load
--- it as a standalone module.
+-- ImGui-on-panel-graphics test plugin written against the XPLM API directly.
+-- Loadable as a test plugin via `--test_plugin=LuaImguiTestPlugin`.
 --
--- The draw callback below is just widget code. The C wrapper inside
--- XLuaCreateImguiWindow opens and closes the imgui frame around it (using
--- XPLMGetWindowGeometry to derive the DisplaySize), so the Lua side never
--- touches NewFrame / Render.
+-- The draw callback is invoked between an auto-framed imgui.Begin/EndFrame
+-- pair owned by XLuaCreateImguiWindow's C wrapper — the body below is just
+-- widget calls; the width/height passed in match the BeginFrame DisplaySize.
 --
 -- imgui_test_v2 mirrors the widget breadth of XLua's older imgui_test.lua
 -- (text, buttons, sliders, table, draw-list lines, styled text).
@@ -24,8 +22,8 @@ local g_slider  = 0.5
 local g_check   = false
 local g_color   = { 0.4, 0.7, 1.0, 1.0 }
 local g_tab     = 1
-local g_in_int  = 0
-local g_in_flt  = 1.5
+local g_text    = ""
+local g_text_ml = "first line\nsecond line"
 
 local function draw_window(win_id, w, h, refcon)
     -- Fill the entire window with one ImGui::Begin window so widget positions
@@ -49,10 +47,14 @@ local function draw_window(win_id, w, h, refcon)
                 local _, cv = imgui.Checkbox("checkbox", g_check)
                 g_check = cv
 
-                local _, iv = imgui.InputInt("input int", g_in_int)
-                g_in_int = iv
-                local _, fv = imgui.InputFloat("input float", g_in_flt, 0.1, 1.0, "%.3f")
-                g_in_flt = fv
+                -- Text inputs — keyboard focus is auto-managed: clicking these
+                -- widgets makes ImGui set io.WantTextInput=true, which the
+                -- host-side wrapper translates to XPLMTakeKeyboardFocus.
+                local _, tv = imgui.InputText("input text", g_text)
+                g_text = tv
+                local _, mv = imgui.InputTextMultiline(
+                    "multiline", g_text_ml, 4096, 300, 80)
+                g_text_ml = mv
 
                 imgui.PushStyleColor(imgui.constant.Col.Text,
                     imgui.GetColorU32_1(g_color[1], g_color[2], g_color[3], g_color[4]))
@@ -117,7 +119,6 @@ function XPluginStart()
     })
     XPLMSetWindowTitle(g_window, "imgui_test_v2")
     return true
-    -- return "imgui_test_v2", "com.x-plane.test.imgui-lua-v2", "Lua imgui test plugin"
 end
 
 function XPluginEnable()

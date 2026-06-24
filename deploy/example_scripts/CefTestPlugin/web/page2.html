@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CEF Test Plugin - Page 2</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body style="padding: 30px;">
+    <h1 style="color:#ffd07a;">page2.html</h1>
+    <p>This is a separate top-level page used by tab 2 to verify XPLMWindowSetURL across files.</p>
+    <p>Loaded at: <span id="ts"></span></p>
+    <p><button class="action" onclick="window.history.back()">Back to index</button></p>
+    <script>
+        document.getElementById('ts').textContent = new Date().toISOString();
+        // Tell the host we got here, if the bridge is available.
+        if (window.xplane && window.xplane.echo)
+            window.xplane.echo("page2.html loaded").catch(() => {});
+    </script>
+</body>
+</html>

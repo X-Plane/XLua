@@ -3,16 +3,37 @@
 
 require('XPLMPanelGraphics')
 
-local PLUGIN_NAME        = "LuaPanelGraphicsTestPlugin"
-local PLUGIN_SIGNATURE   = "xpsdk.examples.LuaPanelGraphicsTestPlugin"
-local PLUGIN_DESCRIPTION = "A test of custom panel graphics drawing"
-
 local c_screen_width = 1000.0
 local c_screen_height = 500.0
 
 local s_font = nil
 local s_atlas = nil
 local s_avionic = nil
+local s_svt = nil
+local s_svt_overrides = nil
+local s_map = nil
+
+-- SVT feature toggles
+local s_svt_features = XPLMSVTFeatures.xplm_SVT_All
+local s_svt_features_pressed = 0
+
+-- Map layer toggles
+local s_map_layers = 0
+local s_map_layers_pressed = 0
+
+-- SVT override state. Keyed by XPLMSVTCustomData_t field name so the same key feeds
+-- both the +/- buttons and the override struct populated per frame.
+local s_ov = {
+	pitchDeg        = 0.0,
+	rollDeg         = 0.0,
+	headingMagDeg   = 0.0,
+	magVarDeg       = 0.0,
+	indicatedAltFt  = 3000.0,
+	baroSettingInHg = 29.92,
+	hsiSource       = 0,
+	hdefDots        = 0.0,
+	vdefDots        = 0.0
+}
 
 local button_id = {
 	lines = 1,
@@ -26,7 +47,11 @@ local button_id = {
 	scissors = 9,
 	masks = 10,
 	retained = 11,
-	reload_plugin = 12
+	texture_source = 12,
+	svt_display = 13,
+	svt_overrides = 14,
+	map_display = 15,
+	reload_plugin = 16
 }
 
 local s_current_tab = button_id.lines
@@ -104,14 +129,18 @@ local function screen_draw_cb(ref)
 	draw_button(25.0, c_screen_height - 50.0, "linestrips", button_id.linestrips)
 	draw_button(25.0, c_screen_height - 75.0, "lineloops", button_id.lineloops)
 	draw_button(25.0, c_screen_height - 100.0, "polygons", button_id.polygons)
-	draw_button(25.0, c_screen_height - 100.0, "quadstrips", button_id.quadstrips)
-	draw_button(25.0, c_screen_height - 125.0, "Fonts", button_id.fonts)
-	draw_button(25.0, c_screen_height - 150.0, "Texture atlas", button_id.texture_atlas)
-	draw_button(25.0, c_screen_height - 175.0, "Transforms", button_id.transforms)
-	draw_button(25.0, c_screen_height - 200.0, "Scissors", button_id.scissors)
-	draw_button(25.0, c_screen_height - 225.0, "Masks", button_id.masks)
-	draw_button(25.0, c_screen_height - 250.0, "Retained drawing", button_id.retained)
-	draw_button(25.0, c_screen_height - 275.0, "Reload this plugin!", button_id.reload_plugin)
+	draw_button(25.0, c_screen_height - 125.0, "quadstrips", button_id.quadstrips)
+	draw_button(25.0, c_screen_height - 150.0, "Fonts", button_id.fonts)
+	draw_button(25.0, c_screen_height - 175.0, "Texture atlas", button_id.texture_atlas)
+	draw_button(25.0, c_screen_height - 200.0, "Transforms", button_id.transforms)
+	draw_button(25.0, c_screen_height - 225.0, "Scissors", button_id.scissors)
+	draw_button(25.0, c_screen_height - 250.0, "Masks", button_id.masks)
+	draw_button(25.0, c_screen_height - 275.0, "Retained drawing", button_id.retained)
+	draw_button(25.0, c_screen_height - 300.0, "Texture source", button_id.texture_source)
+	draw_button(25.0, c_screen_height - 325.0, "SVT Display", button_id.svt_display)
+	draw_button(25.0, c_screen_height - 350.0, "SVT Overrides", button_id.svt_overrides)
+	draw_button(25.0, c_screen_height - 375.0, "Map Display", button_id.map_display)
+	draw_button(25.0, c_screen_height - 400.0, "Reload this plugin!", button_id.reload_plugin)
 
 	draw_line(175, 0, 175, c_screen_height, 5, XPLMMakeColor(1, 1, 1, 1))
 
@@ -383,7 +412,7 @@ local function screen_draw_cb(ref)
 		framecounter = framecounter + 1
 
 		local z = {
-			type = xplm_TouchZone_Command,
+			type = XPLMTouchZone.xplm_TouchZone_Command,
 			command = XPLMFindCommand("sim/operation/pause_toggle"),
 			left = 400 - XPLMTextureAtlasGetImageWidth(s_atlas, 11) / 2,
 			right = 400 + XPLMTextureAtlasGetImageWidth(s_atlas, 11) / 2,
@@ -391,7 +420,7 @@ local function screen_draw_cb(ref)
 			top = 300 + XPLMTextureAtlasGetImageHeight(s_atlas, 11) / 2
 		}
 
-		local clicked = XPLMAccumulateTouchZone(z) ~= 0
+		local clicked = XPLMAccumulateTouchZone(z) == true
 
 		XPLMTextureAtlasDrawScaled(s_atlas, 11, XPLMMakeColor(1, clicked and 0 or 1, 1, 1),
 				400, 420,
@@ -561,13 +590,134 @@ local function screen_draw_cb(ref)
 		XPLMTransformPop()
 
 		XPLMDestroyRetainedDrawing(drawing)
-	end
-end
 
-function print_table(t)
-    for k, v in pairs(t) do
-        print(k, v)
-    end
+	elseif s_current_tab == button_id.texture_source then
+		XPLMFontDrawString(s_font, XPLMMakeColor(1, 1, 1, 1), 14, 200, c_screen_height - 30.0, "Texture Source (Weather Radar)", XPLMJustification_t.xplm_JustLeft)
+
+		-- Draw radar 1 stretched into a rect
+		XPLMTextureSourceDrawIn(XPLMTextureSource.xplm_Texture_WeatherRadar2, XPLMMakeColor(1, 1, 1, 1),
+			200, c_screen_height - 50, 550, c_screen_height - 300)
+
+		-- Draw radar 2 using a mesh (triangle strip quad)
+		local mesh = {
+			{ x = 600.0, y = c_screen_height - 300.0, s = 0.0, t = 0.0 },
+			{ x = 600.0, y = c_screen_height - 50.0,  s = 0.0, t = 1.0 },
+			{ x = 950.0, y = c_screen_height - 300.0, s = 1.0, t = 0.0 },
+			{ x = 950.0, y = c_screen_height - 50.0,  s = 1.0, t = 1.0 }
+		}
+		XPLMTextureSourceDrawMesh(XPLMTextureSource.xplm_Texture_WeatherRadar2, XPLMMakeColor(1, 1, 1, 1), mesh, 4)
+
+	elseif s_current_tab == button_id.svt_display then
+		XPLMFontDrawString(s_font, XPLMMakeColor(1, 1, 1, 1), 14, 200, c_screen_height - 30.0, "Synthetic Vision (SVT)", XPLMJustification_t.xplm_JustLeft)
+
+		if s_svt then
+			-- Feature toggle buttons
+			local features = {
+				{ name = "Terrain",        flag = XPLMSVTFeatures.xplm_SVT_Terrain },
+				{ name = "Runways",        flag = XPLMSVTFeatures.xplm_SVT_Runways },
+				{ name = "Obstacles",      flag = XPLMSVTFeatures.xplm_SVT_Obstacles },
+				{ name = "FlightPath",     flag = XPLMSVTFeatures.xplm_SVT_FlightPath },
+				{ name = "Traffic",        flag = XPLMSVTFeatures.xplm_SVT_Traffic },
+				{ name = "AirportSigns",   flag = XPLMSVTFeatures.xplm_SVT_AirportSigns },
+				{ name = "ILSHoops",       flag = XPLMSVTFeatures.xplm_SVT_ILSHoops },
+				{ name = "HorizonHeading", flag = XPLMSVTFeatures.xplm_SVT_HorizonHeading },
+			}
+
+			local btn_y = c_screen_height - 60.0
+			local pressed_this_frame = 0
+			for _, f in ipairs(features) do
+				local on = bit.band(s_svt_features, f.flag) ~= 0
+				local label = string.format("%s [%s]", f.name, on and "ON" or "OFF")
+				local held = draw_button(200.0, btn_y, label)
+				if held then
+					pressed_this_frame = bit.bor(pressed_this_frame, f.flag)
+				end
+				if held and bit.band(s_svt_features_pressed, f.flag) == 0 then
+					s_svt_features = bit.bxor(s_svt_features, f.flag)
+				end
+				btn_y = btn_y - 25.0
+			end
+			s_svt_features_pressed = pressed_this_frame
+
+			-- Draw SVT with current feature flags
+			XPLMSVTDisplayDrawIn(s_svt, s_svt_features, 400, c_screen_height - 50, 950, 50, nil)
+		else
+			XPLMFontDrawString(s_font, XPLMMakeColor(1, 0, 0, 1), 14, 200, c_screen_height - 60.0, "SVT not available", XPLMJustification_t.xplm_JustLeft)
+		end
+
+	elseif s_current_tab == button_id.svt_overrides then
+		XPLMFontDrawString(s_font, XPLMMakeColor(1, 1, 1, 1), 14, 200, c_screen_height - 30.0, "SVT Overrides", XPLMJustification_t.xplm_JustLeft)
+
+		if s_svt_overrides then
+			local floats = {
+				{ name = "Pitch",   key = "pitchDeg",        step = 1.0,   fmt = "%.1f deg" },
+				{ name = "Roll",    key = "rollDeg",         step = 1.0,   fmt = "%.1f deg" },
+				{ name = "Heading", key = "headingMagDeg",   step = 5.0,   fmt = "%.1f deg" },
+				{ name = "MagVar",  key = "magVarDeg",       step = 1.0,   fmt = "%.1f deg" },
+				{ name = "Alt",     key = "indicatedAltFt",  step = 100.0, fmt = "%.0f ft" },
+				{ name = "Baro",    key = "baroSettingInHg", step = 0.01,  fmt = "%.2f inHg" },
+				{ name = "HDef",    key = "hdefDots",        step = 0.1,   fmt = "%.1f dots" },
+				{ name = "VDef",    key = "vdefDots",        step = 0.1,   fmt = "%.1f dots" }
+			}
+
+			local btn_y = c_screen_height - 60.0
+			for _, f in ipairs(floats) do
+				if draw_button(200.0, btn_y, "- " .. f.name) then s_ov[f.key] = s_ov[f.key] - f.step end
+				if draw_button(290.0, btn_y, "+ " .. f.name) then s_ov[f.key] = s_ov[f.key] + f.step end
+
+				XPLMFontDrawString(s_font, XPLMMakeColor(1, 1, 1, 1), 12, 380.0, btn_y, string.format(f.fmt, s_ov[f.key]), XPLMJustification_t.xplm_JustLeft)
+				btn_y = btn_y - 25.0
+			end
+
+			-- HSI source (int)
+			if draw_button(200.0, btn_y, "- HSI Src") then s_ov.hsiSource = s_ov.hsiSource - 1 end
+			if draw_button(290.0, btn_y, "+ HSI Src") then s_ov.hsiSource = s_ov.hsiSource + 1 end
+			XPLMFontDrawString(s_font, XPLMMakeColor(1, 1, 1, 1), 12, 380.0, btn_y, tostring(s_ov.hsiSource), XPLMJustification_t.xplm_JustLeft)
+
+			-- Draw override SVT display with per-frame custom data
+			XPLMSVTDisplayDrawIn(s_svt_overrides, XPLMSVTFeatures.xplm_SVT_All, 480, c_screen_height - 50, 950, 50, s_ov)
+		else
+			XPLMFontDrawString(s_font, XPLMMakeColor(1, 0, 0, 1), 14, 200, c_screen_height - 60.0, "SVT overrides not available", XPLMJustification_t.xplm_JustLeft)
+		end
+
+	elseif s_current_tab == button_id.map_display then
+		XPLMFontDrawString(s_font, XPLMMakeColor(1, 1, 1, 1), 14, 200, c_screen_height - 30.0, "base map", XPLMJustification_t.xplm_JustLeft)
+
+		if s_map then
+			-- Layer toggle buttons
+			local layers = {
+				{ name = "Raw Elev",  flag = XPLMMapLayers.xplm_Map_raw_elev },
+				{ name = "EGPWS",     flag = XPLMMapLayers.xplm_Map_EGPWS },
+				{ name = "Water",     flag = XPLMMapLayers.xplm_Map_Water },
+				{ name = "Topo",      flag = XPLMMapLayers.xplm_Map_Topo },
+				{ name = "Terrain",   flag = XPLMMapLayers.xplm_Map_Terrain },
+				{ name = "Safe Taxi", flag = XPLMMapLayers.xplm_Map_safe_taxi },
+				{ name = "NEXRAD",    flag = XPLMMapLayers.xplm_Map_Nexrad },
+				{ name = "Cloud IR",  flag = XPLMMapLayers.xplm_Map_IR },
+			}
+
+			local btn_y = c_screen_height - 60.0
+			local pressed_this_frame = 0
+			for _, l in ipairs(layers) do
+				local on = bit.band(s_map_layers, l.flag) ~= 0
+				local label = string.format("%s [%s]", l.name, on and "ON" or "OFF")
+				local held = draw_button(200.0, btn_y, label)
+				if held then
+					pressed_this_frame = bit.bor(pressed_this_frame, l.flag)
+				end
+				if held and bit.band(s_map_layers_pressed, l.flag) == 0 then
+					s_map_layers = bit.bxor(s_map_layers, l.flag)
+				end
+				btn_y = btn_y - 25.0
+			end
+			s_map_layers_pressed = pressed_this_frame
+
+			-- Draw map with current layer flags
+			XPLMMapDisplayDrawIn(s_map, s_map_layers, 400, c_screen_height - 50, 950, 50, nil)
+		else
+			XPLMFontDrawString(s_font, XPLMMakeColor(1, 0, 0, 1), 14, 200, c_screen_height - 60.0, "Map not available", XPLMJustification_t.xplm_JustLeft)
+		end
+	end
 end
 
 -- Plugin Lifecycle
@@ -612,26 +762,51 @@ end
 function XPluginEnable()
 	print("[Lua] XPluginEnable")
 	local cavio = {
-		screenWidth = math.floor(c_screen_width),
-		screenHeight = math.floor(c_screen_height),
-		bezelWidth = math.floor(c_screen_width),
-		bezelHeight = math.floor(c_screen_height),
+		screenWidth = c_screen_width,
+		screenHeight = c_screen_height,
+		bezelWidth = c_screen_width,
+		bezelHeight = c_screen_height,
 		bezelDrawCallback = bezel_draw_cb,
 		drawCallback = screen_draw_cb,
 		deviceID = "custom_avionic",
 		deviceName = "Custom Avionic",
-		native = 1
+		contentType = XPLMWindowContentType.xplm_WindowContentTypePanelGraphics
 	}
 
 	s_avionic = XPLMCreateAvionicsEx(cavio)
 	XPLMSetAvionicsPopupVisible(s_avionic, true)
 	XPLMAvionicsSetTouchEventHandler(s_avionic, touch_event_cb)
 
+	s_svt = XPLMCreateSVTDisplay({
+		features   = XPLMSVTFeatures.xplm_SVT_All,
+		pilotIndex = 0
+	})
+
+	-- Override display; override values are passed per draw call via XPLMSVTDisplayDrawIn.
+	s_svt_overrides = XPLMCreateSVTDisplay({
+		features   = XPLMSVTFeatures.xplm_SVT_All,
+		pilotIndex = 0
+	})
+
+	s_map = XPLMCreateMapDisplay({ pilotIndex = 0 })
+
 	return true
 end
 
 function XPluginDisable()
 	print("[Lua] XPluginDisable")
+	if s_svt_overrides then
+		XPLMDestroySVTDisplay(s_svt_overrides)
+		s_svt_overrides = nil
+	end
+	if s_svt then
+		XPLMDestroySVTDisplay(s_svt)
+		s_svt = nil
+	end
+	if s_map then
+		XPLMDestroyMapDisplay(s_map)
+		s_map = nil
+	end
 	if s_avionic then
 		XPLMDestroyAvionics(s_avionic)
 		s_avionic = nil
