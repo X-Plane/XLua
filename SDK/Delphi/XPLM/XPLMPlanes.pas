@@ -30,6 +30,21 @@ INTERFACE
 USES
     XPLMDefs;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * USER AIRCRAFT ACCESS
  ___________________________________________________________________________}
@@ -105,7 +120,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMInitFlight(
-                                        inJsonData          : P*) : XPLMInitResult;
+                                        inJsonData          : XPLMString) : XPLMInitResult;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM430}
 
@@ -123,7 +138,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMUpdateFlight(
-                                        inJsonData          : P*) : XPLMInitResult;
+                                        inJsonData          : XPLMString) : XPLMInitResult;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM430}
 
@@ -140,7 +155,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSetUsersAircraft(
-                                        inAircraftPath      : Pchar *);
+                                        inAircraftPath      : XPLMString);
     cdecl; external XPLM_DLL;
 
    {
@@ -153,7 +168,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMPlaceUserAtAirport(
-                                        inAirportCode       : Pchar *);
+                                        inAirportCode       : XPLMString);
     cdecl; external XPLM_DLL;
 
 {$IFDEF XPLM300}
@@ -249,9 +264,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMCountAircraft(
-                                        outTotalAircraft    : Pint *;    { Can be nil }
-                                        outActiveAircraft   : Pint *;    { Can be nil }
-                                        outController       : PXPLMPluginID *);    { Can be nil }
+                                        outTotalAircraft    : PInteger;    { Can be nil }
+                                        outActiveAircraft   : PInteger;    { Can be nil }
+                                        outController       : PXPLMPluginID);    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -265,8 +280,8 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMGetNthAircraftModel(
                                         inIndex             : Integer;
-                                        outFileName[256]    : XPLMString;    { Can be nil }
-                                        outPath[512]        : XPLMString);    { Can be nil }
+                                        outFileName         : XPLMString;    { Can be nil }
+                                        outPath             : XPLMString);    { Can be nil }
     cdecl; external XPLM_DLL;
 
 {___________________________________________________________________________
@@ -287,7 +302,7 @@ TYPE
    }
 TYPE
      XPLMPlanesAvailable_f = PROCEDURE(
-                                    inRefcon            : Pvoid*); cdecl;    { Can be nil }
+                                    inRefcon            : pointer); cdecl;    { Can be nil }
 
    {
     XPLMAcquirePlanes
@@ -309,9 +324,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMAcquirePlanes(
-                                        inAircraft[]        : P*;    { Can be nil }
-                                        inCallback          : PXPLMPlanesAvailable_f;    { Can be nil }
-                                        inRefcon            : Pvoid*) : Integer;    { Can be nil }
+                                        inAircraft          : XPLMString;    { Can be nil }
+                                        inCallback          : XPLMPlanesAvailable_f;    { Can be nil }
+                                        inRefcon            : pointer) : Integer;    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -349,7 +364,7 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSetAircraftModel(
                                         inIndex             : Integer;
-                                        inAircraftPath      : Pchar *);
+                                        inAircraftPath      : XPLMString);
     cdecl; external XPLM_DLL;
 
    {
@@ -387,7 +402,7 @@ TYPE
                                         inRoll              : Single;
                                         inYaw               : Single;
                                         inFullDraw          : Integer;
-                                        inDrawStateInfo     : PXPLMPlaneDrawState_t *);
+                                        inDrawStateInfo     : PXPLMPlaneDrawState_t);
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM_DEPRECATED}
 

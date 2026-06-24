@@ -334,6 +334,34 @@ XPLM_API int        XPLMUnregisterDrawCallback(
  */
 
 
+#if defined(XPLMPG1)
+/*
+ * XPLMWindowContentType
+ * 
+ * XPLMWindowContentType describes how the content for a window (or an
+ * avionics device's screen) is provided.
+ *
+ */
+enum {
+
+    /* The window is drawn by calling back your plugin, which will draw using     *
+     * OpenGL and XPLM APIs. You provide mouse and keyboard hooks for interaction.*/
+    xplm_WindowContentTypeOpenGL             = 0,
+
+
+    /* The window is drawn by calling back your plugin, which will draw using     *
+     * panel graphics APIs. You provide mouse and keyboard hooks for interaction. */
+    xplm_WindowContentTypePanelGraphics      = 1,
+
+
+    /* The window content is specified using a web page.                          */
+    xplm_WindowContentTypeBrowser            = 2,
+
+
+};
+typedef int XPLMWindowContentType;
+#endif /* XPLMPG1 */
+
 /*
  * XPLMDeviceID
  * 
@@ -621,7 +649,13 @@ typedef struct {
      * to pass information to yourself as needed.                                 */
      void*                     refcon;
 
-     int                       native;
+#if defined(XPLMPG1)
+    /* How this device's screen is drawn: xplm_WindowContentTypeOpenGL (the legacy*
+     * OpenGL bridge) or xplm_WindowContentTypePanelGraphics (native              *
+     * panel-graphics rendering). xplm_WindowContentTypeBrowser is not valid for  *
+     * avionics.                                                                  */
+     XPLMWindowContentType     contentType;
+#endif /* XPLMPG1 */
 } XPLMCustomizeAvionics_t;
 
 /*
@@ -850,14 +884,20 @@ typedef struct {
      * this to pass information to yourself as needed.                            */
      void*                     refcon;
 
-     int                       native;
+#if defined(XPLMPG1)
+    /* How this device's screen is drawn: xplm_WindowContentTypeOpenGL (the legacy*
+     * OpenGL bridge) or xplm_WindowContentTypePanelGraphics (native              *
+     * panel-graphics rendering). xplm_WindowContentTypeBrowser is not valid for  *
+     * avionics.                                                                  */
+     XPLMWindowContentType     contentType;
+#endif /* XPLMPG1 */
 
-#if defined(XPLM430)
+#if defined(XPLMPG1)
     /* If set to true (1), X-Plane will draw the chrome with the close and pop-out*
      * buttons outside of your bezel, rather than having the buttons steal pixels *
      * from your bezel.                                                           */
      int                       windowWithChrome;
-#endif /* XPLM430 */
+#endif /* XPLMPG1 */
 } XPLMCreateAvionics_t;
 #endif /* XPLM410 */
 
@@ -1405,6 +1445,7 @@ typedef int (* XPLMHandleMouseWheel_f)(
                          void*                inRefcon);
 #endif /* XPLM200 */
 
+#if defined(XPLMPG1)
 /*
  * XPLMBrowserNavigation_f
  *
@@ -1415,6 +1456,7 @@ typedef void (* XPLMBrowserNavigation_f)(
                          int                  inSuccess,
                          const char *         inError,                /* Can be NULL */
                          void*                inRefcon);
+#endif /* XPLMPG1 */
 
 #if defined(XPLM300)
 /*
@@ -1501,33 +1543,6 @@ enum {
 };
 typedef int XPLMWindowDecoration;
 #endif /* XPLM301 */
-
-#if defined(XPLM420)
-/*
- * XPLMWindowContentType
- * 
- * XPLMWindowContentType describes how content for this window is provided.
- *
- */
-enum {
-
-    /* The window is drawn by calling back your plugin, which will draw using     *
-     * OpenGL and XPLM APIs. You provide mouse and keyboard hooks for interaction.*/
-    xplm_WindowContentTypeOpenGL             = 0,
-
-
-    /* The window is drawn by calling back your plugin, which will draw using     *
-     * panel graphics APIs. You provide mouse and keyboard hooks for interaction. */
-    xplm_WindowContentTypePanelGraphics      = 1,
-
-
-    /* The window content is specified using a web page.                          */
-    xplm_WindowContentTypeBrowser            = 2,
-
-
-};
-typedef int XPLMWindowContentType;
-#endif /* XPLM420 */
 
 #if defined(XPLM200)
 /*
@@ -1620,14 +1635,14 @@ typedef struct {
      XPLMHandleMouseClick_f    handleRightClickFunc;
 #endif /* XPLM300 */
 
-#if defined(XPLM420)
+#if defined(XPLMPG1)
     /* The source of content for this Window (OpenGL, Panel Graphics, CEF, etc.)  */
      XPLMWindowContentType     windowContentType;
-#endif /* XPLM420 */
+#endif /* XPLMPG1 */
 
-#if defined(XPLM420)
+#if defined(XPLMPG1)
      XPLMBrowserNavigation_f   browserNavigationFunc;
-#endif /* XPLM420 */
+#endif /* XPLMPG1 */
 } XPLMCreateWindow_t;
 #endif /* XPLM200 */
 
@@ -1702,6 +1717,7 @@ XPLM_API XPLMWindowID XPLMCreateWindow(
 XPLM_API void       XPLMDestroyWindow(
                          XPLMWindowID         inWindowID);
 
+#if defined(XPLMPG1)
 /*
  * XPLMWindowSetURL
  * 
@@ -1716,7 +1732,9 @@ XPLM_API void       XPLMDestroyWindow(
 XPLM_API void       XPLMWindowSetURL(
                          XPLMWindowID         inWindowID,
                          const char *         inURL);
+#endif /* XPLMPG1 */
 
+#if defined(XPLMPG1)
 /*
  * XPLMWindowRefresh
  * 
@@ -1729,7 +1747,9 @@ XPLM_API void       XPLMWindowSetURL(
 XPLM_API void       XPLMWindowRefresh(
                          XPLMWindowID         inWindowID,
                          int                  inIgnoreCache);
+#endif /* XPLMPG1 */
 
+#if defined(XPLMPG1)
 /*
  * XPLMWindowInjectScript
  * 
@@ -1744,7 +1764,9 @@ XPLM_API void       XPLMWindowRefresh(
 XPLM_API void       XPLMWindowInjectScript(
                          XPLMWindowID         inWindowID,
                          const char *         inScript);
+#endif /* XPLMPG1 */
 
+#if defined(XPLMPG1)
 /*
  * XPLMBrowserCallback_f
  *
@@ -1753,7 +1775,9 @@ typedef const char * (* XPLMBrowserCallback_f)(
                          XPLMWindowID         inWindowID,
                          const char *         inJSON,
                          void*                inRefcon);
+#endif /* XPLMPG1 */
 
+#if defined(XPLMPG1)
 /*
  * XPLMWindowAddBrowserFunction
  * 
@@ -1773,6 +1797,7 @@ XPLM_API void       XPLMWindowAddBrowserFunction(
                          const char *         inName,
                          XPLMBrowserCallback_f inFunction,
                          void*                inRefcon);
+#endif /* XPLMPG1 */
 
 /*
  * XPLMGetScreenSize

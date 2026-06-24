@@ -97,6 +97,21 @@ INTERFACE
 USES
     XPLMDefs;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * READING AND WRITING DATA
  ___________________________________________________________________________}
@@ -115,7 +130,7 @@ TYPE
     the lifetime of your plugin. You never hard code these values; you always
     get them from XPLMFindDataRef.
    }
-   XPLMDataRef = Pvoid *;
+   XPLMDataRef = pointer;
    PXPLMDataRef = ^XPLMDataRef;
 
    {
@@ -171,8 +186,8 @@ TYPE
      { against; should always be set to sizeof(XPLMDataRefInfo_t)                 }
      structSize               : Integer;
      { The full name/path of the data ref                                         }
-     name                     : Pchar *;
-     type                     : XPLMDataTypeID;
+     name                     : XPLMString;
+     &type                    : XPLMDataTypeID;
      { TRUE if the data ref permits writing to it. FALSE if it's read-only.       }
      writable                 : Integer;
      { The handle to the plugin that registered this dataref.                     }
@@ -204,7 +219,7 @@ TYPE
    PROCEDURE XPLMGetDataRefsByIndex(
                                         offset              : Integer;
                                         count               : Integer;
-                                   VAR  outDataRefs[]       : );
+                                        outDataRefs         : PXPLMDataRef);
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM400}
 
@@ -217,8 +232,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMGetDataRefInfo(
-                                   VAR  inDataRef           : ;
-                                        outInfo             : PXPLMDataRefInfo_t *);    { Can be nil }
+                                        inDataRef           : XPLMDataRef;
+                                        outInfo             : PXPLMDataRefInfo_t);    { Can be nil }
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM400}
 
@@ -237,7 +252,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMFindDataRef(
-                                        inDataRefName       : Pchar *) : ;
+                                        inDataRefName       : XPLMString) : XPLMDataRef;
     cdecl; external XPLM_DLL;
 
    {
@@ -253,7 +268,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCanWriteDataRef(
-                                   VAR  inDataRef           : ) : Integer;
+                                        inDataRef           : XPLMDataRef) : Integer;
     cdecl; external XPLM_DLL;
 
    {
@@ -272,7 +287,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMIsDataRefGood(
-                                   VAR  inDataRef           : ) : Integer;
+                                        inDataRef           : XPLMDataRef) : Integer;
     cdecl; external XPLM_DLL;
 
    {
@@ -284,7 +299,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetDataRefTypes(
-                                   VAR  inDataRef           : ) : XPLMDataTypeID;
+                                        inDataRef           : XPLMDataRef) : XPLMDataTypeID;
     cdecl; external XPLM_DLL;
 
 {___________________________________________________________________________
@@ -319,7 +334,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetDatai(
-                                   VAR  inDataRef           : ) : Integer;
+                                        inDataRef           : XPLMDataRef) : Integer;
     cdecl; external XPLM_DLL;
 
    {
@@ -331,7 +346,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSetDatai(
-                                   VAR  inDataRef           : ;
+                                        inDataRef           : XPLMDataRef;
                                         inValue             : Integer);
     cdecl; external XPLM_DLL;
 
@@ -344,7 +359,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetDataf(
-                                   VAR  inDataRef           : ) : Single;
+                                        inDataRef           : XPLMDataRef) : Single;
     cdecl; external XPLM_DLL;
 
    {
@@ -356,7 +371,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSetDataf(
-                                   VAR  inDataRef           : ;
+                                        inDataRef           : XPLMDataRef;
                                         inValue             : Single);
     cdecl; external XPLM_DLL;
 
@@ -369,7 +384,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetDatad(
-                                   VAR  inDataRef           : ) : Real;
+                                        inDataRef           : XPLMDataRef) : Real;
     cdecl; external XPLM_DLL;
 
    {
@@ -381,7 +396,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSetDatad(
-                                   VAR  inDataRef           : ;
+                                        inDataRef           : XPLMDataRef;
                                         inValue             : Real);
     cdecl; external XPLM_DLL;
 
@@ -403,8 +418,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetDatavi(
-                                   VAR  inDataRef           : ;
-                                        outValues[]         : PInteger;    { Can be nil }
+                                        inDataRef           : XPLMDataRef;
+                                        outValues           : PInteger;    { Can be nil }
                                         inOffset            : Integer;
                                         inMax               : Integer) : Integer;
     cdecl; external XPLM_DLL;
@@ -424,8 +439,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSetDatavi(
-                                   VAR  inDataRef           : ;
-                                        inValues[]          : PInteger;
+                                        inDataRef           : XPLMDataRef;
+                                        inValues            : PInteger;
                                         inoffset            : Integer;
                                         inCount             : Integer);
     cdecl; external XPLM_DLL;
@@ -449,8 +464,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetDatavf(
-                                   VAR  inDataRef           : ;
-                                        outValues[]         : PSingle;    { Can be nil }
+                                        inDataRef           : XPLMDataRef;
+                                        outValues           : PSingle;    { Can be nil }
                                         inOffset            : Integer;
                                         inMax               : Integer) : Integer;
     cdecl; external XPLM_DLL;
@@ -470,8 +485,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSetDatavf(
-                                   VAR  inDataRef           : ;
-                                        inValues[]          : PSingle;
+                                        inDataRef           : XPLMDataRef;
+                                        inValues            : PSingle;
                                         inoffset            : Integer;
                                         inCount             : Integer);
     cdecl; external XPLM_DLL;
@@ -494,8 +509,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetDatab(
-                                   VAR  inDataRef           : ;
-                                        outValue            : Pvoid*;    { Can be nil }
+                                        inDataRef           : XPLMDataRef;
+                                        outValue            : pointer;    { Can be nil }
                                         inOffset            : Integer;
                                         inMaxBytes          : Integer) : Integer;
     cdecl; external XPLM_DLL;
@@ -515,8 +530,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSetDatab(
-                                   VAR  inDataRef           : ;
-                                        inValue             : Pvoid*;
+                                        inDataRef           : XPLMDataRef;
+                                        inValue             : pointer;
                                         inOffset            : Integer;
                                         inLength            : Integer);
     cdecl; external XPLM_DLL;
@@ -561,47 +576,47 @@ TYPE
    }
 TYPE
      XPLMGetDatai_f = FUNCTION(
-                                    inRefcon            : Pvoid*) : Integer; cdecl;    { Can be nil }
+                                    inRefcon            : pointer) : Integer; cdecl;    { Can be nil }
 
    {
     XPLMSetDatai_f
    }
      XPLMSetDatai_f = PROCEDURE(
-                                    inRefcon            : Pvoid*;    { Can be nil }
+                                    inRefcon            : pointer;    { Can be nil }
                                     inValue             : Integer); cdecl;
 
    {
     XPLMGetDataf_f
    }
      XPLMGetDataf_f = FUNCTION(
-                                    inRefcon            : Pvoid*) : Single; cdecl;    { Can be nil }
+                                    inRefcon            : pointer) : Single; cdecl;    { Can be nil }
 
    {
     XPLMSetDataf_f
    }
      XPLMSetDataf_f = PROCEDURE(
-                                    inRefcon            : Pvoid*;    { Can be nil }
+                                    inRefcon            : pointer;    { Can be nil }
                                     inValue             : Single); cdecl;
 
    {
     XPLMGetDatad_f
    }
      XPLMGetDatad_f = FUNCTION(
-                                    inRefcon            : Pvoid*) : Real; cdecl;    { Can be nil }
+                                    inRefcon            : pointer) : Real; cdecl;    { Can be nil }
 
    {
     XPLMSetDatad_f
    }
      XPLMSetDatad_f = PROCEDURE(
-                                    inRefcon            : Pvoid*;    { Can be nil }
+                                    inRefcon            : pointer;    { Can be nil }
                                     inValue             : Real); cdecl;
 
    {
     XPLMGetDatavi_f
    }
      XPLMGetDatavi_f = FUNCTION(
-                                    inRefcon            : Pvoid*;    { Can be nil }
-                                    outValues[]         : PInteger;    { Can be nil }
+                                    inRefcon            : pointer;    { Can be nil }
+                                    outValues           : PInteger;    { Can be nil }
                                     inOffset            : Integer;
                                     inMax               : Integer) : Integer; cdecl;
 
@@ -609,8 +624,8 @@ TYPE
     XPLMSetDatavi_f
    }
      XPLMSetDatavi_f = PROCEDURE(
-                                    inRefcon            : Pvoid*;    { Can be nil }
-                                    inValues[]          : PInteger;
+                                    inRefcon            : pointer;    { Can be nil }
+                                    inValues            : PInteger;
                                     inOffset            : Integer;
                                     inCount             : Integer); cdecl;
 
@@ -618,8 +633,8 @@ TYPE
     XPLMGetDatavf_f
    }
      XPLMGetDatavf_f = FUNCTION(
-                                    inRefcon            : Pvoid*;    { Can be nil }
-                                    outValues[]         : PSingle;    { Can be nil }
+                                    inRefcon            : pointer;    { Can be nil }
+                                    outValues           : PSingle;    { Can be nil }
                                     inOffset            : Integer;
                                     inMax               : Integer) : Integer; cdecl;
 
@@ -627,8 +642,8 @@ TYPE
     XPLMSetDatavf_f
    }
      XPLMSetDatavf_f = PROCEDURE(
-                                    inRefcon            : Pvoid*;    { Can be nil }
-                                    inValues[]          : PSingle;
+                                    inRefcon            : pointer;    { Can be nil }
+                                    inValues            : PSingle;
                                     inOffset            : Integer;
                                     inCount             : Integer); cdecl;
 
@@ -636,8 +651,8 @@ TYPE
     XPLMGetDatab_f
    }
      XPLMGetDatab_f = FUNCTION(
-                                    inRefcon            : Pvoid*;    { Can be nil }
-                                    outValue            : Pvoid*;    { Can be nil }
+                                    inRefcon            : pointer;    { Can be nil }
+                                    outValue            : pointer;    { Can be nil }
                                     inOffset            : Integer;
                                     inMaxLength         : Integer) : Integer; cdecl;
 
@@ -645,8 +660,8 @@ TYPE
     XPLMSetDatab_f
    }
      XPLMSetDatab_f = PROCEDURE(
-                                    inRefcon            : Pvoid*;    { Can be nil }
-                                    inValue             : Pvoid*;
+                                    inRefcon            : pointer;    { Can be nil }
+                                    inValue             : pointer;
                                     inOffset            : Integer;
                                     inLength            : Integer); cdecl;
 
@@ -665,23 +680,23 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMRegisterDataAccessor(
-                                        inDataName          : Pchar *;
+                                        inDataName          : XPLMString;
                                         inDataType          : XPLMDataTypeID;
                                         inIsWritable        : Integer;
-                                        inReadInt           : PXPLMGetDatai_f;    { Can be nil }
-                                        inWriteInt          : PXPLMSetDatai_f;    { Can be nil }
-                                        inReadFloat         : PXPLMGetDataf_f;    { Can be nil }
-                                        inWriteFloat        : PXPLMSetDataf_f;    { Can be nil }
-                                        inReadDouble        : PXPLMGetDatad_f;    { Can be nil }
-                                        inWriteDouble       : PXPLMSetDatad_f;    { Can be nil }
-                                        inReadIntArray      : PXPLMGetDatavi_f;    { Can be nil }
-                                        inWriteIntArray     : PXPLMSetDatavi_f;    { Can be nil }
-                                        inReadFloatArray    : PXPLMGetDatavf_f;    { Can be nil }
-                                        inWriteFloatArray   : PXPLMSetDatavf_f;    { Can be nil }
-                                        inReadData          : PXPLMGetDatab_f;    { Can be nil }
-                                        inWriteData         : PXPLMSetDatab_f;    { Can be nil }
-                                        inReadRefcon        : Pvoid*;    { Can be nil }
-                                        inWriteRefcon       : Pvoid*) : ;    { Can be nil }
+                                        inReadInt           : XPLMGetDatai_f;    { Can be nil }
+                                        inWriteInt          : XPLMSetDatai_f;    { Can be nil }
+                                        inReadFloat         : XPLMGetDataf_f;    { Can be nil }
+                                        inWriteFloat        : XPLMSetDataf_f;    { Can be nil }
+                                        inReadDouble        : XPLMGetDatad_f;    { Can be nil }
+                                        inWriteDouble       : XPLMSetDatad_f;    { Can be nil }
+                                        inReadIntArray      : XPLMGetDatavi_f;    { Can be nil }
+                                        inWriteIntArray     : XPLMSetDatavi_f;    { Can be nil }
+                                        inReadFloatArray    : XPLMGetDatavf_f;    { Can be nil }
+                                        inWriteFloatArray   : XPLMSetDatavf_f;    { Can be nil }
+                                        inReadData          : XPLMGetDatab_f;    { Can be nil }
+                                        inWriteData         : XPLMSetDatab_f;    { Can be nil }
+                                        inReadRefcon        : pointer;    { Can be nil }
+                                        inWriteRefcon       : pointer) : XPLMDataRef;    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -694,7 +709,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMUnregisterDataAccessor(
-                                   VAR  inDataRef           : );
+                                        inDataRef           : XPLMDataRef);
     cdecl; external XPLM_DLL;
 
 {___________________________________________________________________________
@@ -746,7 +761,7 @@ TYPE
    }
 TYPE
      XPLMDataChanged_f = PROCEDURE(
-                                    inRefcon            : Pvoid*); cdecl;    { Can be nil }
+                                    inRefcon            : pointer); cdecl;    { Can be nil }
 
    {
     XPLMShareData
@@ -769,10 +784,10 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMShareData(
-                                        inDataName          : Pchar *;
+                                        inDataName          : XPLMString;
                                         inDataType          : XPLMDataTypeID;
-                                        inNotificationFunc  : PXPLMDataChanged_f;    { Can be nil }
-                                        inNotificationRefcon: Pvoid*) : Integer;    { Can be nil }
+                                        inNotificationFunc  : XPLMDataChanged_f;    { Can be nil }
+                                        inNotificationRefcon: pointer) : Integer;    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -787,10 +802,10 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMUnshareData(
-                                        inDataName          : Pchar *;
+                                        inDataName          : XPLMString;
                                         inDataType          : XPLMDataTypeID;
-                                        inNotificationFunc  : PXPLMDataChanged_f;    { Can be nil }
-                                        inNotificationRefcon: Pvoid*) : Integer;    { Can be nil }
+                                        inNotificationFunc  : XPLMDataChanged_f;    { Can be nil }
+                                        inNotificationRefcon: pointer) : Integer;    { Can be nil }
     cdecl; external XPLM_DLL;
 
 {___________________________________________________________________________

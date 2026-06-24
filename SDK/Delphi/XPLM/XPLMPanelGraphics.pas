@@ -35,6 +35,21 @@ INTERFACE
 USES
     XPLMDefs, XPLMUtilities, XPLMDisplay;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {$IFDEF XPLMPG1}
 {___________________________________________________________________________
  * PANEL GRAPHICS primitives
@@ -84,7 +99,7 @@ TYPE
      { Vertical position in panel coordinates, pixels.                            }
      y                        : Single;
      { Packed ABGR color as returned by XPLMMakeColor.                            }
-     color                    : uint32_t;
+     color                    : Cardinal;
    END;
    PXPLMVertexColor_t = ^XPLMVertexColor_t;
 
@@ -102,7 +117,7 @@ TYPE
                                         red                 : Single;
                                         green               : Single;
                                         blue                : Single;
-                                        alpha               : Single) : uint32_t;
+                                        alpha               : Single) : Cardinal;
     cdecl; external XPLM_DLL;
 
    {
@@ -117,8 +132,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLines(
-                                        color               : uint32_t;
-                                        vertices[]          : PXPLMVertex_t;
+                                        color               : Cardinal;
+                                        vertices            : PXPLMVertex_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -132,9 +147,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLinesWithWidth(
-                                        color               : uint32_t;
+                                        color               : Cardinal;
                                         lineWidth           : Single;
-                                        vertices[]          : PXPLMVertex_t;
+                                        vertices            : PXPLMVertex_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -147,7 +162,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLinesc(
-                                        vertices[]          : PXPLMVertexColor_t;
+                                        vertices            : PXPLMVertexColor_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -162,7 +177,7 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLinescWithWidth(
                                         lineWidth           : Single;
-                                        vertices[]          : PXPLMVertexColor_t;
+                                        vertices            : PXPLMVertexColor_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -178,8 +193,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLinesStipple(
-                                        color               : uint32_t;
-                                        pts[]               : PXPLMVertex_t;
+                                        color               : Cardinal;
+                                        pts                 : PXPLMVertex_t;
                                         count               : Integer;
                                         dashLength          : Single;
                                         lineWidth           : Single);
@@ -194,8 +209,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLineStrip(
-                                        color               : uint32_t;
-                                        pts[]               : PXPLMVertex_t;
+                                        color               : Cardinal;
+                                        pts                 : PXPLMVertex_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -209,9 +224,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLineStripWithWidth(
-                                        color               : uint32_t;
+                                        color               : Cardinal;
                                         lineWidth           : Single;
-                                        pts[]               : PXPLMVertex_t;
+                                        pts                 : PXPLMVertex_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -224,7 +239,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLineStripc(
-                                        pts[]               : PXPLMVertexColor_t;
+                                        pts                 : PXPLMVertexColor_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -239,7 +254,7 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLineStripcWithWidth(
                                         lineWidth           : Single;
-                                        pts[]               : PXPLMVertexColor_t;
+                                        pts                 : PXPLMVertexColor_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -255,8 +270,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLineStripStipple(
-                                        color               : uint32_t;
-                                        pts[]               : PXPLMVertex_t;
+                                        color               : Cardinal;
+                                        pts                 : PXPLMVertex_t;
                                         count               : Integer;
                                         dashLength          : Single;
                                         lineWidth           : Single);
@@ -271,8 +286,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLineLoop(
-                                        color               : uint32_t;
-                                        pts[]               : PXPLMVertex_t;
+                                        color               : Cardinal;
+                                        pts                 : PXPLMVertex_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -286,9 +301,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLineLoopWithWidth(
-                                        color               : uint32_t;
+                                        color               : Cardinal;
                                         lineWidth           : Single;
-                                        pts[]               : PXPLMVertex_t;
+                                        pts                 : PXPLMVertex_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -301,7 +316,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLineLoopc(
-                                        pts[]               : PXPLMVertexColor_t;
+                                        pts                 : PXPLMVertexColor_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -316,7 +331,7 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLineLoopcWithWidth(
                                         lineWidth           : Single;
-                                        pts[]               : PXPLMVertexColor_t;
+                                        pts                 : PXPLMVertexColor_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -332,8 +347,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLineLoopStipple(
-                                        color               : uint32_t;
-                                        pts[]               : PXPLMVertex_t;
+                                        color               : Cardinal;
+                                        pts                 : PXPLMVertex_t;
                                         count               : Integer;
                                         dashLength          : Single;
                                         lineWidth           : Single);
@@ -350,8 +365,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMPolygon(
-                                        color               : uint32_t;
-                                        vertices[]          : PXPLMVertex_t;
+                                        color               : Cardinal;
+                                        vertices            : PXPLMVertex_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -365,9 +380,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMPolygonWithWidth(
-                                        color               : uint32_t;
+                                        color               : Cardinal;
                                         lineWidth           : Single;
-                                        vertices[]          : PXPLMVertex_t;
+                                        vertices            : PXPLMVertex_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -379,7 +394,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMPolygonc(
-                                        vertices[]          : PXPLMVertexColor_t;
+                                        vertices            : PXPLMVertexColor_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -394,7 +409,7 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMPolygoncWithWidth(
                                         lineWidth           : Single;
-                                        vertices[]          : PXPLMVertexColor_t;
+                                        vertices            : PXPLMVertexColor_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -411,8 +426,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMQuadstrip(
-                                        color               : uint32_t;
-                                        vertices[]          : PXPLMVertex_t;
+                                        color               : Cardinal;
+                                        vertices            : PXPLMVertex_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -426,9 +441,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMQuadstripWithWidth(
-                                        color               : uint32_t;
+                                        color               : Cardinal;
                                         lineWidth           : Single;
-                                        vertices[]          : PXPLMVertex_t;
+                                        vertices            : PXPLMVertex_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -441,7 +456,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMQuadstripc(
-                                        vertices[]          : PXPLMVertexColor_t;
+                                        vertices            : PXPLMVertexColor_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -456,7 +471,7 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMQuadstripcWithWidth(
                                         lineWidth           : Single;
-                                        vertices[]          : PXPLMVertexColor_t;
+                                        vertices            : PXPLMVertexColor_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -543,7 +558,7 @@ TYPE
     the font measurement and drawing routines. Destroy the handle with
     XPLMDestroyFont when you are done with it.
    }
-   XPLMFontHandle = Pvoid*;
+   XPLMFontHandle = pointer;
    PXPLMFontHandle = ^XPLMFontHandle;
 
    {
@@ -557,7 +572,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateFont(
-                                        charset             : XPLMCharSet_t) : ;
+                                        charset             : XPLMCharSet_t) : XPLMFontHandle;
     cdecl; external XPLM_DLL;
 
    {
@@ -567,7 +582,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDestroyFont(
-                                   VAR  font                : );
+                                        font                : XPLMFontHandle);
     cdecl; external XPLM_DLL;
 
    {
@@ -582,8 +597,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMFontAddFace(
-                                   VAR  font                : ;
-                                        ttf_path            : P*);
+                                        font                : XPLMFontHandle;
+                                        ttf_path            : XPLMString);
     cdecl; external XPLM_DLL;
 
    {
@@ -599,9 +614,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMFontGetMetrics(
-                                   VAR  font                : ;
+                                        font                : XPLMFontHandle;
                                         fontSize            : Single;
-                                        outMetrics          : PXPLMFontMetrics_t*);
+                                        outMetrics          : PXPLMFontMetrics_t);
     cdecl; external XPLM_DLL;
 
    {
@@ -614,9 +629,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMFontMeasureString(
-                                   VAR  font                : ;
+                                        font                : XPLMFontHandle;
                                         fontSize            : Single;
-                                        string              : P*) : Single;
+                                        &string             : XPLMString) : Single;
     cdecl; external XPLM_DLL;
 
    {
@@ -629,9 +644,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMFontGetLineCount(
-                                   VAR  font                : ;
+                                        font                : XPLMFontHandle;
                                         fontSize            : Single;
-                                        string              : P*;
+                                        &string             : XPLMString;
                                         width               : Single) : Integer;
     cdecl; external XPLM_DLL;
 
@@ -646,9 +661,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMFontFitForward(
-                                   VAR  font                : ;
+                                        font                : XPLMFontHandle;
                                         fontSize            : Single;
-                                        string              : P*;
+                                        &string             : XPLMString;
                                         width               : Single) : Integer;
     cdecl; external XPLM_DLL;
 
@@ -664,9 +679,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMFontFitReverse(
-                                   VAR  font                : ;
+                                        font                : XPLMFontHandle;
                                         fontSize            : Single;
-                                        string              : P*;
+                                        &string             : XPLMString;
                                         width               : Single) : Integer;
     cdecl; external XPLM_DLL;
 
@@ -682,12 +697,12 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMFontDrawString(
-                                   VAR  font                : ;
-                                        color               : uint32_t;
+                                        font                : XPLMFontHandle;
+                                        color               : Cardinal;
                                         fontSize            : Single;
                                         x                   : Single;
                                         y                   : Single;
-                                        string              : P*;
+                                        &string             : XPLMString;
                                         justification       : XPLMJustification_t);
     cdecl; external XPLM_DLL;
 
@@ -706,12 +721,12 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMFontDrawStringFixedSpacing(
-                                   VAR  font                : ;
-                                        color               : uint32_t;
+                                        font                : XPLMFontHandle;
+                                        color               : Cardinal;
                                         fontSize            : Single;
                                         x                   : Single;
                                         y                   : Single;
-                                        string              : P*;
+                                        &string             : XPLMString;
                                         fixedSpacing        : Integer;
                                         justification       : XPLMJustification_t);
     cdecl; external XPLM_DLL;
@@ -731,12 +746,12 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMFontDrawStringWordWrapped(
-                                   VAR  font                : ;
-                                        color               : uint32_t;
+                                        font                : XPLMFontHandle;
+                                        color               : Cardinal;
                                         fontSize            : Single;
                                         x                   : Single;
                                         y                   : Single;
-                                        string              : P*;
+                                        &string             : XPLMString;
                                         wrapWidth           : Integer;
                                         justification       : XPLMJustification_t);
     cdecl; external XPLM_DLL;
@@ -754,12 +769,12 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMFontDrawStringRotated(
-                                   VAR  font                : ;
-                                        color               : uint32_t;
+                                        font                : XPLMFontHandle;
+                                        color               : Cardinal;
                                         fontSize            : Single;
                                         x                   : Single;
                                         y                   : Single;
-                                        string              : P*;
+                                        &string             : XPLMString;
                                         angle               : Single;
                                         justification       : XPLMJustification_t);
     cdecl; external XPLM_DLL;
@@ -794,7 +809,7 @@ TYPE
     An opaque handle to a texture atlas. Create one with XPLMCreateTextureAtlas
     and destroy it with XPLMDestroyTextureAtlas.
    }
-   XPLMTextureAtlasRef = Pvoid *;
+   XPLMTextureAtlasRef = pointer;
    PXPLMTextureAtlasRef = ^XPLMTextureAtlasRef;
 
    {
@@ -826,7 +841,7 @@ TYPE
     Returns an opaque atlas handle.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   FUNCTION XPLMCreateTextureAtlas: ;
+   FUNCTION XPLMCreateTextureAtlas: XPLMTextureAtlasRef;
     cdecl; external XPLM_DLL;
 
    {
@@ -837,7 +852,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDestroyTextureAtlas(
-                                   VAR  inTextureAtlas      : );
+                                        inTextureAtlas      : XPLMTextureAtlasRef);
     cdecl; external XPLM_DLL;
 
    {
@@ -852,8 +867,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMTextureAtlasAddImageFile(
-                                   VAR  inTextureAtlas      : ;
-                                        inImageFilePath     : Pchar *) : Integer;
+                                        inTextureAtlas      : XPLMTextureAtlasRef;
+                                        inImageFilePath     : XPLMString) : Integer;
     cdecl; external XPLM_DLL;
 
    {
@@ -873,8 +888,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMTextureAtlasAddImageFileSet(
-                                   VAR  inTextureAtlas      : ;
-                                        inImageFilePath     : Pchar *;
+                                        inTextureAtlas      : XPLMTextureAtlasRef;
+                                        inImageFilePath     : XPLMString;
                                         inCellsX            : Integer;
                                         inCellsY            : Integer) : Integer;
     cdecl; external XPLM_DLL;
@@ -894,8 +909,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMTextureAtlasAddImage(
-                                   VAR  inTextureAtlas      : ;
-                                        inImage             : Punsigned char *;
+                                        inTextureAtlas      : XPLMTextureAtlasRef;
+                                        inImage             : PByte;
                                         inWidth             : Integer;
                                         inHeight            : Integer) : Integer;
     cdecl; external XPLM_DLL;
@@ -919,8 +934,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMTextureAtlasAddImageSet(
-                                   VAR  inTextureAtlas      : ;
-                                        inImage[]           : Puint8_t;
+                                        inTextureAtlas      : XPLMTextureAtlasRef;
+                                        inImage             : PByte;
                                         inWidth             : Integer;
                                         inHeight            : Integer;
                                         inCellsX            : Integer;
@@ -936,7 +951,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMTextureAtlasBake(
-                                   VAR  inTextureAtlas      : );
+                                        inTextureAtlas      : XPLMTextureAtlasRef);
     cdecl; external XPLM_DLL;
 
    {
@@ -949,7 +964,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMTextureAtlasGetImageWidth(
-                                   VAR  inTextureAtlas      : ;
+                                        inTextureAtlas      : XPLMTextureAtlasRef;
                                         inImageIndex        : Integer) : Integer;
     cdecl; external XPLM_DLL;
 
@@ -963,7 +978,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMTextureAtlasGetImageHeight(
-                                   VAR  inTextureAtlas      : ;
+                                        inTextureAtlas      : XPLMTextureAtlasRef;
                                         inImageIndex        : Integer) : Integer;
     cdecl; external XPLM_DLL;
 
@@ -980,9 +995,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMTextureAtlasGetImageUVMap(
-                                   VAR  inTextureAtlas      : ;
+                                        inTextureAtlas      : XPLMTextureAtlasRef;
                                         inImageIndex        : Integer;
-                                        outUV[4]            : PSingle);
+                                        outUV               : PSingle);
     cdecl; external XPLM_DLL;
 
    {
@@ -999,9 +1014,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMTextureAtlasDrawAt(
-                                   VAR  inTextureAtlas      : ;
+                                        inTextureAtlas      : XPLMTextureAtlasRef;
                                         inImageIndex        : Integer;
-                                        inTintColor         : uint32_t;
+                                        inTintColor         : Cardinal;
                                         inX                 : Single;
                                         inY                 : Single);
     cdecl; external XPLM_DLL;
@@ -1018,9 +1033,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMTextureAtlasDrawIn(
-                                   VAR  inTextureAtlas      : ;
+                                        inTextureAtlas      : XPLMTextureAtlasRef;
                                         inImageIndex        : Integer;
-                                        inTintColor         : uint32_t;
+                                        inTintColor         : Cardinal;
                                         inLeft              : Single;
                                         inTop               : Single;
                                         inRight             : Single;
@@ -1043,9 +1058,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMTextureAtlasDrawStretched(
-                                   VAR  inTextureAtlas      : ;
+                                        inTextureAtlas      : XPLMTextureAtlasRef;
                                         inImageIndex        : Integer;
-                                        inTintColor         : uint32_t;
+                                        inTintColor         : Cardinal;
                                         inLeft              : Single;
                                         inTop               : Single;
                                         inRight             : Single;
@@ -1070,9 +1085,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMTextureAtlasDrawScaled(
-                                   VAR  inTextureAtlas      : ;
+                                        inTextureAtlas      : XPLMTextureAtlasRef;
                                         inImageIndex        : Integer;
-                                        inTintColor         : uint32_t;
+                                        inTintColor         : Cardinal;
                                         inXPanel            : Single;
                                         inYPanel            : Single;
                                         inXAtlas            : Single;
@@ -1097,10 +1112,10 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMTextureAtlasDrawMesh(
-                                   VAR  inTextureAtlas      : ;
+                                        inTextureAtlas      : XPLMTextureAtlasRef;
                                         inImageIndex        : Integer;
-                                        inTintColor         : uint32_t;
-                                        vertices[]          : PXPLMTextureVertex_t;
+                                        inTintColor         : Cardinal;
+                                        vertices            : PXPLMTextureVertex_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -1151,7 +1166,7 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMTextureSourceDrawIn(
                                         tex                 : XPLMTextureSource;
-                                        tint                : uint32_t;
+                                        tint                : Cardinal;
                                         left                : Integer;
                                         top                 : Integer;
                                         right               : Integer;
@@ -1175,8 +1190,8 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMTextureSourceDrawMesh(
                                         tex                 : XPLMTextureSource;
-                                        tint                : uint32_t;
-                                        mesh[]              : PXPLMTextureVertex_t;
+                                        tint                : Cardinal;
+                                        mesh                : PXPLMTextureVertex_t;
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
@@ -1337,8 +1352,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMBeginSetupStencilMask(
-                                        bits                : unsigned int;
-                                        mask                : unsigned int);
+                                        bits                : Cardinal;
+                                        mask                : Cardinal);
     cdecl; external XPLM_DLL;
 
    {
@@ -1364,8 +1379,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMUseStencilMask(
-                                        bits                : unsigned int;
-                                        mask                : unsigned int);
+                                        bits                : Cardinal;
+                                        mask                : Cardinal);
     cdecl; external XPLM_DLL;
 
    {
@@ -1430,7 +1445,7 @@ TYPE
                                     dx                  : Integer;
                                     dy                  : Integer;
                                     button              : Integer;
-                                    ref                 : Pvoid*); cdecl;    { Can be nil }
+                                    ref                 : pointer); cdecl;    { Can be nil }
 
    {
     XPLMTouchZoneSpec_t
@@ -1444,7 +1459,7 @@ TYPE
      { Set to sizeof(XPLMTouchZoneSpec_t).                                        }
      structSize               : Integer;
      { How the zone responds to interaction.                                      }
-     type                     : XPLMTouchZone;
+     &type                    : XPLMTouchZone;
      { The command to fire. Only used when type is xplm_TouchZone_Command.        }
      command                  : XPLMCommandRef;
      { An integer you assign to identify this zone in your XPLMTouchEvent_f       }
@@ -1475,7 +1490,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMAccumulateTouchZone(
-                                        inSpec              : PXPLMTouchZoneSpec_t *) : Integer;
+                                        inSpec              : PXPLMTouchZoneSpec_t) : Integer;
     cdecl; external XPLM_DLL;
 
    {
@@ -1494,8 +1509,8 @@ TYPE
     { Thread-safe. This call may be used from threads.                              }
    PROCEDURE XPLMAvionicsSetTouchEventHandler(
                                         avionic             : XPLMAvionicsID;
-                                        handler             : PXPLMTouchEvent_f;    { Can be nil }
-                                        ref                 : Pvoid*);    { Can be nil }
+                                        handler             : XPLMTouchEvent_f;    { Can be nil }
+                                        ref                 : pointer);    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -1504,8 +1519,8 @@ TYPE
     { Thread-safe. This call may be used from threads.                              }
    PROCEDURE XPLMWindowSetTouchEventHandler(
                                         window              : XPLMWindowID;
-                                        handler             : PXPLMTouchEvent_f;    { Can be nil }
-                                        ref                 : Pvoid*);    { Can be nil }
+                                        handler             : XPLMTouchEvent_f;    { Can be nil }
+                                        ref                 : pointer);    { Can be nil }
     cdecl; external XPLM_DLL;
 
 {$ENDIF XPLMPG1}
@@ -1535,7 +1550,7 @@ TYPE
     XPLMEndRetainedDrawing. Destroy it with XPLMDestroyRetainedDrawing when it
     is no longer needed.
    }
-   XPLMRetainedDrawing_t = Pvoid *;
+   XPLMRetainedDrawing_t = pointer;
    PXPLMRetainedDrawing_t = ^XPLMRetainedDrawing_t;
 
    {
@@ -1561,7 +1576,7 @@ TYPE
     Returns an opaque handle to the retained drawing.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   FUNCTION XPLMEndRetainedDrawing: ;
+   FUNCTION XPLMEndRetainedDrawing: XPLMRetainedDrawing_t;
     cdecl; external XPLM_DLL;
 
    {
@@ -1573,7 +1588,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDrawRetained(
-                                   VAR  drawing             : );
+                                        drawing             : XPLMRetainedDrawing_t);
     cdecl; external XPLM_DLL;
 
    {
@@ -1583,7 +1598,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDestroyRetainedDrawing(
-                                   VAR  drawing             : );
+                                        drawing             : XPLMRetainedDrawing_t);
     cdecl; external XPLM_DLL;
 
 {$ENDIF XPLMPG1}
@@ -1670,7 +1685,7 @@ TYPE
     An opaque handle to an SVT display instance. Create one with
     XPLMCreateSVTDisplay and destroy it with XPLMDestroySVTDisplay.
    }
-   XPLMSVTDisplayRef = Pvoid *;
+   XPLMSVTDisplayRef = pointer;
    PXPLMSVTDisplayRef = ^XPLMSVTDisplayRef;
 
    {
@@ -1687,7 +1702,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateSVTDisplay(
-                                        params              : PXPLMCreateSVT_t *) : ;
+                                        params              : PXPLMCreateSVT_t) : XPLMSVTDisplayRef;
     cdecl; external XPLM_DLL;
 
    {
@@ -1697,7 +1712,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDestroySVTDisplay(
-                                   VAR  svt                 : );
+                                        svt                 : XPLMSVTDisplayRef);
     cdecl; external XPLM_DLL;
 
    {
@@ -1748,13 +1763,13 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSVTDisplayDrawIn(
-                                   VAR  svt                 : ;
+                                        svt                 : XPLMSVTDisplayRef;
                                         features            : XPLMSVTFeatures;
                                         left                : Integer;
                                         top                 : Integer;
                                         right               : Integer;
                                         bottom              : Integer;
-                                        dataOverrides       : PXPLMSVTCustomData_t*);    { Can be nil }
+                                        dataOverrides       : PXPLMSVTCustomData_t);    { Can be nil }
     cdecl; external XPLM_DLL;
 
 {$ENDIF XPLMPG1}
@@ -1874,7 +1889,7 @@ TYPE
     An opaque handle to a map display instance. Create one with
     XPLMCreateMapDisplay and destroy it with XPLMDestroyMapDisplay.
    }
-   XPLMMapDisplayRef = Pvoid *;
+   XPLMMapDisplayRef = pointer;
    PXPLMMapDisplayRef = ^XPLMMapDisplayRef;
 
    {
@@ -1891,7 +1906,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateMapDisplay(
-                                        params              : PXPLMCreateMap_t *) : ;
+                                        params              : PXPLMCreateMap_t) : XPLMMapDisplayRef;
     cdecl; external XPLM_DLL;
 
    {
@@ -1901,7 +1916,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDestroyMapDisplay(
-                                   VAR  map                 : );
+                                        map                 : XPLMMapDisplayRef);
     cdecl; external XPLM_DLL;
 
    {
@@ -1926,13 +1941,13 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMMapDisplayDrawIn(
-                                   VAR  map                 : ;
+                                        map                 : XPLMMapDisplayRef;
                                         layers              : XPLMMapLayers;
                                         left                : Integer;
                                         top                 : Integer;
                                         right               : Integer;
                                         bottom              : Integer;
-                                        dataOverrides       : PXPLMMapCustomData_t*);    { Can be nil }
+                                        dataOverrides       : PXPLMMapCustomData_t);    { Can be nil }
     cdecl; external XPLM_DLL;
 
 {$ENDIF XPLMPG1}
@@ -2054,7 +2069,7 @@ TYPE
     XPAtlasEntry
    }
    XPAtlasEntry = RECORD
-     storage                  : Punsigned char *;
+     storage                  : PByte;
      width                    : Integer;
      height                   : Integer;
      cells_x                  : Integer;
@@ -2114,8 +2129,8 @@ TYPE
    Sampler: bilinear filter, clamp-to-edge in both dimensions, no mipmaps. UV
    coordinates outside [0,1] sample the edge texels (no wrap).
    
-   Scissor: the per-`XPLMDrawCall_t` scissor rect is in {left, top, right,
-   bottom} order (top-left origin). Zero-width or zero-height rects produce no
+   Scissor: the per-`XPLMDrawCall_t` scissor rect is in (left, top, right,
+   bottom) order (top-left origin). Zero-width or zero-height rects produce no
    output. The scissor state is automatically saved on entry to
    `XPLMDrawCalls` and restored on exit, so subsequent panel-graphics calls in
     the same frame are unaffected.
@@ -2138,9 +2153,9 @@ TYPE
    XPLMDrawCall_t = RECORD
      { Texture handle from XPLMCreateTexture, or any pointer the host returned for}
      { a texture.                                                                 }
-     tex_ref                  : Pvoid *;
-     { Clip rect: {left, top, right, bottom} in window-local top-left coords.     }
-     scissors[4]              : PSingle;
+     tex_ref                  : pointer;
+     { Clip rect: (left, top, right, bottom) in window-local top-left coords.     }
+     scissors                 : array[0..4 - 1] of Single;
      { First index into XPLMMesh_t::indices to use.                               }
      idx_offset               : Integer;
      { Number of indices to consume (must be a multiple of 3 for triangles). Zero }
@@ -2163,9 +2178,9 @@ TYPE
    XPLMMesh_t = RECORD
      vertex_count             : Integer;
      { Pointer to vertex_count * 5 floats.                                        }
-     vertices                 : Pfloat *;
+     vertices                 : PSingle;
      index_count              : Integer;
-     indices                  : Puint16_t*;
+     indices                  : PWord;
    END;
    PXPLMMesh_t = ^XPLMMesh_t;
 
@@ -2183,9 +2198,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateTexture(
-                                        rgba_image          : Punsigned char *;
+                                        rgba_image          : PByte;
                                         width               : Integer;
-                                        height              : Integer) : Pvoid *;
+                                        height              : Integer) : pointer;
     cdecl; external XPLM_DLL;
 
    {
@@ -2196,7 +2211,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDestroyTexture(
-                                        tex_ref             : Pvoid *);
+                                        tex_ref             : pointer);
     cdecl; external XPLM_DLL;
 
    {
@@ -2212,9 +2227,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDrawCalls(
-                                        inMesh              : PXPLMMesh_t *;
+                                        inMesh              : PXPLMMesh_t;
                                         inCount             : Integer;
-                                        inDrawCalls[]       : PXPLMDrawCall_t);
+                                        inDrawCalls         : PXPLMDrawCall_t);
     cdecl; external XPLM_DLL;
 
 {$ENDIF XPLMPG1}

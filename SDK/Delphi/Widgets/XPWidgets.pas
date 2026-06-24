@@ -63,6 +63,21 @@ INTERFACE
 USES
     XPWidgetDefs, XPLMDisplay;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPWIDGETS_DLL = 'XPWidgets_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPWIDGETS_DLL = 'XPWidgets.framework/XPWidgets';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPWIDGETS_DLL = 'XPWidgets_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * WIDGET CREATION AND MANAGEMENT
  ___________________________________________________________________________}
@@ -105,11 +120,11 @@ USES
                                         inRight             : Integer;
                                         inBottom            : Integer;
                                         inVisible           : Integer;
-                                        inDescriptor        : Pchar *;
+                                        inDescriptor        : XPLMString;
                                         inIsRoot            : Integer;
                                         inContainer         : XPWidgetID;
                                         inClass             : XPWidgetClass) : XPWidgetID;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPCreateCustomWidget
@@ -127,11 +142,11 @@ USES
                                         inRight             : Integer;
                                         inBottom            : Integer;
                                         inVisible           : Integer;
-                                        inDescriptor        : Pchar *;
+                                        inDescriptor        : XPLMString;
                                         inIsRoot            : Integer;
                                         inContainer         : XPWidgetID;
-                                        inCallback          : PXPWidgetFunc_t) : XPWidgetID;
-    cdecl; external XPWIDGETS.DLL;
+                                        inCallback          : XPWidgetFunc_t) : XPWidgetID;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPDestroyWidget
@@ -147,7 +162,7 @@ USES
    PROCEDURE XPDestroyWidget(
                                         inWidget            : XPWidgetID;
                                         inDestroyChildren   : Integer);
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPSendMessageToWidget
@@ -170,9 +185,9 @@ USES
                                         inWidget            : XPWidgetID;
                                         inMessage           : XPWidgetMessage;
                                         inMode              : XPDispatchMode;
-                                        inParam1            : intptr_t;
-                                        inParam2            : intptr_t) : Integer;
-    cdecl; external XPWIDGETS.DLL;
+                                        inParam1            : NativeInt;
+                                        inParam2            : NativeInt) : Integer;
+    cdecl; external XPWIDGETS_DLL;
 
 {___________________________________________________________________________
  * WIDGET POSITIONING AND VISIBILITY
@@ -199,7 +214,7 @@ USES
    PROCEDURE XPPlaceWidgetWithin(
                                         inSubWidget         : XPWidgetID;
                                         inContainer         : XPWidgetID);
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPCountChildWidgets
@@ -209,7 +224,7 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPCountChildWidgets(
                                         inWidget            : XPWidgetID) : Integer;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetNthChildWidget
@@ -222,7 +237,7 @@ USES
    FUNCTION XPGetNthChildWidget(
                                         inWidget            : XPWidgetID;
                                         inIndex             : Integer) : XPWidgetID;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetParentWidget
@@ -233,7 +248,7 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPGetParentWidget(
                                         inWidget            : XPWidgetID) : XPWidgetID;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPShowWidget
@@ -245,7 +260,7 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPShowWidget(
                                         inWidget            : XPWidgetID);
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPHideWidget
@@ -256,7 +271,7 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPHideWidget(
                                         inWidget            : XPWidgetID);
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPIsWidgetVisible
@@ -268,7 +283,7 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPIsWidgetVisible(
                                         inWidget            : XPWidgetID) : Integer;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPFindRootWidget
@@ -279,7 +294,7 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPFindRootWidget(
                                         inWidget            : XPWidgetID) : XPWidgetID;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPBringRootWidgetToFront
@@ -293,7 +308,7 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPBringRootWidgetToFront(
                                         inWidget            : XPWidgetID);
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPIsWidgetInFront
@@ -305,7 +320,7 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPIsWidgetInFront(
                                         inWidget            : XPWidgetID) : Integer;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetWidgetGeometry
@@ -316,11 +331,11 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPGetWidgetGeometry(
                                         inWidget            : XPWidgetID;
-                                        outLeft             : Pint *;    { Can be nil }
-                                        outTop              : Pint *;    { Can be nil }
-                                        outRight            : Pint *;    { Can be nil }
-                                        outBottom           : Pint *);    { Can be nil }
-    cdecl; external XPWIDGETS.DLL;
+                                        outLeft             : PInteger;    { Can be nil }
+                                        outTop              : PInteger;    { Can be nil }
+                                        outRight            : PInteger;    { Can be nil }
+                                        outBottom           : PInteger);    { Can be nil }
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPSetWidgetGeometry
@@ -334,7 +349,7 @@ USES
                                         inTop               : Integer;
                                         inRight             : Integer;
                                         inBottom            : Integer);
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetWidgetForLocation
@@ -360,7 +375,7 @@ USES
                                         inYOffset           : Integer;
                                         inRecursive         : Integer;
                                         inVisibleOnly       : Integer) : XPWidgetID;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetWidgetExposedGeometry
@@ -376,11 +391,11 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPGetWidgetExposedGeometry(
                                         inWidgetID          : XPWidgetID;
-                                        outLeft             : Pint *;    { Can be nil }
-                                        outTop              : Pint *;    { Can be nil }
-                                        outRight            : Pint *;    { Can be nil }
-                                        outBottom           : Pint *);    { Can be nil }
-    cdecl; external XPWIDGETS.DLL;
+                                        outLeft             : PInteger;    { Can be nil }
+                                        outTop              : PInteger;    { Can be nil }
+                                        outRight            : PInteger;    { Can be nil }
+                                        outBottom           : PInteger);    { Can be nil }
+    cdecl; external XPWIDGETS_DLL;
 
 {___________________________________________________________________________
  * ACCESSING WIDGET DATA
@@ -400,8 +415,8 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPSetWidgetDescriptor(
                                         inWidget            : XPWidgetID;
-                                        inDescriptor        : Pchar *);
-    cdecl; external XPWIDGETS.DLL;
+                                        inDescriptor        : XPLMString);
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetWidgetDescriptor
@@ -417,9 +432,9 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPGetWidgetDescriptor(
                                         inWidget            : XPWidgetID;
-                                        outDescriptor       : Pchar *;
+                                        outDescriptor       : XPLMString;
                                         inMaxDescLength     : Integer) : Integer;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetWidgetUnderlyingWindow
@@ -434,7 +449,7 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPGetWidgetUnderlyingWindow(
                                         inWidget            : XPWidgetID) : XPLMWindowID;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPSetWidgetProperty
@@ -446,8 +461,8 @@ USES
    PROCEDURE XPSetWidgetProperty(
                                         inWidget            : XPWidgetID;
                                         inProperty          : XPWidgetPropertyID;
-                                        inValue             : intptr_t);
-    cdecl; external XPWIDGETS.DLL;
+                                        inValue             : NativeInt);
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetWidgetProperty
@@ -462,8 +477,8 @@ USES
    FUNCTION XPGetWidgetProperty(
                                         inWidget            : XPWidgetID;
                                         inProperty          : XPWidgetPropertyID;
-                                        inExists            : Pint *) : intptr_t;    { Can be nil }
-    cdecl; external XPWIDGETS.DLL;
+                                        inExists            : PInteger) : NativeInt;    { Can be nil }
+    cdecl; external XPWIDGETS_DLL;
 
 {___________________________________________________________________________
  * KEYBOARD MANAGEMENT
@@ -488,7 +503,7 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPSetKeyboardFocus(
                                         inWidget            : XPWidgetID) : XPWidgetID;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPLoseKeyboardFocus
@@ -500,7 +515,7 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLoseKeyboardFocus(
                                         inWidget            : XPWidgetID);
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetWidgetWithFocus
@@ -511,7 +526,7 @@ USES
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPGetWidgetWithFocus: XPWidgetID;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
 {___________________________________________________________________________
  * CREATING CUSTOM WIDGETS
@@ -536,8 +551,8 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPAddWidgetCallback(
                                         inWidget            : XPWidgetID;
-                                        inNewCallback       : PXPWidgetFunc_t);
-    cdecl; external XPWIDGETS.DLL;
+                                        inNewCallback       : XPWidgetFunc_t);
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetWidgetClassFunc
@@ -547,8 +562,8 @@ USES
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPGetWidgetClassFunc(
-                                        inWidgetClass       : XPWidgetClass) : PXPWidgetFunc_t;
-    cdecl; external XPWIDGETS.DLL;
+                                        inWidgetClass       : XPWidgetClass) : XPWidgetFunc_t;
+    cdecl; external XPWIDGETS_DLL;
 
 
 IMPLEMENTATION

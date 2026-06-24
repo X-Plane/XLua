@@ -1,4 +1,9 @@
--- Use require('XPLMNavigation') to access these functions.
+---@meta XPLMNavigation
+
+-- The functions, typedefs, enums, and defines in this file are
+-- installed into the Lua VM at startup by the host's add_xplm_to_interp()
+-- call. Scripts do NOT need to require('XPLMNavigation') to access them; this file
+-- exists solely as type metadata for lua-language-server / EmmyLua.
 
 --[[
    Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
@@ -22,6 +27,10 @@
 
 require("XPLMDefs")
 
+--- XPLMNavRef is an iterator into the navigation database. The navigation database is essentially an array, but it is not necessarily densely populated. The only assumption you can safely make is that like-typed nav-aids are grouped together. Use XPLMNavRef to refer to a nav-aid. XPLM_NAV_NOT_FOUND is returned by functions that return an XPLMNavRef when the iterator must be invalid.
+---@class XPLMNavRef : userdata
+---@field private __XPLMNavRef_marker any
+
 --[[
 These enumerations define the different types of navaids.  They are each
 defined with a separate bit so that they may be bit-wise added together
@@ -33,7 +42,8 @@ Querying the FMS for navaids will return it.  Use XPLMSetFMSEntryLatLon to
 set a lat/lon waypoint.
 ]]--
 
-XPLMNavType = {
+---@enum XPLMNavType
+local XPLMNavType = {
     xplm_Nav_Unknown                         = 0,
     xplm_Nav_Airport                         = 1,
     xplm_Nav_NDB                             = 2,
@@ -49,290 +59,145 @@ XPLMNavType = {
     xplm_Nav_LatLon                          = 2048,
     xplm_Nav_TACAN                           = 4096,
 }
+---@class _G
+---@field XPLMNavType XPLMNavType
 
---[[
-   XLuaGetFirstNavAid
-   
-   This returns the very first navaid in the database.  Use this to traverse
-   the entire database.  Returns XPLM_NAV_NOT_FOUND if the nav database is
-   empty.
-]]--
---[[
-    Returns   : userdata<XPLMNavRef>
+---@class _G
+---@field XPLM_NAV_NOT_FOUND integer
 
-    Parameters:
-      None.
-]]--
+---@class _G
+--- This returns the very first navaid in the database.  Use this to traverse
+--- the entire database.  Returns XPLM_NAV_NOT_FOUND if the nav database is empty.
+---
+---@field XPLMGetFirstNavAid fun(): XPLMNavRef
 
---[[
-   XLuaGetNextNavAid
-   
-   Given a valid navaid ref, this routine returns the next navaid.  It returns
-   XPLM_NAV_NOT_FOUND if the navaid passed in was invalid or if the navaid
-   passed in was the last one in the database.  Use this routine to iterate
-   across all like-typed navaids or the entire database.
-]]--
---[[
-    Returns   : userdata<XPLMNavRef>
+---@class _G
+--- Given a valid navaid ref, this routine returns the next navaid.  It returns
+--- XPLM_NAV_NOT_FOUND if the navaid passed in was invalid or if the navaid
+--- passed in was the last one in the database.  Use this routine to iterate
+--- across all like-typed navaids or the entire database.
+---
+---@field XPLMGetNextNavAid fun(inNavAidRef: XPLMNavRef): XPLMNavRef
 
-    Parameters:
-     inNavAidRef                            (XPLMNavRef)
+---@class _G
+--- This routine returns the ref of the first navaid of the given type in the
+--- database or XPLM_NAV_NOT_FOUND if there are no navaids of that type in the
+--- database.  You must pass exactly one navaid type to this routine.
+---
+---@field XPLMFindFirstNavAidOfType fun(inType: XPLMNavType): XPLMNavRef
 
-]]--
+---@class _G
+--- This routine returns the ref of the last navaid of the given type in the
+--- database or XPLM_NAV_NOT_FOUND if there are no navaids of that type in the
+--- database.  You must pass exactly one navaid type to this routine.
+---
+---@field XPLMFindLastNavAidOfType fun(inType: XPLMNavType): XPLMNavRef
 
---[[
-   XLuaFindFirstNavAidOfType
-   
-   This routine returns the ref of the first navaid of the given type in the
-   database or XPLM_NAV_NOT_FOUND if there are no navaids of that type in the
-   database.  You must pass exactly one navaid type to this routine.
-]]--
---[[
-    Returns   : userdata<XPLMNavRef>
+---@class _G
+--- This routine provides a number of searching capabilities for the nav database.
+--- XPLMFindNavAid will search through every navaid whose type is within inType
+--- (multiple types may be added together) and return any navaids found based
+--- on the following rules:
+---
+--- * If inLat and inLon are not NULL, the navaid nearest to that lat/lon will be
+---   returned, otherwise the last navaid found will be returned.
+---
+--- * If inFrequency is not NULL, then any navaids considered must match this
+---   frequency.  Note that this will screen out radio beacons that do not have
+---   frequency data published (like inner markers) but not fixes and airports.
+---
+--- * If inNameFragment is not NULL, only navaids that contain the fragment in their
+---   name will be returned.
+---
+--- * If inIDFragment is not NULL, only navaids that contain the fragment in their
+---   IDs will be returned.
+---
+--- This routine provides a simple way to do a number of useful searches:
+--- * Find the nearest navaid on this frequency.
+--- * Find the nearest airport.
+--- * Find the VOR whose ID is "BOS".
+--- * Find the nearest airport whose name contains "Chicago".
+---
+---@field XPLMFindNavAid fun(inNameFragment: string, inIDFragment: string, inLat: userdata, inLon: userdata, inFrequency: userdata, inType: XPLMNavType): XPLMNavRef
 
-    Parameters:
-     inType                                 (XPLMNavType)
+---@class _G
+--- This routine returns information about a navaid.  Any non-null field is filled
+--- out with information if it is available.
+---
+--- Frequencies are in the nav.dat convention as described in the X-Plane nav
+--- database FAQ: NDB frequencies are exact, all others are multiplied by 100.
+---
+--- The buffer for IDs should be at least 6 chars and the buffer for names should
+--- be at least 41 chars, but since these values are likely to go up, I recommend
+--- passing at least 32 chars for IDs and 256 chars for names when possible.
+---
+--- The outReg parameter tells if the navaid is within the local "region" of loaded
+--- DSFs.  (This information may not be particularly useful to plugins.)  The parameter
+--- is a single byte value 1 for true or 0 for false, not a C string.
+---
+---@field XPLMGetNavAidInfo fun(inRef: XPLMNavRef): { outType: XPLMNavType, outLatitude: userdata, outLongitude: userdata, outHeight: userdata, outFrequency: userdata, outHeading: userdata, outID: string[], outName: string[], outReg: string[] }
 
-]]--
+---@class _G
+--- This routine returns the number of entries in the FMS.
+---
+---@field XPLMCountFMSEntries fun(): integer
 
---[[
-   XLuaFindLastNavAidOfType
-   
-   This routine returns the ref of the last navaid of the given type in the
-   database or XPLM_NAV_NOT_FOUND if there are no navaids of that type in the
-   database.  You must pass exactly one navaid type to this routine.
-]]--
---[[
-    Returns   : userdata<XPLMNavRef>
+---@class _G
+--- This routine returns the index of the entry the pilot is viewing.
+---
+---@field XPLMGetDisplayedFMSEntry fun(): integer
 
-    Parameters:
-     inType                                 (XPLMNavType)
+---@class _G
+--- This routine returns the index of the entry the FMS is flying to.
+---
+---@field XPLMGetDestinationFMSEntry fun(): integer
 
-]]--
+---@class _G
+--- This routine changes which entry the FMS is showing to the index specified.
+---
+---@field XPLMSetDisplayedFMSEntry fun(inIndex: integer)
 
---[[
-   XLuaFindNavAid
-   
-   This routine provides a number of searching capabilities for the nav
-   database. XPLMFindNavAid will search through every navaid whose type is
-   within inType (multiple types may be added together) and return any navaids
-   found based on the following rules:
-   
-   * If inLat and inLon are not NULL, the navaid nearest to that lat/lon will
-     be returned, otherwise the last navaid found will be returned.
-   
-   * If inFrequency is not NULL, then any navaids considered must match this
-     frequency.  Note that this will screen out radio beacons that do not have
-     frequency data published (like inner markers) but not fixes and airports.
-   
-   * If inNameFragment is not NULL, only navaids that contain the fragment in
-     their name will be returned.
-   
-   * If inIDFragment is not NULL, only navaids that contain the fragment in
-     their IDs will be returned.
-   
-   This routine provides a simple way to do a number of useful searches:
-   * Find the nearest navaid on this frequency.
-   * Find the nearest airport.
-   * Find the VOR whose ID is "BOS".
-   * Find the nearest airport whose name contains "Chicago".
-]]--
---[[
-    Returns   : userdata<XPLMNavRef>
+---@class _G
+--- This routine changes which entry the FMS is flying the aircraft toward. The track is from the n-1'th point to the n'th point.
+---
+---@field XPLMSetDestinationFMSEntry fun(inIndex: integer)
 
-    Parameters:
-     inNameFragment                         (string)
-     inIDFragment                           (string)
-     inLat                                  (number)
-     inLon                                  (number)
-     inFrequency                            (integer)
-     inType                                 (XPLMNavType)
+---@class _G
+--- This routine returns information about a given FMS entry. If the entry is an airport
+--- or navaid, a reference to a nav entry can be returned allowing you to find additional
+--- information (such as a frequency, ILS heading, name, etc.). Note that this reference
+--- can be XPLM_NAV_NOT_FOUND until the information has been looked up asynchronously,
+--- so after flightplan changes, it might take up to a second for this field to become
+--- populated. The other information is available immediately.
+--- For a lat/lon entry, the lat/lon is returned by this routine
+--- but the navaid cannot be looked up (and the reference will be XPLM_NAV_NOT_FOUND).
+--- FMS name entry buffers should be at least 256 chars in length.
+---
+--- WARNING: Due to a bug in X-Plane prior to 11.31, the navaid reference will not be set to
+--- XPLM_NAV_NOT_FOUND while no data is available, and instead just remain the value of the
+--- variable that you passed the pointer to. Therefore, always initialize the variable
+--- to XPLM_NAV_NOT_FOUND before passing the pointer to this function.
+---
+---@field XPLMGetFMSEntryInfo fun(inIndex: integer): { outType: XPLMNavType, outID: string[], outRef: XPLMNavRef, outAltitude: userdata, outLat: userdata, outLon: userdata }
 
-]]--
+---@class _G
+--- This routine changes an entry in the FMS to have the destination navaid passed
+--- in and the altitude specified.  Use this only for airports, fixes, and radio-beacon
+--- navaids.  Currently of radio beacons, the FMS can only support VORs and NDBs.
+--- Use the routines below to clear or fly to a lat/lon.
+---
+---@field XPLMSetFMSEntryInfo fun(inIndex: integer, inRef: XPLMNavRef, inAltitudeFt: integer)
 
---[[
-   XLuaGetNavAidInfo
-   
-   This routine returns information about a navaid.  Any non-null field is
-   filled out with information if it is available.
-   
-   Frequencies are in the nav.dat convention as described in the X-Plane nav
-   database FAQ: NDB frequencies are exact, all others are multiplied by 100.
-   
-   The buffer for IDs should be at least 6 chars and the buffer for names
-   should be at least 41 chars, but since these values are likely to go up, I
-   recommend passing at least 32 chars for IDs and 256 chars for names when
-   possible.
-   
-   The outReg parameter tells if the navaid is within the local "region" of
-   loaded DSFs.  (This information may not be particularly useful to plugins.)
-   The parameter is a single byte value 1 for true or 0 for false, not a C
-   string.
-]]--
---[[
-    Returns   : Table {
-          ["outType"]                       (integer),
-          ["outLatitude"]                   (number),
-          ["outLongitude"]                  (number),
-          ["outHeight"]                     (number),
-          ["outFrequency"]                  (integer),
-          ["outHeading"]                    (number),
-          ["outID"]                         (array[32] of string),
-          ["outName"]                       (array[256] of string),
-          ["outReg"]                        (array[1] of string)
-    }
+---@class _G
+--- This routine changes the entry in the FMS to a lat/lon entry with the given
+--- coordinates.
+---
+---@field XPLMSetFMSEntryLatLon fun(inIndex: integer, inLat: number, inLon: number, inAltitudeFt: integer)
 
-    Parameters:
-     inRef                                  (XPLMNavRef)
-
-]]--
-
---[[
-   XLuaCountFMSEntries
-   
-   This routine returns the number of entries in the FMS.
-]]--
---[[
-    Returns   : integer
-
-    Parameters:
-      None.
-]]--
-
---[[
-   XLuaGetDisplayedFMSEntry
-   
-   This routine returns the index of the entry the pilot is viewing.
-]]--
---[[
-    Returns   : integer
-
-    Parameters:
-      None.
-]]--
-
---[[
-   XLuaGetDestinationFMSEntry
-   
-   This routine returns the index of the entry the FMS is flying to.
-]]--
---[[
-    Returns   : integer
-
-    Parameters:
-      None.
-]]--
-
---[[
-   XLuaSetDisplayedFMSEntry
-   
-   This routine changes which entry the FMS is showing to the index specified.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inIndex                                (integer)
-
-]]--
-
---[[
-   XLuaSetDestinationFMSEntry
-   
-   This routine changes which entry the FMS is flying the aircraft toward. The
-   track is from the n-1'th point to the n'th point. 
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inIndex                                (integer)
-
-]]--
-
---[[
-   XLuaGetFMSEntryInfo
-   
-   This routine returns information about a given FMS entry. If the entry is
-   an airport or navaid, a reference to a nav entry can be returned allowing
-   you to find additional information (such as a frequency, ILS heading, name,
-   etc.). Note that this reference can be XPLM_NAV_NOT_FOUND until the
-   information has been looked up asynchronously, so after flightplan changes,
-   it might take up to a second for this field to become populated. The other
-   information is available immediately. For a lat/lon entry, the lat/lon is
-   returned by this routine but the navaid cannot be looked up (and the
-   reference will be XPLM_NAV_NOT_FOUND). FMS name entry buffers should be at
-   least 256 chars in length.
-   
-   WARNING: Due to a bug in X-Plane prior to 11.31, the navaid reference will
-   not be set to XPLM_NAV_NOT_FOUND while no data is available, and instead
-   just remain the value of the variable that you passed the pointer to.
-   Therefore, always initialize the variable to XPLM_NAV_NOT_FOUND before
-   passing the pointer to this function.
-]]--
---[[
-    Returns   : Table {
-          ["outType"]                       (integer),
-          ["outID"]                         (array[256] of string),
-          ["outRef"]                        (XPLMNavRef),
-          ["outAltitude"]                   (integer),
-          ["outLat"]                        (number),
-          ["outLon"]                        (number)
-    }
-
-    Parameters:
-     inIndex                                (integer)
-
-]]--
-
---[[
-   XLuaSetFMSEntryInfo
-   
-   This routine changes an entry in the FMS to have the destination navaid
-   passed in and the altitude specified.  Use this only for airports, fixes,
-   and radio-beacon navaids.  Currently of radio beacons, the FMS can only
-   support VORs and NDBs. Use the routines below to clear or fly to a lat/lon.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inIndex                                (integer)
-     inRef                                  (XPLMNavRef)
-     inAltitudeFt                           (integer)
-
-]]--
-
---[[
-   XLuaSetFMSEntryLatLon
-   
-   This routine changes the entry in the FMS to a lat/lon entry with the given
-   coordinates.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inIndex                                (integer)
-     inLat                                  (number)
-     inLon                                  (number)
-     inAltitudeFt                           (integer)
-
-]]--
-
---[[
-   XLuaClearFMSEntry
-   
-   This routine clears the given entry, potentially shortening the flight
-   plan.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inIndex                                (integer)
-
-]]--
+---@class _G
+--- This routine clears the given entry, potentially shortening the flight plan.
+---
+---@field XPLMClearFMSEntry fun(inIndex: integer)
 
 --[[
 These enumerations defines the flightplan you are accesing using the FMSFlightPlan functions.
@@ -342,7 +207,8 @@ An FMS has an active and a temporary flightplan.
 If you are trying to access a flightplan that doesn't exist in your aircraft, e.g. asking a GPS for a temp flightplan, FMSFlighPlan functions have no effect and will return no information.
 ]]--
 
-XPLMNavFlightPlan = {
+---@enum XPLMNavFlightPlan
+local XPLMNavFlightPlan = {
     xplm_Fpl_Pilot_Primary                   = 0,
     xplm_Fpl_CoPilot_Primary                 = 1,
     xplm_Fpl_Pilot_Approach                  = 2,
@@ -350,239 +216,95 @@ XPLMNavFlightPlan = {
     xplm_Fpl_Pilot_Temporary                 = 4,
     xplm_Fpl_CoPilot_Temporary               = 5,
 }
+---@class _G
+---@field XPLMNavFlightPlan XPLMNavFlightPlan
 
---[[
-   XLuaCountFMSFlightPlanEntries
-   
-   This routine returns the number of entries in the FMS.
-]]--
---[[
-    Returns   : integer
+---@class _G
+--- This routine returns the number of entries in the FMS.
+---
+---@field XPLMCountFMSFlightPlanEntries fun(inFlightPlan: XPLMNavFlightPlan): integer
 
-    Parameters:
-     inFlightPlan                           (XPLMNavFlightPlan)
+---@class _G
+--- This routine returns the index of the entry the pilot is viewing.
+---
+---@field XPLMGetDisplayedFMSFlightPlanEntry fun(inFlightPlan: XPLMNavFlightPlan): integer
 
-]]--
+---@class _G
+--- This routine returns the index of the entry the FMS is flying to.
+---
+---@field XPLMGetDestinationFMSFlightPlanEntry fun(inFlightPlan: XPLMNavFlightPlan): integer
 
---[[
-   XLuaGetDisplayedFMSFlightPlanEntry
-   
-   This routine returns the index of the entry the pilot is viewing.
-]]--
---[[
-    Returns   : integer
+---@class _G
+--- This routine changes which entry the FMS is showing to the index specified.
+---
+---@field XPLMSetDisplayedFMSFlightPlanEntry fun(inFlightPlan: XPLMNavFlightPlan, inIndex: integer)
 
-    Parameters:
-     inFlightPlan                           (XPLMNavFlightPlan)
+---@class _G
+--- This routine changes which entry the FMS is flying the aircraft toward. The track is from the n-1'th point to the n'th point.
+---
+---@field XPLMSetDestinationFMSFlightPlanEntry fun(inFlightPlan: XPLMNavFlightPlan, inIndex: integer)
 
-]]--
+---@class _G
+--- This routine changes which entry the FMS is flying the aircraft toward. The track is from the current position of the aircraft directly to the n'th point, ignoring the point before it.
+---
+---@field XPLMSetDirectToFMSFlightPlanEntry fun(inFlightPlan: XPLMNavFlightPlan, inIndex: integer)
 
---[[
-   XLuaGetDestinationFMSFlightPlanEntry
-   
-   This routine returns the index of the entry the FMS is flying to.
-]]--
---[[
-    Returns   : integer
+---@class _G
+--- This routine returns information about a given FMS entry. If the entry is an airport
+--- or navaid, a reference to a nav entry can be returned allowing you to find additional
+--- information (such as a frequency, ILS heading, name, etc.). Note that this reference
+--- can be XPLM_NAV_NOT_FOUND until the information has been looked up asynchronously,
+--- so after flightplan changes, it might take up to a second for this field to become
+--- populated. The other information is available immediately.
+--- For a lat/lon entry, the lat/lon is returned by this routine
+--- but the navaid cannot be looked up (and the reference will be XPLM_NAV_NOT_FOUND).
+--- FMS name entry buffers should be at least 256 chars in length.
+---
+--- WARNING: Due to a bug in X-Plane prior to 11.31, the navaid reference will not be set to
+--- XPLM_NAV_NOT_FOUND while no data is available, and instead just remain the value of the
+--- variable that you passed the pointer to. Therefore, always initialize the variable
+--- to XPLM_NAV_NOT_FOUND before passing the pointer to this function.
+---
+---@field XPLMGetFMSFlightPlanEntryInfo fun(inFlightPlan: XPLMNavFlightPlan, inIndex: integer): { outType: XPLMNavType, outID: string[], outRef: XPLMNavRef, outAltitude: userdata, outLat: userdata, outLon: userdata }
 
-    Parameters:
-     inFlightPlan                           (XPLMNavFlightPlan)
+---@class _G
+--- This routine changes an entry in the FMS to have the destination navaid passed
+--- in and the altitude specified.  Use this only for airports, fixes, and radio-beacon
+--- navaids.  Currently of radio beacons, the FMS can only support VORs, NDBs and TACANs.
+--- Use the routines below to clear or fly to a lat/lon.
+---
+---@field XPLMSetFMSFlightPlanEntryInfo fun(inFlightPlan: XPLMNavFlightPlan, inIndex: integer, inRef: XPLMNavRef, inAltitudeFt: integer)
 
-]]--
+---@class _G
+--- This routine changes the entry in the FMS to a lat/lon entry with the given
+--- coordinates.
+---
+---@field XPLMSetFMSFlightPlanEntryLatLon fun(inFlightPlan: XPLMNavFlightPlan, inIndex: integer, inLat: number, inLon: number, inAltitudeFt: integer)
 
---[[
-   XLuaSetDisplayedFMSFlightPlanEntry
-   
-   This routine changes which entry the FMS is showing to the index specified.
-]]--
---[[
-    Returns   : Nothing.
+---@class _G
+--- This routine changes the entry in the FMS to a lat/lon entry with the given
+--- coordinates. You can specify the display ID of the waypoint.
+---
+---@field XPLMSetFMSFlightPlanEntryLatLonWithId fun(inFlightPlan: XPLMNavFlightPlan, inIndex: integer, inLat: number, inLon: number, inAltitudeFt: integer, inId: string, inIdLength: integer)
 
-    Parameters:
-     inFlightPlan                           (XPLMNavFlightPlan)
-     inIndex                                (integer)
+---@class _G
+--- This routine clears the given entry, potentially shortening the flight plan.
+---
+---@field XPLMClearFMSFlightPlanEntry fun(inFlightPlan: XPLMNavFlightPlan, inIndex: integer)
 
-]]--
+---@class _G
+--- Loads an X-Plane 11 and later formatted flightplan from the buffer into the FMS or GPS, including instrument procedures.
+--- Use device index 0 for the pilot-side and device index 1 for the co-pilot side unit.
+---
+---@field XPLMLoadFMSFlightPlan fun(inDevice: integer, inBuffer: string, inBufferLen: integer)
 
---[[
-   XLuaSetDestinationFMSFlightPlanEntry
-   
-   This routine changes which entry the FMS is flying the aircraft toward. The
-   track is from the n-1'th point to the n'th point.
-]]--
---[[
-    Returns   : Nothing.
+---@class _G
+--- This routine returns the type of the currently selected
+--- GPS destination, one of fix, airport, VOR or NDB.
+---
+---@field XPLMGetGPSDestinationType fun(): XPLMNavType
 
-    Parameters:
-     inFlightPlan                           (XPLMNavFlightPlan)
-     inIndex                                (integer)
-
-]]--
-
---[[
-   XLuaSetDirectToFMSFlightPlanEntry
-   
-   This routine changes which entry the FMS is flying the aircraft toward. The
-   track is from the current position of the aircraft directly to the n'th
-   point, ignoring the point before it.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inFlightPlan                           (XPLMNavFlightPlan)
-     inIndex                                (integer)
-
-]]--
-
---[[
-   XLuaGetFMSFlightPlanEntryInfo
-   
-   This routine returns information about a given FMS entry. If the entry is
-   an airport or navaid, a reference to a nav entry can be returned allowing
-   you to find additional information (such as a frequency, ILS heading, name,
-   etc.). Note that this reference can be XPLM_NAV_NOT_FOUND until the
-   information has been looked up asynchronously, so after flightplan changes,
-   it might take up to a second for this field to become populated. The other
-   information is available immediately. For a lat/lon entry, the lat/lon is
-   returned by this routine but the navaid cannot be looked up (and the
-   reference will be XPLM_NAV_NOT_FOUND). FMS name entry buffers should be at
-   least 256 chars in length.
-   
-   WARNING: Due to a bug in X-Plane prior to 11.31, the navaid reference will
-   not be set to XPLM_NAV_NOT_FOUND while no data is available, and instead
-   just remain the value of the variable that you passed the pointer to.
-   Therefore, always initialize the variable to XPLM_NAV_NOT_FOUND before
-   passing the pointer to this function.
-]]--
---[[
-    Returns   : Table {
-          ["outType"]                       (integer),
-          ["outID"]                         (array[256] of string),
-          ["outRef"]                        (XPLMNavRef),
-          ["outAltitude"]                   (integer),
-          ["outLat"]                        (number),
-          ["outLon"]                        (number)
-    }
-
-    Parameters:
-     inFlightPlan                           (XPLMNavFlightPlan)
-     inIndex                                (integer)
-
-]]--
-
---[[
-   XLuaSetFMSFlightPlanEntryInfo
-   
-   This routine changes an entry in the FMS to have the destination navaid
-   passed in and the altitude specified.  Use this only for airports, fixes,
-   and radio-beacon navaids.  Currently of radio beacons, the FMS can only
-   support VORs, NDBs and TACANs. Use the routines below to clear or fly to a
-   lat/lon.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inFlightPlan                           (XPLMNavFlightPlan)
-     inIndex                                (integer)
-     inRef                                  (XPLMNavRef)
-     inAltitudeFt                           (integer)
-
-]]--
-
---[[
-   XLuaSetFMSFlightPlanEntryLatLon
-   
-   This routine changes the entry in the FMS to a lat/lon entry with the given
-   coordinates.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inFlightPlan                           (XPLMNavFlightPlan)
-     inIndex                                (integer)
-     inLat                                  (number)
-     inLon                                  (number)
-     inAltitudeFt                           (integer)
-
-]]--
-
---[[
-   XLuaSetFMSFlightPlanEntryLatLonWithId
-   
-   This routine changes the entry in the FMS to a lat/lon entry with the given
-   coordinates. You can specify the display ID of the waypoint.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inFlightPlan                           (XPLMNavFlightPlan)
-     inIndex                                (integer)
-     inLat                                  (number)
-     inLon                                  (number)
-     inAltitudeFt                           (integer)
-     inId                                   (string)
-     inIdLength                             (integer)
-
-]]--
-
---[[
-   XLuaClearFMSFlightPlanEntry
-   
-   This routine clears the given entry, potentially shortening the flight
-   plan.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inFlightPlan                           (XPLMNavFlightPlan)
-     inIndex                                (integer)
-
-]]--
-
---[[
-   XLuaLoadFMSFlightPlan
-   
-   Loads an X-Plane 11 and later formatted flightplan from the buffer into the
-   FMS or GPS, including instrument procedures. Use device index 0 for the
-   pilot-side and device index 1 for the co-pilot side unit.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inDevice                               (integer)
-     inBuffer                               (string)
-     inBufferLen                            (integer)
-
-]]--
-
---[[
-   XLuaGetGPSDestinationType
-   
-   This routine returns the type of the currently selected GPS destination,
-   one of fix, airport, VOR or NDB.
-]]--
---[[
-    Returns   : integer
-
-    Parameters:
-      None.
-]]--
-
---[[
-   XLuaGetGPSDestination
-   
-   This routine returns the current GPS destination.
-]]--
---[[
-    Returns   : userdata<XPLMNavRef>
-
-    Parameters:
-      None.
-]]--
+---@class _G
+--- This routine returns the current GPS destination.
+---@field XPLMGetGPSDestination fun(): XPLMNavRef
 

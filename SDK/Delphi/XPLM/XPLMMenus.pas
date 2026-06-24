@@ -37,6 +37,21 @@ INTERFACE
 USES
     XPLMDefs, XPLMUtilities;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * XPLM MENUS
  ___________________________________________________________________________}
@@ -67,7 +82,7 @@ TYPE
     
     This is a unique ID for each menu you create.
    }
-   XPLMMenuID = Pvoid *;
+   XPLMMenuID = pointer;
    PXPLMMenuID = ^XPLMMenuID;
 
    {
@@ -78,8 +93,8 @@ TYPE
     the item was created).
    }
      XPLMMenuHandler_f = PROCEDURE(
-                                    inMenuRef           : Pvoid*;    { Can be nil }
-                                    inItemRef           : Pvoid*); cdecl;    { Can be nil }
+                                    inMenuRef           : pointer;    { Can be nil }
+                                    inItemRef           : pointer); cdecl;    { Can be nil }
 
    {
     XPLMFindPluginsMenu
@@ -88,7 +103,7 @@ TYPE
     at startup.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   FUNCTION XPLMFindPluginsMenu: ;
+   FUNCTION XPLMFindPluginsMenu: XPLMMenuID;
     cdecl; external XPLM_DLL;
 
 {$IFDEF XPLM300}
@@ -107,7 +122,7 @@ TYPE
     attempts to add menu items to it will fail.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   FUNCTION XPLMFindAircraftMenu: ;
+   FUNCTION XPLMFindAircraftMenu: XPLMMenuID;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM300}
 
@@ -127,11 +142,11 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateMenu(
-                                        inName              : Pchar *;
-                                   VAR  inParentMenu        : ;
+                                        inName              : XPLMString;
+                                        inParentMenu        : XPLMMenuID;
                                         inParentItem        : Integer;
-                                        inHandler           : PXPLMMenuHandler_f;    { Can be nil }
-                                        inMenuRef           : Pvoid*) : ;    { Can be nil }
+                                        inHandler           : XPLMMenuHandler_f;    { Can be nil }
+                                        inMenuRef           : pointer) : XPLMMenuID;    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -142,7 +157,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDestroyMenu(
-                                   VAR  inMenuID            : );
+                                        inMenuID            : XPLMMenuID);
     cdecl; external XPLM_DLL;
 
    {
@@ -153,7 +168,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMClearAllMenuItems(
-                                   VAR  inMenuID            : );
+                                        inMenuID            : XPLMMenuID);
     cdecl; external XPLM_DLL;
 
    {
@@ -176,9 +191,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMAppendMenuItem(
-                                   VAR  inMenu              : ;
-                                        inItemName          : Pchar *;
-                                        inItemRef           : Pvoid*;    { Can be nil }
+                                        inMenu              : XPLMMenuID;
+                                        inItemName          : XPLMString;
+                                        inItemRef           : pointer;    { Can be nil }
                                         inDeprecatedAndIgnored: Integer) : Integer;
     cdecl; external XPLM_DLL;
 
@@ -200,8 +215,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMAppendMenuItemWithCommand(
-                                   VAR  inMenu              : ;
-                                        inItemName          : Pchar *;
+                                        inMenu              : XPLMMenuID;
+                                        inItemName          : XPLMString;
                                         inCommandToExecute  : XPLMCommandRef) : Integer;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM300}
@@ -213,7 +228,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMAppendMenuSeparator(
-                                   VAR  inMenu              : );
+                                        inMenu              : XPLMMenuID);
     cdecl; external XPLM_DLL;
 
    {
@@ -224,9 +239,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSetMenuItemName(
-                                   VAR  inMenu              : ;
+                                        inMenu              : XPLMMenuID;
                                         inIndex             : Integer;
-                                        inItemName          : Pchar *;
+                                        inItemName          : XPLMString;
                                         inDeprecatedAndIgnored: Integer);
     cdecl; external XPLM_DLL;
 
@@ -237,7 +252,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMCheckMenuItem(
-                                   VAR  inMenu              : ;
+                                        inMenu              : XPLMMenuID;
                                         index               : Integer;
                                         inCheck             : XPLMMenuCheck);
     cdecl; external XPLM_DLL;
@@ -250,9 +265,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMCheckMenuItemState(
-                                   VAR  inMenu              : ;
+                                        inMenu              : XPLMMenuID;
                                         index               : Integer;
-                                        outCheck            : PXPLMMenuCheck *);
+                                        outCheck            : PXPLMMenuCheck);
     cdecl; external XPLM_DLL;
 
    {
@@ -262,7 +277,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMEnableMenuItem(
-                                   VAR  inMenu              : ;
+                                        inMenu              : XPLMMenuID;
                                         index               : Integer;
                                         enabled             : Integer);
     cdecl; external XPLM_DLL;
@@ -276,7 +291,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMRemoveMenuItem(
-                                   VAR  inMenu              : ;
+                                        inMenu              : XPLMMenuID;
                                         inIndex             : Integer);
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM210}

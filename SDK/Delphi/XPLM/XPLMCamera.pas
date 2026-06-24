@@ -42,6 +42,21 @@ INTERFACE
 USES
     XPLMDefs;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * CAMERA CONTROL
  ___________________________________________________________________________}
@@ -99,9 +114,9 @@ TYPE
     called with inIsLosingControl set to true and ioCameraPosition NULL.
    }
      XPLMCameraControl_f = FUNCTION(
-                                    outCameraPosition   : PXPLMCameraPosition_t *;    { Can be nil }
+                                    outCameraPosition   : PXPLMCameraPosition_t;    { Can be nil }
                                     inIsLosingControl   : Integer;
-                                    inRefcon            : Pvoid*) : Integer; cdecl;    { Can be nil }
+                                    inRefcon            : pointer) : Integer; cdecl;    { Can be nil }
 
    {
     XPLMControlCamera
@@ -113,8 +128,8 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMControlCamera(
                                         inHowLong           : XPLMCameraControlDuration;
-                                        inControlFunc       : PXPLMCameraControl_f;
-                                        inRefcon            : Pvoid*);    { Can be nil }
+                                        inControlFunc       : XPLMCameraControl_f;
+                                        inRefcon            : pointer);    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -140,7 +155,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMIsCameraBeingControlled(
-                                        outCameraControlDuration: PXPLMCameraControlDuration *) : Integer;    { Can be nil }
+                                        outCameraControlDuration: PXPLMCameraControlDuration) : Integer;    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -150,7 +165,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMReadCameraPosition(
-                                        outCameraPosition   : PXPLMCameraPosition_t *);
+                                        outCameraPosition   : PXPLMCameraPosition_t);
     cdecl; external XPLM_DLL;
 
 {___________________________________________________________________________

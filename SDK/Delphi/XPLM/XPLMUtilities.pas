@@ -9,6 +9,21 @@ INTERFACE
 USES
     XPLMDefs;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * FILE UTILITIES
  ___________________________________________________________________________}
@@ -85,7 +100,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMGetSystemPath(
-                                        outSystemPath[512]  : XPLMString);
+                                        outSystemPath       : XPLMString);
     cdecl; external XPLM_DLL;
 
    {
@@ -101,7 +116,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMGetPrefsPath(
-                                        outPrefsPath[512]   : XPLMString);
+                                        outPrefsPath        : XPLMString);
     cdecl; external XPLM_DLL;
 
    {
@@ -113,7 +128,7 @@ TYPE
     platform. The character returned will reflect the current file path mode.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   FUNCTION XPLMGetDirectorySeparator: Pchar *;
+   FUNCTION XPLMGetDirectorySeparator: XPLMString;
     cdecl; external XPLM_DLL;
 
    {
@@ -127,7 +142,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMExtractFileAndPath(
-                                        inFullPath          : Pchar *) : Pchar *;
+                                        inFullPath          : XPLMString) : XPLMString;
     cdecl; external XPLM_DLL;
 
    {
@@ -174,14 +189,14 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetDirectoryContents(
-                                        inDirectoryPath     : Pchar *;
+                                        inDirectoryPath     : XPLMString;
                                         inFirstReturn       : Integer;
-                                        outFileNames        : Pchar *;
+                                        outFileNames        : XPLMString;
                                         inFileNameBufSize   : Integer;
-                                        outIndices[]        : Pchar *;    { Can be nil }
+                                        outIndices          : XPLMString;    { Can be nil }
                                         inIndexCount        : Integer;
-                                        outTotalFiles       : Pint *;    { Can be nil }
-                                        outReturnedFiles    : Pint *) : Integer;    { Can be nil }
+                                        outTotalFiles       : PInteger;    { Can be nil }
+                                        outReturnedFiles    : PInteger) : Integer;    { Can be nil }
     cdecl; external XPLM_DLL;
 
 {$IFDEF XPLM200}
@@ -195,7 +210,7 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMLoadDataFile(
                                         inFileType          : XPLMDataFileType;
-                                        inFilePath          : Pchar *) : Integer;    { Can be nil }
+                                        inFilePath          : XPLMString) : Integer;    { Can be nil }
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM200}
 
@@ -209,7 +224,7 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMSaveDataFile(
                                         inFileType          : XPLMDataFileType;
-                                        inFilePath          : Pchar *) : Integer;
+                                        inFilePath          : XPLMString) : Integer;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM200}
 
@@ -234,7 +249,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMReturnString(
-                                        inString            : Pchar *) : Pchar *;
+                                        inString            : XPLMString) : XPLMString;
     cdecl; external XPLM_DLL;
 
    {
@@ -356,7 +371,7 @@ TYPE
    }
 TYPE
      XPLMError_f = PROCEDURE(
-                                    inMessage           : Pchar *); cdecl;
+                                    inMessage           : XPLMString); cdecl;
 {$ENDIF XPLM200}
 
 {$IFDEF XPLM_DEPRECATED}
@@ -390,9 +405,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMGetVersions(
-                                        outXPlaneVersion    : Pint *;
-                                        outXPLMVersion      : Pint *;
-                                        outHostID           : PXPLMHostApplicationID *);
+                                        outXPlaneVersion    : PInteger;
+                                        outXPLMVersion      : PInteger;
+                                        outHostID           : PXPLMHostApplicationID);
     cdecl; external XPLM_DLL;
 
    {
@@ -434,7 +449,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMFindSymbol(
-                                        inString            : Pchar *) : Pvoid *;
+                                        inString            : XPLMString) : pointer;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM200}
 
@@ -465,7 +480,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSetErrorCallback(
-                                        inCallback          : PXPLMError_f);
+                                        inCallback          : XPLMError_f);
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM200}
 
@@ -484,7 +499,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDebugString(
-                                        inString            : Pchar *);
+                                        inString            : XPLMString);
     cdecl; external XPLM_DLL;
 
    {
@@ -497,7 +512,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSpeakString(
-                                        inString            : Pchar *);
+                                        inString            : XPLMString);
     cdecl; external XPLM_DLL;
 
    {
@@ -510,7 +525,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetVirtualKeyDescription(
-                                        inVirtualKey        : XPLMChar) : Pchar *;
+                                        inVirtualKey        : XPLMChar) : XPLMString;
     cdecl; external XPLM_DLL;
 
    {
@@ -602,7 +617,7 @@ TYPE
     plugins may participate in a command's execution, the command does not go
     away if the plugin that created it is unloaded.
    }
-   XPLMCommandRef = Pvoid *;
+   XPLMCommandRef = pointer;
    PXPLMCommandRef = ^XPLMCommandRef;
 
    {
@@ -618,9 +633,9 @@ TYPE
     potentially bypassing X-Plane code.
    }
      XPLMCommandCallback_f = FUNCTION(
-                               VAR  inCommand           : ;
+                                    inCommand           : XPLMCommandRef;
                                     inPhase             : XPLMCommandPhase;
-                                    inRefcon            : Pvoid*) : Integer; cdecl;    { Can be nil }
+                                    inRefcon            : pointer) : Integer; cdecl;    { Can be nil }
 
    {
     XPLMFindCommand
@@ -630,7 +645,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMFindCommand(
-                                        inName              : Pchar *) : ;
+                                        inName              : XPLMString) : XPLMCommandRef;
     cdecl; external XPLM_DLL;
 
    {
@@ -643,7 +658,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMCommandBegin(
-                                   VAR  inCommand           : );
+                                        inCommand           : XPLMCommandRef);
     cdecl; external XPLM_DLL;
 
    {
@@ -655,7 +670,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMCommandEnd(
-                                   VAR  inCommand           : );
+                                        inCommand           : XPLMCommandRef);
     cdecl; external XPLM_DLL;
 
    {
@@ -667,7 +682,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMCommandOnce(
-                                   VAR  inCommand           : );
+                                        inCommand           : XPLMCommandRef);
     cdecl; external XPLM_DLL;
 
    {
@@ -680,8 +695,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateCommand(
-                                        inName              : Pchar *;
-                                        inDescription       : Pchar *) : ;
+                                        inName              : XPLMString;
+                                        inDescription       : XPLMString) : XPLMCommandRef;
     cdecl; external XPLM_DLL;
 
    {
@@ -698,10 +713,10 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMRegisterCommandHandler(
-                                   VAR  inComand            : ;
-                                        inHandler           : PXPLMCommandCallback_f;
+                                        inComand            : XPLMCommandRef;
+                                        inHandler           : XPLMCommandCallback_f;
                                         inBefore            : Integer;
-                                        inRefcon            : Pvoid*);    { Can be nil }
+                                        inRefcon            : pointer);    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -712,10 +727,10 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMUnregisterCommandHandler(
-                                   VAR  inComand            : ;
-                                        inHandler           : PXPLMCommandCallback_f;
+                                        inComand            : XPLMCommandRef;
+                                        inHandler           : XPLMCommandCallback_f;
                                         inBefore            : Integer;
-                                        inRefcon            : Pvoid*);    { Can be nil }
+                                        inRefcon            : pointer);    { Can be nil }
     cdecl; external XPLM_DLL;
 
 {$ENDIF XPLM200}

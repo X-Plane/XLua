@@ -18,6 +18,21 @@ INTERFACE
 }
 
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {$IFDEF LINUX}
    {$DEFINE KYLIX}
 {$ENDIF}
@@ -281,7 +296,7 @@ CONST
 TYPE
    XPLMFixedString150_t = RECORD
      { The size of the struct.                                                    }
-     buffer[150]              : XPLMString;
+     buffer                   : array[0..150 - 1] of XPLMChar;
    END;
    PXPLMFixedString150_t = ^XPLMFixedString150_t;
 

@@ -1,4 +1,9 @@
--- Use require('XPLMInstance') to access these functions.
+---@meta XPLMInstance
+
+-- The functions, typedefs, enums, and defines in this file are
+-- installed into the Lua VM at startup by the host's add_xplm_to_interp()
+-- call. Scripts do NOT need to require('XPLMInstance') to access them; this file
+-- exists solely as type metadata for lua-language-server / EmmyLua.
 
 --[[
    Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
@@ -40,120 +45,60 @@
 require("XPLMDefs")
 require("XPLMScenery")
 
---[[
-   XLuaCreateInstance
-   
-   XPLMCreateInstance creates a new instance, managed by your plug-in, and
-   returns a handle to the instance. A few important requirements:
-   
-   * The object passed in must be fully loaded and returned from the XPLM
-     before you can create your instance; you cannot pass a null obj ref, nor
-     can you change the ref later.
-   
-   * If you use any custom datarefs in your object, they must be registered
-     before the object is loaded. This is true even if their data will be
-     provided via the instance dataref list.
-   
-   * The instance dataref array must be a valid pointer to a null-terminated
-     array.  That is, if you do not want any datarefs, you must pass a pointer
-     to a one-element array containing a null item.  You cannot pass null for
-     the array itself.
-]]--
---[[
-    Returns   : userdata<XPLMInstanceRef>
+--- An opaque handle to an instance.
+---@class XPLMInstanceRef : userdata
+---@field private __XPLMInstanceRef_marker any
 
-    Parameters:
-     obj                                    (XPLMObjectRef)
-     datarefs                               (array<string|char const*>[])
+---@class _G
+--- XPLMCreateInstance creates a new instance, managed by your plug-in, and returns a handle to the instance. A few important requirements:
+---
+--- * The object passed in must be fully loaded and returned from the XPLM before you can create your instance; you cannot pass a null obj ref,
+---   nor can you change the ref later.
+---
+--- * If you use any custom datarefs in your object, they must be registered before the object is loaded. This is true even if their data will be
+---   provided via the instance dataref list.
+---
+--- * The instance dataref array must be a valid pointer to a null-terminated array.  That is, if you do not want any
+---   datarefs, you must pass a pointer to a one-element array containing a null item.  You cannot pass null for the array itself.
+---
+---@field XPLMCreateInstance fun(obj: XPLMObjectRef, datarefs: string[]): XPLMInstanceRef
 
-]]--
+---@class _G
+--- XPLMInstanceSetAutoShift tells X-Plane to move the location of your instance every time the sim\'s local coordinate sytem changes, so that
+--- a static instance does not have to be moved. Without this, a plugin is responsible for updating an instance's local position when the
+--- coordinate system shifts. Use this for static instances that you would not otherwise have to move.
+---
+---@field XPLMInstanceSetAutoShift fun(instance: XPLMInstanceRef)
 
---[[
-   XLuaInstanceSetAutoShift
-   
-   XPLMInstanceSetAutoShift tells X-Plane to move the location of your
-   instance every time the sim\'s local coordinate sytem changes, so that a
-   static instance does not have to be moved. Without this, a plugin is
-   responsible for updating an instance's local position when the  coordinate
-   system shifts. Use this for static instances that you would not otherwise
-   have to move.
-]]--
---[[
-    Returns   : Nothing.
+---@class _G
+--- XPLMDestroyInstance destroys and deallocates your instance; once called, you are still responsible for releasing the OBJ ref.
+---
+--- Tip: you can release your OBJ ref after you call XPLMCreateInstance as long as you never use it again; the instance will maintain its own
+--- reference to the OBJ and the object OBJ be deallocated when the instance is destroyed.
+---
+---@field XPLMDestroyInstance fun(instance: XPLMInstanceRef)
 
-    Parameters:
-     instance                               (XPLMInstanceRef)
+---@class _G
+--- Updates both the position of the instance and all datarefs you registered for it.  Call this from a flight loop callback or UI callback.
+---
+--- __DO_NOT__ call XPLMInstanceSetPosition from a drawing callback; the whole point of instancing is that you do not need any drawing callbacks.
+--- Setting instance data from a drawing callback may have undefined consequences, and the drawing callback hurts FPS unnecessarily.
+---
+--- The memory pointed to by the data pointer must be large enough to hold one float for every dataref you have registered, and must contain valid
+--- floating point data.
+---
+--- BUG: before X-Plane 11.50, if you have no dataref registered, you must still pass a valid pointer for data and not null.
+---
+---@field XPLMInstanceSetPosition fun(instance: XPLMInstanceRef, new_position: XPLMDrawInfo_t, data: number[])
 
-]]--
-
---[[
-   XLuaDestroyInstance
-   
-   XPLMDestroyInstance destroys and deallocates your instance; once called,
-   you are still responsible for releasing the OBJ ref.
-   
-   Tip: you can release your OBJ ref after you call XPLMCreateInstance as long
-   as you never use it again; the instance will maintain its own reference to
-   the OBJ and the object OBJ be deallocated when the instance is destroyed.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     instance                               (XPLMInstanceRef)
-
-]]--
-
---[[
-   XLuaInstanceSetPosition
-   
-   Updates both the position of the instance and all datarefs you registered
-   for it.  Call this from a flight loop callback or UI callback.
-   
-   __DO_NOT__ call XPLMInstanceSetPosition from a drawing callback; the whole
-   point of instancing is that you do not need any drawing callbacks. Setting
-   instance data from a drawing callback may have undefined consequences, and
-   the drawing callback hurts FPS unnecessarily.  
-   
-   The memory pointed to by the data pointer must be large enough to hold one
-   float for every dataref you have registered, and must contain valid
-   floating point data.
-   
-   BUG: before X-Plane 11.50, if you have no dataref registered, you must
-   still pass a valid pointer for data and not null.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     instance                               (XPLMInstanceRef)
-     new_position                           (XPLMDrawInfo_t)
-     data                                   (array<number|float>[])
-
-]]--
-
---[[
-   XLuaInstanceSetPositionDouble
-   
-   Updates both the position of the instance and all datarefs you registered
-   for it.  Call this from a flight loop callback or UI callback.
-   
-   __DO_NOT__ call XPLMInstanceSetPositionDouble from a drawing callback; the
-   whole point of instancing is that you do not need any drawing  callbacks.
-   Setting instance data from a drawing callback may have undefined
-   consequences, and the drawing callback hurts FPS unnecessarily.  
-   
-   The memory pointed to by the data pointer must be large enough to hold one
-   float for every dataref you have registered, and must contain valid
-   floating point data.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     instance                               (XPLMInstanceRef)
-     new_position                           (XPLMDrawInfoDouble_t)
-     data                                   (array<number|float>[])
-
-]]--
+---@class _G
+--- Updates both the position of the instance and all datarefs you registered for it.  Call this from a flight loop callback or UI callback.
+---
+--- __DO_NOT__ call XPLMInstanceSetPositionDouble from a drawing callback; the whole point of instancing is that you do not need any drawing
+--- callbacks. Setting instance data from a drawing callback may have undefined consequences, and the drawing callback hurts FPS unnecessarily.
+---
+--- The memory pointed to by the data pointer must be large enough to hold one float for every dataref you have registered, and must contain valid
+--- floating point data.
+---
+---@field XPLMInstanceSetPositionDouble fun(instance: XPLMInstanceRef, new_position: XPLMDrawInfoDouble_t, data: number[])
 

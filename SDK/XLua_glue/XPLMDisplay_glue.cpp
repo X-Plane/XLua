@@ -58,6 +58,16 @@ XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 XPLMWindowID* Make_XPLMWindowID(lua_State* L, XPLMWindowID const& init);
 
 
+void RegEnum_XPLMWindowContentType(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_WindowContentTypePanelGraphics");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_WindowContentTypeBrowser");
+	lua_setglobal(L, "XPLMWindowContentType");
+}
+
 void RegEnum_XPLMDeviceID(lua_State* L)
 {
 	lua_newtable(L);
@@ -532,10 +542,10 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, stackpos, "native");
+	lua_getfield(L, stackpos, "contentType");
 	if (!lua_isnil(L, -1))
 	{
-		out.native = static_cast<int>(luaL_checkinteger(L, -1));
+		out.contentType = static_cast<XPLMWindowContentType>(luaL_checkinteger(L, -1));
 	}
 	lua_pop(L, 1);
 
@@ -554,8 +564,8 @@ void XPLMCustomizeAvionics_t_to_table(lua_State* L, XPLMCustomizeAvionics_t cons
 	xlua_pushuserdata<void*>(L, src.refcon);
 	lua_settable(L, -3);
 
-	lua_pushstring(L, "native");
-	lua_pushinteger(L, src.native);
+	lua_pushstring(L, "contentType");
+	lua_pushinteger(L, src.contentType);
 	lua_settable(L, -3);
 }
 
@@ -977,10 +987,10 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, stackpos, "native");
+	lua_getfield(L, stackpos, "contentType");
 	if (!lua_isnil(L, -1))
 	{
-		out.native = static_cast<int>(luaL_checkinteger(L, -1));
+		out.contentType = static_cast<XPLMWindowContentType>(luaL_checkinteger(L, -1));
 	}
 	lua_pop(L, 1);
 
@@ -1046,8 +1056,8 @@ void XPLMCreateAvionics_t_to_table(lua_State* L, XPLMCreateAvionics_t const& src
 	xlua_pushuserdata<void*>(L, src.refcon);
 	lua_settable(L, -3);
 
-	lua_pushstring(L, "native");
-	lua_pushinteger(L, src.native);
+	lua_pushstring(L, "contentType");
+	lua_pushinteger(L, src.contentType);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "windowWithChrome");
@@ -1603,16 +1613,6 @@ void RegEnum_XPLMWindowDecoration(lua_State* L)
 	lua_pushinteger(L, 3);
 	lua_setfield(L, -2, "xplm_WindowDecorationSelfDecoratedResizable");
 	lua_setglobal(L, "XPLMWindowDecoration");
-}
-
-void RegEnum_XPLMWindowContentType(lua_State* L)
-{
-	lua_newtable(L);
-	lua_pushinteger(L, 1);
-	lua_setfield(L, -2, "xplm_WindowContentTypePanelGraphics");
-	lua_pushinteger(L, 2);
-	lua_setfield(L, -2, "xplm_WindowContentTypeBrowser");
-	lua_setglobal(L, "XPLMWindowContentType");
 }
 /*
  * XPLMCreateWindow_t

@@ -1,4 +1,9 @@
--- Use require('XPLMPlanes') to access these functions.
+---@meta XPLMPlanes
+
+-- The functions, typedefs, enums, and defines in this file are
+-- installed into the Lua VM at startup by the host's add_xplm_to_interp()
+-- call. Scripts do NOT need to require('XPLMPlanes') to access them; this file
+-- exists solely as type metadata for lua-language-server / EmmyLua.
 
 --[[
    Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
@@ -44,7 +49,8 @@ This is meant for debugging purposes only and should not be parsed. Your plugin'
 only use the result code for flow control.
 ]]--
 
-XPLMInitResult = {
+---@enum XPLMInitResult
+local XPLMInitResult = {
     -- The initialization succeeded.
     xplm_Init_Success                        = 0,
     -- The provided argument was invalid. This can be returned if the provided
@@ -71,230 +77,129 @@ XPLMInitResult = {
     -- not found at the specified airport in X-Plane's airport database.
     xplm_Init_MissingRunway                  = 6,
 }
+---@class _G
+---@field XPLMInitResult XPLMInitResult
 
---[[
-   XLuaInitFlight
-   
-   Initialize a new flight, ending th user's current flight. The flight config
-   is provided as json string. See
-   https://developer.x-plane.com/article/flight-initialization-api/ for the
-   JSON format specification. 
-   
-   Returns a XPLMInitResult enum value specifying whether the initalization
-   succeeeded (and if not, what  caused it to fail).
-]]--
---[[
-    Returns   : integer
+---@class _G
+--- Initialize a new flight, ending th user's current flight. The flight config is provided as json string.
+--- See https://developer.x-plane.com/article/flight-initialization-api/ for the JSON format specification.
+---
+--- Returns a XPLMInitResult enum value specifying whether the initalization succeeeded (and if not, what
+--- caused it to fail).
+---
+---@field XPLMInitFlight fun(inJsonData: string): XPLMInitResult
 
-    Parameters:
-     inJsonData                             (string)
+---@class _G
+--- Updates the user's 'current flight, modifying some flight parameters. The flight config is provided as
+--- a JSON string, see https://developer.x-plane.com/article/flight-initialization-api/ for the JSON format
+--- specification.
+---
+--- Returns an XPLMInitResult enum value specifying whether the update suceeeded (and if not, what caused
+--- it to fail).
+---
+---@field XPLMUpdateFlight fun(inJsonData: string): XPLMInitResult
 
-]]--
+---@class _G
+--- This routine changes the user's aircraft.  Note that this will reinitialize the user
+--- to be on the nearest airport's first runway.  Pass in a full path (hard drive and
+--- everything including the .acf extension) to the .acf file.
+---
+--- Use XPLMInitFlight for complete control over initialization.
+---
+--- **WARNING**: this API takes a full, not relative aicraft path.
+---
+---@field XPLMSetUsersAircraft fun(inAircraftPath: string)
 
---[[
-   XLuaUpdateFlight
-   
-   Updates the user's 'current flight, modifying some flight parameters. The
-   flight config is provided as a JSON string, see
-   https://developer.x-plane.com/article/flight-initialization-api/ for the
-   JSON format  specification.
-   
-   Returns an XPLMInitResult enum value specifying whether the update
-   suceeeded (and if not, what caused  it to fail).
-]]--
---[[
-    Returns   : integer
+---@class _G
+--- This routine places the user at a given airport.  Specify the airport by its X-Plane
+--- airport ID (e.g. 'KBOS').
+---
+--- Use XPLMInitFlight for complete control over initialization.
+---
+---@field XPLMPlaceUserAtAirport fun(inAirportCode: string)
 
-    Parameters:
-     inJsonData                             (string)
+---@class _G
+--- Places the user at a specific location after performing any necessary scenery loads.
+---
+--- As with in-air starts initiated from the X-Plane user interface, the aircraft will always start with
+--- its engines running, regardless of the user's preferences (i.e., regardless of what the dataref
+--- `sim/operation/prefs/startup_running` says).
+---
+--- Use XPLMInitFlight for complete control over initialization.
+---
+---@field XPLMPlaceUserAtLocation fun(latitudeDegrees: number, longitudeDegrees: number, elevationMetersMSL: number, headingDegreesTrue: number, speedMetersPerSecond: number)
 
-]]--
+---@class _G
+--- The user's aircraft is always index 0.
+---
+---@field XPLM_USER_AIRCRAFT integer
 
---[[
-   XLuaSetUsersAircraft
-   
-   This routine changes the user's aircraft.  Note that this will reinitialize
-   the user to be on the nearest airport's first runway.  Pass in a full path
-   (hard drive and everything including the .acf extension) to the .acf file.
-   
-   Use XPLMInitFlight for complete control over initialization.
-   
-   **WARNING**: this API takes a full, not relative aicraft path.
-]]--
---[[
-    Returns   : Nothing.
+---@class _G
+--- This function returns the number of aircraft X-Plane is capable of having,
+--- as well as the number of aircraft that are currently active.  These
+--- numbers count the user's aircraft.  It can also return the plugin that
+--- is currently controlling aircraft.  In X-Plane 7, this routine reflects
+--- the number of aircraft the user has enabled in the rendering options window.
+---
+---@field XPLMCountAircraft fun(): { outTotalAircraft: userdata, outActiveAircraft: userdata, outController: XPLMPluginID }
 
-    Parameters:
-     inAircraftPath                         (string)
+---@class _G
+--- This function returns the aircraft model for the Nth aircraft.  Indices
+--- are zero based, with zero being the user's aircraft.  The file name should
+--- be at least 256 chars in length; the path should be at least 512 chars
+--- in length.
+---
+---@field XPLMGetNthAircraftModel fun(inIndex: integer): { outFileName: string[], outPath: string[] }
 
-]]--
+--- Your airplanes available callback is called when another plugin gives up access to the multiplayer planes. Use this to wait for access to multiplayer.
+---@alias XPLMPlanesAvailable_f fun(inRefcon: any)
 
---[[
-   XLuaPlaceUserAtAirport
-   
-   This routine places the user at a given airport.  Specify the airport by
-   its X-Plane airport ID (e.g. 'KBOS').
-   
-   Use XPLMInitFlight for complete control over initialization.
-]]--
---[[
-    Returns   : Nothing.
+---@class _G
+--- XPLMAcquirePlanes grants your plugin exclusive access to the
+--- aircraft.  It returns true if you gain access, false if you do not.
+---
+--- inAircraft - pass in an array of pointers to strings specifying
+--- the planes you want loaded.  For any plane index you do not
+--- want loaded, pass a 0-length string.  Other strings should be
+--- full paths with the .acf extension.  NULL terminates this array,
+--- or pass NULL if there are no planes you want loaded.
+---
+--- Aircraft paths for this API are full, not relative aircraft paths.
+---
+--- If you pass in a callback and do not receive access to the planes
+--- your callback will be called when the airplanes are available.
+--- If you do receive airplane access, your callback will not be called.
+---
+---@field XPLMAcquirePlanes fun(inAircraft: string[], inCallback: XPLMPlanesAvailable_f, inRefcon: any): boolean
 
-    Parameters:
-     inAirportCode                          (string)
+---@class _G
+--- Call this function to release access to the planes.  Note that if
+--- you are disabled, access to planes is released for you and you must
+--- reacquire it.
+---
+---@field XPLMReleasePlanes fun()
 
-]]--
+---@class _G
+--- This routine sets the number of active planes.  If you pass in a number
+--- higher than the total number of planes availables, only the total number
+--- of planes available is actually used.
+---
+---@field XPLMSetActiveAircraftCount fun(inCount: integer)
 
---[[
-   XLuaPlaceUserAtLocation
-   
-   Places the user at a specific location after performing any necessary
-   scenery loads.
-   
-   As with in-air starts initiated from the X-Plane user interface, the
-   aircraft will always start with its engines running, regardless of the
-   user's preferences (i.e., regardless of what the dataref
-   `sim/operation/prefs/startup_running` says).
-   
-   Use XPLMInitFlight for complete control over initialization.
-]]--
---[[
-    Returns   : Nothing.
+---@class _G
+--- This routine loads an aircraft model.  It may only be called if you
+--- have exclusive access to the airplane APIs.  Pass in the path of the
+--- model with the .acf extension.  The index is zero based, but you
+--- may not pass in 0 (use XPLMSetUsersAircraft to load the user's aircracft).
+---
+--- This API takes a full aircraft path.
+---
+---@field XPLMSetAircraftModel fun(inIndex: integer, inAircraftPath: string)
 
-    Parameters:
-     latitudeDegrees                        (number)
-     longitudeDegrees                       (number)
-     elevationMetersMSL                     (number)
-     headingDegreesTrue                     (number)
-     speedMetersPerSecond                   (number)
-
-]]--
-
---[[
-   XLuaCountAircraft
-   
-   This function returns the number of aircraft X-Plane is capable of having,
-   as well as the number of aircraft that are currently active.  These numbers
-   count the user's aircraft.  It can also return the plugin that is currently
-   controlling aircraft.  In X-Plane 7, this routine reflects the number of
-   aircraft the user has enabled in the rendering options window.
-]]--
---[[
-    Returns   : Table {
-          ["outTotalAircraft"]              (integer),
-          ["outActiveAircraft"]             (integer),
-          ["outController"]                 (XPLMPluginID)
-    }
-
-    Parameters:
-      None.
-]]--
-
---[[
-   XLuaGetNthAircraftModel
-   
-   This function returns the aircraft model for the Nth aircraft.  Indices are
-   zero based, with zero being the user's aircraft.  The file name should be
-   at least 256 chars in length; the path should be at least 512 chars in
-   length.
-]]--
---[[
-    Returns   : Table {
-          ["outFileName"]                   (array[256] of string),
-          ["outPath"]                       (array[512] of string)
-    }
-
-    Parameters:
-     inIndex                                (integer)
-
-]]--
-
---[[
-   XLuaAcquirePlanes
-   
-   XPLMAcquirePlanes grants your plugin exclusive access to the aircraft.  It
-   returns true if you gain access, false if you do not.
-   
-   inAircraft - pass in an array of pointers to strings specifying the planes
-   you want loaded.  For any plane index you do not want loaded, pass a
-   0-length string.  Other strings should be full paths with the .acf
-   extension.  NULL terminates this array, or pass NULL if there are no planes
-   you want loaded.
-   
-   Aircraft paths for this API are full, not relative aircraft paths.
-   
-   If you pass in a callback and do not receive access to the planes your
-   callback will be called when the airplanes are available. If you do receive
-   airplane access, your callback will not be called.
-]]--
---[[
-    Returns   : boolean
-
-    Parameters:
-     inAircraft                             (array<string|char const*>[])
-     inCallback                             (XPLMPlanesAvailable_f)
-     inRefcon                               (Any reference value)
-
-]]--
-
---[[
-   XLuaReleasePlanes
-   
-   Call this function to release access to the planes.  Note that if you are
-   disabled, access to planes is released for you and you must reacquire it.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-      None.
-]]--
-
---[[
-   XLuaSetActiveAircraftCount
-   
-   This routine sets the number of active planes.  If you pass in a number
-   higher than the total number of planes availables, only the total number of
-   planes available is actually used.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inCount                                (integer)
-
-]]--
-
---[[
-   XLuaSetAircraftModel
-   
-   This routine loads an aircraft model.  It may only be called if you have
-   exclusive access to the airplane APIs.  Pass in the path of the model with
-   the .acf extension.  The index is zero based, but you may not pass in 0
-   (use XPLMSetUsersAircraft to load the user's aircracft).
-   
-   This API takes a full aircraft path.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inIndex                                (integer)
-     inAircraftPath                         (string)
-
-]]--
-
---[[
-   XLuaDisableAIForPlane
-   
-   This routine turns off X-Plane's AI for a given plane.  The plane will
-   continue to draw and be a real plane in X-Plane, but will not move itself.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inPlaneIndex                           (integer)
-
-]]--
+---@class _G
+--- This routine turns off X-Plane's AI for a given plane.  The plane
+--- will continue to draw and be a real plane in X-Plane, but will not
+--- move itself.
+---
+---@field XPLMDisableAIForPlane fun(inPlaneIndex: integer)
 

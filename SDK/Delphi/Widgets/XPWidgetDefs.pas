@@ -9,6 +9,21 @@ INTERFACE
 USES
     XPLMDefs;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPWIDGETS_DLL = 'XPWidgets_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPWIDGETS_DLL = 'XPWidgets.framework/XPWidgets';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPWIDGETS_DLL = 'XPWidgets_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * WIDGET DEFINITIONS
  ___________________________________________________________________________}
@@ -30,7 +45,7 @@ TYPE
     pointer. You receive a widget ID when you create a new widget and then use
     that widget ID to further refer to the widget.
    }
-   XPWidgetID = Pvoid *;
+   XPWidgetID = pointer;
    PXPWidgetID = ^XPWidgetID;
 
    {
@@ -417,9 +432,9 @@ TYPE
 TYPE
      XPWidgetFunc_t = FUNCTION(
                                     inMessage           : XPWidgetMessage;
-                               VAR  inWidget            : ;
-                                    inParam1            : intptr_t;
-                                    inParam2            : intptr_t) : Integer; cdecl;
+                                    inWidget            : XPWidgetID;
+                                    inParam1            : NativeInt;
+                                    inParam2            : NativeInt) : Integer; cdecl;
 
 
 IMPLEMENTATION

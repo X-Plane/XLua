@@ -32,6 +32,21 @@ INTERFACE
 USES
     XPWidgetDefs;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPWIDGETS_DLL = 'XPWidgets_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPWIDGETS_DLL = 'XPWidgets.framework/XPWidgets';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPWIDGETS_DLL = 'XPWidgets_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * GENERAL UTILITIES
  ___________________________________________________________________________}
@@ -61,7 +76,7 @@ TYPE
      right                    : Integer;
      bottom                   : Integer;
      visible                  : Integer;
-     descriptor               : Pchar *;
+     descriptor               : XPLMString;
      { Whether this widget is a root widget                                       }
      isRoot                   : Integer;
      { The index of the widget to be contained within, or a constant              }
@@ -94,11 +109,11 @@ CONST
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPUCreateWidgets(
-                                        inWidgetDefs        : PXPWidgetCreate_t *;
+                                        inWidgetDefs        : PXPWidgetCreate_t;
                                         inCount             : Integer;
                                         inParamParent       : XPWidgetID;
-                                        ioWidgets           : PXPWidgetID *);
-    cdecl; external XPWIDGETS.DLL;
+                                        ioWidgets           : PXPWidgetID);
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPUMoveWidgetBy
@@ -111,7 +126,7 @@ CONST
                                         inWidget            : XPWidgetID;
                                         inDeltaX            : Integer;
                                         inDeltaY            : Integer);
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
 {___________________________________________________________________________
  * LAYOUT MANAGERS
@@ -134,9 +149,9 @@ CONST
    FUNCTION XPUFixedLayout(
                                         inMessage           : XPWidgetMessage;
                                         inWidget            : XPWidgetID;
-                                        inParam1            : intptr_t;
-                                        inParam2            : intptr_t) : Integer;
-    cdecl; external XPWIDGETS.DLL;
+                                        inParam1            : NativeInt;
+                                        inParam2            : NativeInt) : Integer;
+    cdecl; external XPWIDGETS_DLL;
 
 {___________________________________________________________________________
  * WIDGET PROC BEHAVIORS
@@ -159,10 +174,10 @@ CONST
    FUNCTION XPUSelectIfNeeded(
                                         inMessage           : XPWidgetMessage;
                                         inWidget            : XPWidgetID;
-                                        inParam1            : intptr_t;
-                                        inParam2            : intptr_t;
+                                        inParam1            : NativeInt;
+                                        inParam2            : NativeInt;
                                         inEatClick          : Integer) : Integer;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPUDefocusKeyboard
@@ -174,10 +189,10 @@ CONST
    FUNCTION XPUDefocusKeyboard(
                                         inMessage           : XPWidgetMessage;
                                         inWidget            : XPWidgetID;
-                                        inParam1            : intptr_t;
-                                        inParam2            : intptr_t;
+                                        inParam1            : NativeInt;
+                                        inParam2            : NativeInt;
                                         inEatClick          : Integer) : Integer;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPUDragWidget
@@ -190,13 +205,13 @@ CONST
    FUNCTION XPUDragWidget(
                                         inMessage           : XPWidgetMessage;
                                         inWidget            : XPWidgetID;
-                                        inParam1            : intptr_t;
-                                        inParam2            : intptr_t;
+                                        inParam1            : NativeInt;
+                                        inParam2            : NativeInt;
                                         inLeft              : Integer;
                                         inTop               : Integer;
                                         inRight             : Integer;
                                         inBottom            : Integer) : Integer;
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
 
 IMPLEMENTATION

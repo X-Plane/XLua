@@ -57,6 +57,21 @@ INTERFACE
 USES
     XPLMDefs;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {$IFDEF XPLM300}
 {___________________________________________________________________________
  * DRAWING CALLBACKS
@@ -77,7 +92,7 @@ TYPE
     This is an opaque handle for a plugin-created map layer. Pass it to the map
     drawing APIs from an appropriate callback to draw in the layer you created.
    }
-   XPLMMapLayerID = Pvoid *;
+   XPLMMapLayerID = pointer;
    PXPLMMapLayerID = ^XPLMMapLayerID;
 
    {
@@ -86,7 +101,7 @@ TYPE
     This is an opaque handle for a map projection. Pass it to the projection
     APIs to translate between map coordinates and latitude/longitudes.
    }
-   XPLMMapProjectionID = Pvoid *;
+   XPLMMapProjectionID = pointer;
    PXPLMMapProjectionID = ^XPLMMapProjectionID;
 
    {
@@ -124,13 +139,13 @@ TYPE
     guaranteed.
    }
      XPLMMapDrawingCallback_f = PROCEDURE(
-                               VAR  inLayer             : ;
-                                    inMapBoundsLeftTopRightBottom[4]: PSingle;
+                                    inLayer             : XPLMMapLayerID;
+                                    inMapBoundsLeftTopRightBottom: PSingle;
                                     zoomRatio           : Single;
                                     mapUnitsPerUserInterfaceUnit: Single;
                                     mapStyle            : XPLMMapStyle;
-                               VAR  projection          : ;
-                                    inRefcon            : Pvoid*); cdecl;    { Can be nil }
+                                    projection          : XPLMMapProjectionID;
+                                    inRefcon            : pointer); cdecl;    { Can be nil }
 
    {
     XPLMMapIconDrawingCallback_f
@@ -149,13 +164,13 @@ TYPE
     different plugins is not guaranteed.
    }
      XPLMMapIconDrawingCallback_f = PROCEDURE(
-                               VAR  inLayer             : ;
-                                    inMapBoundsLeftTopRightBottom[4]: PSingle;
+                                    inLayer             : XPLMMapLayerID;
+                                    inMapBoundsLeftTopRightBottom: PSingle;
                                     zoomRatio           : Single;
                                     mapUnitsPerUserInterfaceUnit: Single;
                                     mapStyle            : XPLMMapStyle;
-                               VAR  projection          : ;
-                                    inRefcon            : Pvoid*); cdecl;    { Can be nil }
+                                    projection          : XPLMMapProjectionID;
+                                    inRefcon            : pointer); cdecl;    { Can be nil }
 
    {
     XPLMMapLabelDrawingCallback_f
@@ -174,13 +189,13 @@ TYPE
     different plugins is not guaranteed.
    }
      XPLMMapLabelDrawingCallback_f = PROCEDURE(
-                               VAR  inLayer             : ;
-                                    inMapBoundsLeftTopRightBottom[4]: PSingle;
+                                    inLayer             : XPLMMapLayerID;
+                                    inMapBoundsLeftTopRightBottom: PSingle;
                                     zoomRatio           : Single;
                                     mapUnitsPerUserInterfaceUnit: Single;
                                     mapStyle            : XPLMMapStyle;
-                               VAR  projection          : ;
-                                    inRefcon            : Pvoid*); cdecl;    { Can be nil }
+                                    projection          : XPLMMapProjectionID;
+                                    inRefcon            : pointer); cdecl;    { Can be nil }
 
 {$ENDIF XPLM300}
 {$IFDEF XPLM300}
@@ -218,10 +233,10 @@ TYPE
    }
 TYPE
      XPLMMapPrepareCacheCallback_f = PROCEDURE(
-                               VAR  inLayer             : ;
-                                    inTotalMapBoundsLeftTopRightBottom[4]: PSingle;
-                               VAR  projection          : ;
-                                    inRefcon            : Pvoid*); cdecl;    { Can be nil }
+                                    inLayer             : XPLMMapLayerID;
+                                    inTotalMapBoundsLeftTopRightBottom: PSingle;
+                                    projection          : XPLMMapProjectionID;
+                                    inRefcon            : pointer); cdecl;    { Can be nil }
 
    {
     XPLMMapWillBeDeletedCallback_f
@@ -231,8 +246,8 @@ TYPE
     map gets unloaded from memory, your layer will too.
    }
      XPLMMapWillBeDeletedCallback_f = PROCEDURE(
-                               VAR  inLayer             : ;
-                                    inRefcon            : Pvoid*); cdecl;    { Can be nil }
+                                    inLayer             : XPLMMapLayerID;
+                                    inRefcon            : pointer); cdecl;    { Can be nil }
 
 {$ENDIF XPLM300}
 {$IFDEF XPLM300}
@@ -276,11 +291,11 @@ TYPE
 CONST
     { Globally unique identifier for X-Plane's Map window, used as the           }
     { mapToCreateLayerIn parameter in XPLMCreateMapLayer_t                       }
-   XPLM_MAP_USER_INTERFACE = "XPLM_MAP_USER_INTERFACE";
+   XPLM_MAP_USER_INTERFACE = 'XPLM_MAP_USER_INTERFACE';
 
     { Globally unique identifier for X-Plane's Instructor Operator Station       }
     { window, used as the mapToCreateLayerIn parameter in XPLMCreateMapLayer_t   }
-   XPLM_MAP_IOS         = "XPLM_MAP_IOS";
+   XPLM_MAP_IOS         = 'XPLM_MAP_IOS';
 
    {
     XPLMCreateMapLayer_t
@@ -302,36 +317,36 @@ TYPE
      { Globally unique string identifying the map you want this layer to appear   }
      { in. As of XPLM300, this is limited to one of XPLM_MAP_USER_INTERFACE or    }
      { XPLM_MAP_IOS                                                               }
-     mapToCreateLayerIn       : Pchar *;
+     mapToCreateLayerIn       : XPLMString;
      { The type of layer you are creating, used to determine draw order (all      }
      { plugin-created markings layers are drawn above all plugin-created fill     }
      { layers)                                                                    }
      layerType                : XPLMMapLayerType;
      { Optional callback to inform you this layer is being deleted (due to its    }
      { owning map being destroyed)                                                }
-     willBeDeletedCallback    : PXPLMMapWillBeDeletedCallback_f;
+     willBeDeletedCallback    : XPLMMapWillBeDeletedCallback_f;
      { Optional callback you want to use to prepare your draw cache when the map  }
      { bounds change (set to NULL if you don't want this callback)                }
-     prepCacheCallback        : PXPLMMapPrepareCacheCallback_f;
+     prepCacheCallback        : XPLMMapPrepareCacheCallback_f;
      { Optional callback you want to use for arbitrary OpenGL drawing, which goes }
      { beneath all icons in the map's layering system (set to NULL if you don't   }
      { want this callback)                                                        }
-     drawCallback             : PXPLMMapDrawingCallback_f;
+     drawCallback             : XPLMMapDrawingCallback_f;
      { Optional callback you want to use for drawing icons, which go above all    }
      { built-in X-Plane icons (except the aircraft) in the map's layering system  }
      { (set to NULL if you don't want this callback)                              }
-     iconCallback             : PXPLMMapIconDrawingCallback_f;
+     iconCallback             : XPLMMapIconDrawingCallback_f;
      { Optional callback you want to use for drawing map labels, which go above   }
      { all built-in X-Plane icons and labels (except those of aircraft) in the    }
      { map's layering system (set to NULL if you don't want this callback)        }
-     labelCallback            : PXPLMMapLabelDrawingCallback_f;
+     labelCallback            : XPLMMapLabelDrawingCallback_f;
      { True if you want a checkbox to be created in the map UI to toggle this     }
      { layer on and off; false if the layer should simply always be enabled       }
      showUiToggle             : Integer;
      { Short label to use for this layer in the user interface                    }
-     layerName                : Pchar *;
+     layerName                : XPLMString;
      { A reference to arbitrary data that will be passed to your callbacks        }
-     refcon                   : Pvoid*;
+     refcon                   : pointer;
    END;
    PXPLMCreateMapLayer_t = ^XPLMCreateMapLayer_t;
 
@@ -351,7 +366,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateMapLayer(
-                                        inParams            : PXPLMCreateMapLayer_t *) : ;
+                                        inParams            : PXPLMCreateMapLayer_t) : XPLMMapLayerID;
     cdecl; external XPLM_DLL;
 
    {
@@ -363,7 +378,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMDestroyMapLayer(
-                                   VAR  inLayer             : ) : Integer;
+                                        inLayer             : XPLMMapLayerID) : Integer;
     cdecl; external XPLM_DLL;
 
    {
@@ -377,8 +392,8 @@ TYPE
    }
 TYPE
      XPLMMapCreatedCallback_f = PROCEDURE(
-                                    mapIdentifier       : Pchar *;
-                                    inRefcon            : Pvoid*); cdecl;    { Can be nil }
+                                    mapIdentifier       : XPLMString;
+                                    inRefcon            : pointer); cdecl;    { Can be nil }
 
    {
     XPLMRegisterMapCreationHook
@@ -392,8 +407,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMRegisterMapCreationHook(
-                                        callback            : PXPLMMapCreatedCallback_f;    { Can be nil }
-                                        inRefcon            : Pvoid*);    { Can be nil }
+                                        callback            : XPLMMapCreatedCallback_f;    { Can be nil }
+                                        inRefcon            : pointer);    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -405,7 +420,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMMapExists(
-                                        mapIdentifier       : Pchar *) : Integer;
+                                        mapIdentifier       : XPLMString) : Integer;
     cdecl; external XPLM_DLL;
 
 {$ENDIF XPLM300}
@@ -484,8 +499,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDrawMapIconFromSheet(
-                                   VAR  layer               : ;
-                                        inPngPath           : Pchar *;
+                                        layer               : XPLMMapLayerID;
+                                        inPngPath           : XPLMString;
                                         s                   : Integer;
                                         t                   : Integer;
                                         ds                  : Integer;
@@ -507,8 +522,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDrawMapLabel(
-                                   VAR  layer               : ;
-                                        inText              : Pchar *;
+                                        layer               : XPLMMapLayerID;
+                                        inText              : XPLMString;
                                         mapX                : Single;
                                         mapY                : Single;
                                         orientation         : XPLMMapOrientation;
@@ -548,11 +563,11 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMMapProject(
-                                   VAR  projection          : ;
+                                        projection          : XPLMMapProjectionID;
                                         latitude            : Real;
                                         longitude           : Real;
-                                        outX                : Pfloat *;
-                                        outY                : Pfloat *);
+                                        outX                : PSingle;
+                                        outY                : PSingle);
     cdecl; external XPLM_DLL;
 
    {
@@ -567,11 +582,11 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMMapUnproject(
-                                   VAR  projection          : ;
+                                        projection          : XPLMMapProjectionID;
                                         mapX                : Single;
                                         mapY                : Single;
-                                        outLatitude         : Pdouble *;
-                                        outLongitude        : Pdouble *);
+                                        outLatitude         : PReal;
+                                        outLongitude        : PReal);
     cdecl; external XPLM_DLL;
 
    {
@@ -586,7 +601,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMMapScaleMeter(
-                                   VAR  projection          : ;
+                                        projection          : XPLMMapProjectionID;
                                         mapX                : Single;
                                         mapY                : Single) : Single;
     cdecl; external XPLM_DLL;
@@ -606,7 +621,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMMapGetNorthHeading(
-                                   VAR  projection          : ;
+                                        projection          : XPLMMapProjectionID;
                                         mapX                : Single;
                                         mapY                : Single) : Single;
     cdecl; external XPLM_DLL;

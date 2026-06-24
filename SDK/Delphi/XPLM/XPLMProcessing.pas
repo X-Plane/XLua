@@ -42,6 +42,21 @@ INTERFACE
 USES
     XPLMDefs;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * FLIGHT LOOP CALLBACKS
  ___________________________________________________________________________}
@@ -73,7 +88,7 @@ TYPE
     identifier to easily track and remove your callbacks, or to use the new
     flight loop APIs.
    }
-   XPLMFlightLoopID = Pvoid *;
+   XPLMFlightLoopID = pointer;
    PXPLMFlightLoopID = ^XPLMFlightLoopID;
 {$ENDIF XPLM210}
 
@@ -115,7 +130,7 @@ TYPE
                                     inElapsedSinceLastCall: Single;
                                     inElapsedTimeSinceLastFlightLoop: Single;
                                     inCounter           : Integer;
-                                    inRefcon            : Pvoid*) : Single; cdecl;    { Can be nil }
+                                    inRefcon            : pointer) : Single; cdecl;    { Can be nil }
 
 {$IFDEF XPLM210}
    {
@@ -129,8 +144,8 @@ TYPE
    XPLMCreateFlightLoop_t = RECORD
      structSize               : Integer;
      phase                    : XPLMFlightLoopPhaseType;
-     callbackFunc             : PXPLMFlightLoop_f;
-     refcon                   : Pvoid*;
+     callbackFunc             : XPLMFlightLoop_f;
+     refcon                   : pointer;
    END;
    PXPLMCreateFlightLoop_t = ^XPLMCreateFlightLoop_t;
 {$ENDIF XPLM210}
@@ -176,9 +191,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMRegisterFlightLoopCallback(
-                                        inFlightLoop        : PXPLMFlightLoop_f;
+                                        inFlightLoop        : XPLMFlightLoop_f;
                                         inInterval          : Single;
-                                        inRefcon            : Pvoid*);    { Can be nil }
+                                        inRefcon            : pointer);    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -193,8 +208,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMUnregisterFlightLoopCallback(
-                                        inFlightLoop        : PXPLMFlightLoop_f;
-                                        inRefcon            : Pvoid*);    { Can be nil }
+                                        inFlightLoop        : XPLMFlightLoop_f;
+                                        inRefcon            : pointer);    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -212,10 +227,10 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSetFlightLoopCallbackInterval(
-                                        inFlightLoop        : PXPLMFlightLoop_f;
+                                        inFlightLoop        : XPLMFlightLoop_f;
                                         inInterval          : Single;
                                         inRelativeToNow     : Integer;
-                                        inRefcon            : Pvoid*);    { Can be nil }
+                                        inRefcon            : pointer);    { Can be nil }
     cdecl; external XPLM_DLL;
 
 {$IFDEF XPLM210}
@@ -228,7 +243,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateFlightLoop(
-                                        inParams            : PXPLMCreateFlightLoop_t *) : ;
+                                        inParams            : PXPLMCreateFlightLoop_t) : XPLMFlightLoopID;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM210}
 
@@ -241,7 +256,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDestroyFlightLoop(
-                                   VAR  inFlightLoopID      : );
+                                        inFlightLoopID      : XPLMFlightLoopID);
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM210}
 
@@ -260,7 +275,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMScheduleFlightLoop(
-                                   VAR  inFlightLoopID      : ;
+                                        inFlightLoopID      : XPLMFlightLoopID;
                                         inInterval          : Single;
                                         inRelativeToNow     : Integer);
     cdecl; external XPLM_DLL;

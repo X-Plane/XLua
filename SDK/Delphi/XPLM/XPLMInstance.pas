@@ -36,6 +36,21 @@ INTERFACE
 USES
     XPLMDefs, XPLMScenery;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * Instance Creation and Destruction
  ___________________________________________________________________________}
@@ -50,7 +65,7 @@ TYPE
     
     An opaque handle to an instance.
    }
-   XPLMInstanceRef = Pvoid *;
+   XPLMInstanceRef = pointer;
    PXPLMInstanceRef = ^XPLMInstanceRef;
 
    {
@@ -75,7 +90,7 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateInstance(
                                         obj                 : XPLMObjectRef;
-                                        datarefs[]          : P*) : ;
+                                        datarefs            : XPLMString) : XPLMInstanceRef;
     cdecl; external XPLM_DLL;
 
 {$IFDEF XPLM420}
@@ -91,7 +106,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMInstanceSetAutoShift(
-                                   VAR  instance            : );
+                                        instance            : XPLMInstanceRef);
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM420}
 
@@ -107,7 +122,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDestroyInstance(
-                                   VAR  instance            : );
+                                        instance            : XPLMInstanceRef);
     cdecl; external XPLM_DLL;
 
 {___________________________________________________________________________
@@ -134,9 +149,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMInstanceSetPosition(
-                                   VAR  instance            : ;
-                                        new_position        : PXPLMDrawInfo_t *;
-                                        data[]              : PSingle);
+                                        instance            : XPLMInstanceRef;
+                                        new_position        : PXPLMDrawInfo_t;
+                                        data                : PSingle);
     cdecl; external XPLM_DLL;
 
 {$IFDEF XPLM420}
@@ -157,9 +172,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMInstanceSetPositionDouble(
-                                   VAR  instance            : ;
-                                        new_position        : PXPLMDrawInfoDouble_t *;
-                                        data[]              : PSingle);
+                                        instance            : XPLMInstanceRef;
+                                        new_position        : PXPLMDrawInfoDouble_t;
+                                        data                : PSingle);
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM420}
 

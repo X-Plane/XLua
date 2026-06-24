@@ -19,6 +19,21 @@ INTERFACE
 USES
     XPLMDefs;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * NAVIGATION DATABASE ACCESS
  ___________________________________________________________________________}
@@ -96,7 +111,7 @@ CONST
     empty.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   FUNCTION XPLMGetFirstNavAid: ;
+   FUNCTION XPLMGetFirstNavAid: XPLMNavRef;
     cdecl; external XPLM_DLL;
 
    {
@@ -109,7 +124,7 @@ CONST
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetNextNavAid(
-                                   VAR  inNavAidRef         : ) : ;
+                                        inNavAidRef         : XPLMNavRef) : XPLMNavRef;
     cdecl; external XPLM_DLL;
 
    {
@@ -121,7 +136,7 @@ CONST
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMFindFirstNavAidOfType(
-                                        inType              : XPLMNavType) : ;
+                                        inType              : XPLMNavType) : XPLMNavRef;
     cdecl; external XPLM_DLL;
 
    {
@@ -133,7 +148,7 @@ CONST
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMFindLastNavAidOfType(
-                                        inType              : XPLMNavType) : ;
+                                        inType              : XPLMNavType) : XPLMNavRef;
     cdecl; external XPLM_DLL;
 
    {
@@ -165,12 +180,12 @@ CONST
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMFindNavAid(
-                                        inNameFragment      : Pchar *;    { Can be nil }
-                                        inIDFragment        : Pchar *;    { Can be nil }
-                                        inLat               : Pfloat *;    { Can be nil }
-                                        inLon               : Pfloat *;    { Can be nil }
-                                        inFrequency         : Pint *;    { Can be nil }
-                                        inType              : XPLMNavType) : ;
+                                        inNameFragment      : XPLMString;    { Can be nil }
+                                        inIDFragment        : XPLMString;    { Can be nil }
+                                        inLat               : PSingle;    { Can be nil }
+                                        inLon               : PSingle;    { Can be nil }
+                                        inFrequency         : PInteger;    { Can be nil }
+                                        inType              : XPLMNavType) : XPLMNavRef;
     cdecl; external XPLM_DLL;
 
    {
@@ -194,16 +209,16 @@ CONST
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMGetNavAidInfo(
-                                   VAR  inRef               : ;
-                                        outType             : PXPLMNavType *;    { Can be nil }
-                                        outLatitude         : Pfloat *;    { Can be nil }
-                                        outLongitude        : Pfloat *;    { Can be nil }
-                                        outHeight           : Pfloat *;    { Can be nil }
-                                        outFrequency        : Pint *;    { Can be nil }
-                                        outHeading          : Pfloat *;    { Can be nil }
-                                        outID[32]           : XPLMString;    { Can be nil }
-                                        outName[256]        : XPLMString;    { Can be nil }
-                                        outReg[1]           : XPLMString);    { Can be nil }
+                                        inRef               : XPLMNavRef;
+                                        outType             : PXPLMNavType;    { Can be nil }
+                                        outLatitude         : PSingle;    { Can be nil }
+                                        outLongitude        : PSingle;    { Can be nil }
+                                        outHeight           : PSingle;    { Can be nil }
+                                        outFrequency        : PInteger;    { Can be nil }
+                                        outHeading          : PSingle;    { Can be nil }
+                                        outID               : XPLMString;    { Can be nil }
+                                        outName             : XPLMString;    { Can be nil }
+                                        outReg              : XPLMString);    { Can be nil }
     cdecl; external XPLM_DLL;
 
 {___________________________________________________________________________
@@ -291,12 +306,12 @@ CONST
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMGetFMSEntryInfo(
                                         inIndex             : Integer;
-                                        outType             : PXPLMNavType *;    { Can be nil }
-                                        outID[256]          : XPLMString;    { Can be nil }
-                                        outRef              : PXPLMNavRef *;    { Can be nil }
-                                        outAltitude         : Pint *;    { Can be nil }
-                                        outLat              : Pfloat *;    { Can be nil }
-                                        outLon              : Pfloat *);    { Can be nil }
+                                        outType             : PXPLMNavType;    { Can be nil }
+                                        outID               : XPLMString;    { Can be nil }
+                                        outRef              : PXPLMNavRef;    { Can be nil }
+                                        outAltitude         : PInteger;    { Can be nil }
+                                        outLat              : PSingle;    { Can be nil }
+                                        outLon              : PSingle);    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -310,7 +325,7 @@ CONST
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSetFMSEntryInfo(
                                         inIndex             : Integer;
-                                   VAR  inRef               : ;
+                                        inRef               : XPLMNavRef;
                                         inAltitudeFt        : Integer);
     cdecl; external XPLM_DLL;
 
@@ -472,12 +487,12 @@ TYPE
    PROCEDURE XPLMGetFMSFlightPlanEntryInfo(
                                         inFlightPlan        : XPLMNavFlightPlan;
                                         inIndex             : Integer;
-                                        outType             : PXPLMNavType *;    { Can be nil }
-                                        outID[256]          : XPLMString;    { Can be nil }
-                                        outRef              : PXPLMNavRef *;    { Can be nil }
-                                        outAltitude         : Pint *;    { Can be nil }
-                                        outLat              : Pfloat *;    { Can be nil }
-                                        outLon              : Pfloat *);    { Can be nil }
+                                        outType             : PXPLMNavType;    { Can be nil }
+                                        outID               : XPLMString;    { Can be nil }
+                                        outRef              : PXPLMNavRef;    { Can be nil }
+                                        outAltitude         : PInteger;    { Can be nil }
+                                        outLat              : PSingle;    { Can be nil }
+                                        outLon              : PSingle);    { Can be nil }
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM410}
 
@@ -495,7 +510,7 @@ TYPE
    PROCEDURE XPLMSetFMSFlightPlanEntryInfo(
                                         inFlightPlan        : XPLMNavFlightPlan;
                                         inIndex             : Integer;
-                                   VAR  inRef               : ;
+                                        inRef               : XPLMNavRef;
                                         inAltitudeFt        : Integer);
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM410}
@@ -531,8 +546,8 @@ TYPE
                                         inLat               : Single;
                                         inLon               : Single;
                                         inAltitudeFt        : Integer;
-                                        inId                : Pchar*;
-                                        inIdLength          : unsigned int);
+                                        inId                : XPLMString;
+                                        inIdLength          : Cardinal);
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM410}
 
@@ -561,8 +576,8 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLoadFMSFlightPlan(
                                         inDevice            : Integer;
-                                        inBuffer            : Pchar *;
-                                        inBufferLen         : unsigned int);
+                                        inBuffer            : XPLMString;
+                                        inBufferLen         : Cardinal);
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM410}
 
@@ -584,8 +599,8 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMSaveFMSFlightPlan(
                                         inDevice            : Integer;
-                                        inBuffer            : Pchar *;
-                                        inBufferLen         : unsigned int) : unsigned int;
+                                        inBuffer            : XPLMString;
+                                        inBufferLen         : Cardinal) : Cardinal;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM410}
 
@@ -612,7 +627,7 @@ TYPE
     This routine returns the current GPS destination.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   FUNCTION XPLMGetGPSDestination: ;
+   FUNCTION XPLMGetGPSDestination: XPLMNavRef;
     cdecl; external XPLM_DLL;
 
 {___________________________________________________________________________

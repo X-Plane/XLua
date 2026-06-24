@@ -12,6 +12,21 @@ INTERFACE
 USES
     XPLMDefs;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {$IFDEF XPLM200}
 {___________________________________________________________________________
  * Terrain Y-Testing
@@ -89,7 +104,7 @@ TYPE
     An XPLMProbeRef is an opaque handle to a probe, used for querying the
     terrain.
    }
-   XPLMProbeRef = Pvoid *;
+   XPLMProbeRef = pointer;
    PXPLMProbeRef = ^XPLMProbeRef;
 
    {
@@ -134,7 +149,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateProbe(
-                                        inProbeType         : XPLMProbeType) : ;
+                                        inProbeType         : XPLMProbeType) : XPLMProbeRef;
     cdecl; external XPLM_DLL;
 
    {
@@ -144,7 +159,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDestroyProbe(
-                                   VAR  inProbe             : );
+                                        inProbe             : XPLMProbeRef);
     cdecl; external XPLM_DLL;
 
    {
@@ -157,11 +172,11 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMProbeTerrainXYZ(
-                                   VAR  inProbe             : ;
+                                        inProbe             : XPLMProbeRef;
                                         inX                 : Single;
                                         inY                 : Single;
                                         inZ                 : Single;
-                                        outInfo             : PXPLMProbeInfo_t *) : XPLMProbeResult;
+                                        outInfo             : PXPLMProbeInfo_t) : XPLMProbeResult;
     cdecl; external XPLM_DLL;
 
 {$ENDIF XPLM200}
@@ -237,7 +252,7 @@ TYPE
     An XPLMObjectRef is a opaque handle to an .obj file that has been loaded
     into memory.
    }
-   XPLMObjectRef = Pvoid *;
+   XPLMObjectRef = pointer;
    PXPLMObjectRef = ^XPLMObjectRef;
 {$ENDIF XPLM200}
 
@@ -311,8 +326,8 @@ TYPE
    }
 TYPE
      XPLMObjectLoaded_f = PROCEDURE(
-                               VAR  inObject            : ;
-                                    inRefcon            : Pvoid*); cdecl;    { Can be nil }
+                                    inObject            : XPLMObjectRef;
+                                    inRefcon            : pointer); cdecl;    { Can be nil }
 {$ENDIF XPLM210}
 
 {$IFDEF XPLM200}
@@ -340,7 +355,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMLoadObject(
-                                        inPath              : Pchar *) : ;
+                                        inPath              : XPLMString) : XPLMObjectRef;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM200}
 
@@ -363,9 +378,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLoadObjectAsync(
-                                        inPath              : Pchar *;
-                                        inCallback          : PXPLMObjectLoaded_f;
-                                        inRefcon            : Pvoid*);    { Can be nil }
+                                        inPath              : XPLMString;
+                                        inCallback          : XPLMObjectLoaded_f;
+                                        inRefcon            : pointer);    { Can be nil }
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM210}
 
@@ -398,9 +413,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDrawObjects(
-                                   VAR  inObject            : ;
+                                        inObject            : XPLMObjectRef;
                                         inCount             : Integer;
-                                        inLocations         : PXPLMDrawInfo_t *;
+                                        inLocations         : PXPLMDrawInfo_t;
                                         lighting            : Integer;
                                         earth_relative      : Integer);
     cdecl; external XPLM_DLL;
@@ -417,7 +432,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMUnloadObject(
-                                   VAR  inObject            : );
+                                        inObject            : XPLMObjectRef);
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM200}
 
@@ -442,8 +457,8 @@ TYPE
    }
 TYPE
      XPLMLibraryEnumerator_f = PROCEDURE(
-                                    inFilePath          : Pchar *;
-                                    inRef               : Pvoid*); cdecl;    { Can be nil }
+                                    inFilePath          : XPLMString;
+                                    inRef               : pointer); cdecl;    { Can be nil }
 
    {
     XPLMLookupObjects
@@ -460,11 +475,11 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMLookupObjects(
-                                        inPath              : Pchar *;
+                                        inPath              : XPLMString;
                                         inLatitude          : Single;
                                         inLongitude         : Single;
-                                        enumerator          : PXPLMLibraryEnumerator_f;
-                                        ref                 : Pvoid*) : Integer;    { Can be nil }
+                                        enumerator          : XPLMLibraryEnumerator_f;
+                                        ref                 : pointer) : Integer;    { Can be nil }
     cdecl; external XPLM_DLL;
 
 {$ENDIF XPLM200}

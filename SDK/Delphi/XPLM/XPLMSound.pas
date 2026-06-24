@@ -14,8 +14,23 @@ INTERFACE
 }
 
 USES
-    XPLMDefs, fmod.hpp, fmod_studio.hpp;
+    XPLMDefs;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {$IFDEF XPLM400}
 {___________________________________________________________________________
  * FMOD ACCESS
@@ -81,6 +96,7 @@ TYPE
    PXPLMBankID = ^XPLMBankID;
 
 
+{$IFDEF _FMOD_COMMON_H}
    {
     XPLMGetFMODStudio
     
@@ -94,9 +110,11 @@ TYPE
     channelgroups and using the getSystem() call on that.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   FUNCTION XPLMGetFMODStudio: PFMOD_STUDIO_SYSTEM*;
+   FUNCTION XPLMGetFMODStudio: PFMOD_STUDIO_SYSTEM;
     cdecl; external XPLM_DLL;
+{$ENDIF}
 
+{$IFDEF _FMOD_COMMON_H}
    {
     XPLMGetFMODChannelGroup
     
@@ -105,9 +123,11 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetFMODChannelGroup(
-                                        audioType           : XPLMAudioBus) : PFMOD_CHANNELGROUP*;
+                                        audioType           : XPLMAudioBus) : PFMOD_CHANNELGROUP;
     cdecl; external XPLM_DLL;
+{$ENDIF}
 
+{$IFNDEF _FMOD_COMMON_H}
    {
     FMOD_RESULT
    }
@@ -117,7 +137,9 @@ TYPE
  
    );
    PFMOD_RESULT = ^FMOD_RESULT;
+{$ENDIF}
 
+{$IFNDEF _FMOD_COMMON_H}
    {
     FMOD_SOUND_FORMAT
    }
@@ -126,13 +148,17 @@ TYPE
  
    );
    PFMOD_SOUND_FORMAT = ^FMOD_SOUND_FORMAT;
+{$ENDIF}
 
+{$IFNDEF _FMOD_COMMON_H}
    {
     FMOD_CHANNEL
    }
-   FMOD_CHANNEL = ;
+   FMOD_CHANNEL = record end;
    PFMOD_CHANNEL = ^FMOD_CHANNEL;
+{$ENDIF}
 
+{$IFNDEF _FMOD_COMMON_H}
    {
     FMOD_VECTOR
    }
@@ -142,6 +168,7 @@ TYPE
      z                        : Single;
    END;
    PFMOD_VECTOR = ^FMOD_VECTOR;
+{$ENDIF}
 
    {
     XPLMPCMComplete_f
@@ -151,7 +178,7 @@ TYPE
     for example.
    }
      XPLMPCMComplete_f = PROCEDURE(
-                                    inRefcon            : Pvoid*;    { Can be nil }
+                                    inRefcon            : pointer;    { Can be nil }
                                     status              : FMOD_RESULT); cdecl;
 
    {
@@ -173,15 +200,15 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMPlayPCMOnBus(
-                                        audioBuffer         : Pvoid*;
+                                        audioBuffer         : pointer;
                                         bufferSize          : Integer;
                                         soundFormat         : FMOD_SOUND_FORMAT;
                                         freqHz              : Integer;
                                         numChannels         : Integer;
                                         loop                : Integer;
                                         audioType           : XPLMAudioBus;
-                                        inCallback          : PXPLMPCMComplete_f;    { Can be nil }
-                                        inRefcon            : Pvoid*) : PFMOD_CHANNEL*;    { Can be nil }
+                                        inCallback          : XPLMPCMComplete_f;    { Can be nil }
+                                        inRefcon            : pointer) : PFMOD_CHANNEL;    { Can be nil }
     cdecl; external XPLM_DLL;
 
    {
@@ -193,7 +220,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMStopAudio(
-                                        fmod_channel        : PFMOD_CHANNEL*) : FMOD_RESULT;
+                                        fmod_channel        : PFMOD_CHANNEL) : FMOD_RESULT;
     cdecl; external XPLM_DLL;
 
    {
@@ -204,9 +231,9 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMSetAudioPosition(
-                                        fmod_channel        : PFMOD_CHANNEL*;
-                                        position            : PFMOD_VECTOR*;
-                                        velocity            : PFMOD_VECTOR*) : FMOD_RESULT;
+                                        fmod_channel        : PFMOD_CHANNEL;
+                                        position            : PFMOD_VECTOR;
+                                        velocity            : PFMOD_VECTOR) : FMOD_RESULT;
     cdecl; external XPLM_DLL;
 
    {
@@ -221,7 +248,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMSetAudioFadeDistance(
-                                        fmod_channel        : PFMOD_CHANNEL*;
+                                        fmod_channel        : PFMOD_CHANNEL;
                                         min_fade_distance   : Single;
                                         max_fade_distance   : Single) : FMOD_RESULT;
     cdecl; external XPLM_DLL;
@@ -236,7 +263,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMSetAudioVolume(
-                                        fmod_channel        : PFMOD_CHANNEL*;
+                                        fmod_channel        : PFMOD_CHANNEL;
                                         source_volume       : Single) : FMOD_RESULT;
     cdecl; external XPLM_DLL;
 
@@ -247,7 +274,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMSetAudioPitch(
-                                        fmod_channel        : PFMOD_CHANNEL*;
+                                        fmod_channel        : PFMOD_CHANNEL;
                                         audio_pitch_hz      : Single) : FMOD_RESULT;
     cdecl; external XPLM_DLL;
 
@@ -260,11 +287,11 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMSetAudioCone(
-                                        fmod_channel        : PFMOD_CHANNEL*;
+                                        fmod_channel        : PFMOD_CHANNEL;
                                         inside_angle        : Single;
                                         outside_angle       : Single;
                                         outside_volume      : Single;
-                                        orientation         : PFMOD_VECTOR*) : FMOD_RESULT;
+                                        orientation         : PFMOD_VECTOR) : FMOD_RESULT;
     cdecl; external XPLM_DLL;
 
 {$ENDIF XPLM400}

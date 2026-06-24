@@ -1,4 +1,9 @@
--- Use require('XPLMMenus') to access these functions.
+---@meta XPLMMenus
+
+-- The functions, typedefs, enums, and defines in this file are
+-- installed into the Lua VM at startup by the host's add_xplm_to_interp()
+-- call. Scripts do NOT need to require('XPLMMenus') to access them; this file
+-- exists solely as type metadata for lua-language-server / EmmyLua.
 
 --[[
    Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
@@ -47,7 +52,8 @@ in X-Plane actually appears as a light which may or may not be lit.  So there ar
 three possible states.
 ]]--
 
-XPLMMenuCheck = {
+---@enum XPLMMenuCheck
+local XPLMMenuCheck = {
     -- There is no symbol to the left of the menu item.
     xplm_Menu_NoCheck                        = 0,
     -- The menu has a mark next to it that is unmarked (not lit).
@@ -55,238 +61,115 @@ XPLMMenuCheck = {
     -- The menu has a mark next to it that is checked (lit).
     xplm_Menu_Checked                        = 2,
 }
+---@class _G
+---@field XPLMMenuCheck XPLMMenuCheck
 
---[[
-   XLuaFindPluginsMenu
-   
-   This function returns the ID of the plug-ins menu, which is created for you
-   at startup.
-]]--
---[[
-    Returns   : userdata<XPLMMenuID>
+--- This is a unique ID for each menu you create.
+---@class XPLMMenuID : userdata
+---@field private __XPLMMenuID_marker any
 
-    Parameters:
-      None.
-]]--
+--- A menu handler function takes two reference pointers, one for the menu (specified when the menu was created) and one for the item (specified when the item was created).
+---@alias XPLMMenuHandler_f fun(inMenuRef: any, inItemRef: any)
 
---[[
-   XLuaFindAircraftMenu
-   
-   This function returns the ID of the menu for the currently-loaded aircraft,
-   used for showing aircraft-specific commands.
-   
-   The aircraft menu is created by X-Plane at startup, but it remains hidden
-   until it is populated via XPLMAppendMenuItem() or
-   XPLMAppendMenuItemWithCommand().
-   
-   Only plugins loaded with the user's current aircraft are allowed to access
-   the aircraft menu. For all other plugins, this will return NULL, and any
-   attempts to add menu items to it will fail.
-]]--
---[[
-    Returns   : userdata<XPLMMenuID>
+---@class _G
+--- This function returns the ID of the plug-ins menu, which is created for you at startup.
+---
+---@field XPLMFindPluginsMenu fun(): XPLMMenuID
 
-    Parameters:
-      None.
-]]--
+---@class _G
+--- This function returns the ID of the menu for the currently-loaded aircraft,
+--- used for showing aircraft-specific commands.
+---
+--- The aircraft menu is created by X-Plane at startup, but it remains hidden until it is populated via
+--- XPLMAppendMenuItem() or XPLMAppendMenuItemWithCommand().
+---
+--- Only plugins loaded with the user's current aircraft are allowed to access the aircraft menu.
+--- For all other plugins, this will return NULL, and any attempts to add menu items to it will fail.
+---
+---@field XPLMFindAircraftMenu fun(): XPLMMenuID
 
---[[
-   XLuaCreateMenu
-   
-   This function creates a new menu and returns its ID.  It returns NULL if
-   the menu cannot be created.  Pass in a parent menu ID and an item index to
-   create a submenu, or NULL for the parent menu to put the menu in the menu
-   bar.  The menu's name is only used if the menu is in the menubar.  You also
-   pass a handler function and a menu reference value. Pass NULL for the
-   handler if you do not need callbacks from the menu (for example, if it only
-   contains submenus).
-   
-   Important: you must pass a valid, non-empty menu title even if the menu is
-   a submenu where the title is not visible.
-]]--
---[[
-    Returns   : userdata<XPLMMenuID>
+---@class _G
+--- This function creates a new menu and returns its ID.  It returns NULL if the menu cannot
+--- be created.  Pass in a parent menu ID and an item index to create a submenu, or NULL
+--- for the parent menu to put the menu in the menu bar.  The menu's name is only used if
+--- the menu is in the menubar.  You also pass a handler function and a menu reference value.
+--- Pass NULL for the handler if you do not need callbacks from the menu (for example, if it
+--- only contains submenus).
+---
+--- Important: you must pass a valid, non-empty menu title even if the menu is a submenu where
+--- the title is not visible.
+---
+---@field XPLMCreateMenu fun(inName: string, inParentMenu: XPLMMenuID, inParentItem: integer, inHandler: XPLMMenuHandler_f, inMenuRef: any): XPLMMenuID
 
-    Parameters:
-     inName                                 (string)
-     inParentMenu                           (XPLMMenuID)
-     inParentItem                           (integer)
-     inHandler                              (XPLMMenuHandler_f)
-     inMenuRef                              (Any reference value)
+---@class _G
+--- This function destroys a menu that you have created.  Use this to remove a submenu
+--- if necessary.  (Normally this function will not be necessary.)
+---
+---@field XPLMDestroyMenu fun(inMenuID: XPLMMenuID)
 
-]]--
+---@class _G
+--- This function removes all menu items from a menu, allowing you to rebuild
+--- it.  Use this function if you need to change the number of items on a menu.
+---
+---@field XPLMClearAllMenuItems fun(inMenuID: XPLMMenuID)
 
---[[
-   XLuaDestroyMenu
-   
-   This function destroys a menu that you have created.  Use this to remove a
-   submenu if necessary.  (Normally this function will not be necessary.)
-]]--
---[[
-    Returns   : Nothing.
+---@class _G
+--- This routine appends a new menu item to the bottom of a menu and returns its index.
+--- Pass in the menu to add the item to, the items name, and a void * ref for this item.
+---
+--- Returns a negative index if the append failed (due to an invalid parent menu argument).
+---
+--- Note that all menu indices returned are relative to your plugin's menus only; if your plugin
+--- creates two sub-menus in the Plugins menu at different times, it doesn't matter how many other
+--- plugins also create sub-menus of Plugins in the intervening time: your sub-menus will be
+--- given menu indices 0 and 1.
+--- (The SDK does some work in the back-end to filter out menus that are irrelevant to your plugin
+--- in order to deliver this consistency for each plugin.)
+---
+---@field XPLMAppendMenuItem fun(inMenu: XPLMMenuID, inItemName: string, inItemRef: any, inDeprecatedAndIgnored: integer): integer
 
-    Parameters:
-     inMenuID                               (XPLMMenuID)
+---@class _G
+--- Like XPLMAppendMenuItem(), but instead of the new menu item triggering the XPLMMenuHandler_f of
+--- the containiner menu, it will simply execute the command you pass in. Using a command for your menu item
+--- allows the user to bind a keyboard shortcut to the command and see that shortcut represented in the menu.
+---
+--- Returns a negative index if the append failed (due to an invalid parent menu argument).
+---
+--- Like XPLMAppendMenuItem(), all menu indices are relative to your plugin's menus only.
+---
+---@field XPLMAppendMenuItemWithCommand fun(inMenu: XPLMMenuID, inItemName: string, inCommandToExecute: XPLMCommandRef): integer
 
-]]--
+---@class _G
+--- This routine adds a separator to the end of a menu.
+---
+---@field XPLMAppendMenuSeparator fun(inMenu: XPLMMenuID)
 
---[[
-   XLuaClearAllMenuItems
-   
-   This function removes all menu items from a menu, allowing you to rebuild
-   it.  Use this function if you need to change the number of items on a menu.
-]]--
---[[
-    Returns   : Nothing.
+---@class _G
+--- This routine changes the name of an existing menu item.  Pass in the menu ID and
+--- the index of the menu item.
+---
+---@field XPLMSetMenuItemName fun(inMenu: XPLMMenuID, inIndex: integer, inItemName: string, inDeprecatedAndIgnored: integer)
 
-    Parameters:
-     inMenuID                               (XPLMMenuID)
+---@class _G
+--- Set whether a menu item is checked.  Pass in the menu ID and item index.
+---
+---@field XPLMCheckMenuItem fun(inMenu: XPLMMenuID, index: integer, inCheck: XPLMMenuCheck)
 
-]]--
+---@class _G
+--- This routine returns whether a menu item is checked or not.
+--- A menu item's check mark may be on or off, or a menu may
+--- not have an icon at all.
+---
+---@field XPLMCheckMenuItemState fun(inMenu: XPLMMenuID, index: integer): { outCheck: XPLMMenuCheck }
 
---[[
-   XLuaAppendMenuItem
-   
-   This routine appends a new menu item to the bottom of a menu and returns
-   its index. Pass in the menu to add the item to, the items name, and a void
-   * ref for this item.
-   
-   Returns a negative index if the append failed (due to an invalid parent
-   menu argument).
-   
-   Note that all menu indices returned are relative to your plugin's menus
-   only; if your plugin creates two sub-menus in the Plugins menu at different
-   times, it doesn't matter how many other plugins also create sub-menus of
-   Plugins in the intervening time: your sub-menus will be given menu indices
-   0 and 1. (The SDK does some work in the back-end to filter out menus that
-   are irrelevant to your plugin in order to deliver this consistency for each
-   plugin.)
-]]--
---[[
-    Returns   : integer
+---@class _G
+--- Sets whether this menu item is enabled.  Items start out enabled.
+---
+---@field XPLMEnableMenuItem fun(inMenu: XPLMMenuID, index: integer, enabled: boolean)
 
-    Parameters:
-     inMenu                                 (XPLMMenuID)
-     inItemName                             (string)
-     inItemRef                              (Any reference value)
-     inDeprecatedAndIgnored                 (integer)
-
-]]--
-
---[[
-   XLuaAppendMenuItemWithCommand
-   
-   Like XPLMAppendMenuItem(), but instead of the new menu item triggering the
-   XPLMMenuHandler_f of the containiner menu, it will simply execute the
-   command you pass in. Using a command for your menu item allows the user to
-   bind a keyboard shortcut to the command and see that shortcut represented
-   in the menu.
-   
-   Returns a negative index if the append failed (due to an invalid parent
-   menu argument).
-   
-   Like XPLMAppendMenuItem(), all menu indices are relative to your plugin's
-   menus only.
-]]--
---[[
-    Returns   : integer
-
-    Parameters:
-     inMenu                                 (XPLMMenuID)
-     inItemName                             (string)
-     inCommandToExecute                     (XPLMCommandRef)
-
-]]--
-
---[[
-   XLuaAppendMenuSeparator
-   
-   This routine adds a separator to the end of a menu.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inMenu                                 (XPLMMenuID)
-
-]]--
-
---[[
-   XLuaSetMenuItemName
-   
-   This routine changes the name of an existing menu item.  Pass in the menu
-   ID and the index of the menu item.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inMenu                                 (XPLMMenuID)
-     inIndex                                (integer)
-     inItemName                             (string)
-     inDeprecatedAndIgnored                 (integer)
-
-]]--
-
---[[
-   XLuaCheckMenuItem
-   
-   Set whether a menu item is checked.  Pass in the menu ID and item index.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inMenu                                 (XPLMMenuID)
-     index                                  (integer)
-     inCheck                                (XPLMMenuCheck)
-
-]]--
-
---[[
-   XLuaCheckMenuItemState
-   
-   This routine returns whether a menu item is checked or not. A menu item's
-   check mark may be on or off, or a menu may not have an icon at all.
-]]--
---[[
-    Returns   : Table {
-          ["outCheck"]                      (integer)
-    }
-
-    Parameters:
-     inMenu                                 (XPLMMenuID)
-     index                                  (integer)
-
-]]--
-
---[[
-   XLuaEnableMenuItem
-   
-   Sets whether this menu item is enabled.  Items start out enabled.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inMenu                                 (XPLMMenuID)
-     index                                  (integer)
-     enabled                                (boolean)
-
-]]--
-
---[[
-   XLuaRemoveMenuItem
-   
-   Removes one item from a menu.  Note that all menu items below are moved up
-   one; your plugin must track the change in index numbers.
-]]--
---[[
-    Returns   : Nothing.
-
-    Parameters:
-     inMenu                                 (XPLMMenuID)
-     inIndex                                (integer)
-
-]]--
+---@class _G
+--- Removes one item from a menu.  Note that all menu items below are moved up one; your plugin
+--- must track the change in index numbers.
+---
+---@field XPLMRemoveMenuItem fun(inMenu: XPLMMenuID, inIndex: integer)
 

@@ -9,6 +9,21 @@ INTERFACE
 USES
     XPWidgetDefs, XPLMGraphics;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPWIDGETS_DLL = 'XPWidgets_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPWIDGETS_DLL = 'XPWidgets.framework/XPWidgets';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPWIDGETS_DLL = 'XPWidgets_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * UI GRAPHICS
  ___________________________________________________________________________}
@@ -68,7 +83,7 @@ TYPE
                                         inX2                : Integer;
                                         inY2                : Integer;
                                         inStyle             : XPWindowStyle);
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetWindowDefaultDimensions
@@ -79,9 +94,9 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPGetWindowDefaultDimensions(
                                         inStyle             : XPWindowStyle;
-                                        outWidth            : Pint *;    { Can be nil }
-                                        outHeight           : Pint *);    { Can be nil }
-    cdecl; external XPWIDGETS.DLL;
+                                        outWidth            : PInteger;    { Can be nil }
+                                        outHeight           : PInteger);    { Can be nil }
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPElementStyle
@@ -226,7 +241,7 @@ TYPE
                                         inY2                : Integer;
                                         inStyle             : XPElementStyle;
                                         inLit               : Integer);
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetElementDefaultDimensions
@@ -238,10 +253,10 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPGetElementDefaultDimensions(
                                         inStyle             : XPElementStyle;
-                                        outWidth            : Pint *;    { Can be nil }
-                                        outHeight           : Pint *;    { Can be nil }
-                                        outCanBeLit         : Pint *);    { Can be nil }
-    cdecl; external XPWIDGETS.DLL;
+                                        outWidth            : PInteger;    { Can be nil }
+                                        outHeight           : PInteger;    { Can be nil }
+                                        outCanBeLit         : PInteger);    { Can be nil }
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPTrackStyle
@@ -292,7 +307,7 @@ TYPE
                                         inValue             : Integer;
                                         inTrackStyle        : XPTrackStyle;
                                         inLit               : Integer);
-    cdecl; external XPWIDGETS.DLL;
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetTrackDefaultDimensions
@@ -304,9 +319,9 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPGetTrackDefaultDimensions(
                                         inStyle             : XPTrackStyle;
-                                        outWidth            : Pint *;
-                                        outCanBeLit         : Pint *);
-    cdecl; external XPWIDGETS.DLL;
+                                        outWidth            : PInteger;
+                                        outCanBeLit         : PInteger);
+    cdecl; external XPWIDGETS_DLL;
 
    {
     XPGetTrackMetrics
@@ -334,13 +349,13 @@ TYPE
                                         inMax               : Integer;
                                         inValue             : Integer;
                                         inTrackStyle        : XPTrackStyle;
-                                        outIsVertical       : Pint *;
-                                        outDownBtnSize      : Pint *;
-                                        outDownPageSize     : Pint *;
-                                        outThumbSize        : Pint *;
-                                        outUpPageSize       : Pint *;
-                                        outUpBtnSize        : Pint *);
-    cdecl; external XPWIDGETS.DLL;
+                                        outIsVertical       : PInteger;
+                                        outDownBtnSize      : PInteger;
+                                        outDownPageSize     : PInteger;
+                                        outThumbSize        : PInteger;
+                                        outUpPageSize       : PInteger;
+                                        outUpBtnSize        : PInteger);
+    cdecl; external XPWIDGETS_DLL;
 
 {___________________________________________________________________________
  * Host API

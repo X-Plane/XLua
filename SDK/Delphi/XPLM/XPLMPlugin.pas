@@ -13,6 +13,21 @@ INTERFACE
 USES
     XPLMDefs, XPLMSound;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * FINDING PLUGINS
  ___________________________________________________________________________}
@@ -65,7 +80,7 @@ USES
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMFindPluginByPath(
-                                        inPath              : Pchar *) : XPLMPluginID;
+                                        inPath              : XPLMString) : XPLMPluginID;
     cdecl; external XPLM_DLL;
 
    {
@@ -80,7 +95,7 @@ USES
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMFindPluginBySignature(
-                                        inSignature         : Pchar *) : XPLMPluginID;
+                                        inSignature         : XPLMString) : XPLMPluginID;
     cdecl; external XPLM_DLL;
 
    {
@@ -98,10 +113,10 @@ USES
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMGetPluginInfo(
                                         inPlugin            : XPLMPluginID;
-                                        outName[256]        : XPLMString;    { Can be nil }
-                                        outFilePath[256]    : XPLMString;    { Can be nil }
-                                        outSignature[256]   : XPLMString;    { Can be nil }
-                                        outDescription[256] : XPLMString);    { Can be nil }
+                                        outName             : XPLMString;    { Can be nil }
+                                        outFilePath         : XPLMString;    { Can be nil }
+                                        outSignature        : XPLMString;    { Can be nil }
+                                        outDescription      : XPLMString);    { Can be nil }
     cdecl; external XPLM_DLL;
 
 {___________________________________________________________________________
@@ -236,7 +251,7 @@ USES
    PROCEDURE XPLMSendMessageToPlugin(
                                         inPlugin            : XPLMPluginID;
                                         inMessage           : Integer;
-                                        inParam             : Pvoid *);
+                                        inParam             : pointer);
     cdecl; external XPLM_DLL;
 
 {$IFDEF XPLM200}
@@ -321,8 +336,8 @@ USES
    }
 TYPE
      XPLMFeatureEnumerator_f = PROCEDURE(
-                                    inFeature           : Pchar *;
-                                    inRef               : Pvoid*); cdecl;    { Can be nil }
+                                    inFeature           : XPLMString;
+                                    inRef               : pointer); cdecl;    { Can be nil }
 
    {
     XPLMHasFeature
@@ -332,7 +347,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMHasFeature(
-                                        inFeature           : Pchar *) : Integer;
+                                        inFeature           : XPLMString) : Integer;
     cdecl; external XPLM_DLL;
 
    {
@@ -344,7 +359,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMIsFeatureEnabled(
-                                        inFeature           : Pchar *) : Integer;
+                                        inFeature           : XPLMString) : Integer;
     cdecl; external XPLM_DLL;
 
    {
@@ -356,7 +371,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMEnableFeature(
-                                        inFeature           : Pchar *;
+                                        inFeature           : XPLMString;
                                         inEnable            : Integer);
     cdecl; external XPLM_DLL;
 
@@ -369,8 +384,8 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMEnumerateFeatures(
-                                        inEnumerator        : PXPLMFeatureEnumerator_f;    { Can be nil }
-                                        inRef               : Pvoid*);    { Can be nil }
+                                        inEnumerator        : XPLMFeatureEnumerator_f;    { Can be nil }
+                                        inRef               : pointer);    { Can be nil }
     cdecl; external XPLM_DLL;
 
 {$ENDIF XPLM200}

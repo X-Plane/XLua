@@ -1,4 +1,9 @@
--- Use require('XPLMSound') to access these functions.
+---@meta XPLMSound
+
+-- The functions, typedefs, enums, and defines in this file are
+-- installed into the Lua VM at startup by the host's add_xplm_to_interp()
+-- call. Scripts do NOT need to require('XPLMSound') to access them; this file
+-- exists solely as type metadata for lua-language-server / EmmyLua.
 
 --[[
    Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All

@@ -39,6 +39,21 @@ INTERFACE
 USES
     XPLMDefs;
    {$A4}
+
+TYPE
+   XPLMChar   = AnsiChar;
+   XPLMString = PAnsiChar;
+
+CONST
+{$IFDEF MSWINDOWS}
+   XPLM_DLL = 'XPLM_64.dll';
+{$ENDIF}
+{$IFDEF DARWIN}
+   XPLM_DLL = 'XPLM.framework/XPLM';
+{$ENDIF}
+{$IFDEF LINUX}
+   XPLM_DLL = 'XPLM_64.so';
+{$ENDIF}
 {___________________________________________________________________________
  * X-PLANE COORDINATES
  ___________________________________________________________________________}
@@ -61,9 +76,9 @@ USES
                                         inLatitude          : Real;
                                         inLongitude         : Real;
                                         inAltitude          : Real;
-                                        outX                : Pdouble *;
-                                        outY                : Pdouble *;
-                                        outZ                : Pdouble *);
+                                        outX                : PReal;
+                                        outY                : PReal;
+                                        outZ                : PReal);
     cdecl; external XPLM_DLL;
 
    {
@@ -84,9 +99,9 @@ USES
                                         inX                 : Real;
                                         inY                 : Real;
                                         inZ                 : Real;
-                                        outLatitude         : Pdouble *;
-                                        outLongitude        : Pdouble *;
-                                        outAltitude         : Pdouble *);
+                                        outLatitude         : PReal;
+                                        outLongitude        : PReal;
+                                        outAltitude         : PReal);
     cdecl; external XPLM_DLL;
 
 {___________________________________________________________________________
@@ -227,7 +242,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMGenerateTextureNumbers(
-                                        outTextureIDs       : Pint *;
+                                        outTextureIDs       : PInteger;
                                         inCount             : Integer);
     cdecl; external XPLM_DLL;
 
@@ -386,11 +401,11 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDrawString(
-                                        inColorRGB[3]       : PSingle;
+                                        inColorRGB          : PSingle;
                                         inXOffset           : Integer;
                                         inYOffset           : Integer;
-                                        inChar              : Pchar *;
-                                        inWordWrapWidth     : Pint *;    { Can be nil }
+                                        inChar              : XPLMString;
+                                        inWordWrapWidth     : PInteger;    { Can be nil }
                                         inFontID            : XPLMFontID);
     cdecl; external XPLM_DLL;
 
@@ -406,7 +421,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDrawNumber(
-                                        inColorRGB[3]       : PSingle;
+                                        inColorRGB          : PSingle;
                                         inXOffset           : Integer;
                                         inYOffset           : Integer;
                                         inValue             : Real;
@@ -427,9 +442,9 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMGetFontDimensions(
                                         inFontID            : XPLMFontID;
-                                        outCharWidth        : Pint *;    { Can be nil }
-                                        outCharHeight       : Pint *;    { Can be nil }
-                                        outDigitsOnly       : Pint *);    { Can be nil }
+                                        outCharWidth        : PInteger;    { Can be nil }
+                                        outCharHeight       : PInteger;    { Can be nil }
+                                        outDigitsOnly       : PInteger);    { Can be nil }
     cdecl; external XPLM_DLL;
 
 {$IFDEF XPLM200}
@@ -445,7 +460,7 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMMeasureString(
                                         inFontID            : XPLMFontID;
-                                        inChar              : Pchar *;
+                                        inChar              : XPLMString;
                                         inNumChars          : Integer) : Single;
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM200}
