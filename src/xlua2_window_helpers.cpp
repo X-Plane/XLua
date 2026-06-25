@@ -1,3 +1,9 @@
+// KEEP IN SYNC WITH XPLMDisplay.xml: these hand-written bodies back the
+// lua_impl="external" window-helper declarations there. A missing/renamed impl
+// fails the link — but the XML's params/return/desc (which become the published
+// EmmyLua docs) are NOT checked, so if you change what a function takes or returns
+// here, update the XML too or the docs silently go stale.
+//
 // XLuaCreateImguiWindow / XLuaCreateBrowserWindow — XLua-2-only convenience
 // constructors that wrap XPLMCreateWindowEx with content-type-specific
 // defaults and pre-installed handlers. See header for the registration

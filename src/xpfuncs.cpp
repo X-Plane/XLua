@@ -34,7 +34,8 @@
  */
 
 static XPLMDataRef drSimRealTime = nullptr;
-std::string const kTimerCallbackSig("TimerCallback");
+// kTimerCallbackSig is defined in xptimers.cpp (shared with the host loader);
+// declared extern in xpfuncs.h.
 std::string const kDatarefCallbackSig("DatarefCallback");
 std::string const kFilterCallbackSig("FilterCallback");
 std::string const kCommandCallbackSig("CmdCallback");
@@ -563,121 +564,12 @@ namespace XLua1
 
 }	// End of XLua1_Compat namespace
 
-#define XLUA_ALL_FUNC_LIST \
-	FUNC(XLuaCreateTimer) \
-	FUNC(XLuaRunTimer) \
-	FUNC(XLuaFindTimer) \
-	FUNC(XLuaIsTimerScheduled) \
-	FUNC(XLuaGetTimerRemaining) \
-	FUNC(XLuaReloadOnFlightChange)
-
-static int XLuaReloadOnFlightChange(lua_State* L)
-{
-	char log[512];
-	sprintf(log, "Aircraft scripts will be fully reloaded when flight details change.");
-
-	// Log the fact that the plugin's been put into reinit-on-flight-change mode.
-	lua_pushstring(L, log);
-	l_my_print(L);
-	lua_pop(L, 1);
-
-	xlua_cmd_mark_reload_on_change();
-
-	return 0;
-}
-
-//----------------------------------------------------------------
-// TIMERS
-//----------------------------------------------------------------
-
-static void timer_callback(std::shared_ptr<notify_cb_t> ref)
-{
-	lua_State* L = setup_lua_callback(ref.get(), kTimerCallbackSig);
-	if (L)
-	{
-		fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "");
-	}
-}
-
-// XPLMCreateTimer func -> ptr
-static int XLuaCreateTimer(lua_State* L)
-{
-	std::shared_ptr<notify_cb_t> timer_cb = std::make_shared<notify_cb_t>(L, 0);
-	if (!wrap_next_lua_func(timer_cb, -1, false, kTimerCallbackSig))
-	{
-		return 0;
-	}
-
-	xlua_timer* t = xlua_create_timer(L, timer_callback, timer_cb);
-	assert(t);
-
-	xlua_pushuserdata(L, t);
-	return 1;
-}
-
-/*
-* This is for use from init.lua . Previously it stored a reference to each created timer in an array. This caused problems for
-* timers created with closures because each instance of the closure - i.e. unique per frame - was stored. Moving the management
-* of timers into the plugin solves that but it also means we need to be able to search for an existing timer by function, to satisfy
-* the case where the callback is _not_ a closure.
-*
-* The original function is stored only as a registry index as part of the notify_cb_t struct and that's going to be expanded to allow
-* multiple callbacks for the same refcon, which makes problems here because all we have to search on is a function on the stack...
-*
-*/
-static int XLuaFindTimer(lua_State* L)
-{
-	std::shared_ptr<notify_cb_t> timer_cb = std::make_shared<notify_cb_t>(L, 0);
-	wrap_next_lua_func(timer_cb, -1, false, kTimerCallbackSig);
-
-	xlua_timer* timer = xlua_find_timer(L, timer_callback, timer_cb);
-	if (timer == nullptr)
-	{
-		lua_pushnil(L);
-	}
-	else
-	{
-		xlua_pushuserdata(L, timer);
-	}
-
-	return 1;
-}
-
-// Get the number of seconds a timer has to go, or -1 if not scheduled.
-static int XLuaGetTimerRemaining(lua_State* L)
-{
-	xlua_timer* t = xlua_checkuserdata<xlua_timer*>(L, 1, "expected timer");
-	if (t == nullptr)
-	{
-		lua_pushnumber(L, -1);
-	}
-	else
-	{
-		lua_pushnumber(L, xlua_get_timer_remaining(L, t));
-	}
-
-	return 1;
-}
-
-// XPLMRunTimer timer delay repeat
-static int XLuaRunTimer(lua_State* L)
-{
-	xlua_timer* t = xlua_checkuserdata<xlua_timer*>(L, 1, "expected timer");
-	if (!t)
-		return 0;
-
-	xlua_run_timer(L, t, lua_tonumber(L, -2), lua_tonumber(L, -1));
-	return 0;
-}
-
-// XPLMIsTimerScheduled ptr -> int
-static int XLuaIsTimerScheduled(lua_State* L)
-{
-	xlua_timer* t = xlua_checkuserdata<xlua_timer*>(L, 1, "expected timer");
-	int sched = xlua_is_timer_scheduled(L, t);
-	lua_pushboolean(L, sched);
-	return 1;
-}
+// The XLua timer bindings (XLuaCreateTimer / XLuaRunTimer / XLuaFindTimer /
+// XLuaIsTimerScheduled / XLuaGetTimerRemaining) and XLuaReloadOnFlightChange
+// moved to xptimers.cpp so the host's glua library can link them too. They
+// are declared lua-only in XPLMProcessing.xml and registered for XLua 2.x and
+// the direct loader via add_xplm_to_interp; add_xlua_funcs_to_interp below
+// hand-registers them for XLua 1.x scripts (which don't run add_xplm_to_interp).
 
 std::string get_log_prefix(char l)
 {
@@ -775,10 +667,20 @@ void	add_xlua_funcs_to_interp(lua_State * L, int compat_version)
 	#define FUNC(x) lua_register(L,#x,x);
 	#define FUNC_V1(x) lua_register(L,#x,XLua1::x);
 
-	XLUA_ALL_FUNC_LIST;
-
 	if (compat_version == 1)
 	{
+		// XLua 1.x scripts never run add_xplm_to_interp (module.cpp only calls it
+		// for compat >= 2), so the timer + reload bindings — registered there for
+		// XLua 2.x and the direct loader via XPLMProcessing.xml — must be
+		// hand-registered here. init.lua's run_timer/run_after_time sugar calls
+		// straight into these.
+		FUNC(XLuaCreateTimer);
+		FUNC(XLuaRunTimer);
+		FUNC(XLuaFindTimer);
+		FUNC(XLuaIsTimerScheduled);
+		FUNC(XLuaGetTimerRemaining);
+		FUNC(XLuaReloadOnFlightChange);
+
 		XLUA1_FUNC_LIST;
 	}
 	else
