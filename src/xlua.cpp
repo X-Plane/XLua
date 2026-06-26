@@ -699,15 +699,15 @@ PLUGIN_API int XPluginEnable(void)
 		{
 			reset_cmd = XPLMCreateCommand("laminar/xlua_sys/reload_all_scripts", "Reload scripts and state for system-level XLua");
 		}
-
-		if (reset_cmd != nullptr)
-		{
-			XPLMRegisterCommandHandler(reset_cmd, ResetState, 1, nullptr);
-		}
 	}
 	else
 	{
 		menuName = "System XLua";
+	}
+
+	if (reset_cmd != nullptr)
+	{
+		XPLMRegisterCommandHandler(reset_cmd, ResetState, 1, nullptr);
 	}
 
 	if (menuName != nullptr)
