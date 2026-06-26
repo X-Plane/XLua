@@ -182,6 +182,19 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 
 static std::map<int, std::shared_ptr<notify_cb_t>> s_RegisteredCallbacks;
 
+void xlua_callback_shutdown(void)
+{
+	// In theory, on shutdown there should be _no_ callbacks remaining.
+	assert(s_RegisteredCallbacks.empty());
+
+	// ... but if there is, ensure the interpreter pointer is null so the destructor is a no-op. This function should only ever be
+	// called if there are no modules/interpreters left.
+	for (auto& cb : s_RegisteredCallbacks)
+	{
+		cb.second->L = nullptr;
+	}
+}
+
 void xlua_callback_cleanup(lua_State* L)
 {
 	for (auto it = s_RegisteredCallbacks.begin(); it != s_RegisteredCallbacks.end(); )

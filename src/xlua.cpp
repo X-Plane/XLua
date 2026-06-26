@@ -260,12 +260,12 @@ void CleanupScripts(void)
 	xlua_dref_cleanup();
 	xlua_cmd_cleanup();
 	xlua_timer_cleanup();
-	for (auto& m : g_modules)
-		xlua_callback_cleanup(m->get_interp());
 
 	for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
 		delete (*m);
+
 	g_modules.clear();
+	xlua_callback_shutdown();
 }
 
 #if !MOBILE
