@@ -85,6 +85,7 @@ void xlua_pushuserdata(lua_State * state, T data)
 
 void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb);
 void xlua_callback_cleanup(lua_State* L);
+bool xlua_is_callback_valid(notify_cb_t const* probe_cb);
 void xlua_callback_shutdown(void);
 
 // Install a panic handler that logs the unprotected-Lua-error context (the

@@ -148,6 +148,13 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 	if (!cb)
 		return nullptr;
 
+	if (!xlua_is_callback_valid(cb))
+	{
+		log_message(nullptr, "ERROR: A closure '%s' cas called which was invalid. This is a plugin bug, not a script bug. Please report it.\n",
+					callbackKey.c_str());
+		return nullptr;
+	}
+
 	if (callbackKey.empty())
 	{
 		log_message(cb->L, "ERROR: Anonymous closure specified.\n");
@@ -181,6 +188,14 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 }
 
 static std::map<int, std::shared_ptr<notify_cb_t>> s_RegisteredCallbacks;
+
+bool xlua_is_callback_valid(notify_cb_t const* probe_cb)
+{
+	auto valid_record = std::find_if(s_RegisteredCallbacks.cbegin(), s_RegisteredCallbacks.cend(),
+									 [probe_cb](auto const& cb) { return cb.second.get() == probe_cb; });
+
+	return (valid_record != s_RegisteredCallbacks.cend());
+}
 
 void xlua_callback_shutdown(void)
 {
