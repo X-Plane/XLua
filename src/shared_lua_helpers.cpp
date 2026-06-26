@@ -92,7 +92,7 @@ static int traceback(lua_State * L)
 
 	// IMC make sure we see the message in the log file!
 	// Pass nullptr here so we don't get a duplicate stack trace.
-	log_message(nullptr, "traceback: %s\n", lua_tostring(L, -1));
+	log_message(nullptr, "ERROR: %s\n", lua_tostring(L, -1));
 
 	return 1;
 }
