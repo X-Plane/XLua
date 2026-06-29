@@ -64,14 +64,7 @@ struct window_ctx final {
 
     explicit window_ctx(lua_State* in_L) : L(in_L) {}
 
-    ~window_ctx() {
-        // Drop the per-VM s_RegisteredCallbacks references so the captured
-        // Lua functions can be GC'd. The map holds shared_ptrs and would
-        // otherwise keep them alive (and count against the 500-entry cap in
-        // shared_xpfuncs.cpp) for the script's whole lifetime.
-        if (draw_cb)        xlua_remove_callback(draw_cb);
-        if (browser_nav_cb) xlua_remove_callback(browser_nav_cb);
-    }
+    ~window_ctx() {}
 
     window_ctx(window_ctx const&)            = delete;
     window_ctx& operator=(window_ctx const&) = delete;
@@ -93,9 +86,10 @@ void cb_draw(XPLMWindowID win, void* refcon) {
     // (even on Lua error) to leave imgui in a clean state for the next tick.
     xplm_imgui_begin_frame(ctx->L, w, h, win);
     if (ctx->draw_cb) {
-        lua_State* L = setup_lua_callback(ctx->draw_cb.get(), "drawWindowFunc");
-        if (L) {
-            fmt_pcall_stdvars(L, find_debug_proc(L), false, "uiir",
+        lua_rawgeti(ctx->L, LUA_REGISTRYINDEX, ctx->draw_cb->callbacks.at("drawWindowFunc"));
+        if (lua_isfunction(ctx->L, -1))
+        {
+            fmt_pcall_stdvars(ctx->L, find_debug_proc(ctx->L), false, "uiir",
                               win, w, h, ctx->draw_cb->get_capture());
         }
     }
@@ -167,7 +161,7 @@ std::shared_ptr<notify_cb_t> capture_field_func(lua_State* L, int tbl,
     }
     auto cb = wrap_lua_func(L, -1, /*optional=*/false, key);
     lua_pop(L, 1);
-    if (cb) xlua_persist_userref(L, cb);
+
     return cb;
 }
 
