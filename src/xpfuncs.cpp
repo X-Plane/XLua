@@ -103,7 +103,7 @@ namespace XLua1
 		const char* name = luaL_checkstring(L, 1);
 		const char* typestr = luaL_checkstring(L, 2);
 		const char* writable = luaL_checkstring(L, 3);
-		std::shared_ptr<notify_cb_t> cb = wrap_lua_func_nil(L, 4, kDatarefCallbackSig);
+		std::shared_ptr<notify_cb_t> cb = wrap_lua_func_no_userref(L, 4, kDatarefCallbackSig);
 
 		if (strlen(name) == 0)
 			return luaL_argerror(L, 1, "dataref name must not be an empty string.");

@@ -159,7 +159,7 @@ std::shared_ptr<notify_cb_t> capture_field_func(lua_State* L, int tbl,
         luaL_error(L, "%s must be a function", key);
         return nullptr;
     }
-    auto cb = wrap_lua_func(L, -1, /*optional=*/false, key);
+    auto cb = wrap_lua_func_no_userref(L, -1, key);
     lua_pop(L, 1);
 
     return cb;
