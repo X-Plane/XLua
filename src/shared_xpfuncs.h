@@ -49,6 +49,11 @@ std::shared_ptr<notify_cb_t> capture_lua_value(lua_State* L, int idx);
 bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb, int func_stack_idx, bool optional, std::string const& cb_typename);
 void xlua_remove_callback(std::shared_ptr<notify_cb_t> cb);
 
+// Raw-pointer overload for callback bodies, which only hold the cast void* refcon
+// (notify_cb_t const*), not the owning shared_ptr. Erases the matching entry from the
+// registry by identity (heterogeneous O(1) lookup); a no-op if the entry is already gone.
+void xlua_remove_callback(notify_cb_t const* cb);
+
 std::optional<std::string> xlua_checkoptstring(lua_State* L, int narg);
 std::optional<float>       xlua_checkoptfloat(lua_State* L, int narg);
 std::optional<double>      xlua_checkoptdouble(lua_State* L, int narg);

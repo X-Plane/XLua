@@ -608,6 +608,7 @@ static void cb_XPLMObjectLoaded_f(XPLMObjectRef inObject, void* inRefcon)
 		}
 		luaL_unref(L, LUA_REGISTRYINDEX, inObject_typed_ref);
 	}
+	xlua_remove_callback(inRefcon_cb);
 }
 
 int XLuaLoadObject(lua_State* L)
@@ -679,6 +680,7 @@ int XLuaLookupObjects(lua_State* L)
 
 	int res = XPLMLookupObjects(inPath, inLatitude, inLongitude, cb_XPLMLibraryEnumerator_f, cb_capture_0.get());
 	lua_pushinteger(L, res);
+	xlua_remove_callback(cb_capture_0);
 
 	return 1;
 }

@@ -295,6 +295,17 @@ void xlua_remove_callback(std::shared_ptr<notify_cb_t> cb)
 	s_RegisteredCallbacks.erase(cb);
 }
 
+void xlua_remove_callback(notify_cb_t const* cb)
+{
+	// Heterogeneous (C++20) lookup so the raw refcon pointer a callback body holds can erase its own
+	// entry without rebuilding a shared_ptr. Tolerant no-op if it's already gone: a correctly-tagged
+	// one-shot callback fires exactly once, so this normally hits, but a double-fire (mis-tag) must
+	// not be fatal.
+	auto it = s_RegisteredCallbacks.find(cb);
+	if (it != s_RegisteredCallbacks.end())
+		s_RegisteredCallbacks.erase(it);
+}
+
 void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb)
 {
 	// s_RegisteredCallbacks should only be used to store notify_cb_t structs with a persisted registry ID. Without that,

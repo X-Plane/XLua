@@ -307,6 +307,7 @@ static void cb_XPLMMapWillBeDeletedCallback_f(XPLMMapLayerID inLayer, void* inRe
 		}
 		luaL_unref(L, LUA_REGISTRYINDEX, inLayer_typed_ref);
 	}
+	xlua_remove_callback(inRefcon_cb);
 }
 
 void RegEnum_XPLMMapLayerType(lua_State* L)

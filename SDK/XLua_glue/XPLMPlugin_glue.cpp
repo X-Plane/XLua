@@ -258,6 +258,7 @@ int XLuaEnumerateFeatures(lua_State* L)
 	wrap_next_lua_func(cb_capture_0, 1, true, "XPLMFeatureEnumerator_f");
 
 	XPLMEnumerateFeatures((cb_capture_0 ? cb_XPLMFeatureEnumerator_f : nullptr), cb_capture_0.get());
+	xlua_remove_callback(cb_capture_0);
 
 	return 0;
 }
