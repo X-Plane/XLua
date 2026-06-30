@@ -2010,6 +2010,7 @@ int XLuaGetAllMonitorBoundsGlobal(lua_State* L)
 	wrap_next_lua_func(cb_capture_0, 1, false, "XPLMReceiveMonitorBoundsGlobal_f");
 
 	XPLMGetAllMonitorBoundsGlobal(cb_XPLMReceiveMonitorBoundsGlobal_f, cb_capture_0.get());
+	xlua_remove_callback(cb_capture_0);
 
 	return 0;
 }
@@ -2036,6 +2037,7 @@ int XLuaGetAllMonitorBoundsOS(lua_State* L)
 	wrap_next_lua_func(cb_capture_0, 1, false, "XPLMReceiveMonitorBoundsOS_f");
 
 	XPLMGetAllMonitorBoundsOS(cb_XPLMReceiveMonitorBoundsOS_f, cb_capture_0.get());
+	xlua_remove_callback(cb_capture_0);
 
 	return 0;
 }

@@ -584,6 +584,10 @@ void module::shutdown_lua(void)
 		}
 		_XPluginStop();
 
+		// Ditch all the callbacks now, during shutdown and _after_ any disable/stop hooks in case the user decides
+		// to do anything funny like register callbacks.
+		xlua_callback_cleanup(m_interp);
+
 		luaJIT_profile_stop(m_interp);
 		lua_close(m_interp);
 		m_interp = nullptr;

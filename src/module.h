@@ -13,7 +13,9 @@
 
 #define XLUA_VERSION "2.0.0a1"
 
-#define NOMINMAX
+#ifndef NOMINMAX
+	#define NOMINMAX
+#endif
 
 #include <XPLMDefs.h>
 

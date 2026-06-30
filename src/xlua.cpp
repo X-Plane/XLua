@@ -260,12 +260,12 @@ void CleanupScripts(void)
 	xlua_dref_cleanup();
 	xlua_cmd_cleanup();
 	xlua_timer_cleanup();
-	for (auto& m : g_modules)
-		xlua_callback_cleanup(m->get_interp());
 
 	for (vector<module*>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
 		delete (*m);
+
 	g_modules.clear();
+	xlua_callback_shutdown();
 }
 
 #if !MOBILE
@@ -699,15 +699,15 @@ PLUGIN_API int XPluginEnable(void)
 		{
 			reset_cmd = XPLMCreateCommand("laminar/xlua_sys/reload_all_scripts", "Reload scripts and state for system-level XLua");
 		}
-
-		if (reset_cmd != nullptr)
-		{
-			XPLMRegisterCommandHandler(reset_cmd, ResetState, 1, nullptr);
-		}
 	}
 	else
 	{
 		menuName = "System XLua";
+	}
+
+	if (reset_cmd != nullptr)
+	{
+		XPLMRegisterCommandHandler(reset_cmd, ResetState, 1, nullptr);
 	}
 
 	if (menuName != nullptr)

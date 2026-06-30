@@ -30,8 +30,10 @@ public:
 	lua_State* L = nullptr;
 	std::map<std::string, int> callbacks;       // Map from function definition to registry index for the callback;
 
+	static constexpr int kNeverPersist = 0;
+
 private:
-	int origRefconRegIndex = 0;
+	int origRefconRegIndex = kNeverPersist;
 	static int nilRefCount;
 };
 
@@ -40,13 +42,17 @@ std::filesystem::path get_current_script_path(lua_State* L);
 
 int log_message(lua_State *L, char const* format, ...);
 
-std::shared_ptr<notify_cb_t> wrap_lua_func_nil(lua_State* L, int idx, std::string const callbackKey);
+std::shared_ptr<notify_cb_t> wrap_lua_func_no_userref(lua_State* L, int idx, std::string const callbackKey);
 lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackKey);
 std::shared_ptr<notify_cb_t> capture_lua_value(lua_State* L, int idx);
 
-std::shared_ptr<notify_cb_t> wrap_lua_func(lua_State* L, int func_stack_idx, bool optional, std::string const& cb_typename);
 bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb, int func_stack_idx, bool optional, std::string const& cb_typename);
 void xlua_remove_callback(std::shared_ptr<notify_cb_t> cb);
+
+// Raw-pointer overload for callback bodies, which only hold the cast void* refcon
+// (notify_cb_t const*), not the owning shared_ptr. Erases the matching entry from the
+// registry by identity (heterogeneous O(1) lookup); a no-op if the entry is already gone.
+void xlua_remove_callback(notify_cb_t const* cb);
 
 std::optional<std::string> xlua_checkoptstring(lua_State* L, int narg);
 std::optional<float>       xlua_checkoptfloat(lua_State* L, int narg);
@@ -85,6 +91,8 @@ void xlua_pushuserdata(lua_State * state, T data)
 
 void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb);
 void xlua_callback_cleanup(lua_State* L);
+bool xlua_is_callback_valid(notify_cb_t const* probe_cb);
+void xlua_callback_shutdown(void);
 
 // Install a panic handler that logs the unprotected-Lua-error context (the
 // error message, the script path) before LuaJIT's default abort fires. Call
