@@ -15,10 +15,15 @@
 
 #include <XPLMUtilities.h>
 
+#include <algorithm>
 #include <regex>
 #include <cassert>
 #include <string>
 #include <string_view>
+
+// Registers the generated XPLM lua glue (XLua_Register_glue.cpp) — the full
+// SDK surface on desktop, the mobile_compatible subset on mobile.
+void add_xplm_to_interp(lua_State* L);
 
 #if MOBILE
 	#include "xmap.h"
@@ -36,8 +41,6 @@
 		#include "../luajit/src/luajit.h"
 		#include "../luajit/src/lualib.h"
 	}
-
-	void add_xplm_to_interp(lua_State* L);
 
 	class	xmap_class {
 	public:
@@ -268,7 +271,7 @@ module::module(
 
 	static const std::regex reHashbang(R"(^--\[\[\s*XLua\s+((?:\d+\.?){1,3})\s*\]\])");
 	std::smatch hb_match;
-	std::string hb_view(reinterpret_cast<char const*>(lmod.begin()), 128);
+	std::string hb_view(reinterpret_cast<char const*>(lmod.begin()), std::min<size_t>(lmod.size(), 128));
 	if (std::regex_search(hb_view, hb_match, reHashbang))
 	{
 		if (!m_xlua_compat.init_from_string(hb_match[1].str()))
@@ -304,11 +307,13 @@ module::module(
 	lua_setglobal(m_interp, "XLuaPluginVersion");
 
 	add_xlua_funcs_to_interp(m_interp, m_xlua_compat[0]);
-#if !MOBILE
 	if (m_xlua_compat[0] >= 2)
 	{
-		// XLua 2.x functions.
+		// XLua 2.x functions. On mobile the generated glue registers the
+		// mobile_compatible subset of the SDK; imgui and browser windows are
+		// desktop-only.
 		add_xplm_to_interp(m_interp);
+#if !MOBILE
 		LoadImguiBindings(m_interp);
 		register_xlua_imgui_text_inputs(m_interp);
 		// XLuaCreate/DestroyImguiWindow + XLuaCreate/DestroyBrowserWindow are now
@@ -317,8 +322,8 @@ module::module(
 		// call has been removed. imgui text inputs stay hand-registered because
 		// their imgui table is created by LoadImguiBindings(), after the
 		// generated registration runs.
-	}
 #endif
+	}
 
 	lua_getfield(m_interp, LUA_GLOBALSINDEX, "package");
 	lua_getfield(m_interp, -1, "path");
