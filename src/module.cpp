@@ -367,7 +367,9 @@ module::module(
 	* 
 	*/
 
-	int load_result = luaL_loadstring(m_interp, "jit.opt.start(\"maxmcode=8192\", \"maxtrace=4096\", \"maxirconst=1500\", \"maxside=500\")");
+	// The `jit and jit.opt` guard keeps this quiet on interpreter-only builds (iOS
+	// forbids JIT, so LuaJIT ships without the jit.opt module there).
+	int load_result = luaL_loadstring(m_interp, "if jit and jit.opt then jit.opt.start(\"maxmcode=8192\", \"maxtrace=4096\", \"maxirconst=1500\", \"maxside=500\") end");
 	CTOR_FAIL(load_result, "set jit defaults")
 	int script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
 
