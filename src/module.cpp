@@ -248,6 +248,62 @@ bool module::get_jit_mode(void)
 	return is_enabled;
 }
 
+#if MOBILE
+// require() on mobile: the stock lua-path searcher fopens its candidates, which
+// cannot see mobile asset paths (iOS's CWD is not the bundle root, Android
+// assets live in the APK). This searcher makes the same package.path templates
+// work through the sim's xmap file layer instead. Installed at
+// package.loaders[2] — after preload, ahead of the stock searcher — in the v2
+// interp setup below.
+static int xmap_lua_path_searcher(lua_State* L)
+{
+	std::string mod_file = luaL_checkstring(L, 1);
+	for (auto& c : mod_file)
+		if (c == '.')
+			c = '/';
+
+	lua_getfield(L, LUA_GLOBALSINDEX, "package");
+	lua_getfield(L, -1, "path");
+	std::string search_path = lua_tostring(L, -1);
+	lua_pop(L, 2);
+
+	std::string misses;
+	size_t tpl_start = 0;
+	while (tpl_start <= search_path.size())
+	{
+		size_t tpl_end = search_path.find(';', tpl_start);
+		if (tpl_end == std::string::npos)
+			tpl_end = search_path.size();
+		std::string candidate = search_path.substr(tpl_start, tpl_end - tpl_start);
+		tpl_start = tpl_end + 1;
+		if (candidate.empty())
+			continue;
+
+		for (size_t q = candidate.find('?'); q != std::string::npos; q = candidate.find('?', q + mod_file.size()))
+			candidate.replace(q, 1, mod_file);
+
+		// Purely lexical ".."-folding (no file-system access): the include
+		// template contains "../.." which the Android in-APK asset lookup
+		// won't resolve on its own.
+		candidate = std::filesystem::path(candidate).lexically_normal().generic_string();
+
+		xmap_class chunk(candidate);
+		if (chunk.exists())
+		{
+			// A module we found but that fails to parse is an error to report,
+			// not a miss to keep searching past.
+			if (luaL_loadbuffer(L, reinterpret_cast<char const*>(chunk.begin()), chunk.size(), ("@" + candidate).c_str()) != 0)
+				lua_error(L);
+			return 1;
+		}
+		misses += "\n\tno xmap file '" + candidate + "'";
+	}
+
+	lua_pushstring(L, misses.c_str());
+	return 1;
+}
+#endif
+
 module::module(
 	std::filesystem::path const& in_module_path,
 	std::filesystem::path const& in_init_script,
@@ -322,6 +378,32 @@ module::module(
 		// call has been removed. imgui text inputs stay hand-registered because
 		// their imgui table is created by LoadImguiBindings(), after the
 		// generated registration runs.
+#else
+		// Mobile doesn't ship the generated include/XPLM*.lua headers — they are
+		// EmmyLua doc stubs for IDE completion only; every binding they describe
+		// was just registered natively by add_xplm_to_interp(). Two searchers
+		// keep the desktop require() conventions working:
+		//   - at loaders[2], the xmap-backed path searcher so real modules load
+		//     through the sim file layer (the stock searcher fopens and cannot
+		//     see mobile asset paths);
+		//   - appended last, a fallback that tolerates any XPLM* require as a
+		//     no-op — LAST so a real XPLM*.lua file shipped by an aircraft still
+		//     wins, and only a require that would otherwise error lands here.
+		//     This deliberately covers desktop-only headers (XPLMCamera, …) so
+		//     shared scripts load unmodified.
+		int searcher_result = luaL_loadstring(m_interp, R"lua(
+			local xmap_searcher = ...
+			table.insert(package.loaders, 2, xmap_searcher)
+			table.insert(package.loaders, function(name)
+				if string.match(name, "^XPLM") then
+					return function() return true end
+				end
+				return "\n\tno XPLM doc stub on mobile (bindings are pre-registered)"
+			end))lua");
+		CTOR_FAIL(searcher_result, "load searcher setup")
+		lua_pushcfunction(m_interp, xmap_lua_path_searcher);
+		searcher_result = lua_pcall(m_interp, 1, 0, 0);
+		CTOR_FAIL(searcher_result, "install lua searchers")
 #endif
 	}
 
@@ -333,7 +415,12 @@ module::module(
 	{
 		cur_path += ";";
 	}
-	lua_pushstring(m_interp, (cur_path / m_path / "../../include/?.lua").generic_string().c_str());
+	// Plain string concat, NOT std::filesystem::operator/: cur_path is the whole
+	// ';'-joined search path, so path append either replaced it outright (m_path
+	// absolute — desktop) or glued a stray leading '/' onto the template (m_path
+	// relative — mobile, where paths are bundle-relative).
+	cur_path += (m_path / "../../include/?.lua").generic_string();
+	lua_pushstring(m_interp, cur_path.c_str());
 	lua_setfield(m_interp, -2, "path");
 	lua_pop(m_interp, 1); // Remove the package table from the stack
 
