@@ -131,12 +131,16 @@ void cb_browser_nav(XPLMWindowID win, const char* url,
                     int success, const char* err, void* refcon) {
     auto* ctx = static_cast<window_ctx*>(refcon);
     if (ctx == nullptr || ctx->browser_nav_cb == nullptr) return;
-    lua_State* L = setup_lua_callback(ctx->browser_nav_cb.get(),
-                                      "browserNavigationFunc");
-    if (L == nullptr) return;
-    fmt_pcall_stdvars(L, find_debug_proc(L), false, "usbsr",
-                      win, url, static_cast<bool>(success), err,
-                      ctx->browser_nav_cb->get_capture());
+    // The capture is ctx-owned (wrap_lua_func_no_userref / kNeverPersist), so don't route
+    // through setup_lua_callback -- its validity gate only admits callbacks persisted in
+    // s_RegisteredCallbacks and always rejects these. Fetch the ref directly, like cb_draw.
+    lua_rawgeti(ctx->L, LUA_REGISTRYINDEX, ctx->browser_nav_cb->callbacks.at("browserNavigationFunc"));
+    if (lua_isfunction(ctx->L, -1))
+    {
+        fmt_pcall_stdvars(ctx->L, find_debug_proc(ctx->L), false, "usbsr",
+                          win, url, static_cast<bool>(success), err,
+                          ctx->browser_nav_cb->get_capture());
+    }
 }
 
 int field_int(lua_State* L, int tbl, const char* key, int dflt) {
