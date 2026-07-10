@@ -424,7 +424,8 @@ local XPLMDeviceID = {
 --- The SDK calls your mouse wheel callback when one of the mouse wheels is scrolled within your window. Return true to consume the mouse wheel movement or false to pass them on to a lower window. (If your window appears opaque to the user, you should consume mouse wheel scrolling even if it does nothing.) The number of "clicks" indicates how far the wheel was turned since the last callback. The wheel is 0 for the vertical axis or 1 for the horizontal axis (for OS/mouse combinations that support this). The units for x and y values match the units used in your window. Thus, for "modern" windows (those created via XPLMCreateWindowEx() and compiled against the XPLM300 library), the units are boxels, while legacy windows will get pixels. Legacy windows have their origin in the lower left of the main X-Plane window, while modern windows have their origin in the lower left of the global desktop space. In both cases, x increases as you move right, and y increases as you move up.
 ---@alias XPLMHandleMouseWheel_f fun(inWindowID: XPLMWindowID, x: integer, y: integer, wheel: integer, clicks: integer, inRefcon: any): boolean
 
----@alias XPLMBrowserNavigation_f fun(inWindow: XPLMWindowID, inURL: string, inSuccess: boolean, inError: string, inRefcon: any)
+---@alias XPLMBrowserLoadFinished_f fun(inWindow: XPLMWindowID, inURL: string, inRefcon: any)
+---@alias XPLMBrowserLoadError_f fun(inWindow: XPLMWindowID, inURL: string, inError: string, inRefcon: any)
 
 --[[
 XPLMWindowLayer describes where in the ordering of windows X-Plane should place a particular window.
@@ -501,7 +502,8 @@ local XPLMWindowDecoration = {
 ---@field layer XPLMWindowLayer
 ---@field handleRightClickFunc XPLMHandleMouseClick_f A callback to handle the user right-clicking within your window (or NULL to ignore right clicks)
 ---@field windowContentType XPLMWindowContentType The source of content for this Window (OpenGL, Panel Graphics, CEF, etc.)
----@field browserNavigationFunc XPLMBrowserNavigation_f
+---@field browserLoadFinishedFunc XPLMBrowserLoadFinished_f
+---@field browserLoadErrorFunc XPLMBrowserLoadError_f
 
 ---@class _G
 --- Lua only. Creates a modern panel-graphics window pre-wired for imgui drawing
@@ -532,7 +534,8 @@ local XPLMWindowDecoration = {
 ---   decorateAsFloatingWindow    An XPLMWindowDecoration value (default xplm_WindowDecorationRoundRectangle).
 ---   layer                       An XPLMWindowLayer value (default xplm_WindowLayerFloatingWindows).
 ---   url                         Initial URL to load.
----   browserNavigationFunc       function(windowID, url, success, errorText) -- navigation callback.
+---   browserLoadFinishedFunc     function(windowID, url) -- main frame finished loading (not a success guarantee; error pages finish too).
+---   browserLoadErrorFunc        function(windowID, url, errorText) -- navigation failed at the network level.
 ---
 --- Destroy the window with XLuaDestroyBrowserWindow().
 ---

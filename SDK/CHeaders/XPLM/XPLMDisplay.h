@@ -1447,13 +1447,23 @@ typedef int (* XPLMHandleMouseWheel_f)(
 
 #if defined(XPLMPG1)
 /*
- * XPLMBrowserNavigation_f
+ * XPLMBrowserLoadFinished_f
  *
  */
-typedef void (* XPLMBrowserNavigation_f)(
+typedef void (* XPLMBrowserLoadFinished_f)(
                          XPLMWindowID         inWindow,
                          const char *         inURL,
-                         int                  inSuccess,
+                         void*                inRefcon);
+#endif /* XPLMPG1 */
+
+#if defined(XPLMPG1)
+/*
+ * XPLMBrowserLoadError_f
+ *
+ */
+typedef void (* XPLMBrowserLoadError_f)(
+                         XPLMWindowID         inWindow,
+                         const char *         inURL,
                          const char *         inError,                /* Can be NULL */
                          void*                inRefcon);
 #endif /* XPLMPG1 */
@@ -1641,7 +1651,11 @@ typedef struct {
 #endif /* XPLMPG1 */
 
 #if defined(XPLMPG1)
-     XPLMBrowserNavigation_f   browserNavigationFunc;
+     XPLMBrowserLoadFinished_f browserLoadFinishedFunc;
+#endif /* XPLMPG1 */
+
+#if defined(XPLMPG1)
+     XPLMBrowserLoadError_f    browserLoadErrorFunc;
 #endif /* XPLMPG1 */
 } XPLMCreateWindow_t;
 #endif /* XPLM200 */

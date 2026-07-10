@@ -66,7 +66,8 @@ int find_debug_proc(lua_State* L) {
 struct window_ctx final {
     lua_State*                   L;
     std::shared_ptr<notify_cb_t> draw_cb;
-    std::shared_ptr<notify_cb_t> browser_nav_cb;
+    std::shared_ptr<notify_cb_t> browser_load_finished_cb;
+    std::shared_ptr<notify_cb_t> browser_load_error_cb;
 
     explicit window_ctx(lua_State* in_L) : L(in_L) {}
 
@@ -127,19 +128,30 @@ int cb_mouse_wheel(XPLMWindowID w, int x, int y, int wh, int cl, void* rc) {
     return xplm_imgui_handle_mouse_wheel(w, x, y, wh, cl, ctx ? ctx->L : nullptr);
 }
 
-void cb_browser_nav(XPLMWindowID win, const char* url,
-                    int success, const char* err, void* refcon) {
+// The SDK splits browser navigation into two callbacks (finished / error) because
+// that is what the underlying browsers deliver; XLua mirrors the split. The captures
+// are ctx-owned (wrap_lua_func_no_userref / kNeverPersist), so don't route through
+// setup_lua_callback -- its validity gate only admits callbacks persisted in
+// s_RegisteredCallbacks and always rejects these. Fetch the ref directly, like cb_draw.
+void cb_browser_load_finished(XPLMWindowID win, const char* url, void* refcon) {
     auto* ctx = static_cast<window_ctx*>(refcon);
-    if (ctx == nullptr || ctx->browser_nav_cb == nullptr) return;
-    // The capture is ctx-owned (wrap_lua_func_no_userref / kNeverPersist), so don't route
-    // through setup_lua_callback -- its validity gate only admits callbacks persisted in
-    // s_RegisteredCallbacks and always rejects these. Fetch the ref directly, like cb_draw.
-    lua_rawgeti(ctx->L, LUA_REGISTRYINDEX, ctx->browser_nav_cb->callbacks.at("browserNavigationFunc"));
+    if (ctx == nullptr || ctx->browser_load_finished_cb == nullptr) return;
+    lua_rawgeti(ctx->L, LUA_REGISTRYINDEX, ctx->browser_load_finished_cb->callbacks.at("browserLoadFinishedFunc"));
     if (lua_isfunction(ctx->L, -1))
     {
-        fmt_pcall_stdvars(ctx->L, find_debug_proc(ctx->L), false, "usbsr",
-                          win, url, static_cast<bool>(success), err,
-                          ctx->browser_nav_cb->get_capture());
+        fmt_pcall_stdvars(ctx->L, find_debug_proc(ctx->L), false, "usr",
+                          win, url, ctx->browser_load_finished_cb->get_capture());
+    }
+}
+
+void cb_browser_load_error(XPLMWindowID win, const char* url, const char* err, void* refcon) {
+    auto* ctx = static_cast<window_ctx*>(refcon);
+    if (ctx == nullptr || ctx->browser_load_error_cb == nullptr) return;
+    lua_rawgeti(ctx->L, LUA_REGISTRYINDEX, ctx->browser_load_error_cb->callbacks.at("browserLoadErrorFunc"));
+    if (lua_isfunction(ctx->L, -1))
+    {
+        fmt_pcall_stdvars(ctx->L, find_debug_proc(ctx->L), false, "ussr",
+                          win, url, err, ctx->browser_load_error_cb->get_capture());
     }
 }
 
@@ -251,9 +263,11 @@ extern "C" int XLuaCreateBrowserWindow(lua_State* L) {
     // CEF routes input itself; no Lua-side handlers are wired.
 
     auto* ctx = new window_ctx(L);
-    ctx->browser_nav_cb = capture_field_func(L, 1, "browserNavigationFunc");
+    ctx->browser_load_finished_cb = capture_field_func(L, 1, "browserLoadFinishedFunc");
+    ctx->browser_load_error_cb    = capture_field_func(L, 1, "browserLoadErrorFunc");
     p.refcon = ctx;
-    p.browserNavigationFunc = ctx->browser_nav_cb ? cb_browser_nav : nullptr;
+    p.browserLoadFinishedFunc = ctx->browser_load_finished_cb ? cb_browser_load_finished : nullptr;
+    p.browserLoadErrorFunc    = ctx->browser_load_error_cb    ? cb_browser_load_error    : nullptr;
 
     lua_getfield(L, 1, "url");
     const char* url = lua_isstring(L, -1) ? lua_tostring(L, -1) : nullptr;
