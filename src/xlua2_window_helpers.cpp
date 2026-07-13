@@ -1,21 +1,14 @@
 // KEEP IN SYNC WITH XPLMDisplay.xml: these hand-written bodies back the
-// lua_impl="external" window-helper declarations there. A missing/renamed impl
-// fails the link — but the XML's params/return/desc (which become the published
-// EmmyLua docs) are NOT checked, so if you change what a function takes or returns
-// here, update the XML too or the docs silently go stale.
+// lua_impl="external" imgui window-helper declarations there. A missing/renamed
+// impl fails the link — but the XML's params/return/desc (which become the
+// published EmmyLua docs) are NOT checked, so if you change what a function
+// takes or returns here, update the XML too or the docs silently go stale.
 //
-// XLuaCreateImguiWindow / XLuaCreateBrowserWindow — XLua-2-only convenience
-// constructors that wrap XPLMCreateWindowEx with content-type-specific
-// defaults and pre-installed handlers. See header for the registration
-// contract; rationale for hiding XPLMCreateWindowEx itself lives in the
-// exclude="lua" comment on the XPLMDisplay.xml master.
-//
-// These four functions are declared in XPLMDisplay.xml with lua_impl="external"
-// and exclude="c|pascal|php", so header_parser does NOT auto-generate their
-// bodies — it only emits the EmmyLua type stub and a registration entry in the
-// generated XLua_Register_glue.cpp that points at the hand-written extern "C"
-// definitions below. The generated forward declaration must match these
-// signatures exactly, so any drift becomes a link/compile error.
+// XLuaCreateImguiWindow wraps XPLMCreateWindowEx, opening/closing an imgui frame
+// around the Lua draw callback and wiring the input handlers. header_parser does
+// NOT auto-generate these bodies — it only emits the EmmyLua type stub and a
+// registration entry in the generated XLua_Register_glue.cpp pointing at the
+// hand-written extern "C" definitions below.
 
 #include "shared_lua_helpers.h"
 #include "shared_xpfuncs.h"
@@ -60,19 +53,15 @@ int find_debug_proc(lua_State* L) {
 }
 
 // Per-window context held in XPLMCreateWindow_t::refcon. Allocated in the
-// create wrappers, freed by XLuaDestroyImguiWindow / XLuaDestroyBrowserWindow.
-// Non-copyable and non-movable: XPLM holds the raw pointer for the window's
-// whole lifetime, so the address has to stay stable.
+// create wrapper, freed by XLuaDestroyImguiWindow. Non-copyable and non-movable:
+// XPLM holds the raw pointer for the window's whole lifetime, so the address has
+// to stay stable.
 struct window_ctx final {
     lua_State*                   L;
     std::shared_ptr<notify_cb_t> draw_cb;
-    std::shared_ptr<notify_cb_t> browser_load_finished_cb;
-    std::shared_ptr<notify_cb_t> browser_load_error_cb;
 
     explicit window_ctx(lua_State* in_L) : L(in_L) {}
-
-    ~window_ctx() {}
-
+    ~window_ctx()                            = default;
     window_ctx(window_ctx const&)            = delete;
     window_ctx& operator=(window_ctx const&) = delete;
     window_ctx(window_ctx&&)                 = delete;
@@ -128,33 +117,6 @@ int cb_mouse_wheel(XPLMWindowID w, int x, int y, int wh, int cl, void* rc) {
     return xplm_imgui_handle_mouse_wheel(w, x, y, wh, cl, ctx ? ctx->L : nullptr);
 }
 
-// The SDK splits browser navigation into two callbacks (finished / error) because
-// that is what the underlying browsers deliver; XLua mirrors the split. The captures
-// are ctx-owned (wrap_lua_func_no_userref / kNeverPersist), so don't route through
-// setup_lua_callback -- its validity gate only admits callbacks persisted in
-// s_RegisteredCallbacks and always rejects these. Fetch the ref directly, like cb_draw.
-void cb_browser_load_finished(XPLMWindowID win, const char* url, void* refcon) {
-    auto* ctx = static_cast<window_ctx*>(refcon);
-    if (ctx == nullptr || ctx->browser_load_finished_cb == nullptr) return;
-    lua_rawgeti(ctx->L, LUA_REGISTRYINDEX, ctx->browser_load_finished_cb->callbacks.at("browserLoadFinishedFunc"));
-    if (lua_isfunction(ctx->L, -1))
-    {
-        fmt_pcall_stdvars(ctx->L, find_debug_proc(ctx->L), false, "usr",
-                          win, url, ctx->browser_load_finished_cb->get_capture());
-    }
-}
-
-void cb_browser_load_error(XPLMWindowID win, const char* url, const char* err, void* refcon) {
-    auto* ctx = static_cast<window_ctx*>(refcon);
-    if (ctx == nullptr || ctx->browser_load_error_cb == nullptr) return;
-    lua_rawgeti(ctx->L, LUA_REGISTRYINDEX, ctx->browser_load_error_cb->callbacks.at("browserLoadErrorFunc"));
-    if (lua_isfunction(ctx->L, -1))
-    {
-        fmt_pcall_stdvars(ctx->L, find_debug_proc(ctx->L), false, "ussr",
-                          win, url, err, ctx->browser_load_error_cb->get_capture());
-    }
-}
-
 int field_int(lua_State* L, int tbl, const char* key, int dflt) {
     lua_getfield(L, tbl, key);
     int v = lua_isnil(L, -1) ? dflt : static_cast<int>(luaL_checkinteger(L, -1));
@@ -201,10 +163,6 @@ void apply_geometry(lua_State* L, int tbl, XPLMCreateWindow_t& p) {
         field_int(L, tbl, "layer", xplm_WindowLayerFloatingWindows));
 }
 
-// Shared destroyer for both imgui and browser windows. The bodies are
-// identical (read ctx out of the refcon, destroy the window, delete ctx); the
-// only reason we expose two Lua names is API symmetry with the two
-// constructors and script-side legibility.
 int destroy_window(lua_State* L) {
     XPLMWindowID win = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
     auto* ctx = static_cast<window_ctx*>(XPLMGetWindowRefCon(win));
@@ -254,49 +212,6 @@ extern "C" int XLuaCreateImguiWindow(lua_State* L) {
     return 1;
 }
 
-extern "C" int XLuaCreateBrowserWindow(lua_State* L) {
-    luaL_checktype(L, 1, LUA_TTABLE);
-
-    XPLMCreateWindow_t p = {};
-    apply_geometry(L, 1, p);
-    p.windowContentType = xplm_WindowContentTypeBrowser;
-    // CEF routes input itself; no Lua-side handlers are wired.
-
-    auto* ctx = new window_ctx(L);
-    ctx->browser_load_finished_cb = capture_field_func(L, 1, "browserLoadFinishedFunc");
-    ctx->browser_load_error_cb    = capture_field_func(L, 1, "browserLoadErrorFunc");
-    p.refcon = ctx;
-    p.browserLoadFinishedFunc = ctx->browser_load_finished_cb ? cb_browser_load_finished : nullptr;
-    p.browserLoadErrorFunc    = ctx->browser_load_error_cb    ? cb_browser_load_error    : nullptr;
-
-    lua_getfield(L, 1, "url");
-    const char* url = lua_isstring(L, -1) ? lua_tostring(L, -1) : nullptr;
-    // Copy the string out before any potential GC; XPLMWindowSetURL takes
-    // const char* and copies internally, but the Lua VM owns the underlying
-    // storage and could collect it once we pop. So load it eagerly here and
-    // pop after the create call below.
-
-    XPLMWindowID win = XPLMCreateWindowEx(&p);
-    if (win == nullptr) {
-        lua_pop(L, 1); // url
-        delete ctx;
-        lua_pushnil(L);
-        return 1;
-    }
-
-    if (url != nullptr) {
-        XPLMWindowSetURL(win, url);
-    }
-    lua_pop(L, 1); // url
-
-    Make_XPLMWindowID(L, win);
-    return 1;
-}
-
 extern "C" int XLuaDestroyImguiWindow(lua_State* L) {
-    return destroy_window(L);
-}
-
-extern "C" int XLuaDestroyBrowserWindow(lua_State* L) {
     return destroy_window(L);
 }
