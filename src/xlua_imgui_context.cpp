@@ -18,17 +18,6 @@
 
 namespace {
 
-uint32_t PremultiplyColor(uint32_t c) {
-    const uint32_t r = c & 0xFFu;
-    const uint32_t g = (c >> 8) & 0xFFu;
-    const uint32_t b = (c >> 16) & 0xFFu;
-    const uint32_t a = (c >> 24) & 0xFFu;
-    const uint32_t pr = (r * a + 127u) / 255u;
-    const uint32_t pg = (g * a + 127u) / 255u;
-    const uint32_t pb = (b * a + 127u) / 255u;
-    return pr | (pg << 8) | (pb << 16) | (a << 24);
-}
-
 // Translate global-boxel mouse coords to window-local top-left (the space ImGui works in).
 // Returns false if the cursor is outside the window's geometry.
 bool TranslateToImguiSpace(XPLMWindowID win, int gx, int gy, float& out_x, float& out_y) {
@@ -116,21 +105,13 @@ XplmImguiContext::XplmImguiContext() {
     io.ConfigMacOSXBehaviors = false;
     io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
 
-    // Font atlas: ImGui produces a coverage map; XPLMCreateTexture wants RGBA8
-    // pre-multiplied. RGB = A produces (a,a,a,a) — straight-alpha "white with
-    // coverage" expressed in pre-multiplied form.
+    // Font atlas: XPLMDrawCalls blends with straight (non-premultiplied) alpha,
+    // so hand it ImGui's straight-alpha RGBA32 atlas directly — matching the C++
+    // ImguiTestPlugin sample and source_code/core/ui/imgui_impl_xsystem.cpp.
     uint8_t* pixels = nullptr;
     int w = 0, h = 0;
-    io.Fonts->GetTexDataAsAlpha8(&pixels, &w, &h);
-    std::vector<uint8_t> rgba(static_cast<size_t>(w) * h * 4);
-    for (int i = 0; i < w * h; ++i) {
-        const uint8_t a = pixels[i];
-        rgba[i * 4 + 0] = a;
-        rgba[i * 4 + 1] = a;
-        rgba[i * 4 + 2] = a;
-        rgba[i * 4 + 3] = a;
-    }
-    font_tex_ = XPLMCreateTexture(rgba.data(), w, h);
+    io.Fonts->GetTexDataAsRGBA32(&pixels, &w, &h);
+    font_tex_ = XPLMCreateTexture(pixels, w, h);
     io.Fonts->TexID = reinterpret_cast<ImTextureID>(font_tex_);
 }
 
@@ -143,6 +124,18 @@ XplmImguiContext::~XplmImguiContext() {
         ImGui::DestroyContext(ctx_);
         ctx_ = nullptr;
     }
+}
+
+void XplmImguiContext::PushModifiers() {
+#if defined(XPLM440)
+    // Command on macOS is folded into xplm_ControlFlag by the SDK, which maps
+    // cleanly onto ImGuiMod_Ctrl; xplm_CapsLockFlag has no ImGui equivalent.
+    auto& io = ImGui::GetIO();
+    const XPLMKeyFlags m = XPLMGetModifierKeys();
+    io.AddKeyEvent(ImGuiMod_Shift, (m & xplm_ShiftFlag)     != 0);
+    io.AddKeyEvent(ImGuiMod_Ctrl,  (m & xplm_ControlFlag)   != 0);
+    io.AddKeyEvent(ImGuiMod_Alt,   (m & xplm_OptionAltFlag) != 0);
+#endif
 }
 
 void XplmImguiContext::BeginFrame(int display_width, int display_height, XPLMWindowID win) {
@@ -165,6 +158,10 @@ void XplmImguiContext::BeginFrame(int display_width, int display_height, XPLMWin
             io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
         }
     }
+
+    // Keep modifier state fresh every frame so held-modifier-during-draw
+    // reactions work even without an input event this frame.
+    PushModifiers();
 
     ImGui::NewFrame();
 }
@@ -198,13 +195,10 @@ void XplmImguiContext::EndFrame() {
     for (int n = 0; n < drawData->CmdListsCount; n++) {
         ImDrawList* cmd_list = drawData->CmdLists[n];
 
-        // ImGui emits straight-alpha vertex colors; XPLMDrawCalls expects
-        // pre-multiplied (matching the pre-multiplied font atlas above).
-        for (int v = 0; v < cmd_list->VtxBuffer.Size; ++v) {
-            cmd_list->VtxBuffer.Data[v].col =
-                PremultiplyColor(cmd_list->VtxBuffer.Data[v].col);
-        }
-
+        // ImGui emits straight-alpha vertex colors and XPLMDrawCalls blends with
+        // straight alpha, so pass them through unmodified. (Premultiplying here
+        // would darken translucent fills twice — e.g. the ~0.35-alpha text
+        // selection highlight would nearly vanish.)
         XPLMMesh_t mesh{};
         mesh.vertex_count = cmd_list->VtxBuffer.Size;
         mesh.vertices = reinterpret_cast<const float*>(cmd_list->VtxBuffer.Data);
@@ -245,6 +239,9 @@ void XplmImguiContext::EndFrame() {
 int XplmImguiContext::OnMouseButton(XPLMWindowID win, int x, int y, XPLMMouseStatus status, int button) {
     ImGui::SetCurrentContext(ctx_);
     auto& io = ImGui::GetIO();
+    // Push modifiers before the button event so a modifier-sensitive click
+    // (e.g. Ctrl+click a slider to type a value) sees the modifier as held.
+    PushModifiers();
     float lx = 0, ly = 0;
     if (TranslateToImguiSpace(win, x, y, lx, ly)) {
         io.AddMousePosEvent(lx, ly);
@@ -261,6 +258,7 @@ int XplmImguiContext::OnMouseButton(XPLMWindowID win, int x, int y, XPLMMouseSta
 int XplmImguiContext::OnMouseWheel(XPLMWindowID win, int x, int y, int wheel, int clicks) {
     ImGui::SetCurrentContext(ctx_);
     auto& io = ImGui::GetIO();
+    PushModifiers();
     float lx = 0, ly = 0;
     if (TranslateToImguiSpace(win, x, y, lx, ly)) {
         io.AddMousePosEvent(lx, ly);
