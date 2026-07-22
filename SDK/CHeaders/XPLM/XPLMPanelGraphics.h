@@ -50,7 +50,7 @@ extern "C" {
 #endif
 
 
-#if defined(XPLMPG1)
+#if defined(XPLM440)
 /***************************************************************************
  * PANEL GRAPHICS primitives
  ***************************************************************************/
@@ -479,9 +479,9 @@ XPLM_API void       XPLMQuadstripcWithWidth(
                          float                lineWidth,
                          const XPLMVertexColor_t vertices[],
                          int                  count);
-#endif /* XPLMPG1 */
+#endif /* XPLM440 */
 
-#if defined(XPLMPG1)
+#if defined(XPLM440)
 /***************************************************************************
  * PANEL GRAPHICS fonts
  ***************************************************************************/
@@ -689,12 +689,12 @@ XPLM_API int        XPLMFontFitForward(
 /*
  * XPLMFontFitReverse
  * 
- * This function returns the number of characters from the end of a string
- * that fit within the specified width at the given font size. Characters are
- * measured right to left. This is useful for right-aligning a truncated
- * string.
+ * This function returns the number of characters in the input string that
+ * must be skipped to fit the reset of the string into the specified space.
+ * This is useful for right-aligning a truncated string.
  * 
- * Returns a character count.
+ * Returns a character count - the number of characters that must be removed
+ * to fit.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -784,7 +784,7 @@ XPLM_API void       XPLMFontDrawStringWordWrapped(
  * 
  * - fontSize: the font size in pixels.
  * - x, y: the anchor position of the baseline, in panel coordinates.
- * - angle: the rotation angle in degrees, positive counterclockwise.
+ * - angle: the rotation angle in degrees, positive clockwise.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -797,9 +797,9 @@ XPLM_API void       XPLMFontDrawStringRotated(
                          char const*          string,
                          float                angle,
                          XPLMJustification_t  justification);
-#endif /* XPLMPG1 */
+#endif /* XPLM440 */
 
-#if defined(XPLMPG1)
+#if defined(XPLM440)
 /***************************************************************************
  * PANEL GRAPHICS Texture atlas
  ***************************************************************************/
@@ -1141,9 +1141,9 @@ XPLM_API void       XPLMTextureAtlasDrawMesh(
                          uint32_t             inTintColor,
                          const XPLMTextureVertex_t vertices[],
                          int                  count);
-#endif /* XPLMPG1 */
+#endif /* XPLM440 */
 
-#if defined(XPLMPG1)
+#if defined(XPLM440)
 /***************************************************************************
  * PANEL GRAPHICS radar texture
  ***************************************************************************/
@@ -1221,9 +1221,9 @@ XPLM_API void       XPLMTextureSourceDrawMesh(
                          uint32_t             tint,
                          const XPLMTextureVertex_t mesh[],
                          int                  count);
-#endif /* XPLMPG1 */
+#endif /* XPLM440 */
 
-#if defined(XPLMPG1)
+#if defined(XPLM440)
 /***************************************************************************
  * PANEL_GRAPHICS transform/scissors/masks
  ***************************************************************************/
@@ -1346,12 +1346,11 @@ XPLM_API void       XPLMScissorSet(
                          int                  right);
 
 /*
- * XPLMScissorShrink
+ * XPLMScissorIntersect
  * 
- * This function insets (shrinks) the current scissor rectangle by the
- * specified amounts on each side. The result is the intersection of the
- * current scissor rectangle and the new inset rectangle, so the drawable area
- * can only get smaller. This is useful for nested clipping.
+ * This function sets the scissors box to the intersection of the existing
+ * scissors box. The result is always a same or smaller drawable area. This is
+ * useful for nested clipping.
  * 
  * - top: inset from the top edge, in pixels.
  * - left: inset from the left edge, in pixels.
@@ -1360,7 +1359,7 @@ XPLM_API void       XPLMScissorSet(
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
-XPLM_API void       XPLMScissorShrink(
+XPLM_API void       XPLMScissorIntersect(
                          int                  top,
                          int                  left,
                          int                  bottom,
@@ -1420,9 +1419,9 @@ XPLM_API void       XPLMUseStencilMask(
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMClearStencilMask(void);
-#endif /* XPLMPG1 */
+#endif /* XPLM440 */
 
-#if defined(XPLMPG1)
+#if defined(XPLM440)
 /***************************************************************************
  * PANEL GRAPHICS Hot Zones
  ***************************************************************************/
@@ -1564,9 +1563,9 @@ XPLM_API void       XPLMWindowSetTouchEventHandler(
                          XPLMWindowID         window,
                          XPLMTouchEvent_f     handler,                /* Can be NULL */
                          void*                ref);
-#endif /* XPLMPG1 */
+#endif /* XPLM440 */
 
-#if defined(XPLMPG1)
+#if defined(XPLM440)
 /***************************************************************************
  * PANEL GRAPHICS Retained Drawing
  ***************************************************************************/
@@ -1642,9 +1641,9 @@ XPLM_API void       XPLMDrawRetained(
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
 XPLM_API void       XPLMDestroyRetainedDrawing(
                          XPLMRetainedDrawing_t drawing);
-#endif /* XPLMPG1 */
+#endif /* XPLM440 */
 
-#if defined(XPLMPG1)
+#if defined(XPLM440)
 /***************************************************************************
  * PANEL GRAPHICS synthetic vision
  ***************************************************************************/
@@ -1835,9 +1834,9 @@ XPLM_API void       XPLMSVTDisplayDrawIn(
                          int                  right,
                          int                  bottom,
                          XPLMSVTCustomData_t* dataOverrides);         /* Can be NULL */
-#endif /* XPLMPG1 */
+#endif /* XPLM440 */
 
-#if defined(XPLMPG1)
+#if defined(XPLM440)
 /***************************************************************************
  * PANEL GRAPHICS map display
  ***************************************************************************/
@@ -1911,6 +1910,26 @@ enum {
 typedef int XPLMMapLayers;
 
 /*
+ * XPLMEGPWSStyle
+ * 
+ * Flag that controls how the map's EGPWS display layer is rendered.
+ *
+ */
+enum {
+
+    /* Terrain is drawn as small dithered blocks (common in most airliner         *
+     * avionics).                                                                 */
+    xplm_EGPWS_Style_Blocky                  = 0,
+
+
+    /* Terrain countours are smooth and curved (common in modern avionics).       */
+    xplm_EGPWS_Style_Smooth                  = 1,
+
+
+};
+typedef int XPLMEGPWSStyle;
+
+/*
  * XPLMMapCustomData_t
  *
  */
@@ -1952,6 +1971,15 @@ typedef struct {
     /* if map orientation is custom, the rotation in degrees counter-clockwise    *
      * from true north.                                                           */
      float                     trueRotation;
+
+    /* altitude in feet of the nearest runway, used for EGPWS terrain display.    */
+     float                     nearestRwyElev;
+
+    /* brightness of the EGPWS overlay.                                           */
+     float                     egpwsBrightness;
+
+    /* style of the EGPWS overlay.                                                */
+     XPLMEGPWSStyle            egpwsStyle;
 } XPLMMapCustomData_t;
 
 /*
@@ -2037,9 +2065,32 @@ XPLM_API void       XPLMMapDisplayDrawIn(
                          int                  right,
                          int                  bottom,
                          XPLMMapCustomData_t* dataOverrides);         /* Can be NULL */
-#endif /* XPLMPG1 */
 
-#if defined(XPLMPG1)
+/*
+ * XPLMMapDisplayGetTerrainAltitudes
+ * 
+ * This function returns the lowest and highest altitude shown on the map's
+ * EGPWS terrain display.
+ * 
+ * Note that those altitudes are only available if the map has been drawn with
+ * the xplm_Map_EGPWS layer. If altitudes are not available, the function
+ * returns false, and the altitude pointers are not modified.
+ * 
+ * This function must be called from within an avionics drawing callback.
+ * 
+ * - map: the map display handle.
+ * - min: a pointer to the minimum altitude.
+ * - max: a pointer to the maximum altitude.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMMapDisplayGetTerrainAltitudes(
+                         XPLMMapDisplayRef    map,
+                         float*               min,                    /* Can be NULL */
+                         float*               max);                   /* Can be NULL */
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
 /***************************************************************************
  * IMGUI HELPERS
  ***************************************************************************/
@@ -2060,8 +2111,9 @@ XPLM_API void       XPLMMapDisplayDrawIn(
  *  stride passed in `XPLMMesh_t::vertices` must be 5 floats per vertex.
  * 
  * Color and alpha: vertex colors and texture pixels are interpreted as
- * **pre-multiplied alpha**. If you have straight-alpha source data, multiply
- *   RGB by alpha (and divide by 255 if integers) before submitting.
+ * **straight (non-pre-multiplied) alpha** and blended accordingly. Submit
+ *   ImGui's `ImDrawData` verts and font atlas as-is (no premultiply) -- this
+ *   matches ImGui's own defaults.
  * 
  * Sampler: bilinear filter, clamp-to-edge in both dimensions, no mipmaps. UV
  * coordinates outside [0,1] sample the edge texels (no wrap).
@@ -2177,7 +2229,7 @@ XPLM_API void       XPLMDrawCalls(
                          const XPLMMesh_t *   inMesh,
                          int                  inCount,
                          const XPLMDrawCall_t inDrawCalls[]);
-#endif /* XPLMPG1 */
+#endif /* XPLM440 */
 #ifdef __cplusplus
 }
 #endif

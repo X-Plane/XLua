@@ -283,6 +283,11 @@ XPLM_API void       XPLMScheduleFlightLoop(
                          float                inInterval,
                          int                  inRelativeToNow);
 #endif /* XPLM210 */
+
+/***************************************************************************
+ * XLUA TIMERS
+ ***************************************************************************/
+
 #ifdef __cplusplus
 }
 #endif

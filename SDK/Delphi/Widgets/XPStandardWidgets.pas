@@ -29,6 +29,7 @@ USES
 TYPE
    XPLMChar   = AnsiChar;
    XPLMString = PAnsiChar;
+   PXPLMString = ^XPLMString;
 
 CONST
 {$IFDEF MSWINDOWS}

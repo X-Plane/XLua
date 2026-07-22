@@ -39,6 +39,7 @@ USES
 TYPE
    XPLMChar   = AnsiChar;
    XPLMString = PAnsiChar;
+   PXPLMString = ^XPLMString;
 
 CONST
 {$IFDEF MSWINDOWS}
@@ -50,7 +51,7 @@ CONST
 {$IFDEF LINUX}
    XPLM_DLL = 'XPLM_64.so';
 {$ENDIF}
-{$IFDEF XPLMPG1}
+{$IFDEF XPLM440}
 {___________________________________________________________________________
  * PANEL GRAPHICS primitives
  ___________________________________________________________________________}
@@ -475,8 +476,8 @@ TYPE
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
-{$ENDIF XPLMPG1}
-{$IFDEF XPLMPG1}
+{$ENDIF XPLM440}
+{$IFDEF XPLM440}
 {___________________________________________________________________________
  * PANEL GRAPHICS fonts
  ___________________________________________________________________________}
@@ -670,12 +671,12 @@ TYPE
    {
     XPLMFontFitReverse
     
-    This function returns the number of characters from the end of a string
-    that fit within the specified width at the given font size. Characters are
-    measured right to left. This is useful for right-aligning a truncated
-    string.
+    This function returns the number of characters in the input string that
+    must be skipped to fit the reset of the string into the specified space.
+    This is useful for right-aligning a truncated string.
     
-    Returns a character count.
+    Returns a character count - the number of characters that must be removed
+    to fit.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMFontFitReverse(
@@ -765,7 +766,7 @@ TYPE
     
     - fontSize: the font size in pixels.
     - x, y: the anchor position of the baseline, in panel coordinates.
-    - angle: the rotation angle in degrees, positive counterclockwise.
+    - angle: the rotation angle in degrees, positive clockwise.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMFontDrawStringRotated(
@@ -779,8 +780,8 @@ TYPE
                                         justification       : XPLMJustification_t);
     cdecl; external XPLM_DLL;
 
-{$ENDIF XPLMPG1}
-{$IFDEF XPLMPG1}
+{$ENDIF XPLM440}
+{$IFDEF XPLM440}
 {___________________________________________________________________________
  * PANEL GRAPHICS Texture atlas
  ___________________________________________________________________________}
@@ -1119,8 +1120,8 @@ TYPE
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
-{$ENDIF XPLMPG1}
-{$IFDEF XPLMPG1}
+{$ENDIF XPLM440}
+{$IFDEF XPLM440}
 {___________________________________________________________________________
  * PANEL GRAPHICS radar texture
  ___________________________________________________________________________}
@@ -1195,8 +1196,8 @@ TYPE
                                         count               : Integer);
     cdecl; external XPLM_DLL;
 
-{$ENDIF XPLMPG1}
-{$IFDEF XPLMPG1}
+{$ENDIF XPLM440}
+{$IFDEF XPLM440}
 {___________________________________________________________________________
  * PANEL_GRAPHICS transform/scissors/masks
  ___________________________________________________________________________}
@@ -1318,12 +1319,11 @@ TYPE
     cdecl; external XPLM_DLL;
 
    {
-    XPLMScissorShrink
+    XPLMScissorIntersect
     
-    This function insets (shrinks) the current scissor rectangle by the
-    specified amounts on each side. The result is the intersection of the
-    current scissor rectangle and the new inset rectangle, so the drawable area
-    can only get smaller. This is useful for nested clipping.
+    This function sets the scissors box to the intersection of the existing
+    scissors box. The result is always a same or smaller drawable area. This is
+    useful for nested clipping.
     
     - top: inset from the top edge, in pixels.
     - left: inset from the left edge, in pixels.
@@ -1331,7 +1331,7 @@ TYPE
     - right: inset from the right edge, in pixels.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMScissorShrink(
+   PROCEDURE XPLMScissorIntersect(
                                         top                 : Integer;
                                         left                : Integer;
                                         bottom              : Integer;
@@ -1393,8 +1393,8 @@ TYPE
    PROCEDURE XPLMClearStencilMask;
     cdecl; external XPLM_DLL;
 
-{$ENDIF XPLMPG1}
-{$IFDEF XPLMPG1}
+{$ENDIF XPLM440}
+{$IFDEF XPLM440}
 {___________________________________________________________________________
  * PANEL GRAPHICS Hot Zones
  ___________________________________________________________________________}
@@ -1523,8 +1523,8 @@ TYPE
                                         ref                 : pointer);    { Can be nil }
     cdecl; external XPLM_DLL;
 
-{$ENDIF XPLMPG1}
-{$IFDEF XPLMPG1}
+{$ENDIF XPLM440}
+{$IFDEF XPLM440}
 {___________________________________________________________________________
  * PANEL GRAPHICS Retained Drawing
  ___________________________________________________________________________}
@@ -1601,8 +1601,8 @@ TYPE
                                         drawing             : XPLMRetainedDrawing_t);
     cdecl; external XPLM_DLL;
 
-{$ENDIF XPLMPG1}
-{$IFDEF XPLMPG1}
+{$ENDIF XPLM440}
+{$IFDEF XPLM440}
 {___________________________________________________________________________
  * PANEL GRAPHICS synthetic vision
  ___________________________________________________________________________}
@@ -1772,8 +1772,8 @@ TYPE
                                         dataOverrides       : PXPLMSVTCustomData_t);    { Can be nil }
     cdecl; external XPLM_DLL;
 
-{$ENDIF XPLMPG1}
-{$IFDEF XPLMPG1}
+{$ENDIF XPLM440}
+{$IFDEF XPLM440}
 {___________________________________________________________________________
  * PANEL GRAPHICS map display
  ___________________________________________________________________________}
@@ -1837,6 +1837,22 @@ TYPE
    PXPLMMapLayers = ^XPLMMapLayers;
 
    {
+    XPLMEGPWSStyle
+    
+    Flag that controls how the map's EGPWS display layer is rendered.
+   }
+   XPLMEGPWSStyle = (
+     { Terrain is drawn as small dithered blocks (common in most airliner         }
+     { avionics).                                                                 }
+      xplm_EGPWS_Style_Blocky                  = 0
+ 
+     { Terrain countours are smooth and curved (common in modern avionics).       }
+     ,xplm_EGPWS_Style_Smooth                  = 1
+ 
+   );
+   PXPLMEGPWSStyle = ^XPLMEGPWSStyle;
+
+   {
     XPLMMapCustomData_t
    }
    XPLMMapCustomData_t = RECORD
@@ -1865,6 +1881,12 @@ TYPE
      { if map orientation is custom, the rotation in degrees counter-clockwise    }
      { from true north.                                                           }
      trueRotation             : Single;
+     { altitude in feet of the nearest runway, used for EGPWS terrain display.    }
+     nearestRwyElev           : Single;
+     { brightness of the EGPWS overlay.                                           }
+     egpwsBrightness          : Single;
+     { style of the EGPWS overlay.                                                }
+     egpwsStyle               : XPLMEGPWSStyle;
    END;
    PXPLMMapCustomData_t = ^XPLMMapCustomData_t;
 
@@ -1950,7 +1972,30 @@ TYPE
                                         dataOverrides       : PXPLMMapCustomData_t);    { Can be nil }
     cdecl; external XPLM_DLL;
 
-{$ENDIF XPLMPG1}
+   {
+    XPLMMapDisplayGetTerrainAltitudes
+    
+    This function returns the lowest and highest altitude shown on the map's
+    EGPWS terrain display.
+    
+    Note that those altitudes are only available if the map has been drawn with
+    the xplm_Map_EGPWS layer. If altitudes are not available, the function
+    returns false, and the altitude pointers are not modified.
+    
+    This function must be called from within an avionics drawing callback.
+    
+    - map: the map display handle.
+    - min: a pointer to the minimum altitude.
+    - max: a pointer to the maximum altitude.
+   }
+    { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
+   FUNCTION XPLMMapDisplayGetTerrainAltitudes(
+                                        map                 : XPLMMapDisplayRef;
+                                        min                 : PSingle;    { Can be nil }
+                                        max                 : PSingle) : Integer;    { Can be nil }
+    cdecl; external XPLM_DLL;
+
+{$ENDIF XPLM440}
 {___________________________________________________________________________
  * Host API
  ___________________________________________________________________________}
@@ -2102,7 +2147,8 @@ TYPE
 
 
 
-{$IFDEF XPLMPG1}
+
+{$IFDEF XPLM440}
 {___________________________________________________________________________
  * IMGUI HELPERS
  ___________________________________________________________________________}
@@ -2123,8 +2169,9 @@ TYPE
     stride passed in `XPLMMesh_t::vertices` must be 5 floats per vertex.
    
    Color and alpha: vertex colors and texture pixels are interpreted as
-   **pre-multiplied alpha**. If you have straight-alpha source data, multiply
-     RGB by alpha (and divide by 255 if integers) before submitting.
+   **straight (non-pre-multiplied) alpha** and blended accordingly. Submit
+     ImGui's `ImDrawData` verts and font atlas as-is (no premultiply) -- this
+     matches ImGui's own defaults.
    
    Sampler: bilinear filter, clamp-to-edge in both dimensions, no mipmaps. UV
    coordinates outside [0,1] sample the edge texels (no wrap).
@@ -2232,7 +2279,7 @@ TYPE
                                         inDrawCalls         : PXPLMDrawCall_t);
     cdecl; external XPLM_DLL;
 
-{$ENDIF XPLMPG1}
+{$ENDIF XPLM440}
 {___________________________________________________________________________
  * IMGUI HELPERS glue
  ___________________________________________________________________________}

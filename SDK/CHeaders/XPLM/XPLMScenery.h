@@ -347,7 +347,7 @@ typedef struct {
  * You provide this callback when loading an object asynchronously; it will be
  * called once the object is loaded. Your refcon is passed back. The object
  * ref passed in is the newly loaded object (ready for use) or NULL if an
- * error occured.
+ * error occured. It will not be called more than once per object.
  * 
  * If your plugin is disabled, this callback will be delivered as soon as the
  * plugin is re-enabled. If your plugin is unloaded before this callback is
@@ -502,6 +502,9 @@ typedef void (* XPLMLibraryEnumerator_f)(
  * be used. The library system allows for scenery packages to only provide
  * objects to certain local locations. Only objects that are allowed at the
  * latitude/longitude you provide will be returned.
+ * 
+ * The enumerator is fully synchronous: it is called once per matching object,
+ * and all calls complete before XPLMLookupObjects returns.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */

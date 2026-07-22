@@ -83,12 +83,13 @@ INTERFACE
 }
 
 USES
-    XPLMDefs, XPLMUtilities;
+    XPLMDefs, XPLMUtilities, XPLMScenery;
    {$A4}
 
 TYPE
    XPLMChar   = AnsiChar;
    XPLMString = PAnsiChar;
+   PXPLMString = ^XPLMString;
 
 CONST
 {$IFDEF MSWINDOWS}
@@ -316,7 +317,7 @@ TYPE
 }
 
 
-{$IFDEF XPLMPG1}
+{$IFDEF XPLM440}
    {
     XPLMWindowContentType
     
@@ -338,7 +339,7 @@ TYPE
  
    );
    PXPLMWindowContentType = ^XPLMWindowContentType;
-{$ENDIF XPLMPG1}
+{$ENDIF XPLM440}
 
    {
     XPLMDeviceID
@@ -586,13 +587,13 @@ TYPE
      { A reference which will be passed into each of your draw callbacks. Use this}
      { to pass information to yourself as needed.                                 }
      refcon                   : pointer;
-{$IFDEF XPLMPG1}
+{$IFDEF XPLM440}
      { How this device's screen is drawn: xplm_WindowContentTypeOpenGL (the legacy}
      { OpenGL bridge) or xplm_WindowContentTypePanelGraphics (native              }
      { panel-graphics rendering). xplm_WindowContentTypeBrowser is not valid for  }
      { avionics.                                                                  }
      contentType              : XPLMWindowContentType;
-{$ENDIF XPLMPG1}
+{$ENDIF XPLM440}
    END;
    PXPLMCustomizeAvionics_t = ^XPLMCustomizeAvionics_t;
 
@@ -715,6 +716,43 @@ TYPE
                                     inRefcon            : pointer) : Single; cdecl;    { Can be nil }
 {$ENDIF XPLM410}
 
+{$IFDEF XPLM440}
+   {
+    XPLMAvionicsBrowserLoadFinished_f
+    
+    Called for a browser-content-type avionics device when its main frame
+    finishes loading a page. This is NOT a guarantee that the load succeeded: a
+    page that renders an HTTP error response (e.g. a server's 404 page) also
+    "finishes" here. A navigation that fails before the page renders fires
+    XPLMAvionicsBrowserLoadError_f instead. If your page needs to know its own
+    HTTP status, have it report that from JavaScript via a browser function.
+    Set this via browserLoadFinishedFunc in XPLMCreateAvionics_t.
+   }
+TYPE
+     XPLMAvionicsBrowserLoadFinished_f = PROCEDURE(
+                                    inAvionics          : XPLMAvionicsID;
+                                    inURL               : XPLMString;
+                                    inRefcon            : pointer); cdecl;    { Can be nil }
+{$ENDIF XPLM440}
+
+{$IFDEF XPLM440}
+   {
+    XPLMAvionicsBrowserLoadError_f
+    
+    Called for a browser-content-type avionics device when a navigation fails
+    at the network level (bad URL, host unreachable, TLS failure, file not
+    found). inError describes the failure. This may be followed by
+    XPLMAvionicsBrowserLoadFinished_f for a substitute error page, so treat a
+    load error as the authoritative signal that the navigation to inURL failed.
+    Set this via browserLoadErrorFunc in XPLMCreateAvionics_t.
+   }
+     XPLMAvionicsBrowserLoadError_f = PROCEDURE(
+                                    inAvionics          : XPLMAvionicsID;
+                                    inURL               : XPLMString;
+                                    inError             : XPLMString;    { Can be nil }
+                                    inRefcon            : pointer); cdecl;    { Can be nil }
+{$ENDIF XPLM440}
+
 {$IFDEF XPLM410}
    {
     XPLMCreateAvionics_t
@@ -724,6 +762,7 @@ TYPE
     structure will be expanded in future SDK APIs to include more features.
     Always set the structSize member to the size of your struct in bytes!
    }
+TYPE
    XPLMCreateAvionics_t = RECORD
      { Used to inform XPLMCreateAvionicsEx() of the SDK version you compiled      }
      { against; should always be set to sizeof(XPLMCreateAvionics_t)              }
@@ -795,19 +834,35 @@ TYPE
      { A reference which will be passed into your draw and mouse callbacks. Use   }
      { this to pass information to yourself as needed.                            }
      refcon                   : pointer;
-{$IFDEF XPLMPG1}
+{$IFDEF XPLM440}
      { How this device's screen is drawn: xplm_WindowContentTypeOpenGL (the legacy}
-     { OpenGL bridge) or xplm_WindowContentTypePanelGraphics (native              }
-     { panel-graphics rendering). xplm_WindowContentTypeBrowser is not valid for  }
-     { avionics.                                                                  }
+     { OpenGL bridge), xplm_WindowContentTypePanelGraphics (native panel-graphics }
+     { rendering), or xplm_WindowContentTypeBrowser (a CEF web view). For a       }
+     { browser device the single web page covers the whole bezel including the    }
+     { screen; X-Plane copies the screen sub-rectangle into the device's          }
+     { framebuffer, so your drawCallback/bezelDrawCallback are not used. Drive the}
+     { page with XPLMAvionicsSetURL() and friends. Browser content is only valid  }
+     { for devices you create here, not when customising a built-in device.       }
      contentType              : XPLMWindowContentType;
-{$ENDIF XPLMPG1}
-{$IFDEF XPLMPG1}
+{$ENDIF XPLM440}
+{$IFDEF XPLM440}
      { If set to true (1), X-Plane will draw the chrome with the close and pop-out}
      { buttons outside of your bezel, rather than having the buttons steal pixels }
      { from your bezel.                                                           }
      windowWithChrome         : Integer;
-{$ENDIF XPLMPG1}
+{$ENDIF XPLM440}
+{$IFDEF XPLM440}
+     { For browser content (xplm_WindowContentTypeBrowser): called when a page's  }
+     { main frame finishes loading. Not a success guarantee --a rendered HTTP     }
+     { error page finishes too. Set to NULL if you don't need it.                 }
+     browserLoadFinishedFunc  : XPLMAvionicsBrowserLoadFinished_f;
+{$ENDIF XPLM440}
+{$IFDEF XPLM440}
+     { For browser content (xplm_WindowContentTypeBrowser): called when a         }
+     { navigation fails at the network level, with a description of the failure.  }
+     { Set to NULL if you don't need it.                                          }
+     browserLoadErrorFunc     : XPLMAvionicsBrowserLoadError_f;
+{$ENDIF XPLM440}
    END;
    PXPLMCreateAvionics_t = ^XPLMCreateAvionics_t;
 {$ENDIF XPLM410}
@@ -844,6 +899,135 @@ TYPE
                                         inHandle            : XPLMAvionicsID);
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM410}
+
+{$IFDEF XPLM440}
+   {
+    XPLMAvionicsSetURL
+    
+    Loads a URL into a browser-content-type avionics device (one created via
+    XPLMCreateAvionicsEx() with contentType xplm_WindowContentTypeBrowser).
+    Safe to call before the underlying webview has finished initialising; the
+    load is queued and applied as soon as the browser is ready, so you may call
+    this immediately after XPLMCreateAvionicsEx(). Subsequent calls replace the
+    pending or current page. Has no effect on non-browser devices.
+   }
+    { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
+   PROCEDURE XPLMAvionicsSetURL(
+                                        inAvionicsID        : XPLMAvionicsID;
+                                        inURL               : XPLMString);
+    cdecl; external XPLM_DLL;
+{$ENDIF XPLM440}
+
+{$IFDEF XPLM440}
+   {
+    XPLMAvionicsRefresh
+    
+    Reloads the current URL in a browser-content-type avionics device. Pass
+    true for inIgnoreCache to bypass the HTTP cache (the equivalent of a
+    shift-reload). Has no effect on non-browser devices.
+   }
+    { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
+   PROCEDURE XPLMAvionicsRefresh(
+                                        inAvionicsID        : XPLMAvionicsID;
+                                        inIgnoreCache       : Integer);
+    cdecl; external XPLM_DLL;
+{$ENDIF XPLM440}
+
+{$IFDEF XPLM440}
+   {
+    XPLMAvionicsInjectScript
+    
+    Executes a JavaScript snippet in the main frame of a browser-content-type
+    avionics device. The script has access to the same xplane.* namespace
+    exposed to the page. If injected before the page has finished loading, it
+    may run against an empty document. Has no effect on non-browser devices.
+   }
+    { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
+   PROCEDURE XPLMAvionicsInjectScript(
+                                        inAvionicsID        : XPLMAvionicsID;
+                                        inScript            : XPLMString);
+    cdecl; external XPLM_DLL;
+{$ENDIF XPLM440}
+
+{$IFDEF XPLM440}
+   {
+    XPLMAvionicsBrowserCallback_f
+    
+    Handler invoked when the page in a browser-content-type avionics device
+    calls xplane.<name>(arg). You receive the device, the argument serialised
+    as a JSON string, and your refcon; return a JSON string (or NULL) that the
+    JS Promise resolves to.
+   }
+TYPE
+     XPLMAvionicsBrowserCallback_f = FUNCTION(
+                                    inAvionicsID        : XPLMAvionicsID;
+                                    inJSON              : XPLMString;
+                                    inRefcon            : pointer) : XPLMString; cdecl;    { Can be nil }
+{$ENDIF XPLM440}
+
+{$IFDEF XPLM440}
+   {
+    XPLMAvionicsAddBrowserFunction
+    
+    Registers a callback that the page running in a browser-content-type
+    avionics device can invoke as xplane.<inName>(arg). The JS call returns a
+    Promise that resolves to the value your XPLMAvionicsBrowserCallback_f
+    returns (parsed as JSON). Registering the same name again replaces the
+    previous callback. Each device has its own independent xplane.* namespace.
+    Has no effect on non-browser devices.
+   }
+    { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
+   PROCEDURE XPLMAvionicsAddBrowserFunction(
+                                        inAvionicsID        : XPLMAvionicsID;
+                                        inName              : XPLMString;
+                                        inFunction          : XPLMAvionicsBrowserCallback_f;
+                                        inRefcon            : pointer);    { Can be nil }
+    cdecl; external XPLM_DLL;
+{$ENDIF XPLM440}
+
+{$IFDEF XPLM440}
+   {
+    XPLMSetObjectAvionics
+    
+    Glues a cockpit device you created with XPLMCreateAvionicsEx() onto a 3D
+    object you loaded with XPLMLoadObject(), so that the device's screen is
+    drawn on that object - typically one you draw in the world using the
+    instancing API (XPLMCreateInstance()).
+    
+    The device is matched to the object's screen by ID: the object must declare
+    an `ATTR_cockpit_device` with the same device ID string you passed to
+    XPLMCreateAvionicsEx(). The binding is a property of the object itself, so
+    every instance you draw from that object shows the same device. You may
+    only bind devices you created yourself, not X-Plane's built-in devices.
+    
+    Brightness on the object follows your device's own brightness callback,
+    independent of any aircraft electrical system.
+    
+    Returns 1 if the object had a matching device screen and the binding
+    succeeded, or 0 otherwise.
+   }
+    { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
+   FUNCTION XPLMSetObjectAvionics(
+                                        inObject            : XPLMObjectRef;
+                                        inAvionics          : XPLMAvionicsID) : Integer;
+    cdecl; external XPLM_DLL;
+{$ENDIF XPLM440}
+
+{$IFDEF XPLM440}
+   {
+    XPLMClearObjectAvionics
+    
+    Removes a binding previously made with XPLMSetObjectAvionics(), restoring
+    the object's device screen to black and detaching its click handler.
+    Bindings are also cleared automatically when you destroy the device with
+    XPLMDestroyAvionics().
+   }
+    { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
+   PROCEDURE XPLMClearObjectAvionics(
+                                        inObject            : XPLMObjectRef;
+                                        inAvionics          : XPLMAvionicsID);
+    cdecl; external XPLM_DLL;
+{$ENDIF XPLM440}
 
 {$IFDEF XPLM410}
    {
@@ -1352,18 +1536,40 @@ TYPE
                                     inRefcon            : pointer) : Integer; cdecl;    { Can be nil }
 {$ENDIF XPLM200}
 
-{$IFDEF XPLMPG1}
+{$IFDEF XPLM440}
    {
-    XPLMBrowserNavigation_f
+    XPLMBrowserLoadFinished_f
+    
+    Called for a browser-content-type window when its main frame finishes
+    loading a page. NOT a success guarantee --a rendered HTTP error page (e.g.
+    a 404) also finishes here. A navigation that fails before the page renders
+    fires XPLMBrowserLoadError_f instead. Set this via browserLoadFinishedFunc
+    in XPLMCreateWindow_t.
    }
 TYPE
-     XPLMBrowserNavigation_f = PROCEDURE(
+     XPLMBrowserLoadFinished_f = PROCEDURE(
                                     inWindow            : XPLMWindowID;
                                     inURL               : XPLMString;
-                                    inSuccess           : Integer;
+                                    inRefcon            : pointer); cdecl;    { Can be nil }
+{$ENDIF XPLM440}
+
+{$IFDEF XPLM440}
+   {
+    XPLMBrowserLoadError_f
+    
+    Called for a browser-content-type window when a navigation fails at the
+    network level (bad URL, host unreachable, TLS failure, file not found).
+    inError describes the failure. May be followed by XPLMBrowserLoadFinished_f
+    for a substitute error page, so treat this as the authoritative signal that
+    the navigation to inURL failed. Set this via browserLoadErrorFunc in
+    XPLMCreateWindow_t.
+   }
+     XPLMBrowserLoadError_f = PROCEDURE(
+                                    inWindow            : XPLMWindowID;
+                                    inURL               : XPLMString;
                                     inError             : XPLMString;    { Can be nil }
                                     inRefcon            : pointer); cdecl;    { Can be nil }
-{$ENDIF XPLMPG1}
+{$ENDIF XPLM440}
 
 {$IFDEF XPLM300}
    {
@@ -1487,8 +1693,9 @@ TYPE
      { Bottom bound, in global desktop boxels                                     }
      bottom                   : Integer;
      visible                  : Integer;
-     { A callback to draw your window's contents (or NULL, e.g. for               }
-     { browser/panel-graphics content where the window draws itself)              }
+     { A callback to draw your window's contents. Required for OpenGL and         }
+     { panel-graphics content; may be NULL only for browser content, which draws  }
+     { itself.                                                                    }
      drawWindowFunc           : XPLMDrawWindow_f;
      { A callback to handle the user left-clicking within your window (or NULL to }
      { ignore left clicks)                                                        }
@@ -1516,13 +1723,20 @@ TYPE
      { ignore right clicks)                                                       }
      handleRightClickFunc     : XPLMHandleMouseClick_f;
 {$ENDIF XPLM300}
-{$IFDEF XPLMPG1}
+{$IFDEF XPLM440}
      { The source of content for this Window (OpenGL, Panel Graphics, CEF, etc.)  }
      windowContentType        : XPLMWindowContentType;
-{$ENDIF XPLMPG1}
-{$IFDEF XPLMPG1}
-     browserNavigationFunc    : XPLMBrowserNavigation_f;
-{$ENDIF XPLMPG1}
+{$ENDIF XPLM440}
+{$IFDEF XPLM440}
+     { For browser content: called when the main frame finishes loading (not a    }
+     { success guarantee --error pages finish too). NULL if unused.               }
+     browserLoadFinishedFunc  : XPLMBrowserLoadFinished_f;
+{$ENDIF XPLM440}
+{$IFDEF XPLM440}
+     { For browser content: called when a navigation fails at the network level.  }
+     { NULL if unused.                                                            }
+     browserLoadErrorFunc     : XPLMBrowserLoadError_f;
+{$ENDIF XPLM440}
    END;
    PXPLMCreateWindow_t = ^XPLMCreateWindow_t;
 {$ENDIF XPLM200}
@@ -1538,10 +1752,9 @@ TYPE
     leave them null!  (If you do not support the cursor or mouse wheel, use
     functions that return the default values.)
     
-    NOTE: Lua scripts must use XLuaCreateImguiWindow() or
-    XLuaCreateBrowserWindow() instead of XPLMCreateWindowEx -- those wrappers
-    pre-wire the correct content type and input handlers for their respective
-    window flavours.
+    NOTE: For an imgui-drawn window, Lua scripts should use
+    XLuaCreateImguiWindow() instead; it opens and closes the imgui frame for
+    you and wires the input handlers.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateWindowEx(
@@ -1590,8 +1803,9 @@ TYPE
     after this call. Keyboard focus is removed from the window before
     destroying it.
     
-    NOTE: Lua scripts must use XLuaDestroyImguiWindow() or
-    XLuaDestroyBrowserWindow() instead of XPLMDestroyWindow.
+    NOTE: A window created with XLuaCreateImguiWindow() must be destroyed with
+    XLuaDestroyImguiWindow(), not this function, so its captured Lua callbacks
+    are released.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDestroyWindow(
@@ -1600,9 +1814,7 @@ TYPE
 
 
 
-
-
-{$IFDEF XPLMPG1}
+{$IFDEF XPLM440}
    {
     XPLMWindowSetURL
     
@@ -1617,9 +1829,9 @@ TYPE
                                         inWindowID          : XPLMWindowID;
                                         inURL               : XPLMString);
     cdecl; external XPLM_DLL;
-{$ENDIF XPLMPG1}
+{$ENDIF XPLM440}
 
-{$IFDEF XPLMPG1}
+{$IFDEF XPLM440}
    {
     XPLMWindowRefresh
     
@@ -1632,9 +1844,9 @@ TYPE
                                         inWindowID          : XPLMWindowID;
                                         inIgnoreCache       : Integer);
     cdecl; external XPLM_DLL;
-{$ENDIF XPLMPG1}
+{$ENDIF XPLM440}
 
-{$IFDEF XPLMPG1}
+{$IFDEF XPLM440}
    {
     XPLMWindowInjectScript
     
@@ -1649,9 +1861,9 @@ TYPE
                                         inWindowID          : XPLMWindowID;
                                         inScript            : XPLMString);
     cdecl; external XPLM_DLL;
-{$ENDIF XPLMPG1}
+{$ENDIF XPLM440}
 
-{$IFDEF XPLMPG1}
+{$IFDEF XPLM440}
    {
     XPLMBrowserCallback_f
    }
@@ -1660,9 +1872,9 @@ TYPE
                                     inWindowID          : XPLMWindowID;
                                     inJSON              : XPLMString;
                                     inRefcon            : pointer) : XPLMString; cdecl;    { Can be nil }
-{$ENDIF XPLMPG1}
+{$ENDIF XPLM440}
 
-{$IFDEF XPLMPG1}
+{$IFDEF XPLM440}
    {
     XPLMWindowAddBrowserFunction
     
@@ -1682,7 +1894,7 @@ TYPE
                                         inFunction          : XPLMBrowserCallback_f;
                                         inRefcon            : pointer);    { Can be nil }
     cdecl; external XPLM_DLL;
-{$ENDIF XPLMPG1}
+{$ENDIF XPLM440}
 
    {
     XPLMGetScreenSize
@@ -1762,11 +1974,12 @@ TYPE
    {
     XPLMGetAllMonitorBoundsGlobal
     
-    This routine immediately calls you back with the bounds (in boxels) of each
-    full-screen X-Plane window within the X-Plane global desktop space. Note
-    that if a monitor is *not* covered by an X-Plane window, you cannot get its
-    bounds this way. Likewise, monitors with only an X-Plane window (not in
-    full-screen mode) will not be included.
+    This routine immediately and synchronously calls you back with the bounds
+    (in boxels) of each full-screen X-Plane window within the X-Plane global
+    desktop space, one callback per window. Note that if a monitor is *not*
+    covered by an X-Plane window, you cannot get its bounds this way. Likewise,
+    monitors with only an X-Plane window (not in full-screen mode) will not be
+    included.
     
     If X-Plane is running in full-screen and your monitors are of the same size
     and configured contiguously in the OS, then the combined global bounds of
@@ -1813,10 +2026,11 @@ TYPE
    {
     XPLMGetAllMonitorBoundsOS
     
-    This routine immediately calls you back with the bounds (in pixels) of each
-    monitor within the operating system's global desktop space. Note that
-    unlike XPLMGetAllMonitorBoundsGlobal(), this may include monitors that have
-    no X-Plane window on them.
+    This routine immediately and synchronously calls you back with the bounds
+    (in pixels) of each monitor within the operating system's global desktop
+    space, one callback per monitor. Note that unlike
+    XPLMGetAllMonitorBoundsGlobal(), this may include monitors that have no
+    X-Plane window on them.
     
     Note that this function's monitor indices match those provided by
     XPLMGetAllMonitorBoundsGlobal(), but the coordinates are different (since
@@ -1878,6 +2092,28 @@ TYPE
                                         outY                : PInteger);    { Can be nil }
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM300}
+
+{$IFDEF XPLM440}
+   {
+    XPLMGetModifierKeys
+    
+    Returns the modifier keys that are being held down *right now*, as a
+    bitfield of XPLMKeyFlags. Unlike the modifier flags delivered with a key
+    event, this reflects the live keyboard state at the moment of the call, so
+    it can be used to make mouse clicks modifier-sensitive (e.g. shift-click)
+    or to react to a modifier changing during drawing (e.g. show alignment
+    guides while shift is held).
+    
+    Only the modifier bits are ever set: xplm_ShiftFlag, xplm_OptionAltFlag,
+    xplm_ControlFlag and xplm_CapsLockFlag.  The xplm_DownFlag and xplm_UpFlag
+    bits (which describe a key event's phase) are never returned. As elsewhere
+    in the SDK, the Command key on macOS is folded into xplm_ControlFlag 
+    rather than reported separately.
+   }
+    { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
+   FUNCTION XPLMGetModifierKeys: XPLMKeyFlags;
+    cdecl; external XPLM_DLL;
+{$ENDIF XPLM440}
 
    {
     XPLMGetWindowGeometry
@@ -2472,6 +2708,13 @@ TYPE
 
 CONST
    XPLMDisplayHostApiVersion = 0;
+
+
+
+
+
+
+
 
 
 

@@ -46,6 +46,7 @@ USES
 TYPE
    XPLMChar   = AnsiChar;
    XPLMString = PAnsiChar;
+   PXPLMString = ^XPLMString;
 
 CONST
 {$IFDEF MSWINDOWS}
@@ -280,6 +281,17 @@ TYPE
                                         inRelativeToNow     : Integer);
     cdecl; external XPLM_DLL;
 {$ENDIF XPLM210}
+
+{___________________________________________________________________________
+ * XLUA TIMERS
+ ___________________________________________________________________________}
+
+
+
+
+
+
+
 
 {___________________________________________________________________________
  * Host API
