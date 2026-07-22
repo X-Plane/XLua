@@ -521,11 +521,6 @@ void module::do_callout(char const* f)
 	}
 }
 
-extern "C"
-{
-	XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
-}
-
 void module::_XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void* inParam)
 {
 	if (m_interp == nullptr || !m_enabled || m_xlua_compat[0] < 2)
@@ -567,10 +562,7 @@ void module::_XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void*
 			ptype.erase(0);
 		}
 
-		Make_XPLMPluginID(m_interp, inFromWho);
-		int ref = luaL_ref(m_interp, LUA_REGISTRYINDEX);
-		fmt_pcall_stdvars(m_interp, m_debug_proc, false, ("ri" + ptype).c_str(), ref, inMessage, inParam);
-		luaL_unref(m_interp, LUA_REGISTRYINDEX, ref);
+		fmt_pcall_stdvars(m_interp, m_debug_proc, false, ("ii" + ptype).c_str(), inFromWho, inMessage, inParam);
 	}
 }
 
