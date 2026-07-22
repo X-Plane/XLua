@@ -143,9 +143,15 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 	if (!cb)
 		return nullptr;
 
-	if (!xlua_is_callback_valid(cb))
+	// The registry-membership check is the liveness proof only for persisted
+	// userref callbacks (capture != kNeverPersist) — the ones handed to XPLM as a
+	// raw void* refcon and later recovered as a bare notify_cb_t*. kNeverPersist
+	// callbacks (timers, custom datarefs/commands, windows) are always reached
+	// through a live shared_ptr held by their owner, are never in the registry,
+	// and so must skip this check.
+	if (cb->get_capture() != notify_cb_t::kNeverPersist && !xlua_is_callback_valid(cb))
 	{
-		log_message(nullptr, "ERROR: A closure '%s' cas called which was invalid. This is a plugin bug, not a script bug. Please report it.\n",
+		log_message(nullptr, "ERROR: A closure '%s' was called which was invalid. This is a plugin bug, not a script bug. Please report it.\n",
 					callbackKey.c_str());
 		return nullptr;
 	}
