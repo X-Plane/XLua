@@ -64,20 +64,6 @@ function secondPreFlightLoop(inElapsedSinceLastCall, inElapsedTimeSinceLastFligh
 	return 10
 end
 
-local hotkey_count = 0
-local hotkey_ref = nil
-function hotkey_callback(userref)
-	print("Hotkey pressed! Userref = " .. userref)
-
-	hotkey_count = hotkey_count + 1
-	if hotkey_count == 5 then
-		print("Hotkey '" .. tostring(hotkey_ref) .. "' says that's enough.")
-
-		XPLMUnregisterHotKey(hotkey_ref)
-		hotkey_ref = nil
-	end
-end
-
 function PostFlightLoop()
 --	print("  POST-FL: Sim elapsed time: " .. XPLMGetElapsedTime() .. ", cycle #" .. XPLMGetCycleNumber())
 
@@ -635,21 +621,11 @@ NUMENR 24
 
 
 	-----------------------------------------------
-	--[[      XPLMDisplay/HOT KEYS tests       ]]--
+	--[[      XPLMDisplay/HOT KEYS excluded      ]]--
 	-----------------------------------------------
-	print_banner("XPLMDisplay/HOT KEYS")
-
-	print("There are " .. XPLMCountHotKeys() .. " hotkeys registered.")
-	hotkey_ref = XPLMRegisterHotKey("A", XPLMKeyFlags.xplm_ControlFlag + XPLMKeyFlags.xplm_DownFlag, "A Lua-generated Hotkey", hotkey_callback, "Hotkey Refdata")
-	print("There are " .. XPLMCountHotKeys() .. " hotkeys registered after adding a new one.")
-	print("****************************************************")
-	print("*** New hotkey registered to Ctrl+A! Try it out! ***")
-	print("****************************************************")
-
-	local hk_info = XPLMGetHotKeyInfo(XPLMGetNthHotKey(0))
-	print("The first hotkey is '" .. hk_info.outDescription .. "'")
-	local hk_info = XPLMGetHotKeyInfo(XPLMGetNthHotKey(9))				-- 0-based indexing.
-	print("The tenth hotkey is '" .. hk_info.outDescription .. "'")
+	-- Deprecated in XPLM300 and excluded from Lua (exclude="lua" in XPLMDisplay.xml),
+	-- so XPLMCountHotKeys / XPLMRegisterHotKey / XPLMGetNthHotKey / XPLMGetHotKeyInfo
+	-- are not bound. Nothing to test here.
 
 	--------------------------------------------------------
 	--[[      XPLMScenery/Terrain Y-Testing tests       ]]--
