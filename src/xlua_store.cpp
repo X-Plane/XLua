@@ -21,11 +21,18 @@ extern "C" int XLuaStoreLoadFile(lua_State* L)
 	void* buf = nullptr;
 	int buf_size = 0;
 	int res = XPLMStoreLoadFile(path, &buf, &buf_size);
-	if (res != 0 || buf == nullptr)
+	if (res != 1)
 	{
 		lua_pushnil(L);
 		lua_pushinteger(L, res);
 		return 2;
+	}
+
+	// success with no buffer = empty file
+	if (buf == nullptr)
+	{
+		lua_pushliteral(L, "");
+		return 1;
 	}
 
 	lua_pushlstring(L, static_cast<char const*>(buf), static_cast<size_t>(buf_size));

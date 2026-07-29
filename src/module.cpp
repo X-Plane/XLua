@@ -31,6 +31,8 @@
 	#include "xlua_imgui.h"
 	#include "xlua2_window_helpers.h"
 
+	#include <XPLMStore.h>
+
 	extern "C"
 	{
 		#include "../luajit/src/luajit.h"
@@ -43,13 +45,14 @@
 	public:
 		xmap_class(std::filesystem::path const& in_file_name);
 		xmap_class(const string& in_file_name);
-		~xmap_class()				{ if (m_buffer != nullptr) free(m_buffer); }
+		~xmap_class()				{ if (m_buffer != nullptr && m_deleter != nullptr) m_deleter(m_buffer); }
 		bool exists() const			{ return m_buffer != nullptr; }
 		char const* begin() const	{ return m_buffer; }
 		size_t size() const			{ return m_size; }
 	private:
 		char *		 m_buffer;
 		size_t		 m_size;
+		void		 (*m_deleter)(void *);
 	};
 
 	void add_xplm_to_interp(lua_State* L);
@@ -697,8 +700,43 @@ xmap_class::xmap_class(std::filesystem::path const& in_file_name) : xmap_class(i
 }
 
 xmap_class::xmap_class(const string& in_file_name) :
-	m_buffer(NULL), m_size(0)
+	m_buffer(NULL), m_size(0), m_deleter(NULL)
 {
+	// A store-managed xlua loads its scripts through the store: encrypted files must be
+	// decrypted, plain store files get integrity-checked on read. A file the store does
+	// not recognize as this product's content (-1) falls back to a regular read.
+	if (XPLMIsStoreManagedPlugin())
+	{
+		void * buffer = nullptr;
+		int buffer_sz = 0;
+		int const encrypted = XPLMStoreIsEncrypted(in_file_name.c_str());
+		if (encrypted == 1)
+		{
+			// no fallback: a plain read of an encrypted file would yield ciphertext
+			if (XPLMStoreDecryptFile(in_file_name.c_str(), &buffer, &buffer_sz) == xplmDecrypt_Ok)
+			{
+				m_buffer = static_cast<char *>(buffer);
+				m_size = buffer_sz;
+				m_deleter = XPLMStoreFileFree;
+			}
+			return;
+		}
+		if (encrypted == 0)
+		{
+			// no fallback on failure either - a plain read would bypass the integrity check
+			if (XPLMStoreLoadFile(in_file_name.c_str(), &buffer, &buffer_sz) != 1)
+				return;
+			if (buffer != nullptr)
+			{
+				m_buffer = static_cast<char *>(buffer);
+				m_size = buffer_sz;
+				m_deleter = XPLMStoreFileFree;
+				return;
+			}
+			// success with no buffer = empty file; the plain read below handles it
+		}
+	}
+
 #if IBM
 	FILE * fi = _wfopen(utf8_decode(in_file_name).c_str(), L"rb");
 #else
@@ -715,6 +753,7 @@ xmap_class::xmap_class(const string& in_file_name) :
 		{
 			fread(m_buffer, 1, m_size, fi);
 			m_buffer[m_size] = 0;
+			m_deleter = free;
 		}
 
 		fclose(fi);
