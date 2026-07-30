@@ -22,6 +22,7 @@ INTERFACE
 TYPE
    XPLMChar   = AnsiChar;
    XPLMString = PAnsiChar;
+   PXPLMString = ^XPLMString;
 
 CONST
 {$IFDEF MSWINDOWS}
@@ -104,6 +105,12 @@ TYPE
     necessarily match the Macintosh user interface guidelines.  There is not
     yet a way for plugins to access the Macintosh control keys without using
     #ifdefed code.
+    
+    The down and up flags describe the phase of a key *event* and are only
+    meaningful when these flags arrive with a keystroke.  When you poll the
+    live modifier state with XPLMGetModifierKeys(), only the modifier bits
+    (shift, option/alt, command/control, caps lock) are ever set --- the
+    down/up flags are never returned by that call.
    }
    XPLMKeyFlags = (
      { The shift key is down                                                      }
@@ -120,6 +127,12 @@ TYPE
  
      { The key is being released                                                  }
      ,xplm_UpFlag                              = 16
+ 
+{$IFDEF XPLM440}
+     { The caps lock key is engaged.  Only reported by XPLMGetModifierKeys();     }
+     { never set on a key event.                                                  }
+     ,xplm_CapsLockFlag                        = 32
+{$ENDIF XPLM440}
  
    );
    PXPLMKeyFlags = ^XPLMKeyFlags;
@@ -284,8 +297,8 @@ CONST
     { X-Plane itself                                                             }
    XPLM_PLUGIN_XPLANE   = (0);
 
-    {                 The current XPLM revision is 4.3.0 (430).                  }
-   kXPLM_Version        = (430);
+    {                 The current XPLM revision is 4.4.0 (440).                  }
+   kXPLM_Version        = (440);
 
    {
     XPLMFixedString150_t

@@ -28,8 +28,7 @@
 require("XPLMDefs")
 
 --- XPLMNavRef is an iterator into the navigation database. The navigation database is essentially an array, but it is not necessarily densely populated. The only assumption you can safely make is that like-typed nav-aids are grouped together. Use XPLMNavRef to refer to a nav-aid. XPLM_NAV_NOT_FOUND is returned by functions that return an XPLMNavRef when the iterator must be invalid.
----@class XPLMNavRef : userdata
----@field private __XPLMNavRef_marker any
+---@alias XPLMNavRef integer
 
 --[[
 These enumerations define the different types of navaids.  They are each

@@ -196,26 +196,10 @@ require("XPLMDisplay")
 ---@field XPLMPolygon fun(color: integer, vertices: XPLMVertex_t[], count: integer)
 
 ---@class _G
---- This function draws a filled convex polygon with a caller-specified outline
---- width. The interior is filled and an outline is drawn at the given width.
----
---- - lineWidth: the outline width in pixels.
----
----@field XPLMPolygonWithWidth fun(color: integer, lineWidth: number, vertices: XPLMVertex_t[], count: integer)
-
----@class _G
 --- This function draws a filled convex polygon with per-vertex colors. Colors
 --- are interpolated across the polygon interior.
 ---
 ---@field XPLMPolygonc fun(vertices: XPLMVertexColor_t[], count: integer)
-
----@class _G
---- This function draws a filled convex polygon with per-vertex colors and a
---- caller-specified outline width.
----
---- - lineWidth: the outline width in pixels.
----
----@field XPLMPolygoncWithWidth fun(lineWidth: number, vertices: XPLMVertexColor_t[], count: integer)
 
 ---@class _G
 --- This function draws a series of connected filled quadrilaterals. Vertices
@@ -229,27 +213,11 @@ require("XPLMDisplay")
 ---@field XPLMQuadstrip fun(color: integer, vertices: XPLMVertex_t[], count: integer)
 
 ---@class _G
---- This function draws a quad strip with a caller-specified outline width.
---- Vertex interpretation is the same as XPLMQuadstrip.
----
---- - lineWidth: the outline width in pixels.
----
----@field XPLMQuadstripWithWidth fun(color: integer, lineWidth: number, vertices: XPLMVertex_t[], count: integer)
-
----@class _G
 --- This function draws a quad strip with per-vertex colors. Vertex
 --- interpretation is the same as XPLMQuadstrip; colors are interpolated across
 --- each quad.
 ---
 ---@field XPLMQuadstripc fun(vertices: XPLMVertexColor_t[], count: integer)
-
----@class _G
---- This function draws a quad strip with per-vertex colors and a
---- caller-specified outline width.
----
---- - lineWidth: the outline width in pixels.
----
----@field XPLMQuadstripcWithWidth fun(lineWidth: number, vertices: XPLMVertexColor_t[], count: integer)
 
 --[[
 This enumeration specifies the character set for a font created with
@@ -361,12 +329,11 @@ local XPLMJustification_t = {
 ---@field XPLMFontFitForward fun(font: XPLMFontHandle, fontSize: number, string: string, width: number): integer
 
 ---@class _G
---- This function returns the number of characters from the end of a string
---- that fit within the specified width at the given font size. Characters are
---- measured right to left. This is useful for right-aligning a truncated
---- string.
+--- This function returns the number of characters in the input string that must be
+--- skipped to fit the reset of the string into the specified space. This is useful for
+--- right-aligning a truncated string.
 ---
---- Returns a character count.
+--- Returns a character count - the number of characters that must be removed to fit.
 ---
 ---@field XPLMFontFitReverse fun(font: XPLMFontHandle, fontSize: number, string: string, width: number): integer
 
@@ -412,7 +379,7 @@ local XPLMJustification_t = {
 ---
 --- - fontSize: the font size in pixels.
 --- - x, y: the anchor position of the baseline, in panel coordinates.
---- - angle: the rotation angle in degrees, positive counterclockwise.
+--- - angle: the rotation angle in degrees, positive clockwise.
 ---
 ---@field XPLMFontDrawStringRotated fun(font: XPLMFontHandle, color: integer, fontSize: number, x: number, y: number, string: string, angle: number, justification: XPLMJustification_t)
 
@@ -420,7 +387,7 @@ local XPLMJustification_t = {
 ---@class XPLMTextureAtlasRef : userdata
 ---@field private __XPLMTextureAtlasRef_marker any
 
---- A vertex for textured mesh drawing. Combines a position in panel coordinates with normalized texture coordinates within the image.
+--- A vertex for textured mesh drawing. Combines a position in panel coordinates with normalized texture coordinates within the image. Texture coordinates are always relative to the image you are drawing, never to the atlas sheet it happens to be packed into. This is true for both XPLMTextureAtlasDrawMesh and XPLMTextureSourceDrawMesh, so the same vertex array means the same thing to either one.
 ---@class XPLMTextureVertex_t
 ---@field x number
 ---@field y number
@@ -503,17 +470,6 @@ local XPLMJustification_t = {
 ---@field XPLMTextureAtlasGetImageHeight fun(inTextureAtlas: XPLMTextureAtlasRef, inImageIndex: integer): integer
 
 ---@class _G
---- This function returns the UV coordinates of an image within the atlas
---- texture. This is useful for custom mesh rendering with
---- XPLMTextureAtlasDrawMesh.
----
---- - outUV: a pointer to an array of 4 floats that receives [s1, t1, s2, t2],
----   where (s1, t1) is the bottom-left corner and (s2, t2) is the top-right
----   corner in atlas texture space.
----
----@field XPLMTextureAtlasGetImageUVMap fun(inTextureAtlas: XPLMTextureAtlasRef, inImageIndex: integer): { outUV: number[] }
-
----@class _G
 --- This function draws an atlas image at its native resolution. The image is
 --- positioned with its top-left corner at (inX, inY) and extends rightward and
 --- downward by its native pixel dimensions.
@@ -570,6 +526,15 @@ local XPLMJustification_t = {
 --- Each vertex specifies both a panel-space position and a normalized texture
 --- coordinate within the image (0.0 to 1.0). This gives you full control over
 --- how the image is mapped onto geometry.
+---
+--- Texture coordinates are relative to the image, not to the atlas sheet; the
+--- mapping onto wherever the image was packed is applied for you, exactly as it
+--- is for the other atlas drawing routines. One consequence is that the same
+--- vertex array can be drawn with any inImageIndex - you do not have to rebuild
+--- the mesh to switch images.
+---
+--- Coordinates outside 0.0 to 1.0 are not clamped, and will sample whatever
+--- neighboring image shares the atlas sheet. Keep them in range.
 ---
 --- - inTintColor: a color that is multiplied with the texture.
 --- - vertices: an array of XPLMTextureVertex_t vertices defining the triangle
@@ -676,22 +641,21 @@ local XPLMTextureSource = {
 --- This function sets an absolute scissor rectangle. Only pixels within this
 --- rectangle are drawn; everything outside is clipped.
 ---
---- - top, left, bottom, right: the scissor bounds in panel coordinates.
+--- - left, top, right, bottom: the scissor bounds in panel coordinates.
 ---
----@field XPLMScissorSet fun(top: integer, left: integer, bottom: integer, right: integer)
+---@field XPLMScissorSet fun(left: integer, top: integer, right: integer, bottom: integer)
 
 ---@class _G
---- This function insets (shrinks) the current scissor rectangle by the
---- specified amounts on each side. The result is the intersection of the
---- current scissor rectangle and the new inset rectangle, so the drawable area
---- can only get smaller. This is useful for nested clipping.
+--- This function sets the scissors box to the intersection of the existing
+--- scissors box. The result is always a same or smaller drawable area.
+--- This is useful for nested clipping.
 ---
---- - top: inset from the top edge, in pixels.
 --- - left: inset from the left edge, in pixels.
---- - bottom: inset from the bottom edge, in pixels.
+--- - top: inset from the top edge, in pixels.
 --- - right: inset from the right edge, in pixels.
+--- - bottom: inset from the bottom edge, in pixels.
 ---
----@field XPLMScissorShrink fun(top: integer, left: integer, bottom: integer, right: integer)
+---@field XPLMScissorIntersect fun(left: integer, top: integer, right: integer, bottom: integer)
 
 ---@class _G
 --- This function begins stencil mask setup. While in setup mode, drawing
@@ -940,12 +904,29 @@ local XPLMMapLayers = {
 ---@class _G
 ---@field XPLMMapLayers XPLMMapLayers
 
+--[[
+Flag that controls how the map's EGPWS display layer is rendered.
+]]--
+
+---@enum XPLMEGPWSStyle
+local XPLMEGPWSStyle = {
+    -- Terrain is drawn as small dithered blocks (common in most airliner
+    -- avionics).
+    xplm_EGPWS_Style_Blocky                  = 0,
+    -- Terrain countours are smooth and curved (common in modern avionics).
+    xplm_EGPWS_Style_Smooth                  = 1,
+}
+---@class _G
+---@field XPLMEGPWSStyle XPLMEGPWSStyle
+
+--- Per-frame description of what a map display should show: where it is centered, how it is oriented, how far it reaches, and what the terrain layers should shade against. Two fields set the scale, and they are deliberately a matching pair: roseRadius is the distance from the center of the map out to the compass rose in pixels, and mapRange is that same distance in nautical miles. So setting mapRange to 40 puts the rose edge 40 nm from the aircraft, exactly like the range knob on a real EFIS control panel - and a centered rose therefore spans 80 nm across. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
 ---@class XPLMMapCustomData_t
+---@field structSize integer
 ---@field datLat number
 ---@field datLon number
 ---@field ctrX integer
 ---@field ctrY integer
----@field roseDiameter integer
+---@field roseRadius integer
 ---@field mapRange number
 ---@field orientation integer
 ---@field terrainWarn number
@@ -953,6 +934,9 @@ local XPLMMapLayers = {
 ---@field acfAlt number
 ---@field gearDown integer
 ---@field trueRotation number
+---@field nearestRwyElev number
+---@field egpwsBrightness number
+---@field egpwsStyle XPLMEGPWSStyle
 
 --- Parameters for creating a base map display. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
 ---@class XPLMCreateMap_t
@@ -962,6 +946,15 @@ local XPLMMapLayers = {
 --- An opaque handle to a map display instance. Create one with XPLMCreateMapDisplay and destroy it with XPLMDestroyMapDisplay.
 ---@class XPLMMapDisplayRef : userdata
 ---@field private __XPLMMapDisplayRef_marker any
+
+--- Which layers a map shows and where on the panel it goes. Pass the same XPLMMapDrawInfo_t and the same XPLMMapCustomData_t to XPLMMapDisplayDrawIn and to the projection routines, and the projection you query is provably the projection you drew - so your symbology cannot end up a frame or a zoom step out of step with the terrain under it. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
+---@class XPLMMapDrawInfo_t
+---@field structSize integer
+---@field layers XPLMMapLayers
+---@field left integer
+---@field top integer
+---@field right integer
+---@field bottom integer
 
 ---@class _G
 --- This function creates a new map display instance. The display begins loading
@@ -981,21 +974,108 @@ local XPLMMapLayers = {
 
 ---@class _G
 --- This function renders the map display directly into the active panel surface
---- within the specified rectangular region. Map sets up its own stereographic
---- projection to fit the rectangle, so no transform stack manipulation is
---- needed.
+--- within the rectangle given by info. Map sets up its own projection to fit that
+--- rectangle, so no transform stack manipulation is needed.
 ---
---- The layers parameter controls which visual layers are rendered for this
---- draw call. Pass a bitwise OR of XPLMMapLayers flags. Note that some layers
---- are mutually exclusive, such as NEXRAD and EGPWS or NEXRAD and IR.
---- The airport details layer is only visible at very close zoom levels.
+--- info->layers controls which visual layers are rendered. Note that some layers
+--- are mutually exclusive, such as NEXRAD and EGPWS or NEXRAD and IR. The airport
+--- details layer is only visible at very close zoom levels.
 ---
 --- This function must be called from within an avionics drawing callback. If
 --- terrain tiles have not finished loading yet, this function does nothing.
 ---
---- - map: the map display handle.
---- - layers: bitwise OR of XPLMMapLayers flags to enable for this draw call.
---- - left, top, right, bottom: the bounding rectangle in panel coordinates.
+--- dataOverrides may be NULL, in which case the map follows the sim's own navigation
+--- display: centered on the user aircraft in the middle of the rectangle, rose radius
+--- half the shorter side of it, range taken from the EFIS range knob, and track-up or
+--- north-up according to the sim's map mode. The pilotIndex you created the map with
+--- selects which side's range and altitude are used.
 ---
----@field XPLMMapDisplayDrawIn fun(map: XPLMMapDisplayRef, layers: XPLMMapLayers, left: integer, top: integer, right: integer, bottom: integer, dataOverrides: XPLMMapCustomData_t)
+---@field XPLMMapDisplayDrawIn fun(map: XPLMMapDisplayRef, info: XPLMMapDrawInfo_t, dataOverrides: XPLMMapCustomData_t)
+
+---@class _G
+--- Turns a latitude/longitude into a position in panel coordinates, for the map
+--- that info describes. This is the inverse of XPLMMapDisplayUnproject.
+---
+--- Pass the same info you draw that map with and you get the projection that draw
+--- call produces, whether you call this before or after XPLMMapDisplayDrawIn. So
+--- the usual pattern - project your symbols, draw the map, then draw the symbols
+--- on top - lines up exactly, with no need to cache anything between frames.
+---
+--- Unlike XPLMMapDisplayDrawIn, this does not have to be called from a drawing
+--- callback; it is equally valid from a click handler or a flight loop.
+---
+--- Returns 1 on success. Returns 0, leaving outX and outY untouched, if the map's
+--- terrain tiles have not loaded yet or if the point has no position on this map.
+---
+--- Note that the returned coordinates are in the same space as info's rectangle,
+--- and like that rectangle they do not account for the panel graphics transform
+--- stack.
+---
+--- Passing NULL for dataOverrides projects the sim's own navigation display view, the
+--- same one XPLMMapDisplayDrawIn draws with NULL.
+---
+---@field XPLMMapDisplayProject fun(map: XPLMMapDisplayRef, info: XPLMMapDrawInfo_t, dataOverrides: XPLMMapCustomData_t, latitude: number, longitude: number): integer, { outX: userdata, outY: userdata }
+
+---@class _G
+--- Turns a position in panel coordinates back into a latitude/longitude, for the
+--- map that info describes. This is the inverse of XPLMMapDisplayProject.
+---
+--- Use this to turn a touch or click on your map into a place in the world - for
+--- picking a waypoint, or reading out the position under the cursor.
+---
+--- Unlike XPLMMapDisplayDrawIn, this does not have to be called from a drawing
+--- callback; it is equally valid from a click handler or a flight loop.
+---
+--- Returns 1 on success. Returns 0, leaving outLatitude and outLongitude
+--- untouched, if the map's terrain tiles have not loaded yet or if the point does
+--- not correspond to anywhere on the earth.
+---
+--- Passing NULL for dataOverrides projects the sim's own navigation display view, the
+--- same one XPLMMapDisplayDrawIn draws with NULL.
+---
+---@field XPLMMapDisplayUnproject fun(map: XPLMMapDisplayRef, info: XPLMMapDrawInfo_t, dataOverrides: XPLMMapCustomData_t, x: number, y: number): integer, { outLatitude: userdata, outLongitude: userdata }
+
+---@class _G
+--- Returns how many pixels correspond to one meter at a given point on the map
+--- that info describes. Use it to size symbols and range rings so they stay
+--- correct as the range changes.
+---
+--- Returns 0 if the map's terrain tiles have not loaded yet.
+---
+--- Passing NULL for dataOverrides projects the sim's own navigation display view, the
+--- same one XPLMMapDisplayDrawIn draws with NULL.
+---
+---@field XPLMMapDisplayScaleMeter fun(map: XPLMMapDisplayRef, info: XPLMMapDrawInfo_t, dataOverrides: XPLMMapCustomData_t, x: number, y: number): number
+
+---@class _G
+--- Returns the heading, in degrees clockwise from straight up on the display, at
+--- which true north lies at a given point on the map that info describes. ADD it
+--- to a true heading to get the angle to draw that heading at.
+---
+--- This accounts both for the map's own rotation - a heading-up map is turned to
+--- put the aircraft's nose at the top - and for the projection's convergence,
+--- which tilts north away from vertical as you move away from the map's center.
+---
+--- Returns 0 if the map's terrain tiles have not loaded yet.
+---
+--- Passing NULL for dataOverrides projects the sim's own navigation display view, the
+--- same one XPLMMapDisplayDrawIn draws with NULL.
+---
+---@field XPLMMapDisplayGetNorthHeading fun(map: XPLMMapDisplayRef, info: XPLMMapDrawInfo_t, dataOverrides: XPLMMapCustomData_t, x: number, y: number): number
+
+---@class _G
+--- This function returns the lowest and highest altitude shown on the map's
+--- EGPWS terrain display.
+---
+--- Note that those altitudes are only available if the map has been drawn
+--- with the xplm_Map_EGPWS layer. If altitudes are not available, the function
+--- returns false, and the altitude pointers are not modified.
+---
+--- This function must be called from within an avionics drawing callback.
+---
+--- - map: the map display handle.
+--- - min: a pointer to the minimum altitude.
+--- - max: a pointer to the maximum altitude.
+---
+---@field XPLMMapDisplayGetTerrainAltitudes fun(map: XPLMMapDisplayRef): integer, { min: userdata, max: userdata }
 

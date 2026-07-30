@@ -249,6 +249,9 @@ typedef void (* XPLMMapPrepareCacheCallback_f)(
  * Called just before your map layer gets deleted. Because SDK-created map
  * layers have the same lifetime as the X-Plane map that contains them, if the
  * map gets unloaded from memory, your layer will too.
+ * 
+ * This callback fires exactly once, just before deletion, after which none of
+ * the layer's callbacks are used.
  *
  */
 typedef void (* XPLMMapWillBeDeletedCallback_f)(

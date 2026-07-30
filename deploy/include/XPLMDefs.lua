@@ -28,8 +28,7 @@
 
 
 --- Each plug-in is identified by a unique integer ID. This ID can be used to disable or enable a plug-in, or discover what plug-in is 'running' at the time. A plug-in ID is unique within the currently running instance of X-Plane unless plug-ins are reloaded. Plug-ins may receive a different unique ID each time they are loaded. This includes the unloading and reloading of plugins that are part of the user's aircraft. For persistent identification of plug-ins, use XPLMFindPluginBySignature in XPLMUtiltiies.h . -1 indicates no plug-in.
----@class XPLMPluginID : userdata
----@field private __XPLMPluginID_marker any
+---@alias XPLMPluginID integer
 
 --[[
 These bitfields define modifier keys in a platform independent way.
@@ -43,6 +42,11 @@ X-Plane uses the control key and not the command key on Macintosh, providing
 a consistent interface across platforms that does not necessarily match the Macintosh
 user interface guidelines.  There is not yet a way for plugins to access the Macintosh
 control keys without using #ifdefed code.
+
+The down and up flags describe the phase of a key *event* and are only meaningful when
+these flags arrive with a keystroke.  When you poll the live modifier state with
+XPLMGetModifierKeys(), only the modifier bits (shift, option/alt, command/control, caps lock)
+are ever set --- the down/up flags are never returned by that call.
 ]]--
 
 ---@enum XPLMKeyFlags
@@ -57,6 +61,9 @@ local XPLMKeyFlags = {
     xplm_DownFlag                            = 8,
     -- The key is being released
     xplm_UpFlag                              = 16,
+    -- The caps lock key is engaged.  Only reported by XPLMGetModifierKeys();
+    -- never set on a key event.
+    xplm_CapsLockFlag                        = 32,
 }
 ---@class _G
 ---@field XPLMKeyFlags XPLMKeyFlags
@@ -145,7 +152,7 @@ local XPLMMouseStatus = {
 ---@field XPLM_PLUGIN_XPLANE integer
 
 ---@class _G
---- 				The current XPLM revision is 4.3.0 (430).
+--- 				The current XPLM revision is 4.4.0 (440).
 ---
 ---@field kXPLM_Version integer
 

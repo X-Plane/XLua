@@ -52,7 +52,6 @@ void XPLMProbeInfo_t_to_table(lua_State* L, XPLMProbeInfo_t const& src);
 // Typedefs
 //
 XPLMObjectRef* Make_XPLMObjectRef(lua_State* L, XPLMObjectRef const& init);
-XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 XPLMProbeRef* Make_XPLMProbeRef(lua_State* L, XPLMProbeRef const& init);
 
 

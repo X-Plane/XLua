@@ -20,6 +20,7 @@ USES
 TYPE
    XPLMChar   = AnsiChar;
    XPLMString = PAnsiChar;
+   PXPLMString = ^XPLMString;
 
 CONST
 {$IFDEF MSWINDOWS}
@@ -175,7 +176,7 @@ TYPE
     
     If you use XPLMPlayPCMOnBus() you may use this optional callback to find
     out when the FMOD::Channel is complete, if you need to deallocate memory
-    for example.
+    for example. It will not be called more than once per completion.
    }
      XPLMPCMComplete_f = PROCEDURE(
                                     inRefcon            : pointer;    { Can be nil }

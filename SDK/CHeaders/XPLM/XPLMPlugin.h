@@ -476,7 +476,7 @@ XPLM_API void       XPLMEnableFeature(
  * 
  * This routine calls your enumerator callback once for each feature that this
  * running version of X-Plane supports. Use this routine to determine all of
- * the features that X-Plane can support.
+ * the features that X-Plane can support. Callbacks are synchronous.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */

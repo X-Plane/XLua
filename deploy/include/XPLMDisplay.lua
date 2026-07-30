@@ -93,6 +93,7 @@
 
 require("XPLMDefs")
 require("XPLMUtilities")
+require("XPLMScenery")
 
 --[[
 XPLMWindowContentType describes how the content for a window (or an avionics device's screen) is provided.
@@ -234,6 +235,12 @@ local XPLMDeviceID = {
 --- This is the prototype for screen brightness callbacks for custom devices. If you provide a callback, you can return the ratio of the screen's maximum brightness that the simulator should use when displaying the screen in the 3D cockpit. inRheoValue is the current ratio value (between 0 and 1) of the instrument brightness rheostat to which the device is bound. inAmbientBrightness is the value (between 0 and 1) that the callback should return for the screen to be at a usable brightness based on ambient light (if your device has a photo cell and automatically adjusts its brightness, you can return this and your screen will be at the optimal brightness to be readable, but not blind the pilot). inBusVoltsRatio is the ratio of the nominal voltage currently present on the bus to which the device is bound, or -1 if the device is not bound to the current aircraft. Refcon is a unique value that you specify when creating the device, allowing you to slip a pointer to your own data to the callback.
 ---@alias XPLMAvionicsBrightness_f fun(inRheoValue: number, inAmbiantBrightness: number, inBusVoltsRatio: number, inRefcon: any): number
 
+--- Called for a browser-content-type avionics device when its main frame finishes loading a page. This is NOT a guarantee that the load succeeded: a page that renders an HTTP error response (e.g. a server's 404 page) also "finishes" here. A navigation that fails before the page renders fires XPLMAvionicsBrowserLoadError_f instead. If your page needs to know its own HTTP status, have it report that from JavaScript via a browser function. Set this via browserLoadFinishedFunc in XPLMCreateAvionics_t.
+---@alias XPLMAvionicsBrowserLoadFinished_f fun(inAvionics: XPLMAvionicsID, inURL: string, inRefcon: any)
+
+--- Called for a browser-content-type avionics device when a navigation fails at the network level (bad URL, host unreachable, TLS failure, file not found). inError describes the failure. This may be followed by XPLMAvionicsBrowserLoadFinished_f for a substitute error page, so treat a load error as the authoritative signal that the navigation to inURL failed. Set this via browserLoadErrorFunc in XPLMCreateAvionics_t.
+---@alias XPLMAvionicsBrowserLoadError_f fun(inAvionics: XPLMAvionicsID, inURL: string, inError: string, inRefcon: any)
+
 --- The XPLMCreateAvionics_t structure defines all of the parameters used to generate your own glass cockpit device by using XPLMCreateAvionicsEx(). The structure will be expanded in future SDK APIs to include more features. Always set the structSize member to the size of your struct in bytes!
 ---@class XPLMCreateAvionics_t
 ---@field structSize integer Used to inform XPLMCreateAvionicsEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateAvionics_t)
@@ -259,8 +266,10 @@ local XPLMDeviceID = {
 ---@field deviceID string A null-terminated string of maximum 64 characters to uniquely identify your cockpit device. This must be unique (you cannot re-use an ID that X-Plane or another plugin provides), and it must not contain spaces. This is the string the OBJ file must reference when marking polygons with ATTR_cockpit_device. The string is copied when you call XPLMCreateAvionicsEx, so you don't need to hold this string in memory after the call.
 ---@field deviceName string A null-terminated string to give a user-readable name to your device, which can be presented in UI dialogs.
 ---@field refcon any A reference which will be passed into your draw and mouse callbacks. Use this to pass information to yourself as needed.
----@field contentType XPLMWindowContentType How this device's screen is drawn: xplm_WindowContentTypeOpenGL (the legacy OpenGL bridge) or xplm_WindowContentTypePanelGraphics (native panel-graphics rendering). xplm_WindowContentTypeBrowser is not valid for avionics.
+---@field contentType XPLMWindowContentType How this device's screen is drawn: xplm_WindowContentTypeOpenGL (the legacy OpenGL bridge), xplm_WindowContentTypePanelGraphics (native panel-graphics rendering), or xplm_WindowContentTypeBrowser (a CEF web view). For a browser device the single web page covers the whole bezel including the screen; X-Plane copies the screen sub-rectangle into the device's framebuffer, so your drawCallback/bezelDrawCallback are not used. Drive the page with XPLMAvionicsSetURL() and friends. Browser content is only valid for devices you create here, not when customising a built-in device.
 ---@field windowWithChrome integer If set to true (1), X-Plane will draw the chrome with the close and pop-out buttons outside of your bezel, rather than having the buttons steal pixels from your bezel.
+---@field browserLoadFinishedFunc XPLMAvionicsBrowserLoadFinished_f For browser content (xplm_WindowContentTypeBrowser): called when a page's main frame finishes loading. Not a success guarantee --a rendered HTTP error page finishes too. Set to NULL if you don't need it.
+---@field browserLoadErrorFunc XPLMAvionicsBrowserLoadError_f For browser content (xplm_WindowContentTypeBrowser): called when a navigation fails at the network level, with a description of the failure. Set to NULL if you don't need it.
 
 ---@class _G
 --- Creates a new cockpit device to be used in the 3D cockpit. You can call this at any time: if an aircraft referencing your device is loaded before your plugin, the simulator will make sure to retroactively map your display into it.
@@ -273,6 +282,60 @@ local XPLMDeviceID = {
 --- Destroys the cockpit device and deallocates its screen's memory. You should only ever call this for devices that you created using XPLMCreateAvionicsEx(), not X-Plane' built-ine devices you have customised.
 ---
 ---@field XPLMDestroyAvionics fun(inHandle: XPLMAvionicsID)
+
+---@class _G
+--- Loads a URL into a browser-content-type avionics device (one created via
+--- XPLMCreateAvionicsEx() with contentType xplm_WindowContentTypeBrowser). Safe
+--- to call before the underlying webview has finished initialising; the load is
+--- queued and applied as soon as the browser is ready, so you may call this
+--- immediately after XPLMCreateAvionicsEx(). Subsequent calls replace the
+--- pending or current page. Has no effect on non-browser devices.
+---
+---@field XPLMAvionicsSetURL fun(inAvionicsID: XPLMAvionicsID, inURL: string)
+
+---@class _G
+--- Reloads the current URL in a browser-content-type avionics device. Pass true
+--- for inIgnoreCache to bypass the HTTP cache (the equivalent of a shift-reload).
+--- Has no effect on non-browser devices.
+---
+---@field XPLMAvionicsRefresh fun(inAvionicsID: XPLMAvionicsID, inIgnoreCache: integer)
+
+---@class _G
+--- Executes a JavaScript snippet in the main frame of a browser-content-type
+--- avionics device. The script has access to the same xplane.* namespace exposed
+--- to the page. If injected before the page has finished loading, it may run
+--- against an empty document. Has no effect on non-browser devices.
+---
+---@field XPLMAvionicsInjectScript fun(inAvionicsID: XPLMAvionicsID, inScript: string)
+
+--- Handler invoked when the page in a browser-content-type avionics device calls xplane.<name>(arg). You receive the device, the argument serialised as a JSON string, and your refcon; return a JSON string (or NULL) that the JS Promise resolves to.
+---@alias XPLMAvionicsBrowserCallback_f fun(inAvionicsID: XPLMAvionicsID, inJSON: string, inRefcon: any): string
+
+---@class _G
+--- Registers a callback that the page running in a browser-content-type avionics
+--- device can invoke as xplane.<inName>(arg). The JS call returns a Promise
+--- that resolves to the value your XPLMAvionicsBrowserCallback_f returns (parsed
+--- as JSON). Registering the same name again replaces the previous callback. Each
+--- device has its own independent xplane.* namespace. Has no effect on non-browser
+--- devices.
+---
+---@field XPLMAvionicsAddBrowserFunction fun(inAvionicsID: XPLMAvionicsID, inName: string, inFunction: XPLMAvionicsBrowserCallback_f, inRefcon: any)
+
+---@class _G
+--- Glues a cockpit device you created with XPLMCreateAvionicsEx() onto a 3D object you loaded with XPLMLoadObject(), so that the device's screen is drawn on that object - typically one you draw in the world using the instancing API (XPLMCreateInstance()).
+---
+--- The device is matched to the object's screen by ID: the object must declare an `ATTR_cockpit_device` with the same device ID string you passed to XPLMCreateAvionicsEx(). The binding is a property of the object itself, so every instance you draw from that object shows the same device. You may only bind devices you created yourself, not X-Plane's built-in devices.
+---
+--- Brightness on the object follows your device's own brightness callback, independent of any aircraft electrical system.
+---
+--- Returns 1 if the object had a matching device screen and the binding succeeded, or 0 otherwise.
+---
+---@field XPLMSetObjectAvionics fun(inObject: XPLMObjectRef, inAvionics: XPLMAvionicsID): integer
+
+---@class _G
+--- Removes a binding previously made with XPLMSetObjectAvionics(), restoring the object's device screen to black and detaching its click handler. Bindings are also cleared automatically when you destroy the device with XPLMDestroyAvionics().
+---
+---@field XPLMClearObjectAvionics fun(inObject: XPLMObjectRef, inAvionics: XPLMAvionicsID)
 
 ---@class _G
 --- Returns true (1) if the cockpit device with the given handle is used by the current aircraft.
@@ -424,7 +487,10 @@ local XPLMDeviceID = {
 --- The SDK calls your mouse wheel callback when one of the mouse wheels is scrolled within your window. Return true to consume the mouse wheel movement or false to pass them on to a lower window. (If your window appears opaque to the user, you should consume mouse wheel scrolling even if it does nothing.) The number of "clicks" indicates how far the wheel was turned since the last callback. The wheel is 0 for the vertical axis or 1 for the horizontal axis (for OS/mouse combinations that support this). The units for x and y values match the units used in your window. Thus, for "modern" windows (those created via XPLMCreateWindowEx() and compiled against the XPLM300 library), the units are boxels, while legacy windows will get pixels. Legacy windows have their origin in the lower left of the main X-Plane window, while modern windows have their origin in the lower left of the global desktop space. In both cases, x increases as you move right, and y increases as you move up.
 ---@alias XPLMHandleMouseWheel_f fun(inWindowID: XPLMWindowID, x: integer, y: integer, wheel: integer, clicks: integer, inRefcon: any): boolean
 
+--- Called for a browser-content-type window when its main frame finishes loading a page. NOT a success guarantee --a rendered HTTP error page (e.g. a 404) also finishes here. A navigation that fails before the page renders fires XPLMBrowserLoadError_f instead. Set this via browserLoadFinishedFunc in XPLMCreateWindow_t.
 ---@alias XPLMBrowserLoadFinished_f fun(inWindow: XPLMWindowID, inURL: string, inRefcon: any)
+
+--- Called for a browser-content-type window when a navigation fails at the network level (bad URL, host unreachable, TLS failure, file not found). inError describes the failure. May be followed by XPLMBrowserLoadFinished_f for a substitute error page, so treat this as the authoritative signal that the navigation to inURL failed. Set this via browserLoadErrorFunc in XPLMCreateWindow_t.
 ---@alias XPLMBrowserLoadError_f fun(inWindow: XPLMWindowID, inURL: string, inError: string, inRefcon: any)
 
 --[[
@@ -492,7 +558,7 @@ local XPLMWindowDecoration = {
 ---@field right integer Right bound, in global desktop boxels
 ---@field bottom integer Bottom bound, in global desktop boxels
 ---@field visible boolean
----@field drawWindowFunc XPLMDrawWindow_f A callback to draw your window's contents (or NULL, e.g. for browser/panel-graphics content where the window draws itself)
+---@field drawWindowFunc XPLMDrawWindow_f A callback to draw your window's contents. Required for OpenGL and panel-graphics content; may be NULL only for browser content, which draws itself.
 ---@field handleMouseClickFunc XPLMHandleMouseClick_f A callback to handle the user left-clicking within your window (or NULL to ignore left clicks)
 ---@field handleKeyFunc XPLMHandleKey_f A callback to handle keyboard input (or NULL to ignore keyboard input)
 ---@field handleCursorFunc XPLMHandleCursor_f A callback to determine the cursor shape over your window (or NULL for the default cursor)
@@ -502,8 +568,29 @@ local XPLMWindowDecoration = {
 ---@field layer XPLMWindowLayer
 ---@field handleRightClickFunc XPLMHandleMouseClick_f A callback to handle the user right-clicking within your window (or NULL to ignore right clicks)
 ---@field windowContentType XPLMWindowContentType The source of content for this Window (OpenGL, Panel Graphics, CEF, etc.)
----@field browserLoadFinishedFunc XPLMBrowserLoadFinished_f
----@field browserLoadErrorFunc XPLMBrowserLoadError_f
+---@field browserLoadFinishedFunc XPLMBrowserLoadFinished_f For browser content: called when the main frame finishes loading (not a success guarantee --error pages finish too). NULL if unused.
+---@field browserLoadErrorFunc XPLMBrowserLoadError_f For browser content: called when a navigation fails at the network level. NULL if unused.
+
+---@class _G
+--- This routine creates a new "modern" window. You pass in an XPLMCreateWindow_t structure with all
+--- of the fields set in.  You must set the structSize of the structure to the size of the
+--- actual structure you used.  Also, you must provide functions for every callback---you may
+--- not leave them null!  (If you do not support the cursor or mouse wheel, use functions that
+--- return the default values.)
+---
+--- NOTE: For an imgui-drawn window, Lua scripts should use XLuaCreateImguiWindow()
+--- instead; it opens and closes the imgui frame for you and wires the input handlers.
+---
+---@field XPLMCreateWindowEx fun(inParams: XPLMCreateWindow_t): XPLMWindowID
+
+---@class _G
+--- This routine destroys a window.  The window's callbacks are not called after this call.
+--- Keyboard focus is removed from the window before destroying it.
+---
+--- NOTE: A window created with XLuaCreateImguiWindow() must be destroyed with
+--- XLuaDestroyImguiWindow(), not this function, so its captured Lua callbacks are released.
+---
+---@field XPLMDestroyWindow fun(inWindowID: XPLMWindowID)
 
 ---@class _G
 --- Lua only. Creates a modern panel-graphics window pre-wired for imgui drawing
@@ -525,33 +612,10 @@ local XPLMWindowDecoration = {
 ---@field XLuaCreateImguiWindow fun(params: table): XPLMWindowID
 
 ---@class _G
---- Lua only. Creates a modern browser (CEF) window and returns its XPLMWindowID
---- (or nil on failure). CEF routes its own input, so no Lua input handlers are wired.
----
---- Pass a single config table. Recognised fields (all optional):
----   left, top, right, bottom    Window geometry in boxels (defaults 100/500/600/100).
----   visible                     Boolean; whether the window starts visible (default true).
----   decorateAsFloatingWindow    An XPLMWindowDecoration value (default xplm_WindowDecorationRoundRectangle).
----   layer                       An XPLMWindowLayer value (default xplm_WindowLayerFloatingWindows).
----   url                         Initial URL to load.
----   browserLoadFinishedFunc     function(windowID, url) -- main frame finished loading (not a success guarantee; error pages finish too).
----   browserLoadErrorFunc        function(windowID, url, errorText) -- navigation failed at the network level.
----
---- Destroy the window with XLuaDestroyBrowserWindow().
----
----@field XLuaCreateBrowserWindow fun(params: table): XPLMWindowID
-
----@class _G
 --- Lua only. Destroys a window created with XLuaCreateImguiWindow() and releases
 --- its captured Lua callbacks. Do not use on windows created any other way.
 ---
 ---@field XLuaDestroyImguiWindow fun(inWindowID: XPLMWindowID)
-
----@class _G
---- Lua only. Destroys a window created with XLuaCreateBrowserWindow() and releases
---- its captured Lua callbacks. Do not use on windows created any other way.
----
----@field XLuaDestroyBrowserWindow fun(inWindowID: XPLMWindowID)
 
 ---@class _G
 --- Loads a URL into a browser-content-type window. Safe to call before the
@@ -629,8 +693,8 @@ local XPLMWindowDecoration = {
 ---@alias XPLMReceiveMonitorBoundsGlobal_f fun(inMonitorIndex: integer, inLeftBx: integer, inTopBx: integer, inRightBx: integer, inBottomBx: integer, inRefcon: any)
 
 ---@class _G
---- This routine immediately calls you back with the bounds (in boxels) of each full-screen X-Plane window
---- within the X-Plane global desktop space.
+--- This routine immediately and synchronously calls you back with the bounds (in boxels) of each full-screen X-Plane window
+--- within the X-Plane global desktop space, one callback per window.
 --- Note that if a monitor is *not* covered by an X-Plane window, you cannot get its bounds this way. Likewise,
 --- monitors with only an X-Plane window (not in full-screen mode) will not be included.
 ---
@@ -650,8 +714,8 @@ local XPLMWindowDecoration = {
 ---@alias XPLMReceiveMonitorBoundsOS_f fun(inMonitorIndex: integer, inLeftPx: integer, inTopPx: integer, inRightPx: integer, inBottomPx: integer, inRefcon: any)
 
 ---@class _G
---- This routine immediately calls you back with the bounds (in pixels) of each monitor within the operating system's
---- global desktop space. Note that unlike XPLMGetAllMonitorBoundsGlobal(), this may include monitors that have no X-Plane window on them.
+--- This routine immediately and synchronously calls you back with the bounds (in pixels) of each monitor within the operating system's
+--- global desktop space, one callback per monitor. Note that unlike XPLMGetAllMonitorBoundsGlobal(), this may include monitors that have no X-Plane window on them.
 ---
 --- Note that this function's monitor indices match those provided by XPLMGetAllMonitorBoundsGlobal(), but the coordinates are different
 --- (since the X-Plane global desktop may not match the operating system's global desktop, and one X-Plane boxel may be larger than one pixel).
@@ -671,6 +735,19 @@ local XPLMWindowDecoration = {
 --- Pass NULL to not receive info about either parameter.
 ---
 ---@field XPLMGetMouseLocationGlobal fun(): { outX: userdata, outY: userdata }
+
+---@class _G
+--- Returns the modifier keys that are being held down *right now*, as a bitfield of XPLMKeyFlags.
+--- Unlike the modifier flags delivered with a key event, this reflects the live keyboard state at the
+--- moment of the call, so it can be used to make mouse clicks modifier-sensitive (e.g. shift-click) or
+--- to react to a modifier changing during drawing (e.g. show alignment guides while shift is held).
+---
+--- Only the modifier bits are ever set: xplm_ShiftFlag, xplm_OptionAltFlag, xplm_ControlFlag and
+--- xplm_CapsLockFlag.  The xplm_DownFlag and xplm_UpFlag bits (which describe a key event's phase) are
+--- never returned. As elsewhere in the SDK, the Command key on macOS is folded into xplm_ControlFlag
+--- rather than reported separately.
+---
+---@field XPLMGetModifierKeys fun(): XPLMKeyFlags
 
 ---@class _G
 --- This routine returns the position and size of a window. The units and coordinate system vary depending

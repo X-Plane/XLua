@@ -45,63 +45,7 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 //
 // Typedefs
 //
-XPLMNavRef* Make_XPLMNavRef(lua_State* L, XPLMNavRef const& init);
-XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
-
-XPLMNavRef* Make_XPLMNavRef(lua_State* L, XPLMNavRef const& init)
-{
-	XPLMNavRef* ud = static_cast<XPLMNavRef*>(lua_newuserdata(L, sizeof(XPLMNavRef)));
-	memcpy(ud, &init, sizeof(XPLMNavRef));
-
-	luaL_getmetatable(L, "_mt_XPLMNavRef");
-	lua_setmetatable(L, -2);
-
-	return ud;
-}
-
-static int _XPLMNavRef_Constructor(lua_State* L)
-{
-	XPLMNavRef defval = XPLM_NO_PLUGIN_ID;				// TODO: Example only! Do we need a 'defaultvalue' attribute somewhere?
-	if (lua_gettop(L) > 0)
-	{
-		defval = luaL_checkinteger(L, 1);
-	}
-
-	Make_XPLMNavRef(L, defval);
-	return 1;
-}
-
-static int _XPLMNavRef_compare(lua_State* L)
-{
-	XPLMNavRef const test1 = xlua_checkuserdata<XPLMNavRef>(L, 1, "Expected XPLMNavRef");
-	XPLMNavRef const test2 = xlua_checkuserdata<XPLMNavRef>(L, 2, "Expected XPLMNavRef");
-
-	lua_pushboolean(L, test1 == test2);
-	return 1;
-}
-
-void RegType_XPLMNavRef(lua_State* L)
-{
-	luaL_newmetatable(L, "_mt_XPLMNavRef");
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -2, "__index");
-
-	lua_pushstring(L, "XPLMNavRef");
-	lua_setfield(L, -2, "__name");
-
-#ifdef HAVE_XPLMNavRef_tostring
-	lua_pushcfunction(L, _XPLMNavRef_tostring);
-	lua_setfield(L, -2, "__tostring");
-#endif
-
-	lua_pushcfunction(L, _XPLMNavRef_compare);
-	lua_setfield(L, -2, "__eq");
-
-	lua_register(L, "XPLMNavRef", _XPLMNavRef_Constructor);
-
-	lua_pop(L, 1);
-}
 
 void RegEnum_XPLMNavType(lua_State* L)
 {
@@ -140,21 +84,17 @@ void RegEnum_XPLMNavType(lua_State* L)
 int XLuaGetFirstNavAid(lua_State* L)
 {
 	XPLMNavRef res = XPLMGetFirstNavAid();
-	Make_XPLMNavRef(L, res);
+	lua_pushinteger(L, res);
 
 	return 1;
 }
 
 int XLuaGetNextNavAid(lua_State* L)
 {
-	XPLMNavRef inNavAidRef = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inNavAidRef = xlua_checkuserdata<XPLMNavRef>(L, 1, "Expected XPLMNavRef");
-	}
+	XPLMNavRef inNavAidRef = xlua_checkinteger(L, 1);
 
 	XPLMNavRef res = XPLMGetNextNavAid(inNavAidRef);
-	Make_XPLMNavRef(L, res);
+	lua_pushinteger(L, res);
 
 	return 1;
 }
@@ -164,7 +104,7 @@ int XLuaFindFirstNavAidOfType(lua_State* L)
 	XPLMNavType inType = xlua_checkinteger(L, 1);
 
 	XPLMNavRef res = XPLMFindFirstNavAidOfType(inType);
-	Make_XPLMNavRef(L, res);
+	lua_pushinteger(L, res);
 
 	return 1;
 }
@@ -174,7 +114,7 @@ int XLuaFindLastNavAidOfType(lua_State* L)
 	XPLMNavType inType = xlua_checkinteger(L, 1);
 
 	XPLMNavRef res = XPLMFindLastNavAidOfType(inType);
-	Make_XPLMNavRef(L, res);
+	lua_pushinteger(L, res);
 
 	return 1;
 }
@@ -189,18 +129,14 @@ int XLuaFindNavAid(lua_State* L)
 	XPLMNavType inType = xlua_checkinteger(L, 6);
 
 	XPLMNavRef res = XPLMFindNavAid((inNameFragment ? inNameFragment->c_str() : nullptr), (inIDFragment ? inIDFragment->c_str() : nullptr), (inLat ? &*inLat : nullptr), (inLon ? &*inLon : nullptr), (inFrequency ? &*inFrequency : nullptr), inType);
-	Make_XPLMNavRef(L, res);
+	lua_pushinteger(L, res);
 
 	return 1;
 }
 
 int XLuaGetNavAidInfo(lua_State* L)
 {
-	XPLMNavRef inRef = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inRef = xlua_checkuserdata<XPLMNavRef>(L, 1, "Expected XPLMNavRef");
-	}
+	XPLMNavRef inRef = xlua_checkinteger(L, 1);
 	XPLMNavType outType = {};
 	float outLatitude = {};
 	float outLongitude = {};
@@ -319,7 +255,7 @@ int XLuaGetFMSEntryInfo(lua_State* L)
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outRef");
-	xlua_pushuserdata<XPLMNavRef>(L, outRef);
+	lua_pushinteger(L, outRef);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outAltitude");
@@ -340,11 +276,7 @@ int XLuaGetFMSEntryInfo(lua_State* L)
 int XLuaSetFMSEntryInfo(lua_State* L)
 {
 	int inIndex = xlua_checkinteger(L, 1);
-	XPLMNavRef inRef = {};
-	if (lua_isuserdata(L, 2))
-	{
-		inRef = xlua_checkuserdata<XPLMNavRef>(L, 2, "Expected XPLMNavRef");
-	}
+	XPLMNavRef inRef = xlua_checkinteger(L, 2);
 	int inAltitudeFt = xlua_checkinteger(L, 3);
 
 	XPLMSetFMSEntryInfo(inIndex, inRef, inAltitudeFt);
@@ -475,7 +407,7 @@ int XLuaGetFMSFlightPlanEntryInfo(lua_State* L)
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outRef");
-	xlua_pushuserdata<XPLMNavRef>(L, outRef);
+	lua_pushinteger(L, outRef);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outAltitude");
@@ -497,11 +429,7 @@ int XLuaSetFMSFlightPlanEntryInfo(lua_State* L)
 {
 	XPLMNavFlightPlan inFlightPlan = xlua_checkinteger(L, 1);
 	int inIndex = xlua_checkinteger(L, 2);
-	XPLMNavRef inRef = {};
-	if (lua_isuserdata(L, 3))
-	{
-		inRef = xlua_checkuserdata<XPLMNavRef>(L, 3, "Expected XPLMNavRef");
-	}
+	XPLMNavRef inRef = xlua_checkinteger(L, 3);
 	int inAltitudeFt = xlua_checkinteger(L, 4);
 
 	XPLMSetFMSFlightPlanEntryInfo(inFlightPlan, inIndex, inRef, inAltitudeFt);
@@ -569,7 +497,7 @@ int XLuaGetGPSDestinationType(lua_State* L)
 int XLuaGetGPSDestination(lua_State* L)
 {
 	XPLMNavRef res = XPLMGetGPSDestination();
-	Make_XPLMNavRef(L, res);
+	lua_pushinteger(L, res);
 
 	return 1;
 }

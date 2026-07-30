@@ -46,13 +46,12 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 //
 // Typedefs
 //
-XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 
 int XLuaGetMyID(lua_State* L)
 {
 	XPLMPluginID res = XPLMGetMyID();
-	Make_XPLMPluginID(L, res);
+	lua_pushinteger(L, res);
 
 	return 1;
 }
@@ -70,7 +69,7 @@ int XLuaGetNthPlugin(lua_State* L)
 	int inIndex = xlua_checkinteger(L, 1);
 
 	XPLMPluginID res = XPLMGetNthPlugin(inIndex);
-	Make_XPLMPluginID(L, res);
+	lua_pushinteger(L, res);
 
 	return 1;
 }
@@ -80,7 +79,7 @@ int XLuaFindPluginByPath(lua_State* L)
 	const char * inPath = xlua_checkstring(L, 1);
 
 	XPLMPluginID res = XPLMFindPluginByPath(inPath);
-	Make_XPLMPluginID(L, res);
+	lua_pushinteger(L, res);
 
 	return 1;
 }
@@ -90,18 +89,14 @@ int XLuaFindPluginBySignature(lua_State* L)
 	const char * inSignature = xlua_checkstring(L, 1);
 
 	XPLMPluginID res = XPLMFindPluginBySignature(inSignature);
-	Make_XPLMPluginID(L, res);
+	lua_pushinteger(L, res);
 
 	return 1;
 }
 
 int XLuaGetPluginInfo(lua_State* L)
 {
-	XPLMPluginID inPlugin = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inPlugin = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
-	}
+	XPLMPluginID inPlugin = xlua_checkinteger(L, 1);
 	char outName[256] = {};
 	char outFilePath[256] = {};
 	char outSignature[256] = {};
@@ -132,11 +127,7 @@ int XLuaGetPluginInfo(lua_State* L)
 
 int XLuaIsPluginEnabled(lua_State* L)
 {
-	XPLMPluginID inPluginID = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
-	}
+	XPLMPluginID inPluginID = xlua_checkinteger(L, 1);
 
 	int res = XPLMIsPluginEnabled(inPluginID);
 	lua_pushboolean(L, res);
@@ -146,11 +137,7 @@ int XLuaIsPluginEnabled(lua_State* L)
 
 int XLuaEnablePlugin(lua_State* L)
 {
-	XPLMPluginID inPluginID = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
-	}
+	XPLMPluginID inPluginID = xlua_checkinteger(L, 1);
 
 	int res = XPLMEnablePlugin(inPluginID);
 	lua_pushboolean(L, res);
@@ -160,11 +147,7 @@ int XLuaEnablePlugin(lua_State* L)
 
 int XLuaDisablePlugin(lua_State* L)
 {
-	XPLMPluginID inPluginID = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inPluginID = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
-	}
+	XPLMPluginID inPluginID = xlua_checkinteger(L, 1);
 
 	XPLMDisablePlugin(inPluginID);
 
@@ -189,11 +172,7 @@ int XLuaReloadThisPlugin(lua_State* L)
 
 int XLuaSendMessageToPlugin(lua_State* L)
 {
-	XPLMPluginID inPlugin = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inPlugin = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
-	}
+	XPLMPluginID inPlugin = xlua_checkinteger(L, 1);
 	int inMessage = xlua_checkinteger(L, 2);
 	void * inParam = {};
 	if (lua_isuserdata(L, 3))

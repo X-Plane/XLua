@@ -51,7 +51,6 @@ void XPLMWeatherInfo_t_to_table(lua_State* L, XPLMWeatherInfo_t const& src);
 //
 // Typedefs
 //
-XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 /*
  * XPLMWeatherInfoWinds_t
@@ -443,6 +442,13 @@ XPLMWeatherInfo_t XPLMWeatherInfo_t_from_table(lua_State* L, int stackpos)
 	}
 	lua_pop(L, 1);
 
+	lua_getfield(L, stackpos, "snow_coverage_pct");
+	if (!lua_isnil(L, -1))
+	{
+		out.snow_coverage_pct = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
 	return out;
 }
 
@@ -569,6 +575,10 @@ void XPLMWeatherInfo_t_to_table(lua_State* L, XPLMWeatherInfo_t const& src)
 	lua_pushstring(L, "max_altitude_msl_ft");
 	lua_pushnumber(L, src.max_altitude_msl_ft);
 	lua_settable(L, -3);
+
+	lua_pushstring(L, "snow_coverage_pct");
+	lua_pushnumber(L, src.snow_coverage_pct);
+	lua_settable(L, -3);
 }
 
 int MakeXPLMWeatherInfo_t(lua_State* L)
@@ -679,6 +689,8 @@ void RegDefines_XPLMWeather(lua_State* L)
 	lua_setglobal(L, "XPLM_NUM_TEMPERATURE_LAYERS");
 	lua_pushinteger(L, 13);
 	lua_setglobal(L, "XPLM_NUM_WIND_LAYERS");
+	lua_pushinteger(L, -274);
+	lua_setglobal(L, "XPLM_TEMP_UNDEFINED_LAYER");
 	lua_pushinteger(L, -1);
 	lua_setglobal(L, "XPLM_WIND_UNDEFINED_LAYER");
 }

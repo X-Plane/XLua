@@ -226,7 +226,7 @@ typedef struct {
  * 
  * If you use XPLMPlayPCMOnBus() you may use this optional callback to find
  * out when the FMOD::Channel is complete, if you need to deallocate memory
- * for example.
+ * for example. It will not be called more than once per completion.
  *
  */
 typedef void (* XPLMPCMComplete_f)(

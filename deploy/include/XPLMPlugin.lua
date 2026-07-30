@@ -241,7 +241,7 @@ XPLM_MSG_DATAREFS_ADDED = 114
 
 ---@class _G
 --- This routine calls your enumerator callback once for each feature that this running version of X-Plane supports.
---- Use this routine to determine all of the features that X-Plane can support.
+--- Use this routine to determine all of the features that X-Plane can support. Callbacks are synchronous.
 ---
 ---@field XPLMEnumerateFeatures fun(inEnumerator: XPLMFeatureEnumerator_f, inRef: any)
 

@@ -45,7 +45,6 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 //
 // Typedefs
 //
-XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 
 void RegEnum_XPLMInitResult(lua_State* L)
@@ -137,7 +136,7 @@ int XLuaCountAircraft(lua_State* L)
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "outController");
-	xlua_pushuserdata<XPLMPluginID>(L, outController);
+	lua_pushinteger(L, outController);
 	lua_settable(L, -3);
 
 	return 1;

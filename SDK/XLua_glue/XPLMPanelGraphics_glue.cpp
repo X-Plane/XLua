@@ -57,6 +57,8 @@ XPLMFontMetrics_t XPLMFontMetrics_t_from_table(lua_State* L, int stackpos);
 void XPLMFontMetrics_t_to_table(lua_State* L, XPLMFontMetrics_t const& src);
 XPLMMapCustomData_t XPLMMapCustomData_t_from_table(lua_State* L, int stackpos);
 void XPLMMapCustomData_t_to_table(lua_State* L, XPLMMapCustomData_t const& src);
+XPLMMapDrawInfo_t XPLMMapDrawInfo_t_from_table(lua_State* L, int stackpos);
+void XPLMMapDrawInfo_t_to_table(lua_State* L, XPLMMapDrawInfo_t const& src);
 XPLMSVTCustomData_t XPLMSVTCustomData_t_from_table(lua_State* L, int stackpos);
 void XPLMSVTCustomData_t_to_table(lua_State* L, XPLMSVTCustomData_t const& src);
 XPLMTextureVertex_t XPLMTextureVertex_t_from_table(lua_State* L, int stackpos);
@@ -75,7 +77,6 @@ XPLMAvionicsID* Make_XPLMAvionicsID(lua_State* L, XPLMAvionicsID const& init);
 XPLMCommandRef* Make_XPLMCommandRef(lua_State* L, XPLMCommandRef const& init);
 XPLMFontHandle* Make_XPLMFontHandle(lua_State* L, XPLMFontHandle const& init);
 XPLMMapDisplayRef* Make_XPLMMapDisplayRef(lua_State* L, XPLMMapDisplayRef const& init);
-XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 XPLMRetainedDrawing_t* Make_XPLMRetainedDrawing_t(lua_State* L, XPLMRetainedDrawing_t const& init);
 XPLMSVTDisplayRef* Make_XPLMSVTDisplayRef(lua_State* L, XPLMSVTDisplayRef const& init);
 XPLMTextureAtlasRef* Make_XPLMTextureAtlasRef(lua_State* L, XPLMTextureAtlasRef const& init);
@@ -666,35 +667,6 @@ int XLuaPolygon(lua_State* L)
 	return 0;
 }
 
-int XLuaPolygonWithWidth(lua_State* L)
-{
-	uint32_t color = xlua_checkinteger(L, 1);
-	float lineWidth = xlua_checknumber(L, 2);
-	luaL_checktype(L, 3, LUA_TTABLE);
-
-	int count = xlua_checkinteger(L, 4);
-
-	int vertices_len = lua_objlen(L, 3);
-	vertices_len = std::min(vertices_len, static_cast<int>(count));
-	XPLMVertex_t* vertices = new XPLMVertex_t[vertices_len + 1]{};		// Some APIs expect null-terminated arrays.
-
-	for (int i = 0; i < vertices_len; ++i)
-	{
-		lua_rawgeti(L, 3, i + 1);
-		vertices[i] = XPLMVertex_t_from_table(L, -1);
-		lua_pop(L, 1);
-	}
-	
-	XPLMPolygonWithWidth(color, lineWidth, vertices, count);
-
-	if (vertices != nullptr)
-	{
-		delete[] vertices;
-	}
-
-	return 0;
-}
-
 int XLuaPolygonc(lua_State* L)
 {
 	luaL_checktype(L, 1, LUA_TTABLE);
@@ -713,34 +685,6 @@ int XLuaPolygonc(lua_State* L)
 	}
 	
 	XPLMPolygonc(vertices, count);
-
-	if (vertices != nullptr)
-	{
-		delete[] vertices;
-	}
-
-	return 0;
-}
-
-int XLuaPolygoncWithWidth(lua_State* L)
-{
-	float lineWidth = xlua_checknumber(L, 1);
-	luaL_checktype(L, 2, LUA_TTABLE);
-
-	int count = xlua_checkinteger(L, 3);
-
-	int vertices_len = lua_objlen(L, 2);
-	vertices_len = std::min(vertices_len, static_cast<int>(count));
-	XPLMVertexColor_t* vertices = new XPLMVertexColor_t[vertices_len + 1]{};		// Some APIs expect null-terminated arrays.
-
-	for (int i = 0; i < vertices_len; ++i)
-	{
-		lua_rawgeti(L, 2, i + 1);
-		vertices[i] = XPLMVertexColor_t_from_table(L, -1);
-		lua_pop(L, 1);
-	}
-	
-	XPLMPolygoncWithWidth(lineWidth, vertices, count);
 
 	if (vertices != nullptr)
 	{
@@ -778,35 +722,6 @@ int XLuaQuadstrip(lua_State* L)
 	return 0;
 }
 
-int XLuaQuadstripWithWidth(lua_State* L)
-{
-	uint32_t color = xlua_checkinteger(L, 1);
-	float lineWidth = xlua_checknumber(L, 2);
-	luaL_checktype(L, 3, LUA_TTABLE);
-
-	int count = xlua_checkinteger(L, 4);
-
-	int vertices_len = lua_objlen(L, 3);
-	vertices_len = std::min(vertices_len, static_cast<int>(count));
-	XPLMVertex_t* vertices = new XPLMVertex_t[vertices_len + 1]{};		// Some APIs expect null-terminated arrays.
-
-	for (int i = 0; i < vertices_len; ++i)
-	{
-		lua_rawgeti(L, 3, i + 1);
-		vertices[i] = XPLMVertex_t_from_table(L, -1);
-		lua_pop(L, 1);
-	}
-	
-	XPLMQuadstripWithWidth(color, lineWidth, vertices, count);
-
-	if (vertices != nullptr)
-	{
-		delete[] vertices;
-	}
-
-	return 0;
-}
-
 int XLuaQuadstripc(lua_State* L)
 {
 	luaL_checktype(L, 1, LUA_TTABLE);
@@ -825,34 +740,6 @@ int XLuaQuadstripc(lua_State* L)
 	}
 	
 	XPLMQuadstripc(vertices, count);
-
-	if (vertices != nullptr)
-	{
-		delete[] vertices;
-	}
-
-	return 0;
-}
-
-int XLuaQuadstripcWithWidth(lua_State* L)
-{
-	float lineWidth = xlua_checknumber(L, 1);
-	luaL_checktype(L, 2, LUA_TTABLE);
-
-	int count = xlua_checkinteger(L, 3);
-
-	int vertices_len = lua_objlen(L, 2);
-	vertices_len = std::min(vertices_len, static_cast<int>(count));
-	XPLMVertexColor_t* vertices = new XPLMVertexColor_t[vertices_len + 1]{};		// Some APIs expect null-terminated arrays.
-
-	for (int i = 0; i < vertices_len; ++i)
-	{
-		lua_rawgeti(L, 2, i + 1);
-		vertices[i] = XPLMVertexColor_t_from_table(L, -1);
-		lua_pop(L, 1);
-	}
-	
-	XPLMQuadstripcWithWidth(lineWidth, vertices, count);
 
 	if (vertices != nullptr)
 	{
@@ -1454,27 +1341,6 @@ int XLuaTextureAtlasGetImageHeight(lua_State* L)
 	return 1;
 }
 
-int XLuaTextureAtlasGetImageUVMap(lua_State* L)
-{
-	XPLMTextureAtlasRef inTextureAtlas = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inTextureAtlas = xlua_checkuserdata<XPLMTextureAtlasRef>(L, 1, "Expected XPLMTextureAtlasRef");
-	}
-	int inImageIndex = xlua_checkinteger(L, 2);
-	float outUV[4] = {};
-
-	XPLMTextureAtlasGetImageUVMap(inTextureAtlas, inImageIndex, outUV);
-		for (size_t i = 0; i < sizeof(outUV); ++i)
-		{
-			xlua_pushnumber(L, outUV[i]);
-			lua_rawseti(L, 3, i + 1);
-		}
-
-
-	return 1;
-}
-
 int XLuaTextureAtlasDrawAt(lua_State* L)
 {
 	XPLMTextureAtlasRef inTextureAtlas = {};
@@ -1700,24 +1566,24 @@ int XLuaScissorPop(lua_State* L)
 
 int XLuaScissorSet(lua_State* L)
 {
-	int top = xlua_checkinteger(L, 1);
-	int left = xlua_checkinteger(L, 2);
-	int bottom = xlua_checkinteger(L, 3);
-	int right = xlua_checkinteger(L, 4);
+	int left = xlua_checkinteger(L, 1);
+	int top = xlua_checkinteger(L, 2);
+	int right = xlua_checkinteger(L, 3);
+	int bottom = xlua_checkinteger(L, 4);
 
-	XPLMScissorSet(top, left, bottom, right);
+	XPLMScissorSet(left, top, right, bottom);
 
 	return 0;
 }
 
-int XLuaScissorShrink(lua_State* L)
+int XLuaScissorIntersect(lua_State* L)
 {
-	int top = xlua_checkinteger(L, 1);
-	int left = xlua_checkinteger(L, 2);
-	int bottom = xlua_checkinteger(L, 3);
-	int right = xlua_checkinteger(L, 4);
+	int left = xlua_checkinteger(L, 1);
+	int top = xlua_checkinteger(L, 2);
+	int right = xlua_checkinteger(L, 3);
+	int bottom = xlua_checkinteger(L, 4);
 
-	XPLMScissorShrink(top, left, bottom, right);
+	XPLMScissorIntersect(left, top, right, bottom);
 
 	return 0;
 }
@@ -2363,6 +2229,16 @@ void RegEnum_XPLMMapLayers(lua_State* L)
 	lua_setfield(L, -2, "xplm_Map_safe_taxi");
 	lua_setglobal(L, "XPLMMapLayers");
 }
+
+void RegEnum_XPLMEGPWSStyle(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_EGPWS_Style_Blocky");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_EGPWS_Style_Smooth");
+	lua_setglobal(L, "XPLMEGPWSStyle");
+}
 /*
  * XPLMMapCustomData_t
  * 
@@ -2375,6 +2251,7 @@ XPLMMapCustomData_t XPLMMapCustomData_t_from_table(lua_State* L, int stackpos)
 	XPLMMapCustomData_t out = {};
 
 	luaL_checktype(L, stackpos, LUA_TTABLE);
+	out.structSize = sizeof(out);
 
 	lua_getfield(L, stackpos, "datLat");
 	if (!lua_isnil(L, -1))
@@ -2404,10 +2281,10 @@ XPLMMapCustomData_t XPLMMapCustomData_t_from_table(lua_State* L, int stackpos)
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, stackpos, "roseDiameter");
+	lua_getfield(L, stackpos, "roseRadius");
 	if (!lua_isnil(L, -1))
 	{
-		out.roseDiameter = static_cast<int>(luaL_checkinteger(L, -1));
+		out.roseRadius = static_cast<int>(luaL_checkinteger(L, -1));
 	}
 	lua_pop(L, 1);
 
@@ -2460,6 +2337,27 @@ XPLMMapCustomData_t XPLMMapCustomData_t_from_table(lua_State* L, int stackpos)
 	}
 	lua_pop(L, 1);
 
+	lua_getfield(L, stackpos, "nearestRwyElev");
+	if (!lua_isnil(L, -1))
+	{
+		out.nearestRwyElev = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "egpwsBrightness");
+	if (!lua_isnil(L, -1))
+	{
+		out.egpwsBrightness = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "egpwsStyle");
+	if (!lua_isnil(L, -1))
+	{
+		out.egpwsStyle = static_cast<XPLMEGPWSStyle>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
 	return out;
 }
 
@@ -2483,8 +2381,8 @@ void XPLMMapCustomData_t_to_table(lua_State* L, XPLMMapCustomData_t const& src)
 	lua_pushinteger(L, src.ctrY);
 	lua_settable(L, -3);
 
-	lua_pushstring(L, "roseDiameter");
-	lua_pushinteger(L, src.roseDiameter);
+	lua_pushstring(L, "roseRadius");
+	lua_pushinteger(L, src.roseRadius);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "mapRange");
@@ -2514,11 +2412,24 @@ void XPLMMapCustomData_t_to_table(lua_State* L, XPLMMapCustomData_t const& src)
 	lua_pushstring(L, "trueRotation");
 	lua_pushnumber(L, src.trueRotation);
 	lua_settable(L, -3);
+
+	lua_pushstring(L, "nearestRwyElev");
+	lua_pushnumber(L, src.nearestRwyElev);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "egpwsBrightness");
+	lua_pushnumber(L, src.egpwsBrightness);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "egpwsStyle");
+	lua_pushinteger(L, src.egpwsStyle);
+	lua_settable(L, -3);
 }
 
 int MakeXPLMMapCustomData_t(lua_State* L)
 {
 	XPLMMapCustomData_t out = {};
+	out.structSize = sizeof(XPLMMapCustomData_t);
 	XPLMMapCustomData_t_to_table(L, out);
 	return 1;
 }
@@ -2618,6 +2529,94 @@ void RegType_XPLMMapDisplayRef(lua_State* L)
 
 	lua_pop(L, 1);
 }
+/*
+ * XPLMMapDrawInfo_t
+ * 
+ * Creation and transfer between C struct and Lua table
+ *
+ */
+
+XPLMMapDrawInfo_t XPLMMapDrawInfo_t_from_table(lua_State* L, int stackpos)
+{
+	XPLMMapDrawInfo_t out = {};
+
+	luaL_checktype(L, stackpos, LUA_TTABLE);
+	out.structSize = sizeof(out);
+
+	lua_getfield(L, stackpos, "layers");
+	if (!lua_isnil(L, -1))
+	{
+		out.layers = static_cast<XPLMMapLayers>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "left");
+	if (!lua_isnil(L, -1))
+	{
+		out.left = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "top");
+	if (!lua_isnil(L, -1))
+	{
+		out.top = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "right");
+	if (!lua_isnil(L, -1))
+	{
+		out.right = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "bottom");
+	if (!lua_isnil(L, -1))
+	{
+		out.bottom = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	return out;
+}
+
+void XPLMMapDrawInfo_t_to_table(lua_State* L, XPLMMapDrawInfo_t const& src)
+{
+	lua_newtable(L);
+
+	lua_pushstring(L, "layers");
+	lua_pushinteger(L, src.layers);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "left");
+	lua_pushinteger(L, src.left);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "top");
+	lua_pushinteger(L, src.top);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "right");
+	lua_pushinteger(L, src.right);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "bottom");
+	lua_pushinteger(L, src.bottom);
+	lua_settable(L, -3);
+}
+
+int MakeXPLMMapDrawInfo_t(lua_State* L)
+{
+	XPLMMapDrawInfo_t out = {};
+	out.structSize = sizeof(XPLMMapDrawInfo_t);
+	XPLMMapDrawInfo_t_to_table(L, out);
+	return 1;
+}
+/*
+ * END Creation and transfer between C struct and Lua table
+ *
+ */
 
 int XLuaCreateMapDisplay(lua_State* L)
 {
@@ -2656,20 +2655,154 @@ int XLuaMapDisplayDrawIn(lua_State* L)
 	{
 		map = xlua_checkuserdata<XPLMMapDisplayRef>(L, 1, "Expected XPLMMapDisplayRef");
 	}
-	XPLMMapLayers layers = xlua_checkinteger(L, 2);
-	int left = xlua_checkinteger(L, 3);
-	int top = xlua_checkinteger(L, 4);
-	int right = xlua_checkinteger(L, 5);
-	int bottom = xlua_checkinteger(L, 6);
+	XPLMMapDrawInfo_t info = XPLMMapDrawInfo_t_from_table(L, 2);
 	std::optional<XPLMMapCustomData_t> dataOverrides;
-	if (!lua_isnoneornil(L, 7))
+	if (!lua_isnoneornil(L, 3))
 	{
-		dataOverrides = XPLMMapCustomData_t_from_table(L, 7);
+		dataOverrides = XPLMMapCustomData_t_from_table(L, 3);
 	}
 
-	XPLMMapDisplayDrawIn(map, layers, left, top, right, bottom, (dataOverrides ? &*dataOverrides : nullptr));
+	XPLMMapDisplayDrawIn(map, &info, (dataOverrides ? &*dataOverrides : nullptr));
 
 	return 0;
+}
+
+int XLuaMapDisplayProject(lua_State* L)
+{
+	XPLMMapDisplayRef map = {};
+	if (lua_isuserdata(L, 1))
+	{
+		map = xlua_checkuserdata<XPLMMapDisplayRef>(L, 1, "Expected XPLMMapDisplayRef");
+	}
+	XPLMMapDrawInfo_t info = XPLMMapDrawInfo_t_from_table(L, 2);
+	std::optional<XPLMMapCustomData_t> dataOverrides;
+	if (!lua_isnoneornil(L, 3))
+	{
+		dataOverrides = XPLMMapCustomData_t_from_table(L, 3);
+	}
+	double latitude = xlua_checknumber(L, 4);
+	double longitude = xlua_checknumber(L, 5);
+	float outX = {};
+	float outY = {};
+
+	int res = XPLMMapDisplayProject(map, &info, (dataOverrides ? &*dataOverrides : nullptr), latitude, longitude, &outX, &outY);
+	lua_pushinteger(L, res);
+
+	lua_createtable(L, 0, 2);
+
+	lua_pushstring(L, "outX");
+	lua_pushnumber(L, outX);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outY");
+	lua_pushnumber(L, outY);
+	lua_settable(L, -3);
+
+	return 2;
+}
+
+int XLuaMapDisplayUnproject(lua_State* L)
+{
+	XPLMMapDisplayRef map = {};
+	if (lua_isuserdata(L, 1))
+	{
+		map = xlua_checkuserdata<XPLMMapDisplayRef>(L, 1, "Expected XPLMMapDisplayRef");
+	}
+	XPLMMapDrawInfo_t info = XPLMMapDrawInfo_t_from_table(L, 2);
+	std::optional<XPLMMapCustomData_t> dataOverrides;
+	if (!lua_isnoneornil(L, 3))
+	{
+		dataOverrides = XPLMMapCustomData_t_from_table(L, 3);
+	}
+	float x = xlua_checknumber(L, 4);
+	float y = xlua_checknumber(L, 5);
+	double outLatitude = {};
+	double outLongitude = {};
+
+	int res = XPLMMapDisplayUnproject(map, &info, (dataOverrides ? &*dataOverrides : nullptr), x, y, &outLatitude, &outLongitude);
+	lua_pushinteger(L, res);
+
+	lua_createtable(L, 0, 2);
+
+	lua_pushstring(L, "outLatitude");
+	lua_pushnumber(L, outLatitude);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "outLongitude");
+	lua_pushnumber(L, outLongitude);
+	lua_settable(L, -3);
+
+	return 2;
+}
+
+int XLuaMapDisplayScaleMeter(lua_State* L)
+{
+	XPLMMapDisplayRef map = {};
+	if (lua_isuserdata(L, 1))
+	{
+		map = xlua_checkuserdata<XPLMMapDisplayRef>(L, 1, "Expected XPLMMapDisplayRef");
+	}
+	XPLMMapDrawInfo_t info = XPLMMapDrawInfo_t_from_table(L, 2);
+	std::optional<XPLMMapCustomData_t> dataOverrides;
+	if (!lua_isnoneornil(L, 3))
+	{
+		dataOverrides = XPLMMapCustomData_t_from_table(L, 3);
+	}
+	float x = xlua_checknumber(L, 4);
+	float y = xlua_checknumber(L, 5);
+
+	float res = XPLMMapDisplayScaleMeter(map, &info, (dataOverrides ? &*dataOverrides : nullptr), x, y);
+	lua_pushnumber(L, res);
+
+	return 1;
+}
+
+int XLuaMapDisplayGetNorthHeading(lua_State* L)
+{
+	XPLMMapDisplayRef map = {};
+	if (lua_isuserdata(L, 1))
+	{
+		map = xlua_checkuserdata<XPLMMapDisplayRef>(L, 1, "Expected XPLMMapDisplayRef");
+	}
+	XPLMMapDrawInfo_t info = XPLMMapDrawInfo_t_from_table(L, 2);
+	std::optional<XPLMMapCustomData_t> dataOverrides;
+	if (!lua_isnoneornil(L, 3))
+	{
+		dataOverrides = XPLMMapCustomData_t_from_table(L, 3);
+	}
+	float x = xlua_checknumber(L, 4);
+	float y = xlua_checknumber(L, 5);
+
+	float res = XPLMMapDisplayGetNorthHeading(map, &info, (dataOverrides ? &*dataOverrides : nullptr), x, y);
+	lua_pushnumber(L, res);
+
+	return 1;
+}
+
+int XLuaMapDisplayGetTerrainAltitudes(lua_State* L)
+{
+	XPLMMapDisplayRef map = {};
+	if (lua_isuserdata(L, 1))
+	{
+		map = xlua_checkuserdata<XPLMMapDisplayRef>(L, 1, "Expected XPLMMapDisplayRef");
+	}
+	float min = {};
+	float max = {};
+
+	int res = XPLMMapDisplayGetTerrainAltitudes(map, &min, &max);
+	lua_pushinteger(L, res);
+
+	lua_createtable(L, 0, 2);
+
+	lua_pushstring(L, "min");
+	lua_pushnumber(L, min);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "max");
+	lua_pushnumber(L, max);
+	lua_settable(L, -3);
+
+	return 2;
 }
 
 #ifdef __cplusplus

@@ -102,7 +102,7 @@ local XPLMMapStyle = {
 --- A callback used to allow you to cache whatever information your layer needs to draw in the current map area. This is called each time the map's total bounds change. This is typically triggered by new DSFs being loaded, such that X-Plane discards old, now-distant DSFs and pulls in new ones. At that point, the available bounds of the map also change to match the new DSF area. By caching just the information you need to draw in this area, your future draw calls can be made faster, since you'll be able to simply "splat" your precomputed information each frame. We guarantee that the map projection will not change between successive prepare cache calls, nor will any draw call give you bounds outside these total map bounds. So, if you cache the projected map coordinates of all the items you might want to draw in the total map area, you can be guaranteed that no draw call will be asked to do any new work.
 ---@alias XPLMMapPrepareCacheCallback_f fun(inLayer: XPLMMapLayerID, inTotalMapBoundsLeftTopRightBottom: number[], projection: XPLMMapProjectionID, inRefcon: any)
 
---- Called just before your map layer gets deleted. Because SDK-created map layers have the same lifetime as the X-Plane map that contains them, if the map gets unloaded from memory, your layer will too.
+--- Called just before your map layer gets deleted. Because SDK-created map layers have the same lifetime as the X-Plane map that contains them, if the map gets unloaded from memory, your layer will too. This callback fires exactly once, just before deletion, after which none of the layer's callbacks are used.
 ---@alias XPLMMapWillBeDeletedCallback_f fun(inLayer: XPLMMapLayerID, inRefcon: any)
 
 --[[

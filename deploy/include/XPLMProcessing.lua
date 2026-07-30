@@ -116,3 +116,40 @@ local XPLMFlightLoopPhaseType = {
 ---
 ---@field XPLMScheduleFlightLoop fun(inFlightLoopID: XPLMFlightLoopID, inInterval: number, inRelativeToNow: boolean)
 
+--- Opaque handle to an XLua timer, returned by XLuaCreateTimer / XLuaFindTimer and passed to the other timer functions.
+---@class xlua_timer : userdata
+---@field private __xlua_timer_marker any
+
+---@class _G
+--- Create a timer bound to the given callback (a function called with no
+--- arguments when the timer fires). The timer is not scheduled until you call
+--- XLuaRunTimer.
+---
+---@field XLuaCreateTimer fun(callback: any): xlua_timer
+
+---@class _G
+--- Schedule a timer to fire after `delay` seconds, optionally repeating
+--- every `period` seconds. Pass period <= 0 for a one-shot timer.
+---
+---@field XLuaRunTimer fun(timer: xlua_timer, delay: number, period: number)
+
+---@class _G
+--- Find the existing timer bound to `callback` (the function passed to
+--- XLuaCreateTimer), or nil if none exists.
+---
+---@field XLuaFindTimer fun(callback: any): xlua_timer
+
+---@class _G
+--- Returns true if the timer is currently scheduled to fire.
+---@field XLuaIsTimerScheduled fun(timer: xlua_timer): boolean
+
+---@class _G
+--- Seconds until the timer next fires, or -1 if it is not scheduled.
+---@field XLuaGetTimerRemaining fun(timer: xlua_timer): number
+
+---@class _G
+--- Mark this aircraft's scripts as needing a full reload whenever flight
+--- details (livery, situation) change.
+---
+---@field XLuaReloadOnFlightChange fun()
+

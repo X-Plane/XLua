@@ -13,6 +13,7 @@
 #include <optional>
 #include "XPLMDefs.h"
 #include "XPLMUtilities.h"
+#include "XPLMScenery.h"
 
 
 // We need the XPLM_DEPRECATED marker because Lua is interpreted - old Lua scripts will always use the latest SDK.
@@ -46,15 +47,22 @@ XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos);
 void XPLMCreateWindow_t_to_table(lua_State* L, XPLMCreateWindow_t const& src);
 XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int stackpos);
 void XPLMCustomizeAvionics_t_to_table(lua_State* L, XPLMCustomizeAvionics_t const& src);
+XPLMDrawInfoDouble_t XPLMDrawInfoDouble_t_from_table(lua_State* L, int stackpos);
+void XPLMDrawInfoDouble_t_to_table(lua_State* L, XPLMDrawInfoDouble_t const& src);
+XPLMDrawInfo_t XPLMDrawInfo_t_from_table(lua_State* L, int stackpos);
+void XPLMDrawInfo_t_to_table(lua_State* L, XPLMDrawInfo_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+XPLMProbeInfo_t XPLMProbeInfo_t_from_table(lua_State* L, int stackpos);
+void XPLMProbeInfo_t_to_table(lua_State* L, XPLMProbeInfo_t const& src);
 
 //
 // Typedefs
 //
 XPLMAvionicsID* Make_XPLMAvionicsID(lua_State* L, XPLMAvionicsID const& init);
 XPLMCommandRef* Make_XPLMCommandRef(lua_State* L, XPLMCommandRef const& init);
-XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
+XPLMObjectRef* Make_XPLMObjectRef(lua_State* L, XPLMObjectRef const& init);
+XPLMProbeRef* Make_XPLMProbeRef(lua_State* L, XPLMProbeRef const& init);
 XPLMWindowID* Make_XPLMWindowID(lua_State* L, XPLMWindowID const& init);
 
 
@@ -677,6 +685,40 @@ static float cb_XPLMAvionicsBrightness_f(float inRheoValue, float inAmbiantBrigh
 
 	return res;
 }
+
+static void cb_XPLMAvionicsBrowserLoadFinished_f(XPLMAvionicsID inAvionics, const char * inURL, void* inRefcon)
+{
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsBrowserLoadFinished_f");
+	if (L)
+	{
+		Make_XPLMAvionicsID(L, inAvionics);
+		int inAvionics_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rsr", inAvionics_typed_ref, inURL, inRefcon_cb->get_capture()))
+		{
+		}
+		luaL_unref(L, LUA_REGISTRYINDEX, inAvionics_typed_ref);
+	}
+}
+
+static void cb_XPLMAvionicsBrowserLoadError_f(XPLMAvionicsID inAvionics, const char * inURL, const char * inError, void* inRefcon)
+{
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsBrowserLoadError_f");
+	if (L)
+	{
+		Make_XPLMAvionicsID(L, inAvionics);
+		int inAvionics_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rssr", inAvionics_typed_ref, inURL, inError, inRefcon_cb->get_capture()))
+		{
+		}
+		luaL_unref(L, LUA_REGISTRYINDEX, inAvionics_typed_ref);
+	}
+}
 /*
  * XPLMCreateAvionics_t
  * 
@@ -1001,6 +1043,20 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	}
 	lua_pop(L, 1);
 
+	lua_getfield(L, stackpos, "browserLoadFinishedFunc");
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMAvionicsBrowserLoadFinished_f"))
+	{
+		out.browserLoadFinishedFunc = cb_XPLMAvionicsBrowserLoadFinished_f;
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "browserLoadErrorFunc");
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMAvionicsBrowserLoadError_f"))
+	{
+		out.browserLoadErrorFunc = cb_XPLMAvionicsBrowserLoadError_f;
+	}
+	lua_pop(L, 1);
+
 	return out;
 }
 
@@ -1063,6 +1119,14 @@ void XPLMCreateAvionics_t_to_table(lua_State* L, XPLMCreateAvionics_t const& src
 	lua_pushstring(L, "windowWithChrome");
 	lua_pushinteger(L, src.windowWithChrome);
 	lua_settable(L, -3);
+
+	lua_pushstring(L, "browserLoadFinishedFunc");
+	luaL_loadstring(L, "function() end");
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "browserLoadErrorFunc");
+	luaL_loadstring(L, "function() end");
+	lua_settable(L, -3);
 }
 
 int MakeXPLMCreateAvionics_t(lua_State* L)
@@ -1103,6 +1167,129 @@ int XLuaDestroyAvionics(lua_State* L)
 	}
 
 	XPLMDestroyAvionics(inHandle);
+
+	return 0;
+}
+
+int XLuaAvionicsSetURL(lua_State* L)
+{
+	XPLMAvionicsID inAvionicsID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inAvionicsID = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
+	}
+	const char * inURL = xlua_checkstring(L, 2);
+
+	XPLMAvionicsSetURL(inAvionicsID, inURL);
+
+	return 0;
+}
+
+int XLuaAvionicsRefresh(lua_State* L)
+{
+	XPLMAvionicsID inAvionicsID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inAvionicsID = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
+	}
+	int inIgnoreCache = xlua_checkinteger(L, 2);
+
+	XPLMAvionicsRefresh(inAvionicsID, inIgnoreCache);
+
+	return 0;
+}
+
+int XLuaAvionicsInjectScript(lua_State* L)
+{
+	XPLMAvionicsID inAvionicsID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inAvionicsID = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
+	}
+	const char * inScript = xlua_checkstring(L, 2);
+
+	XPLMAvionicsInjectScript(inAvionicsID, inScript);
+
+	return 0;
+}
+
+static const char * cb_XPLMAvionicsBrowserCallback_f(XPLMAvionicsID inAvionicsID, const char * inJSON, void* inRefcon)
+{
+	const char * res = {};
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsBrowserCallback_f");
+	if (L)
+	{
+		Make_XPLMAvionicsID(L, inAvionicsID);
+		int inAvionicsID_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "rsr", inAvionicsID_typed_ref, inJSON, inRefcon_cb->get_capture()))
+		{
+			{
+				const char * s = lua_tostring(L, -1);
+				if (s == nullptr) log_message(L, "warn: lua callback XPLMAvionicsBrowserCallback_f returned %s; expected string\n", luaL_typename(L, -1));
+				res = XPLMReturnString(s ? s : "");
+			}
+			lua_pop(L, 1);
+		}
+		luaL_unref(L, LUA_REGISTRYINDEX, inAvionicsID_typed_ref);
+	}
+
+	return res;
+}
+
+int XLuaAvionicsAddBrowserFunction(lua_State* L)
+{
+	XPLMAvionicsID inAvionicsID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inAvionicsID = xlua_checkuserdata<XPLMAvionicsID>(L, 1, "Expected XPLMAvionicsID");
+	}
+	const char * inName = xlua_checkstring(L, 2);
+
+	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 4);
+	xlua_persist_userref(L, cb_capture_0);
+	wrap_next_lua_func(cb_capture_0, 3, false, "XPLMAvionicsBrowserCallback_f");
+
+	XPLMAvionicsAddBrowserFunction(inAvionicsID, inName, cb_XPLMAvionicsBrowserCallback_f, cb_capture_0.get());
+
+	return 0;
+}
+
+int XLuaSetObjectAvionics(lua_State* L)
+{
+	XPLMObjectRef inObject = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inObject = xlua_checkuserdata<XPLMObjectRef>(L, 1, "Expected XPLMObjectRef");
+	}
+	XPLMAvionicsID inAvionics = {};
+	if (lua_isuserdata(L, 2))
+	{
+		inAvionics = xlua_checkuserdata<XPLMAvionicsID>(L, 2, "Expected XPLMAvionicsID");
+	}
+
+	int res = XPLMSetObjectAvionics(inObject, inAvionics);
+	lua_pushinteger(L, res);
+
+	return 1;
+}
+
+int XLuaClearObjectAvionics(lua_State* L)
+{
+	XPLMObjectRef inObject = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inObject = xlua_checkuserdata<XPLMObjectRef>(L, 1, "Expected XPLMObjectRef");
+	}
+	XPLMAvionicsID inAvionics = {};
+	if (lua_isuserdata(L, 2))
+	{
+		inAvionics = xlua_checkuserdata<XPLMAvionicsID>(L, 2, "Expected XPLMAvionicsID");
+	}
+
+	XPLMClearObjectAvionics(inObject, inAvionics);
 
 	return 0;
 }
@@ -1570,17 +1757,34 @@ static int cb_XPLMHandleMouseWheel_f(XPLMWindowID inWindowID, int x, int y, int 
 	return res;
 }
 
-static void cb_XPLMBrowserNavigation_f(XPLMWindowID inWindow, const char * inURL, int inSuccess, const char * inError, void* inRefcon)
+static void cb_XPLMBrowserLoadFinished_f(XPLMWindowID inWindow, const char * inURL, void* inRefcon)
 {
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMBrowserNavigation_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMBrowserLoadFinished_f");
 	if (L)
 	{
 		Make_XPLMWindowID(L, inWindow);
 		int inWindow_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rsbsr", inWindow_typed_ref, inURL, static_cast<bool>(inSuccess), inError, inRefcon_cb->get_capture()))
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rsr", inWindow_typed_ref, inURL, inRefcon_cb->get_capture()))
+		{
+		}
+		luaL_unref(L, LUA_REGISTRYINDEX, inWindow_typed_ref);
+	}
+}
+
+static void cb_XPLMBrowserLoadError_f(XPLMWindowID inWindow, const char * inURL, const char * inError, void* inRefcon)
+{
+	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
+
+	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMBrowserLoadError_f");
+	if (L)
+	{
+		Make_XPLMWindowID(L, inWindow);
+		int inWindow_typed_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "rssr", inWindow_typed_ref, inURL, inError, inRefcon_cb->get_capture()))
 		{
 		}
 		luaL_unref(L, LUA_REGISTRYINDEX, inWindow_typed_ref);
@@ -1779,10 +1983,17 @@ XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos)
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, stackpos, "browserNavigationFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMBrowserNavigation_f"))
+	lua_getfield(L, stackpos, "browserLoadFinishedFunc");
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMBrowserLoadFinished_f"))
 	{
-		out.browserNavigationFunc = cb_XPLMBrowserNavigation_f;
+		out.browserLoadFinishedFunc = cb_XPLMBrowserLoadFinished_f;
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "browserLoadErrorFunc");
+	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMBrowserLoadError_f"))
+	{
+		out.browserLoadErrorFunc = cb_XPLMBrowserLoadError_f;
 	}
 	lua_pop(L, 1);
 
@@ -1837,7 +2048,11 @@ void XPLMCreateWindow_t_to_table(lua_State* L, XPLMCreateWindow_t const& src)
 	lua_pushinteger(L, src.windowContentType);
 	lua_settable(L, -3);
 
-	lua_pushstring(L, "browserNavigationFunc");
+	lua_pushstring(L, "browserLoadFinishedFunc");
+	luaL_loadstring(L, "function() end");
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "browserLoadErrorFunc");
 	luaL_loadstring(L, "function() end");
 	lua_settable(L, -3);
 }
@@ -1853,6 +2068,36 @@ int MakeXPLMCreateWindow_t(lua_State* L)
  * END Creation and transfer between C struct and Lua table
  *
  */
+
+int XLuaCreateWindowEx(lua_State* L)
+{
+	XPLMCreateWindow_t inParams = XPLMCreateWindow_t_from_table(L, 1);
+
+	XPLMWindowID res = XPLMCreateWindowEx(&inParams);
+	if (res == nullptr)
+	{
+		lua_pushnil(L);
+	}
+	else
+	{
+		Make_XPLMWindowID(L, res);
+	}
+
+	return 1;
+}
+
+int XLuaDestroyWindow(lua_State* L)
+{
+	XPLMWindowID inWindowID = {};
+	if (lua_isuserdata(L, 1))
+	{
+		inWindowID = xlua_checkuserdata<XPLMWindowID>(L, 1, "Expected XPLMWindowID");
+	}
+
+	XPLMDestroyWindow(inWindowID);
+
+	return 0;
+}
 
 int XLuaWindowSetURL(lua_State* L)
 {
@@ -2057,6 +2302,14 @@ int XLuaGetMouseLocationGlobal(lua_State* L)
 	lua_pushstring(L, "outY");
 	lua_pushinteger(L, outY);
 	lua_settable(L, -3);
+
+	return 1;
+}
+
+int XLuaGetModifierKeys(lua_State* L)
+{
+	XPLMKeyFlags res = XPLMGetModifierKeys();
+	lua_pushinteger(L, res);
 
 	return 1;
 }

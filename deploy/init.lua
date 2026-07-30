@@ -520,8 +520,8 @@ if XLuaMajorVersion == 1 then
 	end
 elseif XLuaMajorVersion >= 2 then
 	-- XLua compatibility > 1
-	XPLM_NO_PLUGIN_ID  = XPLMPluginID(-1)
-	XPLM_PLUGIN_XPLANE = XPLMPluginID(0)
+	XPLM_NO_PLUGIN_ID  = -1
+	XPLM_PLUGIN_XPLANE = 0
 end
 
 --------------------------------------------------------------------------------

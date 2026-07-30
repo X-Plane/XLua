@@ -40,12 +40,17 @@ extern "C" {
 //
 // Struct C/Lua conversion helpers
 //
+struct XPLMCreateInstance_t_owner;
+void XPLMCreateInstance_t_from_table(lua_State* L, int stackpos, XPLMCreateInstance_t_owner& out);
+void XPLMCreateInstance_t_to_table(lua_State* L, XPLMCreateInstance_t const& src);
 XPLMDrawInfoDouble_t XPLMDrawInfoDouble_t_from_table(lua_State* L, int stackpos);
 void XPLMDrawInfoDouble_t_to_table(lua_State* L, XPLMDrawInfoDouble_t const& src);
 XPLMDrawInfo_t XPLMDrawInfo_t_from_table(lua_State* L, int stackpos);
 void XPLMDrawInfo_t_to_table(lua_State* L, XPLMDrawInfo_t const& src);
 XPLMFixedString150_t XPLMFixedString150_t_from_table(lua_State* L, int stackpos);
 void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src);
+XPLMInstanceObject_t XPLMInstanceObject_t_from_table(lua_State* L, int stackpos);
+void XPLMInstanceObject_t_to_table(lua_State* L, XPLMInstanceObject_t const& src);
 XPLMProbeInfo_t XPLMProbeInfo_t_from_table(lua_State* L, int stackpos);
 void XPLMProbeInfo_t_to_table(lua_State* L, XPLMProbeInfo_t const& src);
 
@@ -54,7 +59,6 @@ void XPLMProbeInfo_t_to_table(lua_State* L, XPLMProbeInfo_t const& src);
 //
 XPLMInstanceRef* Make_XPLMInstanceRef(lua_State* L, XPLMInstanceRef const& init);
 XPLMObjectRef* Make_XPLMObjectRef(lua_State* L, XPLMObjectRef const& init);
-XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 XPLMProbeRef* Make_XPLMProbeRef(lua_State* L, XPLMProbeRef const& init);
 
 
@@ -170,6 +174,253 @@ int XLuaDestroyInstance(lua_State* L)
 	return 0;
 }
 
+void RegEnum_XPLMCoordinateSpace_t(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_CoordSpace_World");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_CoordSpace_AircraftInterior");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_CoordSpace_AircraftExterior");
+	lua_pushinteger(L, 3);
+	lua_setfield(L, -2, "xplm_CoordSpace_Camera");
+	lua_setglobal(L, "XPLMCoordinateSpace_t");
+}
+/*
+ * XPLMInstanceObject_t
+ * 
+ * Creation and transfer between C struct and Lua table
+ *
+ */
+
+XPLMInstanceObject_t XPLMInstanceObject_t_from_table(lua_State* L, int stackpos)
+{
+	XPLMInstanceObject_t out = {};
+
+	luaL_checktype(L, stackpos, LUA_TTABLE);
+
+	lua_getfield(L, stackpos, "object");
+	if (!lua_isnil(L, -1))
+	{
+		out.object = static_cast<XPLMObjectRef>(xlua_checkuserdata<XPLMObjectRef>(L, -1, "Expected XPLMObjectRef"));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "x");
+	if (!lua_isnil(L, -1))
+	{
+		out.x = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "y");
+	if (!lua_isnil(L, -1))
+	{
+		out.y = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "z");
+	if (!lua_isnil(L, -1))
+	{
+		out.z = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "pitch");
+	if (!lua_isnil(L, -1))
+	{
+		out.pitch = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "heading");
+	if (!lua_isnil(L, -1))
+	{
+		out.heading = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "roll");
+	if (!lua_isnil(L, -1))
+	{
+		out.roll = static_cast<float>(luaL_checknumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	return out;
+}
+
+void XPLMInstanceObject_t_to_table(lua_State* L, XPLMInstanceObject_t const& src)
+{
+	lua_newtable(L);
+
+	lua_pushstring(L, "object");
+	xlua_pushuserdata<XPLMObjectRef>(L, src.object);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "x");
+	lua_pushnumber(L, src.x);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "y");
+	lua_pushnumber(L, src.y);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "z");
+	lua_pushnumber(L, src.z);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "pitch");
+	lua_pushnumber(L, src.pitch);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "heading");
+	lua_pushnumber(L, src.heading);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "roll");
+	lua_pushnumber(L, src.roll);
+	lua_settable(L, -3);
+}
+
+int MakeXPLMInstanceObject_t(lua_State* L)
+{
+	XPLMInstanceObject_t out = {};
+	XPLMInstanceObject_t_to_table(L, out);
+	return 1;
+}
+/*
+ * END Creation and transfer between C struct and Lua table
+ *
+ */
+/*
+ * XPLMCreateInstance_t
+ * 
+ * Creation and transfer between C struct and Lua table
+ *
+ */
+
+struct XPLMCreateInstance_t_owner : XPLMCreateInstance_t
+{
+	XPLMCreateInstance_t_owner() : XPLMCreateInstance_t{} {}
+	XPLMCreateInstance_t_owner(const XPLMCreateInstance_t_owner&) = delete;
+	XPLMCreateInstance_t_owner& operator=(const XPLMCreateInstance_t_owner&) = delete;
+	XPLMCreateInstance_t_owner(XPLMCreateInstance_t_owner&&) = delete;
+	XPLMCreateInstance_t_owner& operator=(XPLMCreateInstance_t_owner&&) = delete;
+	~XPLMCreateInstance_t_owner()
+	{
+		delete[] objects;
+		delete[] datarefs;
+	}
+};
+
+void XPLMCreateInstance_t_from_table(lua_State* L, int stackpos, XPLMCreateInstance_t_owner& out)
+{
+	luaL_checktype(L, stackpos, LUA_TTABLE);
+	out.structSize = sizeof(out);
+
+	lua_getfield(L, stackpos, "objects");
+	if (lua_istable(L, -1))
+	{
+		int objects_len = static_cast<int>(lua_objlen(L, -1));
+		XPLMInstanceObject_t* objects_tmp = new XPLMInstanceObject_t[objects_len]{};
+		for (int i = 0; i < objects_len; ++i)
+		{
+			lua_rawgeti(L, -1, i + 1);
+			objects_tmp[i] = XPLMInstanceObject_t_from_table(L, -1);
+			lua_pop(L, 1);
+		}
+		out.objects = objects_tmp;
+		out.objectCount = objects_len;
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "datarefs");
+	if (lua_istable(L, -1))
+	{
+		int datarefs_len = static_cast<int>(lua_objlen(L, -1));
+		const char ** datarefs_tmp = new const char *[datarefs_len + 1]{};
+		for (int i = 0; i < datarefs_len; ++i)
+		{
+			lua_rawgeti(L, -1, i + 1);
+			datarefs_tmp[i] = xlua_checkstring(L, -1);
+			lua_pop(L, 1);
+		}
+		out.datarefs = datarefs_tmp;
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "coordinateSpace");
+	if (!lua_isnil(L, -1))
+	{
+		out.coordinateSpace = static_cast<XPLMCoordinateSpace_t>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "aircraftIndex");
+	if (!lua_isnil(L, -1))
+	{
+		out.aircraftIndex = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, stackpos, "autoShift");
+	if (!lua_isnil(L, -1))
+	{
+		out.autoShift = static_cast<int>(luaL_checkinteger(L, -1));
+	}
+	lua_pop(L, 1);
+}
+
+void XPLMCreateInstance_t_to_table(lua_State* L, XPLMCreateInstance_t const& src)
+{
+	lua_newtable(L);
+
+	lua_pushstring(L, "coordinateSpace");
+	lua_pushinteger(L, src.coordinateSpace);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "aircraftIndex");
+	lua_pushinteger(L, src.aircraftIndex);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "autoShift");
+	lua_pushinteger(L, src.autoShift);
+	lua_settable(L, -3);
+}
+
+int MakeXPLMCreateInstance_t(lua_State* L)
+{
+	XPLMCreateInstance_t out = {};
+	out.structSize = sizeof(XPLMCreateInstance_t);
+	XPLMCreateInstance_t_to_table(L, out);
+	return 1;
+}
+/*
+ * END Creation and transfer between C struct and Lua table
+ *
+ */
+
+int XLuaCreateInstanceEx(lua_State* L)
+{
+	XPLMCreateInstance_t_owner inParams;
+	XPLMCreateInstance_t_from_table(L, 1, inParams);
+
+	XPLMInstanceRef res = XPLMCreateInstanceEx(&inParams);
+	if (res == nullptr)
+	{
+		lua_pushnil(L);
+	}
+	else
+	{
+		Make_XPLMInstanceRef(L, res);
+	}
+
+	return 1;
+}
+
 int XLuaInstanceSetPosition(lua_State* L)
 {
 	XPLMInstanceRef instance = {};
@@ -228,6 +479,21 @@ int XLuaInstanceSetPositionDouble(lua_State* L)
 	{
 		delete[] data;
 	}
+
+	return 0;
+}
+
+int XLuaInstanceSetCoordinateSpace(lua_State* L)
+{
+	XPLMInstanceRef instance = {};
+	if (lua_isuserdata(L, 1))
+	{
+		instance = xlua_checkuserdata<XPLMInstanceRef>(L, 1, "Expected XPLMInstanceRef");
+	}
+	XPLMCoordinateSpace_t space = xlua_checkinteger(L, 2);
+	int aircraft_index = xlua_checkinteger(L, 3);
+
+	XPLMInstanceSetCoordinateSpace(instance, space, aircraft_index);
 
 	return 0;
 }
