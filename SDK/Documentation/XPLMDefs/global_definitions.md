@@ -173,9 +173,9 @@ X-Plane itself
 
 <span class="sym-badge badge-define">define</span>
 
-The current XPLM revision is 4.4.0 (440).
+The current XPLM revision is 4.6.0 (460).
 
-`#define kXPLM_Version (440)`
+`#define kXPLM_Version (460)`
 
 </div>
 

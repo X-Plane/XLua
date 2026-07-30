@@ -297,8 +297,8 @@ CONST
     { X-Plane itself                                                             }
    XPLM_PLUGIN_XPLANE   = (0);
 
-    {                 The current XPLM revision is 4.4.0 (440).                  }
-   kXPLM_Version        = (440);
+    {                 The current XPLM revision is 4.6.0 (460).                  }
+   kXPLM_Version        = (460);
 
    {
     XPLMFixedString150_t

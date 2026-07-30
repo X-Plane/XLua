@@ -70,6 +70,7 @@ target_compile_definitions(xlua2 PRIVATE
     XPLM420=1
     XPLM430=1
     XPLM440=1
+    XPLM460=1
     XPLMPG1=1
     -DLUA_BINDINGS_LOCAL_STATE
 )
