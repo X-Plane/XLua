@@ -42,6 +42,11 @@ typedef void * XPLMTextureAtlasRef;
 A vertex for textured mesh drawing. Combines a position in panel coordinates
 with normalized texture coordinates within the image.
 
+Texture coordinates are always relative to the image you are drawing, never to
+the atlas sheet it happens to be packed into. This is true for both
+XPLMTextureAtlasDrawMesh and XPLMTextureSourceDrawMesh, so the same vertex
+array means the same thing to either one.
+
 ```cpp
 typedef struct {
      float                     x;
@@ -276,32 +281,6 @@ XPLM_API int        XPLMTextureAtlasGetImageHeight(
 
 ---
 
-<div class="sym-block sym-function" data-name="XPLMTextureAtlasGetImageUVMap" data-type="function" markdown="1">
-
-## XPLMTextureAtlasGetImageUVMap { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span>
-
-This function returns the UV coordinates of an image within the atlas
-texture. This is useful for custom mesh rendering with
-XPLMTextureAtlasDrawMesh.
-
-- outUV: a pointer to an array of 4 floats that receives [s1, t1, s2, t2],
-  where (s1, t1) is the bottom-left corner and (s2, t2) is the top-right
-  corner in atlas texture space.
-
-```cpp
-XPLM_API void       XPLMTextureAtlasGetImageUVMap(
-                         XPLMTextureAtlasRef  inTextureAtlas,
-                         int                  inImageIndex,
-                         float *              outUV
-                    );
-```
-
-</div>
-
----
-
 <div class="sym-block sym-function" data-name="XPLMTextureAtlasDrawAt" data-type="function" markdown="1">
 
 ## XPLMTextureAtlasDrawAt { .symbol-title }
@@ -441,6 +420,15 @@ This function draws an atlas image onto an arbitrary triangle-strip mesh.
 Each vertex specifies both a panel-space position and a normalized texture
 coordinate within the image (0.0 to 1.0). This gives you full control over
 how the image is mapped onto geometry.
+
+Texture coordinates are relative to the image, not to the atlas sheet; the
+mapping onto wherever the image was packed is applied for you, exactly as it
+is for the other atlas drawing routines. One consequence is that the same
+vertex array can be drawn with any inImageIndex - you do not have to rebuild
+the mesh to switch images.
+
+Coordinates outside 0.0 to 1.0 are not clamped, and will sample whatever
+neighboring image shares the atlas sheet. Keep them in range.
 
 - inTintColor: a color that is multiplied with the texture.
 - vertices: an array of XPLMTextureVertex_t vertices defining the triangle

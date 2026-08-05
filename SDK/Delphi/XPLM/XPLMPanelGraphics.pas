@@ -536,11 +536,18 @@ TYPE
     they were added.
     
     - ttf_path: a file system path to a .ttf or .otf font file.
+    
+    Returns 1 if the face was loaded and added, or 0 if it could not be. When
+    this returns 0 the font is left exactly as it was, so you can try another
+    path, and a message explaining what went wrong is sent to your error
+    callback (see XPLMSetErrorCallback) and written to Log.txt.
+    
+    Drawing with a font that has no faces draws nothing; it is not an error.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
-   PROCEDURE XPLMFontAddFace(
+   FUNCTION XPLMFontAddFace(
                                         font                : XPLMFontHandle;
-                                        ttf_path            : XPLMString);
+                                        ttf_path            : XPLMString) : Integer;
     cdecl; external XPLM_DLL;
 
    {
@@ -1554,7 +1561,8 @@ TYPE
    Create an SVT display with XPLMCreateSVTDisplay and draw it with
    XPLMSVTDisplayDrawIn. Each display instance manages its own terrain tile
    loading and GPU state, so you can have multiple independent SVT views (e.g.
-   pilot and copilot PFDs with different feature flags).
+   pilot and copilot PFDs at different scales). Which visual layers are drawn
+   is chosen per draw call, not per display.
    
    SVT rendering works on any aircraft, regardless of whether the stock
    cockpit has a G1000 or other SVT-capable avionics installed.
@@ -1609,10 +1617,11 @@ TYPE
    XPLMCreateSVT_t = RECORD
      { Set to sizeof(XPLMCreateSVT_t).                                            }
      structSize               : Integer;
-     { Bitwise OR of XPLMSVTFeatures flags to enable.                             }
-     features                 : XPLMSVTFeatures;
      { 0 for pilot-side AHRS, 1 for copilot-side AHRS.                            }
      pilotIndex               : Integer;
+     { Vertical scale of the 3-d view, in pixels per degree at the center of the  }
+     { display.  Must be greater than zero; the G1000 PFD uses 14.                }
+     pixelsPerDegree          : Single;
    END;
    PXPLMCreateSVT_t = ^XPLMCreateSVT_t;
 
@@ -1632,6 +1641,17 @@ TYPE
     loading terrain tiles for the current aircraft position immediately. You
     can draw it as soon as tiles are available; before that, the draw call is a
     no-op.
+    
+    The pixelsPerDegree scale and the rectangle you pass to
+    XPLMSVTDisplayDrawIn together determine the field of view: the rectangle is
+    simply the scale applied to the view's angular extent. So drawing into a
+    bigger rectangle at the same scale shows _more_ of the world at the same
+    magnification rather than zooming in, and to zoom you change the scale, not
+    the rectangle. Pick the same scale your pitch ladder uses and the 3-d
+    horizon will line up with your artificial horizon.
+    
+    Which visual layers are rendered is a property of the draw call, not of the
+    display - see XPLMSVTDisplayDrawIn.
     
     The returned handle must be destroyed with XPLMDestroySVTDisplay when no
     longer needed. Handles are automatically destroyed when the owning plugin

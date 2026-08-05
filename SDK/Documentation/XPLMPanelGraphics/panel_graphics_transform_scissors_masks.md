@@ -161,14 +161,14 @@ XPLM_API void       XPLMScissorPop(void);
 This function sets an absolute scissor rectangle. Only pixels within this
 rectangle are drawn; everything outside is clipped.
 
-- top, left, bottom, right: the scissor bounds in panel coordinates.
+- left, top, right, bottom: the scissor bounds in panel coordinates.
 
 ```cpp
 XPLM_API void       XPLMScissorSet(
-                         int                  top,
                          int                  left,
-                         int                  bottom,
-                         int                  right
+                         int                  top,
+                         int                  right,
+                         int                  bottom
                     );
 ```
 
@@ -186,17 +186,17 @@ This function sets the scissors box to the intersection of the existing
 scissors box. The result is always a same or smaller drawable area.
 This is useful for nested clipping.
 
-- top: inset from the top edge, in pixels.
 - left: inset from the left edge, in pixels.
-- bottom: inset from the bottom edge, in pixels.
+- top: inset from the top edge, in pixels.
 - right: inset from the right edge, in pixels.
+- bottom: inset from the bottom edge, in pixels.
 
 ```cpp
 XPLM_API void       XPLMScissorIntersect(
-                         int                  top,
                          int                  left,
-                         int                  bottom,
-                         int                  right
+                         int                  top,
+                         int                  right,
+                         int                  bottom
                     );
 ```
 

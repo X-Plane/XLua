@@ -290,7 +290,14 @@ local XPLMJustification_t = {
 ---
 --- - ttf_path: a file system path to a .ttf or .otf font file.
 ---
----@field XPLMFontAddFace fun(font: XPLMFontHandle, ttf_path: string)
+--- Returns 1 if the face was loaded and added, or 0 if it could not be. When
+--- this returns 0 the font is left exactly as it was, so you can try another
+--- path, and a message explaining what went wrong is sent to your error
+--- callback (see XPLMSetErrorCallback) and written to Log.txt.
+---
+--- Drawing with a font that has no faces draws nothing; it is not an error.
+---
+---@field XPLMFontAddFace fun(font: XPLMFontHandle, ttf_path: string): boolean
 
 ---@class _G
 --- This function returns line metrics for a font at a given size. The metrics
@@ -818,8 +825,8 @@ local XPLMSVTFeatures = {
 --- Parameters for creating an SVT display. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
 ---@class XPLMCreateSVT_t
 ---@field structSize integer
----@field features XPLMSVTFeatures
 ---@field pilotIndex integer
+---@field pixelsPerDegree number
 
 --- An opaque handle to an SVT display instance. Create one with XPLMCreateSVTDisplay and destroy it with XPLMDestroySVTDisplay.
 ---@class XPLMSVTDisplayRef : userdata
@@ -829,6 +836,17 @@ local XPLMSVTFeatures = {
 --- This function creates a new SVT display instance. The display begins loading
 --- terrain tiles for the current aircraft position immediately. You can draw it
 --- as soon as tiles are available; before that, the draw call is a no-op.
+---
+--- The pixelsPerDegree scale and the rectangle you pass to XPLMSVTDisplayDrawIn
+--- together determine the field of view: the rectangle is simply the scale applied
+--- to the view's angular extent. So drawing into a bigger rectangle at the same
+--- scale shows _more_ of the world at the same magnification rather than zooming
+--- in, and to zoom you change the scale, not the rectangle. Pick the same scale
+--- your pitch ladder uses and the 3-d horizon will line up with your artificial
+--- horizon.
+---
+--- Which visual layers are rendered is a property of the draw call, not of the
+--- display - see XPLMSVTDisplayDrawIn.
 ---
 --- The returned handle must be destroyed with XPLMDestroySVTDisplay when no
 --- longer needed. Handles are automatically destroyed when the owning plugin is

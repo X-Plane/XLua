@@ -1,15 +1,20 @@
 <h1>Panel Graphics Primitives</h1>
 
 These routines draw 2-D vector primitives: lines, line strips, line loops,
-filled polygons, and quad strips. Each primitive type has up to four variants:
+filled polygons, and quad strips.
+
+Line-based primitives (Lines, LineStrip, LineLoop) have four variants:
 
 - Base variant: uniform color, default line width.
 - WithWidth variant: uniform color, caller-specified line width.
 - "c" variant: per-vertex color (using XPLMVertexColor_t), default line width.
 - "c" + WithWidth variant: per-vertex color and caller-specified line width.
 
-Line-based primitives (Lines, LineStrip, LineLoop) also have a Stipple variant
-that draws dashed lines with a caller-specified dash length and line width.
+They also have a Stipple variant that draws dashed lines with a caller-specified
+dash length and line width.
+
+Filled primitives (Polygon, Quadstrip) have no line width, so they come in only
+the base and "c" variants.
 
 ---
 
@@ -455,30 +460,6 @@ XPLM_API void       XPLMPolygon(
 
 ---
 
-<div class="sym-block sym-function" data-name="XPLMPolygonWithWidth" data-type="function" markdown="1">
-
-## XPLMPolygonWithWidth { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span>
-
-This function draws a filled convex polygon with a caller-specified outline
-width. The interior is filled and an outline is drawn at the given width.
-
-- lineWidth: the outline width in pixels.
-
-```cpp
-XPLM_API void       XPLMPolygonWithWidth(
-                         uint32_t             color,
-                         float                lineWidth,
-                         const XPLMVertex_t * vertices,
-                         ArraySize            count
-                    );
-```
-
-</div>
-
----
-
 <div class="sym-block sym-function" data-name="XPLMPolygonc" data-type="function" markdown="1">
 
 ## XPLMPolygonc { .symbol-title }
@@ -490,29 +471,6 @@ are interpolated across the polygon interior.
 
 ```cpp
 XPLM_API void       XPLMPolygonc(
-                         const XPLMVertexColor_t * vertices,
-                         ArraySize            count
-                    );
-```
-
-</div>
-
----
-
-<div class="sym-block sym-function" data-name="XPLMPolygoncWithWidth" data-type="function" markdown="1">
-
-## XPLMPolygoncWithWidth { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span>
-
-This function draws a filled convex polygon with per-vertex colors and a
-caller-specified outline width.
-
-- lineWidth: the outline width in pixels.
-
-```cpp
-XPLM_API void       XPLMPolygoncWithWidth(
-                         float                lineWidth,
                          const XPLMVertexColor_t * vertices,
                          ArraySize            count
                     );
@@ -548,30 +506,6 @@ XPLM_API void       XPLMQuadstrip(
 
 ---
 
-<div class="sym-block sym-function" data-name="XPLMQuadstripWithWidth" data-type="function" markdown="1">
-
-## XPLMQuadstripWithWidth { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span>
-
-This function draws a quad strip with a caller-specified outline width.
-Vertex interpretation is the same as XPLMQuadstrip.
-
-- lineWidth: the outline width in pixels.
-
-```cpp
-XPLM_API void       XPLMQuadstripWithWidth(
-                         uint32_t             color,
-                         float                lineWidth,
-                         const XPLMVertex_t * vertices,
-                         ArraySize            count
-                    );
-```
-
-</div>
-
----
-
 <div class="sym-block sym-function" data-name="XPLMQuadstripc" data-type="function" markdown="1">
 
 ## XPLMQuadstripc { .symbol-title }
@@ -584,29 +518,6 @@ each quad.
 
 ```cpp
 XPLM_API void       XPLMQuadstripc(
-                         const XPLMVertexColor_t * vertices,
-                         ArraySize            count
-                    );
-```
-
-</div>
-
----
-
-<div class="sym-block sym-function" data-name="XPLMQuadstripcWithWidth" data-type="function" markdown="1">
-
-## XPLMQuadstripcWithWidth { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span>
-
-This function draws a quad strip with per-vertex colors and a
-caller-specified outline width.
-
-- lineWidth: the outline width in pixels.
-
-```cpp
-XPLM_API void       XPLMQuadstripcWithWidth(
-                         float                lineWidth,
                          const XPLMVertexColor_t * vertices,
                          ArraySize            count
                     );

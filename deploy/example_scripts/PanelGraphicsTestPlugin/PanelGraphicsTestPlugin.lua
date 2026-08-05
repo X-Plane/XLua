@@ -764,14 +764,16 @@ function XPluginEnable()
 	XPLMAvionicsSetTouchEventHandler(s_avionic, touch_event_cb)
 
 	s_svt = XPLMCreateSVTDisplay({
-		features   = XPLMSVTFeatures.xplm_SVT_All,
-		pilotIndex = 0
+		pilotIndex      = 0,
+		pixelsPerDegree = 14		-- What the G1000 PFD uses.
 	})
 
 	-- Override display; override values are passed per draw call via XPLMSVTDisplayDrawIn.
+	-- Half the scale, so the two SVT tabs draw the same world at visibly different fields
+	-- of view - if they ever look alike, pixelsPerDegree stopped being honored.
 	s_svt_overrides = XPLMCreateSVTDisplay({
-		features   = XPLMSVTFeatures.xplm_SVT_All,
-		pilotIndex = 0
+		pilotIndex      = 0,
+		pixelsPerDegree = 7
 	})
 
 	s_map = XPLMCreateMapDisplay({ pilotIndex = 0 })

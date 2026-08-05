@@ -3,13 +3,19 @@
 These routines let you draw the base map for a navigation display (ND) or
 multi-function display (MFD) into your avionics panel. The base map provides
 layers for terrain, topography, bodies of water, EGPWS terrain warnings,
-airport taxi layouts, NEXRAD and cloud tops. These are drawn with a
-stereographic projectionwhere the pole is the current user aircraft position.
+airport taxi layouts, NEXRAD and cloud tops. These are drawn with a transverse
+Mercator projection centered near the map's datum.
 
 Create a map display with XPLMCreateMapDisplay and draw it with
 XPLMMapDisplayDrawIn. Each map instance manages its own terrain tile
 loading and GPU state, so you can have multiple independent views (e.g. pilot
 and copilot PFDs with different layers visible).
+
+To draw your own symbology on top - airports, a flight plan, traffic - use
+XPLMMapDisplayProject to turn a latitude/longitude into a pixel position, and
+XPLMMapDisplayUnproject to turn a click back into a latitude/longitude. Both
+take the same XPLMMapDrawInfo_t you draw with, so they describe exactly the
+projection that draw call produces.
 
 The base map works on any aircraft, regardless of whether the stock cockpit
 has an FMS or other avionics installed.
@@ -75,13 +81,26 @@ Flag that controls how the map's EGPWS display layer is rendered.
 
 <span class="sym-badge badge-struct">struct</span>
 
+Per-frame description of what a map display should show: where it is centered, how it is
+oriented, how far it reaches, and what the terrain layers should shade against.
+
+Two fields set the scale, and they are deliberately a matching pair: roseRadius is the
+distance from the center of the map out to the compass rose in pixels, and mapRange is that
+same distance in nautical miles. So setting mapRange to 40 puts the rose edge 40 nm from the
+aircraft, exactly like the range knob on a real EFIS control panel - and a centered rose
+therefore spans 80 nm across.
+
+Set structSize to the size of your struct so that future SDK versions can add fields without
+breaking existing plugins.
+
 ```cpp
 typedef struct {
+     int                       structSize;
      float                     datLat;
      float                     datLon;
      int                       ctrX;
      int                       ctrY;
-     int                       roseDiameter;
+     int                       roseRadius;
      float                     mapRange;
      int                       orientation;
      float                     terrainWarn;
@@ -137,6 +156,36 @@ typedef void * XPLMMapDisplayRef;
 
 ---
 
+<div class="sym-block sym-struct" data-name="XPLMMapDrawInfo_t" data-type="struct" markdown="1">
+
+## XPLMMapDrawInfo_t { .symbol-title }
+
+<span class="sym-badge badge-struct">struct</span>
+
+Which layers a map shows and where on the panel it goes.
+
+Pass the same XPLMMapDrawInfo_t and the same XPLMMapCustomData_t to XPLMMapDisplayDrawIn and to
+the projection routines, and the projection you query is provably the projection you drew - so
+your symbology cannot end up a frame or a zoom step out of step with the terrain under it.
+
+Set structSize to the size of your struct so that future SDK versions can add fields without
+breaking existing plugins.
+
+```cpp
+typedef struct {
+     int                       structSize;
+     XPLMMapLayers             layers;
+     int                       left;
+     int                       top;
+     int                       right;
+     int                       bottom;
+} XPLMMapDrawInfo_t;
+```
+
+</div>
+
+---
+
 <div class="sym-block sym-function" data-name="XPLMCreateMapDisplay" data-type="function" markdown="1">
 
 ## XPLMCreateMapDisplay { .symbol-title }
@@ -186,31 +235,170 @@ XPLM_API void       XPLMDestroyMapDisplay(
 <span class="sym-badge badge-fn">function</span>
 
 This function renders the map display directly into the active panel surface
-within the specified rectangular region. Map sets up its own stereographic
-projection to fit the rectangle, so no transform stack manipulation is
-needed.
+within the rectangle given by info. Map sets up its own projection to fit that
+rectangle, so no transform stack manipulation is needed.
 
-The layers parameter controls which visual layers are rendered for this
-draw call. Pass a bitwise OR of XPLMMapLayers flags. Note that some layers
-are mutually exclusive, such as NEXRAD and EGPWS or NEXRAD and IR.
-The airport details layer is only visible at very close zoom levels.
+info->layers controls which visual layers are rendered. Note that some layers
+are mutually exclusive, such as NEXRAD and EGPWS or NEXRAD and IR. The airport
+details layer is only visible at very close zoom levels.
 
 This function must be called from within an avionics drawing callback. If
 terrain tiles have not finished loading yet, this function does nothing.
 
-- map: the map display handle.
-- layers: bitwise OR of XPLMMapLayers flags to enable for this draw call.
-- left, top, right, bottom: the bounding rectangle in panel coordinates.
+dataOverrides may be NULL, in which case the map follows the sim's own navigation
+display: centered on the user aircraft in the middle of the rectangle, rose radius
+half the shorter side of it, range taken from the EFIS range knob, and track-up or
+north-up according to the sim's map mode. The pilotIndex you created the map with
+selects which side's range and altitude are used.
 
 ```cpp
 XPLM_API void       XPLMMapDisplayDrawIn(
                          XPLMMapDisplayRef    map,
-                         XPLMMapLayers        layers,
-                         int                  left,
-                         int                  top,
-                         int                  right,
-                         int                  bottom,
-                         XPLMMapCustomData_t* dataOverrides    /* Can be NULL */
+                         XPLMMapDrawInfo_t *  info,
+                         XPLMMapCustomData_t * dataOverrides    /* Can be NULL */
+                    );
+```
+
+</div>
+
+---
+
+<div class="sym-block sym-function" data-name="XPLMMapDisplayProject" data-type="function" markdown="1">
+
+## XPLMMapDisplayProject { .symbol-title }
+
+<span class="sym-badge badge-fn">function</span>
+
+Turns a latitude/longitude into a position in panel coordinates, for the map
+that info describes. This is the inverse of XPLMMapDisplayUnproject.
+
+Pass the same info you draw that map with and you get the projection that draw
+call produces, whether you call this before or after XPLMMapDisplayDrawIn. So
+the usual pattern - project your symbols, draw the map, then draw the symbols
+on top - lines up exactly, with no need to cache anything between frames.
+
+Unlike XPLMMapDisplayDrawIn, this does not have to be called from a drawing
+callback; it is equally valid from a click handler or a flight loop.
+
+Returns 1 on success. Returns 0, leaving outX and outY untouched, if the map's
+terrain tiles have not loaded yet or if the point has no position on this map.
+
+Note that the returned coordinates are in the same space as info's rectangle,
+and like that rectangle they do not account for the panel graphics transform
+stack.
+
+Passing NULL for dataOverrides projects the sim's own navigation display view, the
+same one XPLMMapDisplayDrawIn draws with NULL.
+
+```cpp
+XPLM_API int        XPLMMapDisplayProject(
+                         XPLMMapDisplayRef    map,
+                         XPLMMapDrawInfo_t *  info,
+                         XPLMMapCustomData_t * dataOverrides,    /* Can be NULL */
+                         double               latitude,
+                         double               longitude,
+                         float *              outX,
+                         float *              outY
+                    );
+```
+
+</div>
+
+---
+
+<div class="sym-block sym-function" data-name="XPLMMapDisplayUnproject" data-type="function" markdown="1">
+
+## XPLMMapDisplayUnproject { .symbol-title }
+
+<span class="sym-badge badge-fn">function</span>
+
+Turns a position in panel coordinates back into a latitude/longitude, for the
+map that info describes. This is the inverse of XPLMMapDisplayProject.
+
+Use this to turn a touch or click on your map into a place in the world - for
+picking a waypoint, or reading out the position under the cursor.
+
+Unlike XPLMMapDisplayDrawIn, this does not have to be called from a drawing
+callback; it is equally valid from a click handler or a flight loop.
+
+Returns 1 on success. Returns 0, leaving outLatitude and outLongitude
+untouched, if the map's terrain tiles have not loaded yet or if the point does
+not correspond to anywhere on the earth.
+
+Passing NULL for dataOverrides projects the sim's own navigation display view, the
+same one XPLMMapDisplayDrawIn draws with NULL.
+
+```cpp
+XPLM_API int        XPLMMapDisplayUnproject(
+                         XPLMMapDisplayRef    map,
+                         XPLMMapDrawInfo_t *  info,
+                         XPLMMapCustomData_t * dataOverrides,    /* Can be NULL */
+                         float                x,
+                         float                y,
+                         double *             outLatitude,
+                         double *             outLongitude
+                    );
+```
+
+</div>
+
+---
+
+<div class="sym-block sym-function" data-name="XPLMMapDisplayScaleMeter" data-type="function" markdown="1">
+
+## XPLMMapDisplayScaleMeter { .symbol-title }
+
+<span class="sym-badge badge-fn">function</span>
+
+Returns how many pixels correspond to one meter at a given point on the map
+that info describes. Use it to size symbols and range rings so they stay
+correct as the range changes.
+
+Returns 0 if the map's terrain tiles have not loaded yet.
+
+Passing NULL for dataOverrides projects the sim's own navigation display view, the
+same one XPLMMapDisplayDrawIn draws with NULL.
+
+```cpp
+XPLM_API float      XPLMMapDisplayScaleMeter(
+                         XPLMMapDisplayRef    map,
+                         XPLMMapDrawInfo_t *  info,
+                         XPLMMapCustomData_t * dataOverrides,    /* Can be NULL */
+                         float                x,
+                         float                y
+                    );
+```
+
+</div>
+
+---
+
+<div class="sym-block sym-function" data-name="XPLMMapDisplayGetNorthHeading" data-type="function" markdown="1">
+
+## XPLMMapDisplayGetNorthHeading { .symbol-title }
+
+<span class="sym-badge badge-fn">function</span>
+
+Returns the heading, in degrees clockwise from straight up on the display, at
+which true north lies at a given point on the map that info describes. ADD it
+to a true heading to get the angle to draw that heading at.
+
+This accounts both for the map's own rotation - a heading-up map is turned to
+put the aircraft's nose at the top - and for the projection's convergence,
+which tilts north away from vertical as you move away from the map's center.
+
+Returns 0 if the map's terrain tiles have not loaded yet.
+
+Passing NULL for dataOverrides projects the sim's own navigation display view, the
+same one XPLMMapDisplayDrawIn draws with NULL.
+
+```cpp
+XPLM_API float      XPLMMapDisplayGetNorthHeading(
+                         XPLMMapDisplayRef    map,
+                         XPLMMapDrawInfo_t *  info,
+                         XPLMMapCustomData_t * dataOverrides,    /* Can be NULL */
+                         float                x,
+                         float                y
                     );
 ```
 
