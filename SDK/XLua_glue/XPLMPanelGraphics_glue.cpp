@@ -2268,17 +2268,17 @@ XPLMMapCustomData_t XPLMMapCustomData_t_from_table(lua_State* L, int stackpos)
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, stackpos, "ctrX");
+	lua_getfield(L, stackpos, "centerX");
 	if (!lua_isnil(L, -1))
 	{
-		out.ctrX = static_cast<int>(luaL_checkinteger(L, -1));
+		out.centerX = static_cast<int>(luaL_checkinteger(L, -1));
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, stackpos, "ctrY");
+	lua_getfield(L, stackpos, "centerY");
 	if (!lua_isnil(L, -1))
 	{
-		out.ctrY = static_cast<int>(luaL_checkinteger(L, -1));
+		out.centerY = static_cast<int>(luaL_checkinteger(L, -1));
 	}
 	lua_pop(L, 1);
 
@@ -2374,12 +2374,12 @@ void XPLMMapCustomData_t_to_table(lua_State* L, XPLMMapCustomData_t const& src)
 	lua_pushnumber(L, src.datLon);
 	lua_settable(L, -3);
 
-	lua_pushstring(L, "ctrX");
-	lua_pushinteger(L, src.ctrX);
+	lua_pushstring(L, "centerX");
+	lua_pushinteger(L, src.centerX);
 	lua_settable(L, -3);
 
-	lua_pushstring(L, "ctrY");
-	lua_pushinteger(L, src.ctrY);
+	lua_pushstring(L, "centerY");
+	lua_pushinteger(L, src.centerY);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "roseRadius");

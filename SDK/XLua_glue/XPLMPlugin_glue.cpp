@@ -270,6 +270,8 @@ void RegDefines_XPLMPlugin(lua_State* L)
 	lua_setglobal(L, "XPLM_MSG_RELEASE_PLANES");
 	lua_pushinteger(L, 104);
 	lua_setglobal(L, "XPLM_MSG_SCENERY_LOADED");
+	lua_pushinteger(L, 115);
+	lua_setglobal(L, "XPLM_MSG_WEATHER_DELIVERED");
 	lua_pushinteger(L, 107);
 	lua_setglobal(L, "XPLM_MSG_WILL_WRITE_PREFS");
 }

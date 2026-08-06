@@ -937,13 +937,13 @@ local XPLMEGPWSStyle = {
 ---@class _G
 ---@field XPLMEGPWSStyle XPLMEGPWSStyle
 
---- Per-frame description of what a map display should show: where it is centered, how it is oriented, how far it reaches, and what the terrain layers should shade against. Two fields set the scale, and they are deliberately a matching pair: roseRadius is the distance from the center of the map out to the compass rose in pixels, and mapRange is that same distance in nautical miles. So setting mapRange to 40 puts the rose edge 40 nm from the aircraft, exactly like the range knob on a real EFIS control panel - and a centered rose therefore spans 80 nm across. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
+--- Per-frame description of what a map display should show: where it is centered, how it is oriented, how far it reaches, and what the terrain layers should shade against. centerX and centerY are in the same panel coordinates as the rectangle in XPLMMapDrawInfo_t, NOT relative to that rectangle. This is the point the map is centered on and the point it rotates about - the same sense as XPLMTransformRotate's center. For a map centered in its own rectangle it is ((left+right)/2, (bottom+top)/2). It is also the same space XPLMMapDisplayProject reports positions in, so you can put a symbol on the map without offsetting anything yourself. The center need not be the rectangle's midpoint, and may sit on or outside its edge: pushing it down toward the bottom edge puts more of the map ahead of the aircraft, which is how an EFIS arc mode is laid out. Two fields set the scale, and they are deliberately a matching pair: roseRadius is the distance from the center of the map out to the compass rose in pixels, and mapRange is that same distance in nautical miles. So setting mapRange to 40 puts the rose edge 40 nm from the aircraft, exactly like the range knob on a real EFIS control panel - and a centered rose therefore spans 80 nm across. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
 ---@class XPLMMapCustomData_t
 ---@field structSize integer
 ---@field datLat number
 ---@field datLon number
----@field ctrX integer
----@field ctrY integer
+---@field centerX integer
+---@field centerY integer
 ---@field roseRadius integer
 ---@field mapRange number
 ---@field orientation integer

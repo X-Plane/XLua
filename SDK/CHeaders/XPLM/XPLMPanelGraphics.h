@@ -1898,6 +1898,18 @@ typedef int XPLMEGPWSStyle;
  * centered, how it is oriented, how far it reaches, and what the terrain
  * layers should shade against.
  * 
+ * centerX and centerY are in the same panel coordinates as the rectangle in
+ * XPLMMapDrawInfo_t, NOT relative to that rectangle. This is the point the
+ * map is centered on and the point it rotates about - the same sense as
+ * XPLMTransformRotate's center. For a map centered in its own rectangle it is
+ * ((left+right)/2, (bottom+top)/2). It is also the same space
+ * XPLMMapDisplayProject reports positions in, so you can put a symbol on the
+ * map without offsetting anything yourself.
+ * 
+ * The center need not be the rectangle's midpoint, and may sit on or outside
+ * its edge: pushing it down toward the bottom edge puts more of the map ahead
+ * of the aircraft, which is how an EFIS arc mode is laid out.
+ * 
  * Two fields set the scale, and they are deliberately a matching pair:
  * roseRadius is the distance from the center of the map out to the compass
  * rose in pixels, and mapRange is that same distance in nautical miles. So
@@ -1920,11 +1932,13 @@ typedef struct {
     /* datum lon (degrees).                                                       */
      float                     datLon;
 
-    /* map center x coordinate (pixels).                                          */
-     int                       ctrX;
+    /* map center x, in the same panel coordinates as XPLMMapDrawInfo_t's         *
+     * rectangle.                                                                 */
+     int                       centerX;
 
-    /* map center y coordinate (pixels).                                          */
-     int                       ctrY;
+    /* map center y, in the same panel coordinates as XPLMMapDrawInfo_t's         *
+     * rectangle.                                                                 */
+     int                       centerY;
 
     /* center of the map out to the compass rose (pixels).                        */
      int                       roseRadius;

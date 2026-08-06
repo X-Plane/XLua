@@ -341,6 +341,13 @@ CONST
    XPLM_MSG_DATAREFS_ADDED = 114;
 {$ENDIF XPLM400}
 
+{$IFDEF XPLM430}
+CONST
+    { A new weather moment has been delivered for display. The parameter is 0 for}
+    { a normal async update, 1 for a sync update.                                }
+   XPLM_MSG_WEATHER_DELIVERED = 115;
+{$ENDIF XPLM430}
+
    {
     XPLMSendMessageToPlugin
     

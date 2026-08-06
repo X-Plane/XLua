@@ -335,6 +335,12 @@ XPLM_API void       XPLMReloadThisPlugin(
 #define XPLM_MSG_DATAREFS_ADDED 114
 #endif /* XPLM400 */
 
+#if defined(XPLM430)
+/* A new weather moment has been delivered for display. The parameter is 0 for*
+ * a normal async update, 1 for a sync update.                                */
+#define XPLM_MSG_WEATHER_DELIVERED 115
+#endif /* XPLM430 */
+
 /*
  * XPLMSendMessageToPlugin
  * 
