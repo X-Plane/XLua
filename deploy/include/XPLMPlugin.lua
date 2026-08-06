@@ -213,6 +213,12 @@ XPLM_MSG_FMOD_BANK_UNLOADING = 113
 ]]--
 XPLM_MSG_DATAREFS_ADDED = 114
 
+--[[
+   A new weather moment has been delivered for display. The parameter is 0 for a
+   normal async update, 1 for a sync update.
+]]--
+XPLM_MSG_WEATHER_DELIVERED = 115
+
 ---@class _G
 --- This function sends a message to another plug-in or X-Plane.  Pass XPLM_NO_PLUGIN_ID to broadcast
 --- to all plug-ins.  Only enabled plug-ins with a message receive function receive the message.
