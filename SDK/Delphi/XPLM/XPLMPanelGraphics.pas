@@ -1151,8 +1151,14 @@ TYPE
    of all drawing. The scissor rectangle clips drawing to a rectangular
    region. The stencil mask clips drawing to an arbitrary shape.
    
-   Each state type has a push/pop stack. Always push before modifying state
-   and pop to restore the previous state when you are done.
+   The transform and the scissor rectangle each have a push/pop stack. Always
+   push before modifying either one and pop to restore the previous state when
+   you are done.
+   
+   The stencil has no stack. Instead the stencil buffer holds up to eight
+   independent one-bit masks, and you select which of them clips your drawing
+   by calling XPLMUseStencilMask as often as you like. X-Plane restores the
+   stencil state for you at the end of your drawing callback.
 }
 
 
@@ -1290,9 +1296,17 @@ TYPE
     shapes that define your mask region, then call XPLMEndSetupStencilMask to
     finish.
     
+    The stencil buffer is eight bits wide, so you can record up to eight
+    independent masks and pick among them later with XPLMUseStencilMask - one
+    bit per mask - without having to re-draw them.
+    
     - bits: the stencil bit pattern to write into the stencil buffer where
       geometry is drawn.
     - mask: a bitmask selecting which stencil bits are written.
+    
+    Both parameters must be in the range 0 to 255, and every bit set in bits
+    must also be set in mask - a bit outside the mask can never be written.
+    Stencil testing must be off (see XPLMUseStencilMask) when you call this.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMBeginSetupStencilMask(
@@ -1304,8 +1318,12 @@ TYPE
     XPLMEndSetupStencilMask
     
     This function ends stencil mask setup. After this call, drawing commands
-    once again render to the screen. Call XPLMUseStencilMask to activate the
-    mask for subsequent drawing, or XPLMClearStencilMask to discard it.
+    once again render to the screen, and stencil testing is off. Call
+    XPLMUseStencilMask to start drawing through the mask you just recorded.
+    
+    The mask stays in the stencil buffer until you overwrite it or call
+    XPLMClearStencilMask, so you may record several masks up front and then
+    switch among them.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMEndSetupStencilMask;
@@ -1314,12 +1332,26 @@ TYPE
    {
     XPLMUseStencilMask
     
-    This function activates stencil testing. Subsequent drawing is clipped to
-    the region defined during stencil setup: only pixels where the stencil
-    buffer matches the specified bit pattern are drawn.
+    This function selects which stencil mask clips your drawing. Subsequent
+    drawing is clipped to the region you recorded with
+    XPLMBeginSetupStencilMask: only pixels where the stencil buffer matches the
+    specified bit pattern are drawn.
     
     - bits: the reference bit pattern to test against.
     - mask: a bitmask selecting which stencil bits participate in the test.
+    
+    Both parameters must be in the range 0 to 255, and every bit set in bits
+    must also be set in mask - a bit outside the mask can never match.
+    
+    You may call this as often as you like within one drawing callback to
+    switch between masks you have recorded; each call replaces the previous
+    test. Pass (0, 0) to stop stencil testing entirely. You do not have to do
+    that at the end of your callback - X-Plane turns stencil testing off for
+    you, and for a window it also clears any mask you recorded, so nothing you
+    draw leaks into another window.
+    
+    This function may not be called between XPLMBeginSetupStencilMask and
+    XPLMEndSetupStencilMask.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMUseStencilMask(
@@ -1330,8 +1362,17 @@ TYPE
    {
     XPLMClearStencilMask
     
-    This function clears the stencil buffer and disables stencil testing.
-    Subsequent drawing is no longer clipped by the stencil mask.
+    This function erases the entire stencil buffer, discarding every mask you
+    have recorded. It does not change whether stencil testing is on - use
+    XPLMUseStencilMask(0, 0) for that.
+    
+    Because this throws away all eight masks at once, you rarely need it: to
+    stop drawing through a mask, call XPLMUseStencilMask(0, 0), and to replace
+    one, just record over it. It is safe to call at any time as a way of asking
+    for a known starting state, even if you have recorded nothing.
+    
+    Stencil testing must be off, and you may not call this between
+    XPLMBeginSetupStencilMask and XPLMEndSetupStencilMask.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMClearStencilMask;
