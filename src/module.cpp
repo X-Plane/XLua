@@ -12,6 +12,7 @@
 #include "xpfuncs.h"
 #include "shared_xpfuncs.h"
 #include "lua_helpers.h"
+#include "xlua_command_bindings.h"
 
 #include <XPLMUtilities.h>
 
@@ -372,9 +373,9 @@ module::module(
 #if !MOBILE
 		LoadImguiBindings(m_interp);
 		register_xlua_imgui_text_inputs(m_interp);
-		// XLuaCreate/DestroyImguiWindow + XLuaCreate/DestroyBrowserWindow are now
-		// registered by add_xplm_to_interp() above (declared in XPLMDisplay.xml
-		// with lua_impl="external"), so the old register_xlua2_window_helpers()
+		// XLuaCreate/DestroyImguiWindow are now registered by
+		// add_xplm_to_interp() above (declared in XPLMDisplay.xml with
+		// lua_impl="external"), so the old register_xlua2_window_helpers()
 		// call has been removed. imgui text inputs stay hand-registered because
 		// their imgui table is created by LoadImguiBindings(), after the
 		// generated registration runs.
@@ -615,11 +616,6 @@ void module::do_callout(char const* f)
 	}
 }
 
-extern "C"
-{
-	XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
-}
-
 void module::_XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void* inParam)
 {
 	if (m_interp == nullptr || !m_enabled || m_xlua_compat[0] < 2)
@@ -661,10 +657,7 @@ void module::_XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void*
 			ptype.erase(0);
 		}
 
-		Make_XPLMPluginID(m_interp, inFromWho);
-		int ref = luaL_ref(m_interp, LUA_REGISTRYINDEX);
-		fmt_pcall_stdvars(m_interp, m_debug_proc, false, ("ri" + ptype).c_str(), ref, inMessage, inParam);
-		luaL_unref(m_interp, LUA_REGISTRYINDEX, ref);
+		fmt_pcall_stdvars(m_interp, m_debug_proc, false, ("ii" + ptype).c_str(), inFromWho, inMessage, inParam);
 	}
 }
 
@@ -677,6 +670,10 @@ void module::shutdown_lua(void)
 			_XPluginDisable();
 		}
 		_XPluginStop();
+
+		// Drop this interpreter's command handlers while it is still open. Must precede
+		// xlua_callback_cleanup, which frees the notify_cb_t records XPLM holds as their refcons.
+		xlua_command_bindings_cleanup(m_interp);
 
 		// Ditch all the callbacks now, during shutdown and _after_ any disable/stop hooks in case the user decides
 		// to do anything funny like register callbacks.

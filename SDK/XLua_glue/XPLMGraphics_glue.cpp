@@ -45,7 +45,6 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 //
 // Typedefs
 //
-XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 
 int XLuaWorldToLocal(lua_State* L)

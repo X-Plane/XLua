@@ -46,7 +46,6 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 // Typedefs
 //
 XPLMCommandRef* Make_XPLMCommandRef(lua_State* L, XPLMCommandRef const& init);
-XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 
 void RegEnum_XPLMDataFileType(lua_State* L)
@@ -376,42 +375,6 @@ int XLuaCreateCommand(lua_State* L)
 	}
 
 	return 1;
-}
-
-int XLuaRegisterCommandHandler(lua_State* L)
-{
-	XPLMCommandRef inComand = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inComand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected XPLMCommandRef");
-	}
-
-	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 4);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 2, false, "XPLMCommandCallback_f");
-	bool inBefore = xlua_checkboolean(L, 3);
-
-	XPLMRegisterCommandHandler(inComand, cb_XPLMCommandCallback_f, inBefore, cb_capture_0.get());
-
-	return 0;
-}
-
-int XLuaUnregisterCommandHandler(lua_State* L)
-{
-	XPLMCommandRef inComand = {};
-	if (lua_isuserdata(L, 1))
-	{
-		inComand = xlua_checkuserdata<XPLMCommandRef>(L, 1, "Expected XPLMCommandRef");
-	}
-
-	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 4);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 2, false, "XPLMCommandCallback_f");
-	bool inBefore = xlua_checkboolean(L, 3);
-
-	XPLMUnregisterCommandHandler(inComand, cb_XPLMCommandCallback_f, inBefore, cb_capture_0.get());
-
-	return 0;
 }
 
 #ifdef __cplusplus

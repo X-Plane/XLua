@@ -17,6 +17,7 @@ USES
 TYPE
    XPLMChar   = AnsiChar;
    XPLMString = PAnsiChar;
+   PXPLMString = ^XPLMString;
 
 CONST
 {$IFDEF MSWINDOWS}
@@ -226,19 +227,126 @@ CONST
 }
 
 
+CONST
+    { This message is sent to your plugin whenever the user's plane crashes. The }
+    { parameter is ignored.                                                      }
+   XPLM_MSG_PLANE_CRASHED = 101;
 
+    { This message is sent to your plugin whenever a new plane is loaded.  The   }
+    { parameter contains the index number of the plane being loaded; 0 indicates }
+    { the user's plane. The parameter is an integer bit-cast to a pointer.       }
+   XPLM_MSG_PLANE_LOADED = 102;
 
+    { This messages is sent whenever the user's plane is positioned at a new     }
+    { airport. The parameter is ignored.                                         }
+   XPLM_MSG_AIRPORT_LOADED = 103;
 
+    { This message is sent whenever new scenery is loaded.  Use datarefs to      }
+    { determine the new scenery files that were loaded. The parameter is ignored.}
+   XPLM_MSG_SCENERY_LOADED = 104;
 
+    { This message is sent whenever the user adjusts the number of X-Plane       }
+    { aircraft models.  You must use XPLMCountPlanes to find out how many planes }
+    { are now available.  This message will only be sent in XP7 and higher       }
+    { because in XP6 the number of aircraft is not user-adjustable. The parameter}
+    { is ignored.                                                                }
+   XPLM_MSG_AIRPLANE_COUNT_CHANGED = 105;
 
+{$IFDEF XPLM200}
+CONST
+    { This message is sent to your plugin whenever a plane is unloaded.  The     }
+    { parameter contains the index number of the plane being unloaded; 0         }
+    { indicates the user's plane.  The parameter is of type int, bit-cast to a   }
+    { pointer.                                                                   }
+   XPLM_MSG_PLANE_UNLOADED = 106;
+{$ENDIF XPLM200}
 
+{$IFDEF XPLM210}
+CONST
+    { This message is sent to your plugin right before X-Plane writes its        }
+    { preferences file.  You can use this for two purposes: to write your own    }
+    { preferences, and to modify any datarefs to influence preferences output.   }
+    { For example, if your plugin temporarily modifies saved preferences, you can}
+    { put them back to their default values here to avoid having the tweaks be   }
+    { persisted if your plugin is not loaded on the next invocation of X-Plane.  }
+    { The parameter is ignored.                                                  }
+   XPLM_MSG_WILL_WRITE_PREFS = 107;
+{$ENDIF XPLM210}
 
+{$IFDEF XPLM210}
+    { This message is sent to your plugin right after a livery is loaded for an  }
+    { airplane.  You can use this to check the new livery (via datarefs) and     }
+    { react accordingly.  The parameter contains the index number of the aircraft}
+    { whose livery is changing. The parameter is an integer, bit-cast to a       }
+    { pointer.                                                                   }
+   XPLM_MSG_LIVERY_LOADED = 108;
+{$ENDIF XPLM210}
 
+{$IFDEF XPLM301}
+CONST
+    { Sent to your plugin right before X-Plane enters virtual reality mode (at   }
+    { which time any windows that are not positioned in VR mode will no longer be}
+    { visible to the user). The parameter is unused and should be ignored.       }
+   XPLM_MSG_ENTERED_VR  = 109;
+{$ENDIF XPLM301}
 
+{$IFDEF XPLM301}
+    { Sent to your plugin right before X-Plane leaves virtual reality mode (at   }
+    { which time you may want to clean up windows that are positioned in VR      }
+    { mode). The parameter is unused and should be ignored.                      }
+   XPLM_MSG_EXITING_VR  = 110;
+{$ENDIF XPLM301}
 
+{$IFDEF XPLM303}
+CONST
+    { Sent to your plugin if another plugin wants to take over AI planes. If you }
+    { are a synthetic traffic provider,  that probably means a plugin for an     }
+    { online network has connected and wants to supply aircraft flown by real    }
+    { humans and you should cease to provide synthetic traffic. If however you   }
+    { are providing online traffic from real humans,  you probably don't want to }
+    { disconnect, in which case you just ignore this message. The sender is the  }
+    { plugin ID of the plugin asking for control of the planes now. You can use  }
+    { it to find out who is requesting and whether you should yield to them.     }
+    { Synthetic traffic providers should always yield to online networks. The    }
+    { parameter is unused and should be ignored. Do not send this message        }
+    { directly; always use the XPLMAcquirePlanes() call.                         }
+   XPLM_MSG_RELEASE_PLANES = 111;
+{$ENDIF XPLM303}
 
+{$IFDEF XPLM400}
+CONST
+    { Sent to your plugin after FMOD sound banks are loaded. The parameter is the}
+    { XPLMBankID enum in XPLMSound.h, 0 for the master bank and 1 for the radio  }
+    { bank. The bank ID is bit-cast to a pointer.                                }
+   XPLM_MSG_FMOD_BANK_LOADED = 112;
+{$ENDIF XPLM400}
 
+{$IFDEF XPLM400}
+    { Sent to your plugin before FMOD sound banks are unloaded. Any associated   }
+    { resources should be cleaned up at this point. The parameter is the         }
+    { XPLMBankID enum in XPLMSound.h, 0 for the master bank and 1 for the radio  }
+    { bank. The bank ID is bit-cast to a pointer.                                }
+   XPLM_MSG_FMOD_BANK_UNLOADING = 113;
+{$ENDIF XPLM400}
 
+{$IFDEF XPLM400}
+    { Sent to your plugin per-frame (at-most) when/if datarefs are added. It will}
+    { include the new data ref total count so that your plugin can keep a local  }
+    { cache of the total, see what's changed and know which ones to inquire about}
+    { if it cares.                                                               }
+    {                                                                            }
+    { This message is only sent to plugins that enable the                       }
+    { XPLM_WANTS_DATAREF_NOTIFICATIONS feature. The parameteter is a pointer to  }
+    { an integer containing the new number of datarefs.                          }
+   XPLM_MSG_DATAREFS_ADDED = 114;
+{$ENDIF XPLM400}
+
+{$IFDEF XPLM430}
+CONST
+    { A new weather moment has been delivered for display. The parameter is 0 for}
+    { a normal async update, 1 for a sync update.                                }
+   XPLM_MSG_WEATHER_DELIVERED = 115;
+{$ENDIF XPLM430}
 
    {
     XPLMSendMessageToPlugin
@@ -380,7 +488,7 @@ TYPE
     
     This routine calls your enumerator callback once for each feature that this
     running version of X-Plane supports. Use this routine to determine all of
-    the features that X-Plane can support.
+    the features that X-Plane can support. Callbacks are synchronous.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMEnumerateFeatures(

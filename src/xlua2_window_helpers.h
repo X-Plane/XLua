@@ -5,13 +5,10 @@ extern "C" {
     #include "lua.h"
 }
 
-// XLua-2-only convenience constructors/destructors for imgui and browser
-// windows. Both create functions wrap XPLMCreateWindowEx with content-type-
-// specific defaults and pre-wired handlers (imgui input plumbing for one,
-// optional URL load for the other), so script authors cannot accidentally
-// configure a half-set-up window. The raw XPLMCreateWindowEx Lua binding is
-// excluded from the auto-generated XLua glue (see exclude="lua" on
-// XPLMCreateWindowEx in XPLMDisplay.xml).
+// XLua-2-only imgui window helper. XLuaCreateImguiWindow wraps
+// XPLMCreateWindowEx, opening and closing an imgui frame around the Lua draw
+// callback and wiring the input handlers, so scripts write pure widget calls.
+// Non-imgui windows use the raw XPLMCreateWindowEx binding directly.
 //
 // These are declared in XPLMDisplay.xml with lua_impl="external", so they are
 // registered as Lua globals by the generated add_xplm_to_interp(); there is no
@@ -22,9 +19,7 @@ extern "C" {
 
 extern "C" {
     int XLuaCreateImguiWindow(lua_State* L);
-    int XLuaCreateBrowserWindow(lua_State* L);
     int XLuaDestroyImguiWindow(lua_State* L);
-    int XLuaDestroyBrowserWindow(lua_State* L);
 }
 
 #endif

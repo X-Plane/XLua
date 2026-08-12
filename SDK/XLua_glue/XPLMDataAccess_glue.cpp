@@ -48,7 +48,6 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 // Typedefs
 //
 XPLMDataRef* Make_XPLMDataRef(lua_State* L, XPLMDataRef const& init);
-XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
 
 XPLMDataRef* Make_XPLMDataRef(lua_State* L, XPLMDataRef const& init)
@@ -156,7 +155,7 @@ XPLMDataRefInfo_t XPLMDataRefInfo_t_from_table(lua_State* L, int stackpos)
 	lua_getfield(L, stackpos, "owner");
 	if (!lua_isnil(L, -1))
 	{
-		out.owner = static_cast<XPLMPluginID>(xlua_checkuserdata<XPLMPluginID>(L, -1, "Expected XPLMPluginID"));
+		out.owner = static_cast<XPLMPluginID>(luaL_checkinteger(L, -1));
 	}
 	lua_pop(L, 1);
 
@@ -180,7 +179,7 @@ void XPLMDataRefInfo_t_to_table(lua_State* L, XPLMDataRefInfo_t const& src)
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "owner");
-	xlua_pushuserdata<XPLMPluginID>(L, src.owner);
+	lua_pushinteger(L, src.owner);
 	lua_settable(L, -3);
 }
 

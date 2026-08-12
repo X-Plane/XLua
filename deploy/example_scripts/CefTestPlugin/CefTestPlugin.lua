@@ -14,15 +14,6 @@
 -- there's only one SPA, the host language is the variable under test.
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- XPLM enum values (XLua does not auto-register XPLM* constants as Lua globals)
--- ─────────────────────────────────────────────────────────────────────────────
-local XPLM = {
-    WindowDecorationRoundRectangle     = 1, -- xplm_WindowDecorationRoundRectangle
-    CommandBegin                       = 0, -- xplm_CommandBegin
-    FlightLoopPhase_AfterFlightModel   = 1,
-}
-
--- ─────────────────────────────────────────────────────────────────────────────
 -- Minimal JSON encode / decode
 -- ─────────────────────────────────────────────────────────────────────────────
 -- The bridge contract: inJSON arrives as a JSON literal (e.g. `"hello"`,
@@ -30,6 +21,7 @@ local XPLM = {
 -- JSON-parses the return value before resolving the JS Promise, so every
 -- return must be a valid JSON literal too. JS strings arrive
 -- `\uXXXX`-escaped on the way in, so the input is always 7-bit ASCII.
+
 local json = {}
 
 local function json_encode_string(s)
@@ -312,7 +304,10 @@ end
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Navigation callback
 -- ─────────────────────────────────────────────────────────────────────────────
-local function browser_nav_cb(win, url, success, err, refcon)
+-- The SDK splits browser navigation into two callbacks (finished / error) because
+-- that is what the underlying browsers deliver. This plugin still presents the page
+-- a single merged __cef_nav__(url, success, error) so its assertions are unchanged.
+local function report_nav(win, url, success, err)
     log_line("nav " .. (success and "ok " or "FAIL ") .. (url or "")
              .. ((not success and err and err ~= "") and (" error=" .. err) or ""))
 
@@ -322,6 +317,14 @@ local function browser_nav_cb(win, url, success, err, refcon)
         .. (success and "true" or "false") .. ", "
         .. json.encode(err or "") .. ");"
     XPLMWindowInjectScript(win, js_text)
+end
+
+local function browser_load_finished_cb(win, url, refcon)
+    report_nav(win, url, true, nil)
+end
+
+local function browser_load_error_cb(win, url, err, refcon)
+    report_nav(win, url, false, err)
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -466,24 +469,29 @@ local function register_bridge_funcs(w)
 end
 
 local function create_browser_window(left, bottom, right, top, title, url)
-    local w = XLuaCreateBrowserWindow({
+    local w = XPLMCreateWindowEx({
         left   = left,
         bottom = bottom,
         right  = right,
         top    = top,
         visible                  = true,
-        decorateAsFloatingWindow = XPLM.WindowDecorationRoundRectangle,
-        browserNavigationFunc    = browser_nav_cb,
-        url                      = url,
+        decorateAsFloatingWindow = XPLMWindowDecoration.xplm_WindowDecorationRoundRectangle,
+        windowContentType        = XPLMWindowContentType.xplm_WindowContentTypeBrowser,
+        browserLoadFinishedFunc  = browser_load_finished_cb,
+        browserLoadErrorFunc     = browser_load_error_cb,
     })
     if w == nil then
         log_line("create_browser_window FAILED title=" .. (title or ""))
         return nil
     end
     XPLMSetWindowTitle(w, title)
+    -- Register bridge functions before the first navigation: XPLMWindowSetURL
+    -- freezes the browser-function set (a later XPLMWindowAddBrowserFunction is
+    -- rejected via XPLMError).
     register_bridge_funcs(w)
+    XPLMWindowSetURL(w, url)
     log_line('created window ' .. tostring(w) .. ' title="' .. (title or "") .. '"')
-    log_line("set_url " .. (url or ""))   -- mirrors log_set_url; XLuaCreateBrowserWindow handles the actual URL load
+    log_line("set_url " .. (url or ""))
     return w
 end
 
@@ -527,7 +535,7 @@ local function build_cmd_specs()
 end
 
 local function cmd_handler(cmd, phase, refcon)
-    if phase ~= XPLM.CommandBegin then return 0 end
+    if phase ~= XPLMCommandPhase.xplm_CommandBegin then return 0 end
 
     -- Identify which command fired.
     local which_name = nil
@@ -587,13 +595,13 @@ local function cmd_handler(cmd, phase, refcon)
     elseif which_name == "xpsdk/ceftest/destroy_second_window" then
         if g_second_window ~= nil then
             log_line("destroy second_window")
-            XLuaDestroyBrowserWindow(g_second_window)
+            XPLMDestroyWindow(g_second_window)
             g_second_window = nil
         end
     elseif which_name == "xpsdk/ceftest/destroy_mid_load" then
         if g_mid_load_window ~= nil then
             log_line("destroy mid_load_window (replacing)")
-            XLuaDestroyBrowserWindow(g_mid_load_window)
+            XPLMDestroyWindow(g_mid_load_window)
             g_mid_load_window = nil
         end
         g_mid_load_window = create_browser_window(80, 80, 480, 480,
@@ -619,7 +627,7 @@ end
 local function flight_loop_cb(elapsed_since_last, elapsed_since_last_loop, counter, refcon)
     if g_mid_load_window ~= nil and XPLMGetElapsedTime() >= g_mid_load_destroy_at then
         log_line("destroy mid_load_window (deferred from flight loop)")
-        XLuaDestroyBrowserWindow(g_mid_load_window)
+        XPLMDestroyWindow(g_mid_load_window)
         g_mid_load_window = nil
     end
     return -1.0
@@ -657,7 +665,7 @@ function XPluginEnable()
     end
 
     g_flight_loop = XPLMCreateFlightLoop({
-        phase        = XPLM.FlightLoopPhase_AfterFlightModel,
+        phase        = XPLMFlightLoopPhaseType.xplm_FlightLoop_Phase_AfterFlightModel,
         callbackFunc = flight_loop_cb,
     })
     XPLMScheduleFlightLoop(g_flight_loop, -1.0, true)
@@ -697,9 +705,9 @@ end
 
 function XPluginStop()
     log_line("XPluginStop")
-    if g_window         then XLuaDestroyBrowserWindow(g_window)         ; g_window         = nil end
-    if g_second_window  then XLuaDestroyBrowserWindow(g_second_window)  ; g_second_window  = nil end
-    if g_mid_load_window then XLuaDestroyBrowserWindow(g_mid_load_window); g_mid_load_window = nil end
+    if g_window         then XPLMDestroyWindow(g_window)         ; g_window         = nil end
+    if g_second_window  then XPLMDestroyWindow(g_second_window)  ; g_second_window  = nil end
+    if g_mid_load_window then XPLMDestroyWindow(g_mid_load_window); g_mid_load_window = nil end
 end
 
 function XPluginReceiveMessage(from, msg, param)

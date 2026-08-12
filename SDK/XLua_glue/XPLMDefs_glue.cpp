@@ -44,62 +44,7 @@ void XPLMFixedString150_t_to_table(lua_State* L, XPLMFixedString150_t const& src
 //
 // Typedefs
 //
-XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init);
 
-
-XPLMPluginID* Make_XPLMPluginID(lua_State* L, XPLMPluginID const& init)
-{
-	XPLMPluginID* ud = static_cast<XPLMPluginID*>(lua_newuserdata(L, sizeof(XPLMPluginID)));
-	memcpy(ud, &init, sizeof(XPLMPluginID));
-
-	luaL_getmetatable(L, "_mt_XPLMPluginID");
-	lua_setmetatable(L, -2);
-
-	return ud;
-}
-
-static int _XPLMPluginID_Constructor(lua_State* L)
-{
-	XPLMPluginID defval = XPLM_NO_PLUGIN_ID;				// TODO: Example only! Do we need a 'defaultvalue' attribute somewhere?
-	if (lua_gettop(L) > 0)
-	{
-		defval = luaL_checkinteger(L, 1);
-	}
-
-	Make_XPLMPluginID(L, defval);
-	return 1;
-}
-
-static int _XPLMPluginID_compare(lua_State* L)
-{
-	XPLMPluginID const test1 = xlua_checkuserdata<XPLMPluginID>(L, 1, "Expected XPLMPluginID");
-	XPLMPluginID const test2 = xlua_checkuserdata<XPLMPluginID>(L, 2, "Expected XPLMPluginID");
-
-	lua_pushboolean(L, test1 == test2);
-	return 1;
-}
-
-void RegType_XPLMPluginID(lua_State* L)
-{
-	luaL_newmetatable(L, "_mt_XPLMPluginID");
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -2, "__index");
-
-	lua_pushstring(L, "XPLMPluginID");
-	lua_setfield(L, -2, "__name");
-
-#ifdef HAVE_XPLMPluginID_tostring
-	lua_pushcfunction(L, _XPLMPluginID_tostring);
-	lua_setfield(L, -2, "__tostring");
-#endif
-
-	lua_pushcfunction(L, _XPLMPluginID_compare);
-	lua_setfield(L, -2, "__eq");
-
-	lua_register(L, "XPLMPluginID", _XPLMPluginID_Constructor);
-
-	lua_pop(L, 1);
-}
 
 void RegEnum_XPLMKeyFlags(lua_State* L)
 {
@@ -114,6 +59,8 @@ void RegEnum_XPLMKeyFlags(lua_State* L)
 	lua_setfield(L, -2, "xplm_DownFlag");
 	lua_pushinteger(L, 16);
 	lua_setfield(L, -2, "xplm_UpFlag");
+	lua_pushinteger(L, 32);
+	lua_setfield(L, -2, "xplm_CapsLockFlag");
 	lua_setglobal(L, "XPLMKeyFlags");
 }
 
@@ -493,7 +440,7 @@ void RegDefines_XPLMDefs(lua_State* L)
 	lua_setglobal(L, "XPLM_VK_Y");
 	lua_pushinteger(L, 0x5A);
 	lua_setglobal(L, "XPLM_VK_Z");
-	lua_pushinteger(L, (430));
+	lua_pushinteger(L, (440));
 	lua_setglobal(L, "kXPLM_Version");
 }
 

@@ -128,7 +128,7 @@ local XPLMProbeResult = {
 ---@field heading number
 ---@field roll number
 
---- You provide this callback when loading an object asynchronously; it will be called once the object is loaded. Your refcon is passed back. The object ref passed in is the newly loaded object (ready for use) or NULL if an error occured. If your plugin is disabled, this callback will be delivered as soon as the plugin is re-enabled. If your plugin is unloaded before this callback is ever called, the SDK will release the object handle for you.
+--- You provide this callback when loading an object asynchronously; it will be called once the object is loaded. Your refcon is passed back. The object ref passed in is the newly loaded object (ready for use) or NULL if an error occured. It will not be called more than once per object. If your plugin is disabled, this callback will be delivered as soon as the plugin is re-enabled. If your plugin is unloaded before this callback is ever called, the SDK will release the object handle for you.
 ---@alias XPLMObjectLoaded_f fun(inObject: XPLMObjectRef, inRefcon: any)
 
 ---@class _G
@@ -180,6 +180,9 @@ local XPLMProbeResult = {
 --- The latitude and longitude parameters specify the location the object will be used. The library system
 --- allows for scenery packages to only provide objects to certain local locations. Only objects that are
 --- allowed at the latitude/longitude you provide will be returned.
+---
+--- The enumerator is fully synchronous: it is called once per matching object, and all calls complete before
+--- XPLMLookupObjects returns.
 ---
 ---@field XPLMLookupObjects fun(inPath: string, inLatitude: number, inLongitude: number, enumerator: XPLMLibraryEnumerator_f, ref: any): integer
 

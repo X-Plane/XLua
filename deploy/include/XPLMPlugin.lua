@@ -213,6 +213,12 @@ XPLM_MSG_FMOD_BANK_UNLOADING = 113
 ]]--
 XPLM_MSG_DATAREFS_ADDED = 114
 
+--[[
+   A new weather moment has been delivered for display. The parameter is 0 for a
+   normal async update, 1 for a sync update.
+]]--
+XPLM_MSG_WEATHER_DELIVERED = 115
+
 ---@class _G
 --- This function sends a message to another plug-in or X-Plane.  Pass XPLM_NO_PLUGIN_ID to broadcast
 --- to all plug-ins.  Only enabled plug-ins with a message receive function receive the message.
@@ -241,7 +247,7 @@ XPLM_MSG_DATAREFS_ADDED = 114
 
 ---@class _G
 --- This routine calls your enumerator callback once for each feature that this running version of X-Plane supports.
---- Use this routine to determine all of the features that X-Plane can support.
+--- Use this routine to determine all of the features that X-Plane can support. Callbacks are synchronous.
 ---
 ---@field XPLMEnumerateFeatures fun(inEnumerator: XPLMFeatureEnumerator_f, inRef: any)
 

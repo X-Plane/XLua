@@ -59,6 +59,13 @@ public:
     void OnKey(char key, XPLMKeyFlags flags, char vkey, int losing_focus = 0);
 
 private:
+    // Poll X-Plane's live modifier-key state (XPLMGetModifierKeys, XPLM440) and
+    // feed it to ImGui. Must be called with ctx_ already current. The mouse
+    // callbacks call this *before* their button/wheel event so the modifier is
+    // queued ahead of the click — otherwise modifier state is only fresh while
+    // a text widget holds keyboard focus (see OnKey).
+    void PushModifiers();
+
     ImGuiContext* ctx_       = nullptr;
     void*         font_tex_  = nullptr;   // XPLM texture handle
     XPLMWindowID  cur_win_   = nullptr;   // window passed to most recent BeginFrame

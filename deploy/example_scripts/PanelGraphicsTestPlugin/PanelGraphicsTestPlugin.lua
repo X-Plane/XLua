@@ -271,11 +271,6 @@ local function screen_draw_cb(ref)
 		XPLMPolygon(XPLMMakeColor(1, 1, 0, 1), square, 5)
 
 		font_y = font_y - 100.0
-		for i=1,#square do square[i].y = square[i].y - 100.0 end
-		XPLMFontDrawString(s_font, XPLMMakeColor(1, 0, 0, 1), 12, 200, font_y, "XPLMPolygonWithWidth small square:", XPLMJustification_t.xplm_JustLeft)
-		XPLMPolygonWithWidth(XPLMMakeColor(1, 1, 0, 1), 10.0, square, 5)
-
-		font_y = font_y - 100.0
 		local squareColor = {
 			{ x = 200.0, y = square[1].y - 100, color = XPLMMakeColor(1, 0, 0, 1) },
 			{ x = 200.0, y = square[2].y - 100, color = XPLMMakeColor(0, 1, 0, 1) },
@@ -285,11 +280,6 @@ local function screen_draw_cb(ref)
 		}
 		XPLMFontDrawString(s_font, XPLMMakeColor(1, 0, 0, 1), 12, 200, font_y, "XPLMPolygonc small square:", XPLMJustification_t.xplm_JustLeft)
 		XPLMPolygonc(squareColor, 5)
-
-		font_y = font_y - 100.0
-		for i=1,#squareColor do squareColor[i].y = squareColor[i].y - 100.0 end
-		XPLMFontDrawString(s_font, XPLMMakeColor(1, 0, 0, 1), 12, 200, font_y, "XPLMPolygoncWithWidth small square:", XPLMJustification_t.xplm_JustLeft)
-		XPLMPolygoncWithWidth(20.0, squareColor, 5)
 
 	elseif s_current_tab == button_id.quadstrips then
 		local square = {
@@ -304,11 +294,6 @@ local function screen_draw_cb(ref)
 		XPLMQuadstrip(XPLMMakeColor(1, 1, 0, 1), square, 4)
 
 		font_y = font_y - 100.0
-		for i=1,#square do square[i].y = square[i].y - 100.0 end
-		XPLMFontDrawString(s_font, XPLMMakeColor(1, 0, 0, 1), 12, 200, font_y, "XPLMQuadstripWithWidth small square:", XPLMJustification_t.xplm_JustLeft)
-		XPLMQuadstripWithWidth(XPLMMakeColor(1, 1, 0, 1), 10.0, square, 4)
-
-		font_y = font_y - 100.0
 		local squareColor = {
 			{ x = 200.0, y = square[1].y - 100, color = XPLMMakeColor(1, 0, 0, 1) },
 			{ x = 200.0, y = square[2].y - 100, color = XPLMMakeColor(0, 1, 0, 1) },
@@ -317,11 +302,6 @@ local function screen_draw_cb(ref)
 		}
 		XPLMFontDrawString(s_font, XPLMMakeColor(1, 0, 0, 1), 12, 200, font_y, "XPLMQuadstripc small square:", XPLMJustification_t.xplm_JustLeft)
 		XPLMQuadstripc(squareColor, 4)
-
-		font_y = font_y - 100.0
-		for i=1,#squareColor do squareColor[i].y = squareColor[i].y - 100.0 end
-		XPLMFontDrawString(s_font, XPLMMakeColor(1, 0, 0, 1), 12, 200, font_y, "XPLMQuadstripcWithWidth small square:", XPLMJustification_t.xplm_JustLeft)
-		XPLMQuadstripcWithWidth(20.0, squareColor, 4)
 
 	elseif s_current_tab == button_id.fonts then
 		local function create_box(x, y, width, height)
@@ -529,10 +509,10 @@ local function screen_draw_cb(ref)
 			{ x = c_screen_width, y = c_screen_height / 2 }
 		}
 
-		XPLMScissorSet(scissor_top, scissor_left, scissor_bottom, scissor_right)
+		XPLMScissorSet(scissor_left, scissor_top, scissor_right, scissor_bottom)
 
 		if shrink then
-			XPLMScissorShrink(scissor_top - 50.0, scissor_left + 50.0, scissor_bottom + 50.0, scissor_right - 50.0)
+			XPLMScissorIntersect(scissor_left + 50.0, scissor_top - 50.0, scissor_right - 50.0, scissor_bottom + 50.0)
 		end
 
 		XPLMLinesWithWidth(XPLMMakeColor(1, 1, 1, 0.5), c_screen_height, line, 2)
@@ -713,7 +693,13 @@ local function screen_draw_cb(ref)
 			s_map_layers_pressed = pressed_this_frame
 
 			-- Draw map with current layer flags
-			XPLMMapDisplayDrawIn(s_map, s_map_layers, 400, c_screen_height - 50, 950, 50, nil)
+			XPLMMapDisplayDrawIn(s_map, {
+				layers = s_map_layers,
+				left   = 400,
+				top    = c_screen_height - 50,
+				right  = 950,
+				bottom = 50
+			}, nil)
 		else
 			XPLMFontDrawString(s_font, XPLMMakeColor(1, 0, 0, 1), 14, 200, c_screen_height - 60.0, "Map not available", XPLMJustification_t.xplm_JustLeft)
 		end
@@ -778,14 +764,16 @@ function XPluginEnable()
 	XPLMAvionicsSetTouchEventHandler(s_avionic, touch_event_cb)
 
 	s_svt = XPLMCreateSVTDisplay({
-		features   = XPLMSVTFeatures.xplm_SVT_All,
-		pilotIndex = 0
+		pilotIndex      = 0,
+		pixelsPerDegree = 14		-- What the G1000 PFD uses.
 	})
 
 	-- Override display; override values are passed per draw call via XPLMSVTDisplayDrawIn.
+	-- Half the scale, so the two SVT tabs draw the same world at visibly different fields
+	-- of view - if they ever look alike, pixelsPerDegree stopped being honored.
 	s_svt_overrides = XPLMCreateSVTDisplay({
-		features   = XPLMSVTFeatures.xplm_SVT_All,
-		pilotIndex = 0
+		pilotIndex      = 0,
+		pixelsPerDegree = 7
 	})
 
 	s_map = XPLMCreateMapDisplay({ pilotIndex = 0 })
