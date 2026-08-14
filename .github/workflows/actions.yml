@@ -32,9 +32,11 @@ jobs:
   build-mac:
     runs-on: macos-15
     env:
-      APPLE_ID: ${{ secrets.APPLE_ID }}
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      # Notarization auths with an App Store Connect API key. Unlike an Apple ID +
+      # app-specific password, the key survives Apple ID password rotations.
+      APPLE_NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY }}
+      APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+      APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
 
     steps:
       - name: Checkout
@@ -63,12 +65,14 @@ jobs:
       - name: Notarize
         run: |
           zip -r xlua_mac.zip build/mac_x64/mac.xpl
+          printf '%s' "${APPLE_NOTARY_KEY}" > "${RUNNER_TEMP}/notary_key.p8"
           xcrun notarytool submit xlua_mac.zip \
-              --apple-id "${APPLE_ID}" \
-              --team-id "${APPLE_TEAM_ID}" \
-              --password "${APP_SPECIFIC_PASSWORD}" \
+              --key "${RUNNER_TEMP}/notary_key.p8" \
+              --key-id "${APPLE_NOTARY_KEY_ID}" \
+              --issuer "${APPLE_NOTARY_ISSUER_ID}" \
               --wait \
               --timeout 10m
+          rm -f "${RUNNER_TEMP}/notary_key.p8"
 
       - name: Archive production artifacts
         uses: actions/upload-artifact@v6
