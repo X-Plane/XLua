@@ -151,8 +151,15 @@ they were added.
 
 - ttf_path: a file system path to a .ttf or .otf font file.
 
+Returns 1 if the face was loaded and added, or 0 if it could not be. When
+this returns 0 the font is left exactly as it was, so you can try another
+path, and a message explaining what went wrong is sent to your error
+callback (see XPLMSetErrorCallback) and written to Log.txt.
+
+Drawing with a font that has no faces draws nothing; it is not an error.
+
 ```cpp
-XPLM_API void       XPLMFontAddFace(
+XPLM_API int        XPLMFontAddFace(
                          XPLMFontHandle       font,
                          char const*          ttf_path
                     );

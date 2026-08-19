@@ -91,7 +91,7 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateInstance(
                                         obj                 : XPLMObjectRef;
-                                        datarefs            : XPLMString) : XPLMInstanceRef;
+                                        datarefs            : PXPLMString) : XPLMInstanceRef;
     cdecl; external XPLM_DLL;
 
 {$IFDEF XPLM420}

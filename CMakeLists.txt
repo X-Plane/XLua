@@ -23,6 +23,7 @@ add_library(xlua2 MODULE
     src/lua_helpers.cpp
 	src/shared_lua_helpers.cpp
     src/xpcommands.cpp
+    src/xlua_command_bindings.cpp
     src/xpdatarefs.cpp
     src/xpfuncs.cpp
 	src/shared_xpfuncs.cpp

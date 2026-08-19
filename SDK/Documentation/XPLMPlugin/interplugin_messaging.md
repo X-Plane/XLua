@@ -256,6 +256,20 @@ is a pointer to an integer containing the new number of datarefs.
 
 ---
 
+<div class="sym-block sym-event" data-name="XPLM_MSG_WEATHER_DELIVERED" data-type="event" markdown="1">
+
+## XPLM_MSG_WEATHER_DELIVERED { .symbol-title }
+
+<span class="sym-badge badge-event">event</span> <span class="sym-badge badge-version">XPLM430</span>
+
+A new weather moment has been delivered for display. The parameter is 0 for a normal async update, 1 for a sync update.
+
+`#define XPLM_MSG_WEATHER_DELIVERED 115`
+
+</div>
+
+---
+
 <div class="sym-block sym-function" data-name="XPLMSendMessageToPlugin" data-type="function" markdown="1">
 
 ## XPLMSendMessageToPlugin { .symbol-title }

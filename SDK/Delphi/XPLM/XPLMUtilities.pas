@@ -194,7 +194,7 @@ TYPE
                                         inFirstReturn       : Integer;
                                         outFileNames        : XPLMString;
                                         inFileNameBufSize   : Integer;
-                                        outIndices          : XPLMString;    { Can be nil }
+                                        outIndices          : PXPLMString;    { Can be nil }
                                         inIndexCount        : Integer;
                                         outTotalFiles       : PInteger;    { Can be nil }
                                         outReturnedFiles    : PInteger) : Integer;    { Can be nil }
@@ -463,10 +463,13 @@ TYPE
     performance. When you install an error callback, you will receive calls due
     to certain plugin errors, such as passing bad parameters or incorrect data.
     
-    Important: the error callback determines *programming* errors, e.g. bad API
+    Important: the error callback reports *programming* errors, e.g. bad API
     parameters. Every error that is returned by the error callback represents a
-    mistake in your plugin that you should fix. Error callbacks are not used to
-    report expected run-time problems (e.g. disk I/O errors).
+    mistake in your plugin that you should fix. A few APIs also use it to
+    explain why a call that can legitimately fail did fail - for example,
+    XPLMFontAddFace reports the reason it could not load a font file - but the
+    error callback is not a general channel for run-time conditions your plugin
+    is expected to handle.
     
     The intention is for you to install the error callback during debug
     sections and put a break-point inside your callback. This will cause you to

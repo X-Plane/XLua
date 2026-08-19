@@ -325,7 +325,7 @@ TYPE
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMAcquirePlanes(
-                                        inAircraft          : XPLMString;    { Can be nil }
+                                        inAircraft          : PXPLMString;    { Can be nil }
                                         inCallback          : XPLMPlanesAvailable_f;    { Can be nil }
                                         inRefcon            : pointer) : Integer;    { Can be nil }
     cdecl; external XPLM_DLL;

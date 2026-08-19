@@ -9,7 +9,8 @@ uses the selected AHRS source for attitude.
 Create an SVT display with XPLMCreateSVTDisplay and draw it with
 XPLMSVTDisplayDrawIn. Each display instance manages its own terrain tile loading
 and GPU state, so you can have multiple independent SVT views (e.g. pilot and
-copilot PFDs with different feature flags).
+copilot PFDs at different scales). Which visual layers are drawn is chosen per
+draw call, not per display.
 
 SVT rendering works on any aircraft, regardless of whether the stock cockpit has
 a G1000 or other SVT-capable avionics installed.
@@ -58,8 +59,8 @@ plugins.
 ```cpp
 typedef struct {
      int                       structSize;
-     XPLMSVTFeatures           features;
      int                       pilotIndex;
+     float                     pixelsPerDegree;
 } XPLMCreateSVT_t;
 ```
 
@@ -93,6 +94,17 @@ typedef void * XPLMSVTDisplayRef;
 This function creates a new SVT display instance. The display begins loading
 terrain tiles for the current aircraft position immediately. You can draw it
 as soon as tiles are available; before that, the draw call is a no-op.
+
+The pixelsPerDegree scale and the rectangle you pass to XPLMSVTDisplayDrawIn
+together determine the field of view: the rectangle is simply the scale applied
+to the view's angular extent. So drawing into a bigger rectangle at the same
+scale shows _more_ of the world at the same magnification rather than zooming
+in, and to zoom you change the scale, not the rectangle. Pick the same scale
+your pitch ladder uses and the 3-d horizon will line up with your artificial
+horizon.
+
+Which visual layers are rendered is a property of the draw call, not of the
+display - see XPLMSVTDisplayDrawIn.
 
 The returned handle must be destroyed with XPLMDestroySVTDisplay when no
 longer needed. Handles are automatically destroyed when the owning plugin is

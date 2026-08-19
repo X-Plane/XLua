@@ -70,9 +70,11 @@ XplmImguiContext* GetOrCreateImguiState(lua_State* L) {
     return st;
 }
 
-// Returns the per-lua_State context if a frame has been opened on it; nullptr
-// otherwise. Used by input dispatchers — they should not lazily create a
-// context for input arriving before the first frame.
+// Returns the per-lua_State context if one has been created on it; nullptr
+// otherwise. Used by the frame primitives and the input dispatchers — neither
+// may lazily create a context, the former because creating one calls
+// XPLMCreateTexture (illegal mid-draw), the latter because input can arrive
+// before the window that owns the context exists.
 XplmImguiContext* GetExistingImguiState(lua_State* L) {
     lua_pushstring(L, kImguiStateKey);
     lua_gettable(L, LUA_REGISTRYINDEX);
@@ -84,12 +86,21 @@ XplmImguiContext* GetExistingImguiState(lua_State* L) {
 
 } // anonymous namespace
 
-void xplm_imgui_begin_frame(lua_State* L, int w, int h, XPLMWindowID win) {
-    GetOrCreateImguiState(L)->BeginFrame(w, h, win);
+void xplm_imgui_ensure_context(lua_State* L) {
+    GetOrCreateImguiState(L);
+}
+
+bool xplm_imgui_begin_frame(lua_State* L, int w, int h, XPLMWindowID win) {
+    auto* st = GetExistingImguiState(L);
+    if (st == nullptr) return false;
+    st->BeginFrame(w, h, win);
+    return true;
 }
 
 void xplm_imgui_end_frame(lua_State* L) {
-    GetOrCreateImguiState(L)->EndFrame();
+    auto* st = GetExistingImguiState(L);
+    if (st == nullptr) return;
+    st->EndFrame();
 }
 
 int xplm_imgui_handle_mouse_click(XPLMWindowID win, int x, int y,

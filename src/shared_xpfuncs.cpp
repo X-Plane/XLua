@@ -149,7 +149,10 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 	// callbacks (timers, custom datarefs/commands, windows) are always reached
 	// through a live shared_ptr held by their owner, are never in the registry,
 	// and so must skip this check.
-	if (cb->get_capture() != notify_cb_t::kNeverPersist && !xlua_is_callback_valid(cb))
+	// Registry membership FIRST: it hashes the pointer without touching the pointee,
+	// so it is safe on a stale refcon. get_capture() dereferences, so testing it
+	// first would read freed memory before the check meant to reject it could run.
+	if (!xlua_is_callback_valid(cb) && cb->get_capture() != notify_cb_t::kNeverPersist)
 	{
 		log_message(nullptr, "ERROR: A closure '%s' was called which was invalid. This is a plugin bug, not a script bug. Please report it.\n",
 					callbackKey.c_str());

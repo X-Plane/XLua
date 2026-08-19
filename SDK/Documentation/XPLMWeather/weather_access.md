@@ -98,6 +98,20 @@ Use this value to designate a wind layer as undefined when setting.
 
 ---
 
+<div class="sym-block sym-define" data-name="XPLM_TEMP_UNDEFINED_LAYER" data-type="define" markdown="1">
+
+## XPLM_TEMP_UNDEFINED_LAYER { .symbol-title }
+
+<span class="sym-badge badge-define">define</span> <span class="sym-badge badge-version">XPLM440</span>
+
+Use this value to designate a temperature-related layer as undefined when setting.
+
+`#define XPLM_TEMP_UNDEFINED_LAYER -274`
+
+</div>
+
+---
+
 <div class="sym-block sym-define" data-name="XPLM_DEFAULT_WXR_RADIUS_NM" data-type="define" markdown="1">
 
 ## XPLM_DEFAULT_WXR_RADIUS_NM { .symbol-title }
@@ -164,6 +178,7 @@ typedef struct {
      float                     age;
      float                     radius_nm;
      float                     max_altitude_msl_ft;
+     float                     snow_coverage_pct;
 } XPLMWeatherInfo_t;
 ```
 
@@ -203,6 +218,9 @@ XPLM_API void       XPLMGetMETARForAirport(
 Get the current weather conditions at a given location. Note that this does not work world-wide, only within the
 surrounding region. Return true if detailed weather (i.e. an airport-specific METAR) was found, false if not. In both cases, the structure
 will contain the best data available.
+
+IMPORTANT: When you read the weather at a given point you are reading the OUTPUT from the internal weather simulation, the exact details of
+which are undocumented. Never expect to read the exact numbers you may have set, even at the same coordinates.
 
 This call is not intended to be used per-frame. It should be called only during the pre-flight loop callback.
 
@@ -286,8 +304,12 @@ XPLMSetWeatherAtAirport, and notes on timing in XPLMEndWeatherUpdate.
 
 The ground altitude passed into this function call does not set the area of
 influence of this weather vertically; the weather takes effect from 0 MSL
-ground up to the passed in max_altitude_msl_ft  The ground altitude passed in is the elevation of the
+ground up to the passed-in max_altitude_msl_ft.  The ground altitude passed in is the elevation of the
 reporting station to calibrate QNH.
+
+IMPORTANT: As with all calls to set weather, you are setting one aspect to be used in a much wider atmospheric simulation. Never
+expect to get the same numbers back from a read, even at the same locations, since the XPLMGetWeather... calls all read
+the simulated state, not any particular input. This applies equally to static and real-weather modes.
 
 This call is not intended to be used per-frame. It should be called only during the pre-flight loop callback.
 
@@ -339,15 +361,21 @@ Some notes on individual fields:
   - pressure_alt should be QNH as reported by a station at the specified airport, or 0 if you are passing sealevel pressure in 'pressure_sl' instead.
   - pressure_sl is ignored if pressure_alt is given.
   - wind_dir_alt, wind_spd_alt, turbulence_alt, wave_speed, wave_length are derived from other data and are UNUSED when setting weather.
-  - Temperatures can be given either as a single temperature at the ground altitude (temperature_alt) OR, if the struct is V2 or higher, as an array of temperatures aloft (temp_layers).
+  - Temperatures can be given EITHER as a single temperature at the ground altitude (temperature_alt) OR, if the struct is V2 or higher, as an array of temperatures aloft (temp_layers).
     If you pass a value for temperature_alt higher than -273.15 (absolute zero), that will be used with the altitude value to calculate an offset from ISA temperature at all altitudes.
     Any layer in temp_layers for which you set the temperature higher than -273.15 (absolute zero) will use that temperature and all others will use the existing value for the location,
     or the calculated values from temperature_alt if you also passed that. It is advised to use a lower value than exactly -273.15 to avoid floating-point precision errors.
-	These calculated temperatures during a read are also affected by the troposphere altitude and temperature, and the vertical radius of effect. Do not expect to get the exact values you set.
+	These calculated temperatures during a read are also affected by the troposphere altitude and temperature, and the vertical radius of effect.
+	If you set both temperature_alt (V1 single value) and temp_layers (V2 per-layer value) then the more detailed V2 data, if valid, will override the values calculated from the older,
+	ground-level only temperature value.
   - The same rules apply to dewpoint temperatures; either a single value at ground level in 'dewpoint_alt', or per-layer values in 'dewp_layers'.
   - The troposphere altitude and temperature will be derived from existing data if you pass 0 or lower for troposphere_alt. Both altitude and temperature may be clamped to internally-defined ranges.
   - When setting both temperature and dewpoint from a single value (temperature_alt/dewpoint_alt), the rest of the atmosphere will be
     graded to fit between the given values and the troposphere.
+
+IMPORTANT: As with all calls to set weather, you are setting one aspect to be used in a much wider atmospheric simulation. Never
+expect to get the same numbers back from a read, even at the same locations, since the XPLMGetWeather... calls all read
+the simulated state, not any particular input. This applies equally to static and real-weather modes.
 
 This call is not intended to be used per-frame. It should be called only during the pre-flight loop callback.
 

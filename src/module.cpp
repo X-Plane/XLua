@@ -12,6 +12,9 @@
 #include "xpfuncs.h"
 #include "shared_xpfuncs.h"
 #include "lua_helpers.h"
+#if !MOBILE
+	#include "xlua_command_bindings.h"
+#endif
 
 #include <XPLMUtilities.h>
 
@@ -342,9 +345,9 @@ module::module(
 		add_xplm_to_interp(m_interp);
 		LoadImguiBindings(m_interp);
 		register_xlua_imgui_text_inputs(m_interp);
-		// XLuaCreate/DestroyImguiWindow + XLuaCreate/DestroyBrowserWindow are now
-		// registered by add_xplm_to_interp() above (declared in XPLMDisplay.xml
-		// with lua_impl="external"), so the old register_xlua2_window_helpers()
+		// XLuaCreate/DestroyImguiWindow are now registered by
+		// add_xplm_to_interp() above (declared in XPLMDisplay.xml with
+		// lua_impl="external"), so the old register_xlua2_window_helpers()
 		// call has been removed. imgui text inputs stay hand-registered because
 		// their imgui table is created by LoadImguiBindings(), after the
 		// generated registration runs.
@@ -639,6 +642,12 @@ void module::shutdown_lua(void)
 			_XPluginDisable();
 		}
 		_XPluginStop();
+
+#if !MOBILE
+		// Drop this interpreter's command handlers while it is still open. Must precede
+		// xlua_callback_cleanup, which frees the notify_cb_t records XPLM holds as their refcons.
+		xlua_command_bindings_cleanup(m_interp);
+#endif
 
 		// Ditch all the callbacks now, during shutdown and _after_ any disable/stop hooks in case the user decides
 		// to do anything funny like register callbacks.

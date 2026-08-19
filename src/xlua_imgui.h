@@ -22,10 +22,20 @@ extern "C" {
 // taking that fact into account.)
 void LoadImguiBindings(lua_State* L);
 
+// Creates the per-VM imgui context (and with it the font atlas texture) on the
+// given state if it doesn't exist yet.  MUST NOT be called from inside a panel
+// graphics draw callback: the context constructor calls XPLMCreateTexture, and
+// panel graphics forbids creating or destroying a draw-call texture while
+// drawing.  XLuaCreateImguiWindow calls this at window creation time for exactly
+// that reason - do not make it lazy again.
+void xplm_imgui_ensure_context(lua_State* L);
+
 // Frame primitives — wrap XplmImguiContext::BeginFrame / EndFrame, looking
-// the per-VM context out of the Lua registry on the given state. Driven by
-// XLuaCreateImguiWindow's auto-framing draw wrapper; not exposed to Lua.
-void xplm_imgui_begin_frame(lua_State* L, int w, int h, XPLMWindowID win);
+// the per-VM context out of the Lua registry on the given state.  Neither one
+// creates the context (see above); begin returns false when there isn't one, in
+// which case the caller must skip the whole frame, end_frame included.  Driven
+// by XLuaCreateImguiWindow's auto-framing draw wrapper; not exposed to Lua.
+bool xplm_imgui_begin_frame(lua_State* L, int w, int h, XPLMWindowID win);
 void xplm_imgui_end_frame  (lua_State* L);
 
 // Adds imgui.InputText / InputTextWithHint / InputTextMultiline to the global
