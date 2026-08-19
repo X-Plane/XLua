@@ -12,16 +12,19 @@
 #include "xpfuncs.h"
 #include "shared_xpfuncs.h"
 #include "lua_helpers.h"
-#if !MOBILE
-	#include "xlua_command_bindings.h"
-#endif
+#include "xlua_command_bindings.h"
 
 #include <XPLMUtilities.h>
 
+#include <algorithm>
 #include <regex>
 #include <cassert>
 #include <string>
 #include <string_view>
+
+// Registers the generated XPLM lua glue (XLua_Register_glue.cpp) — the full
+// SDK surface on desktop, the mobile_compatible subset on mobile.
+void add_xplm_to_interp(lua_State* L);
 
 #if MOBILE
 	#include "xmap.h"
@@ -42,8 +45,6 @@
 		#include "../luajit/src/lualib.h"
 	}
 
-	void add_xplm_to_interp(lua_State* L);
-
 	class	xmap_class {
 	public:
 		xmap_class(std::filesystem::path const& in_file_name);
@@ -57,8 +58,6 @@
 		size_t		 m_size;
 		void		 (*m_deleter)(void *);
 	};
-
-	void add_xplm_to_interp(lua_State* L);
 #endif
 
 version_triplet sPluginVersion = { -1, -1, -1 };
@@ -279,6 +278,62 @@ static int store_require_searcher(lua_State * L)
 }
 #endif
 
+#if MOBILE
+// require() on mobile: the stock lua-path searcher fopens its candidates, which
+// cannot see mobile asset paths (iOS's CWD is not the bundle root, Android
+// assets live in the APK). This searcher makes the same package.path templates
+// work through the sim's xmap file layer instead. Installed at
+// package.loaders[2] — after preload, ahead of the stock searcher — in the v2
+// interp setup below.
+static int xmap_lua_path_searcher(lua_State* L)
+{
+	std::string mod_file = luaL_checkstring(L, 1);
+	for (auto& c : mod_file)
+		if (c == '.')
+			c = '/';
+
+	lua_getfield(L, LUA_GLOBALSINDEX, "package");
+	lua_getfield(L, -1, "path");
+	std::string search_path = lua_tostring(L, -1);
+	lua_pop(L, 2);
+
+	std::string misses;
+	size_t tpl_start = 0;
+	while (tpl_start <= search_path.size())
+	{
+		size_t tpl_end = search_path.find(';', tpl_start);
+		if (tpl_end == std::string::npos)
+			tpl_end = search_path.size();
+		std::string candidate = search_path.substr(tpl_start, tpl_end - tpl_start);
+		tpl_start = tpl_end + 1;
+		if (candidate.empty())
+			continue;
+
+		for (size_t q = candidate.find('?'); q != std::string::npos; q = candidate.find('?', q + mod_file.size()))
+			candidate.replace(q, 1, mod_file);
+
+		// Purely lexical ".."-folding (no file-system access): the include
+		// template contains "../.." which the Android in-APK asset lookup
+		// won't resolve on its own.
+		candidate = std::filesystem::path(candidate).lexically_normal().generic_string();
+
+		xmap_class chunk(candidate);
+		if (chunk.exists())
+		{
+			// A module we found but that fails to parse is an error to report,
+			// not a miss to keep searching past.
+			if (luaL_loadbuffer(L, reinterpret_cast<char const*>(chunk.begin()), chunk.size(), ("@" + candidate).c_str()) != 0)
+				lua_error(L);
+			return 1;
+		}
+		misses += "\n\tno xmap file '" + candidate + "'";
+	}
+
+	lua_pushstring(L, misses.c_str());
+	return 1;
+}
+#endif
+
 module::module(
 	std::filesystem::path const& in_module_path,
 	std::filesystem::path const& in_init_script,
@@ -302,7 +357,7 @@ module::module(
 
 	static const std::regex reHashbang(R"(^--\[\[\s*XLua\s+((?:\d+\.?){1,3})\s*\]\])");
 	std::smatch hb_match;
-	std::string hb_view(reinterpret_cast<char const*>(lmod.begin()), 128);
+	std::string hb_view(reinterpret_cast<char const*>(lmod.begin()), std::min<size_t>(lmod.size(), 128));
 	if (std::regex_search(hb_view, hb_match, reHashbang))
 	{
 		if (!m_xlua_compat.init_from_string(hb_match[1].str()))
@@ -338,11 +393,13 @@ module::module(
 	lua_setglobal(m_interp, "XLuaPluginVersion");
 
 	add_xlua_funcs_to_interp(m_interp, m_xlua_compat[0]);
-#if !MOBILE
 	if (m_xlua_compat[0] >= 2)
 	{
-		// XLua 2.x functions.
+		// XLua 2.x functions. On mobile the generated glue registers the
+		// mobile_compatible subset of the SDK; imgui and browser windows are
+		// desktop-only.
 		add_xplm_to_interp(m_interp);
+#if !MOBILE
 		LoadImguiBindings(m_interp);
 		register_xlua_imgui_text_inputs(m_interp);
 		// XLuaCreate/DestroyImguiWindow are now registered by
@@ -351,8 +408,34 @@ module::module(
 		// call has been removed. imgui text inputs stay hand-registered because
 		// their imgui table is created by LoadImguiBindings(), after the
 		// generated registration runs.
-	}
+#else
+		// Mobile doesn't ship the generated include/XPLM*.lua headers — they are
+		// EmmyLua doc stubs for IDE completion only; every binding they describe
+		// was just registered natively by add_xplm_to_interp(). Two searchers
+		// keep the desktop require() conventions working:
+		//   - at loaders[2], the xmap-backed path searcher so real modules load
+		//     through the sim file layer (the stock searcher fopens and cannot
+		//     see mobile asset paths);
+		//   - appended last, a fallback that tolerates any XPLM* require as a
+		//     no-op — LAST so a real XPLM*.lua file shipped by an aircraft still
+		//     wins, and only a require that would otherwise error lands here.
+		//     This deliberately covers desktop-only headers (XPLMCamera, …) so
+		//     shared scripts load unmodified.
+		int searcher_result = luaL_loadstring(m_interp, R"lua(
+			local xmap_searcher = ...
+			table.insert(package.loaders, 2, xmap_searcher)
+			table.insert(package.loaders, function(name)
+				if string.match(name, "^XPLM") then
+					return function() return true end
+				end
+				return "\n\tno XPLM doc stub on mobile (bindings are pre-registered)"
+			end))lua");
+		CTOR_FAIL(searcher_result, "load searcher setup")
+		lua_pushcfunction(m_interp, xmap_lua_path_searcher);
+		searcher_result = lua_pcall(m_interp, 1, 0, 0);
+		CTOR_FAIL(searcher_result, "install lua searchers")
 #endif
+	}
 
 #if !MOBILE
 	// A store-managed plugin routes require() of its include/ files through the store's verified/decrypted
@@ -389,7 +472,12 @@ module::module(
 		{
 			cur_path += ";";
 		}
-		lua_pushstring(m_interp, (cur_path / m_path / "../../include/?.lua").generic_string().c_str());
+		// Plain string concat, NOT std::filesystem::operator/: cur_path is the whole
+		// ';'-joined search path, so path append either replaced it outright (m_path
+		// absolute — desktop) or glued a stray leading '/' onto the template (m_path
+		// relative — mobile, where paths are bundle-relative).
+		cur_path += (m_path / "../../include/?.lua").generic_string();
+		lua_pushstring(m_interp, cur_path.c_str());
 		lua_setfield(m_interp, -2, "path");
 		lua_pop(m_interp, 1); // Remove the package table from the stack
 	}
@@ -424,7 +512,9 @@ module::module(
 	* 
 	*/
 
-	int load_result = luaL_loadstring(m_interp, "jit.opt.start(\"maxmcode=8192\", \"maxtrace=4096\", \"maxirconst=1500\", \"maxside=500\")");
+	// The `jit and jit.opt` guard keeps this quiet on interpreter-only builds (iOS
+	// forbids JIT, so LuaJIT ships without the jit.opt module there).
+	int load_result = luaL_loadstring(m_interp, "if jit and jit.opt then jit.opt.start(\"maxmcode=8192\", \"maxtrace=4096\", \"maxirconst=1500\", \"maxside=500\") end");
 	CTOR_FAIL(load_result, "set jit defaults")
 	int script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
 
@@ -643,11 +733,9 @@ void module::shutdown_lua(void)
 		}
 		_XPluginStop();
 
-#if !MOBILE
 		// Drop this interpreter's command handlers while it is still open. Must precede
 		// xlua_callback_cleanup, which frees the notify_cb_t records XPLM holds as their refcons.
 		xlua_command_bindings_cleanup(m_interp);
-#endif
 
 		// Ditch all the callbacks now, during shutdown and _after_ any disable/stop hooks in case the user decides
 		// to do anything funny like register callbacks.

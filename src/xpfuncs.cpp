@@ -29,6 +29,10 @@
 
 #include <cassert>
 
+#if MOBILE
+	#include "xmap.h"
+#endif
+
 /*
 	TODO: figure out when we have to resync our datarefs
 	TODO: what if dref already registered before acf reload?  (maybe no harm?)
@@ -655,7 +659,21 @@ static int dofile(lua_State* L)
 	if (mod != nullptr)
 	{
 		const char* file = luaL_checkstring(L, 1);
-#if !MOBILE
+#if MOBILE
+		// Mobile asset paths are invisible to fopen (iOS's CWD is not the bundle
+		// root, Android assets live in the APK), so load through the sim's xmap
+		// file layer. The path join is lexical only — std::filesystem file-system
+		// queries don't work on mobile assets. Unlike the desktop branch below,
+		// a missing or broken file raises (stock-dofile semantics): silently
+		// skipped scripts are miserable to debug on mobile.
+		std::string full_path = (mod->get_script_path() / file).generic_string();
+		xmap_class chunk(full_path);
+		if (!chunk.exists())
+			return luaL_error(L, "dofile: cannot open %s", full_path.c_str());
+		if (luaL_loadbuffer(L, reinterpret_cast<char const*>(chunk.begin()), chunk.size(), ("@" + full_path).c_str()) != 0)
+			lua_error(L);
+		lua_call(L, 0, 0);
+#else
 		// A store-managed plugin reads through the module's store-verified/decrypted path
 		// (load_module_relative_path) rather than luaL_dofile, which would open the file directly and
 		// bypass the store integrity check. A non-store plugin keeps the plain luaL_dofile below.
@@ -668,12 +686,12 @@ static int dofile(lua_State* L)
 				return lua_error(L);
 		}
 		else
-#endif
 		{
 			std::filesystem::path fullPath(mod->get_script_path());
 			fullPath = std::filesystem::absolute(fullPath / file);
 			luaL_dofile(L, fullPath.generic_string().c_str());
 		}
+#endif
 	}
 
 	return 0;

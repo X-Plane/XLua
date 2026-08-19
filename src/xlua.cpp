@@ -222,7 +222,16 @@ void InitScripts(void)
 			std::filesystem::path script_path(mod_path / fptr);
 			script_path += ".lua";
 
-			if (std::filesystem::exists(script_path) && !std::filesystem::is_directory(script_path))
+#if MOBILE
+			// On mobile the aircraft lives inside the app bundle (iOS) or the APK
+			// (Android), where std::filesystem can't see it — the exists() fast-path
+			// below would silently skip every script. Just try the module: its ctor
+			// fails cleanly (via the bundle-aware xmap) if the script isn't there.
+			const bool have_script = true;
+#else
+			const bool have_script = std::filesystem::exists(script_path) && !std::filesystem::is_directory(script_path);
+#endif
+			if (have_script)
 			{
 				g_modules.push_back(new module(
 					mod_path.generic_string().c_str(),
