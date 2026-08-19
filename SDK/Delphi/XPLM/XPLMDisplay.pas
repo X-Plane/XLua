@@ -703,8 +703,10 @@ TYPE
     readable, but not blind the pilot).
     
     inBusVoltsRatio is the ratio of the nominal voltage currently present on
-    the bus to which the device is bound, or -1 if the device is not bound to
-    the current aircraft.
+    the electrical bus powering the device. This is the same value
+    XPLMGetAvionicsBusVoltsRatio() returns, including its handling of devices
+    wired to several buses: 1.0 if the author assigned the device to no bus at
+    all, and -1 if the device is not bound to the current aircraft.
     
     Refcon is a unique value that you specify when creating the device,
     allowing you to slip a pointer to your own data to the callback.
@@ -1093,8 +1095,18 @@ TYPE
     XPLMGetAvionicsBusVoltsRatio
     
     Returns the ratio of the nominal voltage (1.0 means full nominal voltage)
-    of the electrical bus to which the given avionics device is bound, or -1 if
-    the device is not bound to the current aircraft.
+    of the electrical bus powering the cockpit device with the given handle.
+    
+    An aircraft author can wire a device to any combination of the six
+    electrical buses. When more than one is selected, this returns the ratio
+    for the highest-numbered selected bus that both exists on the current
+    aircraft and is above the aircraft's low-voltage red line. If no selected
+    bus meets that test, this returns 0 - so 0 means the device has no usable
+    power, not that a bus measured zero volts.
+    
+    If the device is bound but the author assigned it to no bus at all, this
+    returns 1.0; X-Plane treats such a device as always powered. If the device
+    is not bound to the current aircraft, this returns -1.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetAvionicsBusVoltsRatio(

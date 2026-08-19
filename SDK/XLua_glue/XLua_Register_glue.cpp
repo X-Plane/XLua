@@ -21,6 +21,7 @@ extern "C"
 	#include "XPLMPlugin.h"
 	#include "XPLMProcessing.h"
 	#include "XPLMScenery.h"
+	#include "XPLMStore.h"
 	#include "XPLMUtilities.h"
 	#include "XPLMWeather.h"
 
@@ -32,6 +33,7 @@ extern "C"
 	int XLuaIsTimerScheduled(lua_State* L);
 	int XLuaReloadOnFlightChange(lua_State* L);
 	int XLuaRunTimer(lua_State* L);
+	int XLuaStoreLoadFile(lua_State* L);
 	int XLuaAccumulateTouchZone(lua_State* L);
 	int XLuaAcquirePlanes(lua_State* L);
 	int XLuaAppendMenuItem(lua_State* L);
@@ -212,6 +214,7 @@ extern "C"
 	int XLuaIsDataRefGood(lua_State* L);
 	int XLuaIsFeatureEnabled(lua_State* L);
 	int XLuaIsPluginEnabled(lua_State* L);
+	int XLuaIsStoreManagedPlugin(lua_State* L);
 	int XLuaIsWindowInFront(lua_State* L);
 	int XLuaLineLoop(lua_State* L);
 	int XLuaLineLoopStipple(lua_State* L);
@@ -315,6 +318,7 @@ extern "C"
 	int XLuaSetWindowResizingLimits(lua_State* L);
 	int XLuaSetWindowTitle(lua_State* L);
 	int XLuaSpeakString(lua_State* L);
+	int XLuaStoreIsEncrypted(lua_State* L);
 	int XLuaTakeAvionicsKeyboardFocus(lua_State* L);
 	int XLuaTakeKeyboardFocus(lua_State* L);
 	int XLuaTextureAtlasAddImage(lua_State* L);
@@ -399,6 +403,7 @@ extern "C"
 	void RegEnum_XPLMCursorStatus(lua_State* L);
 	void RegEnum_XPLMDataFileType(lua_State* L);
 	void RegEnum_XPLMDataTypeID(lua_State* L);
+	void RegEnum_XPLMDecryptResult(lua_State* L);
 	void RegEnum_XPLMDeviceID(lua_State* L);
 	void RegEnum_XPLMEGPWSStyle(lua_State* L);
 	void RegEnum_XPLMFlightLoopPhaseType(lua_State* L);
@@ -446,6 +451,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XLuaIsTimerScheduled", XLuaIsTimerScheduled);
 	lua_register(L, "XLuaReloadOnFlightChange", XLuaReloadOnFlightChange);
 	lua_register(L, "XLuaRunTimer", XLuaRunTimer);
+	lua_register(L, "XLuaStoreLoadFile", XLuaStoreLoadFile);
 	lua_register(L, "XPLMAccumulateTouchZone", XLuaAccumulateTouchZone);
 	lua_register(L, "XPLMAcquirePlanes", XLuaAcquirePlanes);
 	lua_register(L, "XPLMAppendMenuItem", XLuaAppendMenuItem);
@@ -626,6 +632,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMIsDataRefGood", XLuaIsDataRefGood);
 	lua_register(L, "XPLMIsFeatureEnabled", XLuaIsFeatureEnabled);
 	lua_register(L, "XPLMIsPluginEnabled", XLuaIsPluginEnabled);
+	lua_register(L, "XPLMIsStoreManagedPlugin", XLuaIsStoreManagedPlugin);
 	lua_register(L, "XPLMIsWindowInFront", XLuaIsWindowInFront);
 	lua_register(L, "XPLMLineLoop", XLuaLineLoop);
 	lua_register(L, "XPLMLineLoopStipple", XLuaLineLoopStipple);
@@ -729,6 +736,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMSetWindowResizingLimits", XLuaSetWindowResizingLimits);
 	lua_register(L, "XPLMSetWindowTitle", XLuaSetWindowTitle);
 	lua_register(L, "XPLMSpeakString", XLuaSpeakString);
+	lua_register(L, "XPLMStoreIsEncrypted", XLuaStoreIsEncrypted);
 	lua_register(L, "XPLMTakeAvionicsKeyboardFocus", XLuaTakeAvionicsKeyboardFocus);
 	lua_register(L, "XPLMTakeKeyboardFocus", XLuaTakeKeyboardFocus);
 	lua_register(L, "XPLMTextureAtlasAddImage", XLuaTextureAtlasAddImage);
@@ -797,6 +805,7 @@ void add_xplm_to_interp(lua_State* L)
 	RegEnum_XPLMCursorStatus(L);
 	RegEnum_XPLMDataFileType(L);
 	RegEnum_XPLMDataTypeID(L);
+	RegEnum_XPLMDecryptResult(L);
 	RegEnum_XPLMDeviceID(L);
 	RegEnum_XPLMEGPWSStyle(L);
 	RegEnum_XPLMFlightLoopPhaseType(L);

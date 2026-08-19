@@ -28,6 +28,7 @@ add_library(xlua2 MODULE
     src/xpfuncs.cpp
 	src/shared_xpfuncs.cpp
     src/xptimers.cpp
+    src/xlua_store.cpp
     src/xlua_imgui.cpp
     src/xlua_imgui_context.cpp
     src/xlua2_window_helpers.cpp
@@ -55,6 +56,7 @@ add_library(xlua2 MODULE
 	SDK/XLua_glue/XPLMPanelGraphics_glue.cpp
 	SDK/XLua_glue/XPLMScenery_glue.cpp
 	SDK/XLua_glue/XPLMSound_glue.cpp
+	SDK/XLua_glue/XPLMStore_glue.cpp
 	SDK/XLua_glue/XPLMUtilities_glue.cpp
 	SDK/XLua_glue/XPLMWeather_glue.cpp
 )

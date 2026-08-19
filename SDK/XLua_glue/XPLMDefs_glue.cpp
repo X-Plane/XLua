@@ -440,7 +440,7 @@ void RegDefines_XPLMDefs(lua_State* L)
 	lua_setglobal(L, "XPLM_VK_Y");
 	lua_pushinteger(L, 0x5A);
 	lua_setglobal(L, "XPLM_VK_Z");
-	lua_pushinteger(L, (440));
+	lua_pushinteger(L, (460));
 	lua_setglobal(L, "kXPLM_Version");
 }
 
