@@ -248,6 +248,34 @@ bool module::get_jit_mode(void)
 	return is_enabled;
 }
 
+#if !MOBILE
+// require() searcher for a store-managed xlua: load this module's include/ files through the store's
+// verified/decrypted read (xmap_class), instead of LuaJIT's native file loader which would open the path
+// directly and bypass the integrity check. Returns the loader chunk on success, or a "not found" string
+// so require() can fall through to the remaining searchers.
+static int store_require_searcher(lua_State * L)
+{
+	module * mod = module::module_from_interp(L);
+	if (mod == nullptr)
+		return 0;
+	const char * name = luaL_checkstring(L, 1);
+	std::string rel(name);
+	for (char & c : rel)
+		if (c == '.')
+			c = '/';
+	std::filesystem::path const full = mod->get_script_path() / ".." / ".." / "include" / (rel + ".lua");
+	xmap_class chunk(full);
+	if (!chunk.exists())
+	{
+		lua_pushfstring(L, "\n\tno store module '%s'", name);
+		return 1;
+	}
+	if (luaL_loadbuffer(L, chunk.begin(), chunk.size(), full.generic_string().c_str()) != 0)
+		return lua_error(L);
+	return 1;
+}
+#endif
+
 module::module(
 	std::filesystem::path const& in_module_path,
 	std::filesystem::path const& in_init_script,
@@ -323,17 +351,45 @@ module::module(
 	}
 #endif
 
-	lua_getfield(m_interp, LUA_GLOBALSINDEX, "package");
-	lua_getfield(m_interp, -1, "path");
-	std::string cur_path = lua_tostring(m_interp, -1);
-	lua_pop(m_interp, 1);
-	if (!cur_path.empty() && cur_path.back() != ';')
+#if !MOBILE
+	// A store-managed plugin routes require() of its include/ files through the store's verified/decrypted
+	// read via a custom searcher, rather than extending package.path (LuaJIT's native loader would open
+	// includes directly, bypassing the store integrity check). It re-runs on every script reload, so it
+	// stays verify-on-use. A non-store plugin keeps the plain package.path append below, unchanged.
+	if (XPLMIsStoreManagedPlugin())
 	{
-		cur_path += ";";
+		// Restrict require() to the store's verified read: keep the in-memory preload searcher
+		// (package.loaders[1] — ffi/bit/jit and any script-registered preloads, no file access), put the
+		// store searcher at [2], then drop LuaJIT's package.path / package.cpath file loaders so no
+		// require() can fopen/dlopen an unlisted script or native lib. A store xlua thus resolves require()
+		// only to listed, verified include/ modules (or preloads). require() stops at the first nil slot.
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, "package");
+		lua_getfield(m_interp, -1, "loaders");                          // LuaJIT 5.1: package.loaders
+		int const loader_count = (int)lua_objlen(m_interp, -1);
+		lua_pushcfunction(m_interp, store_require_searcher);
+		lua_rawseti(m_interp, -2, 2);                                   // loaders[2] = store searcher
+		for (int i = 3; i <= loader_count; ++i)                         // drop the file/C loaders
+		{
+			lua_pushnil(m_interp);
+			lua_rawseti(m_interp, -2, i);
+		}
+		lua_pop(m_interp, 2);                                           // pop loaders, package
 	}
-	lua_pushstring(m_interp, (cur_path / m_path / "../../include/?.lua").generic_string().c_str());
-	lua_setfield(m_interp, -2, "path");
-	lua_pop(m_interp, 1); // Remove the package table from the stack
+	else
+#endif
+	{
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, "package");
+		lua_getfield(m_interp, -1, "path");
+		std::string cur_path = lua_tostring(m_interp, -1);
+		lua_pop(m_interp, 1);
+		if (!cur_path.empty() && cur_path.back() != ';')
+		{
+			cur_path += ";";
+		}
+		lua_pushstring(m_interp, (cur_path / m_path / "../../include/?.lua").generic_string().c_str());
+		lua_setfield(m_interp, -2, "path");
+		lua_pop(m_interp, 1); // Remove the package table from the stack
+	}
 
 	log_message(m_interp, "Running %s\n", m_log_path.c_str());
 
@@ -401,17 +457,22 @@ module::module(
 
 int module::load_module_relative_path(const string& path)
 {
+	return load_module_relative_path(m_interp, path);
+}
+
+int module::load_module_relative_path(lua_State* L, const string& path)
+{
 	std::filesystem::path script_path(m_path / path);
-	
+
 	xmap_class script_text(script_path);
-	
+
 	if(!script_text.exists())
 	{
-		return luaL_error(m_interp, "Unable to load script file: %s", path.c_str());
+		return luaL_error(L, "Unable to load script file: %s", path.c_str());
 	}
-	
-	int load_result = luaL_loadbuffer(m_interp, (const char*)script_text.begin(), script_text.size(), path.c_str());
-	
+
+	int load_result = luaL_loadbuffer(L, (const char*)script_text.begin(), script_text.size(), path.c_str());
+
 	return load_result;
 }
 
@@ -703,8 +764,8 @@ xmap_class::xmap_class(const string& in_file_name) :
 	m_buffer(NULL), m_size(0), m_deleter(NULL)
 {
 	// A store-managed xlua loads its scripts through the store: encrypted files must be
-	// decrypted, plain store files get integrity-checked on read. A file the store does
-	// not recognize as this product's content (-1) falls back to a regular read.
+	// decrypted, plain store files get integrity-checked on read, and a path the store does
+	// not recognize as this product's listed content (-1) is refused (not plain-read).
 	if (XPLMIsStoreManagedPlugin())
 	{
 		void * buffer = nullptr;
@@ -734,6 +795,12 @@ xmap_class::xmap_class(const string& in_file_name) :
 				return;
 			}
 			// success with no buffer = empty file; the plain read below handles it
+		}
+		else
+		{
+			// encrypted == -1: not this product's listed content. A store-managed plugin loads only
+			// listed, verified code, so refuse rather than plain-read an unlisted/alien file.
+			return;
 		}
 	}
 

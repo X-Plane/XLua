@@ -23,6 +23,9 @@
 
 #include <XPLMUtilities.h>
 #include <XPLMDataAccess.h>
+#if !MOBILE
+#include <XPLMStore.h>
+#endif
 
 #include <cassert>
 
@@ -652,11 +655,25 @@ static int dofile(lua_State* L)
 	if (mod != nullptr)
 	{
 		const char* file = luaL_checkstring(L, 1);
-
-		std::filesystem::path fullPath(mod->get_script_path());
-		fullPath = std::filesystem::absolute(fullPath / file);
-
-		luaL_dofile(L, fullPath.generic_string().c_str());
+#if !MOBILE
+		// A store-managed plugin reads through the module's store-verified/decrypted path
+		// (load_module_relative_path) rather than luaL_dofile, which would open the file directly and
+		// bypass the store integrity check. A non-store plugin keeps the plain luaL_dofile below.
+		if (XPLMIsStoreManagedPlugin())
+		{
+			int const load_result = mod->load_module_relative_path(L, file);   // loads onto L; raises if not found
+			if (load_result != 0)
+				return lua_error(L);
+			if (lua_pcall(L, 0, 0, 0) != 0)
+				return lua_error(L);
+		}
+		else
+#endif
+		{
+			std::filesystem::path fullPath(mod->get_script_path());
+			fullPath = std::filesystem::absolute(fullPath / file);
+			luaL_dofile(L, fullPath.generic_string().c_str());
+		}
 	}
 
 	return 0;

@@ -65,8 +65,11 @@ public:
 
 			void *		module_alloc_tracked(size_t amount);
 			
-			// Pushes error string or chunk onto interp stack, returns error code or 0.  
+			// Pushes error string or chunk onto the interp stack, returns error code or 0. The lua_State
+			// overload loads onto the given state (use the running thread L, which may be a coroutine); the
+			// other loads onto the module's main interp.
 			int			load_module_relative_path(const string& path);
+			int			load_module_relative_path(lua_State* L, const string& path);
 	std::string const&	get_log_path(void) const { return m_log_path; }
 	std::filesystem::path const&	get_script_path(void) const { return m_path; }
 
