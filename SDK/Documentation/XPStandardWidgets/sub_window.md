@@ -8,11 +8,17 @@ subwindows.
 
 <div class="sym-block sym-define" data-name="xpWidgetClass_SubWindow" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## xpWidgetClass_SubWindow { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
-`#define xpWidgetClass_SubWindow 2`
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">xpWidgetClass_SubWindow  -- 2</code></pre>
+</div>
 
 </div>
 
@@ -20,9 +26,13 @@ subwindows.
 
 <div class="sym-block sym-enum" data-name="SubWindow Type Values" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## SubWindow Type Values { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 These values control the appearance of the subwindow.
 
@@ -42,9 +52,13 @@ These values control the appearance of the subwindow.
 
 <div class="sym-block sym-enum" data-name="SubWindow Properties" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## SubWindow Properties { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 <div class="enum-table" markdown="1">
 
@@ -61,4 +75,4 @@ These values control the appearance of the subwindow.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

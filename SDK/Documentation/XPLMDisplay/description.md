@@ -67,4 +67,4 @@ keystrokes.  So hotkeys allow a user to resolve conflicts and customize keystrok
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

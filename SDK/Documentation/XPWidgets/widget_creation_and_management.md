@@ -4,9 +4,13 @@
 
 <div class="sym-block sym-function" data-name="XPCreateWidget" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPCreateWidget { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This function creates a new widget and returns the new widget's ID to you. If the
 widget creation fails for some reason, it returns NULL. Widget creation will fail
@@ -32,19 +36,20 @@ So it is possible to have whole chains of widgets that are simply not called.
 You can preconstruct widget trees and then place them into root widgets later to
 activate them if you wish.
 
-```cpp
-XPLM_API XPWidgetID XPCreateWidget(
-                         int                  inLeft,
-                         int                  inTop,
-                         int                  inRight,
-                         int                  inBottom,
-                         int                  inVisible,
-                         const char *         inDescriptor,
-                         int                  inIsRoot,
-                         XPWidgetID           inContainer,
-                         XPWidgetClass        inClass
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPWidgetID -> assign to local/var
+local my_widgetID = XPCreateWidget(
+    inLeft,          -- int
+    inTop,           -- int
+    inRight,         -- int
+    inBottom,        -- int
+    inVisible,       -- boolean
+    inDescriptor,    -- string
+    inIsRoot,        -- boolean
+    inContainer,     -- XPWidgetID
+    inClass          -- XPWidgetClass
+)</code></pre>
+</div>
 
 </div>
 
@@ -52,28 +57,33 @@ XPLM_API XPWidgetID XPCreateWidget(
 
 <div class="sym-block sym-function" data-name="XPCreateCustomWidget" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPCreateCustomWidget { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This function is the same as XPCreateWidget except that instead of passing a class ID,
 you pass your widget callback function pointer defining the widget. Use this
 function to define a custom widget. All parameters are the same as XPCreateWidget,
 except that the widget class has been replaced with the widget function.
 
-```cpp
-XPLM_API XPWidgetID XPCreateCustomWidget(
-                         int                  inLeft,
-                         int                  inTop,
-                         int                  inRight,
-                         int                  inBottom,
-                         int                  inVisible,
-                         const char *         inDescriptor,
-                         int                  inIsRoot,
-                         XPWidgetID           inContainer,
-                         XPWidgetFunc_t       inCallback
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPWidgetID -> assign to local/var
+local my_widgetID = XPCreateCustomWidget(
+    inLeft,          -- int
+    inTop,           -- int
+    inRight,         -- int
+    inBottom,        -- int
+    inVisible,       -- boolean
+    inDescriptor,    -- string
+    inIsRoot,        -- boolean
+    inContainer,     -- XPWidgetID
+    inCallback       -- see XPWidgetFunc_t
+)</code></pre>
+</div>
 
 </div>
 
@@ -81,9 +91,13 @@ XPLM_API XPWidgetID XPCreateCustomWidget(
 
 <div class="sym-block sym-function" data-name="XPDestroyWidget" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPDestroyWidget { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This class destroys a widget. Pass in the ID of the widget to kill. If you
 pass 1 for inDestroyChilren, the widget's children will be destroyed first, then
@@ -92,12 +106,12 @@ with the inDestroyChildren flag set to 1, so the destruction will recurse down t
 widget tree.) If you pass 0 for this flag, direct child widgets will simply end up
 with their parent set to 0.
 
-```cpp
-XPLM_API void       XPDestroyWidget(
-                         XPWidgetID           inWidget,
-                         int                  inDestroyChildren
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPDestroyWidget(
+    inWidget,             -- XPWidgetID
+    inDestroyChildren     -- int
+)</code></pre>
+</div>
 
 </div>
 
@@ -105,9 +119,13 @@ XPLM_API void       XPDestroyWidget(
 
 <div class="sym-block sym-function" data-name="XPSendMessageToWidget" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPSendMessageToWidget { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This sends any message to a widget. You should probably not go around simulating the
 predefined messages that the widgets library defines for you. You may however define
@@ -120,15 +138,16 @@ For each widget that receives the message (see the dispatching modes), each widg
 function from the most recently installed to the oldest one receives the message in
 order until it is handled.
 
-```cpp
-XPLM_API int        XPSendMessageToWidget(
-                         XPWidgetID           inWidget,
-                         XPWidgetMessage      inMessage,
-                         XPDispatchMode       inMode,
-                         intptr_t             inParam1,
-                         intptr_t             inParam2
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns boolean -> assign to local/var
+local my_result = XPSendMessageToWidget(
+    inWidget,     -- XPWidgetID
+    inMessage,    -- XPWidgetMessage
+    inMode,       -- XPDispatchMode
+    inParam1,     -- see intptr_t
+    inParam2      -- see intptr_t
+)</code></pre>
+</div>
 
 </div>
 
@@ -137,4 +156,4 @@ XPLM_API int        XPSendMessageToWidget(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

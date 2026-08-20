@@ -33,4 +33,4 @@ get correct sound and 2-d panel behavior.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

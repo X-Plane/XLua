@@ -40,9 +40,13 @@ This is documented on a per-API basis.
 
 <div class="sym-block sym-enum" data-name="XPLMDataFileType" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMDataFileType { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span> <span class="sym-badge badge-version">XPLM200</span>
+
+</div>
 
 These enums define types of data files you can load or unload using the SDK.
 
@@ -55,15 +59,24 @@ These enums define types of data files you can load or unload using the SDK.
 
 </div>
 
+**Used by:**
+
+- [XPLMLoadDataFile](#xplmloaddatafile)
+- [XPLMSaveDataFile](#xplmsavedatafile)
+
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetSystemPath" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetSystemPath { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This function returns the full path to the X-System folder. Note that this is a
 directory path, so it ends in a trailing : or / .
@@ -71,11 +84,12 @@ directory path, so it ends in a trailing : or / .
 The buffer you pass should be at least 512 characters long.  The path is returned using the
 current native or OS path conventions.
 
-```cpp
-XPLM_API void       XPLMGetSystemPath(
-                         char *               outSystemPath
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPLMGetSystemPath(
+)
+-- outs = { outSystemPath }</code></pre>
+</div>
 
 </div>
 
@@ -83,9 +97,13 @@ XPLM_API void       XPLMGetSystemPath(
 
 <div class="sym-block sym-function" data-name="XPLMGetPrefsPath" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetPrefsPath { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine returns a full path to a file that is within X-Plane's preferences
 directory. (You should remove the file name back to the last directory separator
@@ -94,11 +112,12 @@ to get the preferences directory using XPLMExtractFileAndPath).
 The buffer you pass should be at least 512 characters long.  The path is returned using the
 current native or OS path conventions.
 
-```cpp
-XPLM_API void       XPLMGetPrefsPath(
-                         char *               outPrefsPath
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPLMGetPrefsPath(
+)
+-- outs = { outPrefsPath }</code></pre>
+</div>
 
 </div>
 
@@ -106,97 +125,24 @@ XPLM_API void       XPLMGetPrefsPath(
 
 <div class="sym-block sym-function" data-name="XPLMGetDirectorySeparator" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDirectorySeparator { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine returns a string with one char and a null terminator that is the directory
 separator for the current platform. This allows you to write code that concatenates
 directory paths without having to #ifdef for platform. The character returned will reflect
 the current file path mode.
 
-```cpp
-XPLM_API const char *XPLMGetDirectorySeparator(void);
-```
-
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns string -> assign to local/var
+local my_result = XPLMGetDirectorySeparator(
+)</code></pre>
 </div>
-
----
-
-<div class="sym-block sym-function" data-name="XPLMExtractFileAndPath" data-type="function" markdown="1">
-
-## XPLMExtractFileAndPath { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span>
-
-Given a full path to a file, this routine separates the path from the file. If the
-path is a partial directory (e.g. ends in : or / ) the trailing directory separator
-is removed. This routine works in-place; a pointer to the file part of the buffer
-is returned; the original buffer still starts with the path and is null terminated
-with no trailing separator.
-
-```cpp
-XPLM_API char *     XPLMExtractFileAndPath(
-                         char *               inFullPath
-                    );
-```
-
-</div>
-
----
-
-<div class="sym-block sym-function" data-name="XPLMGetDirectoryContents" data-type="function" markdown="1">
-
-## XPLMGetDirectoryContents { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span>
-
-This routine returns a list of files in a directory (specified by a full path, no
-trailing : or / ). The output is returned as a list of NULL terminated strings.
-An index array (if specified) is filled with pointers into the strings.
-The last file is indicated by a zero-length string (and NULL in the indices). This
-routine will return true if you had capacity for all files or false if you did not. You can
-also skip a given number of files.
-
- * inDirectoryPath - a null terminated C string containing the full path to the directory
-   with no trailing directory char.
-
- * inFirstReturn - the zero-based index of the first file in the directory to return.
-   (Usually zero to fetch all in one pass.)
-
- * outFileNames - a buffer to receive a series of sequential null terminated C-string file
-   names. A zero-length C string will be appended to the very end.
-
- * inFileNameBufSize - the size of the file name buffer in bytes.
-
- * outIndices - a pointer to an array of character pointers that will become an index
-   into the directory. The last file will be followed by a NULL value. Pass NULL
-   if you do not want indexing information.
-
- * inIndexCount - the max size of the index in entries.
-
- * outTotalFiles - if not NULL, this is filled in with the number of files in the
-   directory.
-
- * outReturnedFiles - if not NULL, the number of files returned by this iteration.
-
-Return value: 1 if all info could be returned, 0 if there was a buffer overrun.
-
-WARNING: Before X-Plane 7 this routine did not properly iterate through directories. If X-Plane
-6 compatibility is needed, use your own code to iterate directories.
-
-```cpp
-XPLM_API int        XPLMGetDirectoryContents(
-                         const char *         inDirectoryPath,
-                         int                  inFirstReturn,
-                         char *               outFileNames,
-                         int                  inFileNameBufSize,
-                         char * *             outIndices,    /* Can be NULL */
-                         int                  inIndexCount,
-                         int *                outTotalFiles,    /* Can be NULL */
-                         int *                outReturnedFiles    /* Can be NULL */
-                    );
-```
 
 </div>
 
@@ -204,39 +150,57 @@ XPLM_API int        XPLMGetDirectoryContents(
 
 <div class="sym-block sym-function" data-name="XPLMLoadDataFile" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMLoadDataFile { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM200</span>
 
+</div>
+
 Loads a data file of a given type. Paths must be relative to the X-System folder.
 To clear the replay, pass a NULL file name (this is only valid with replay movies, not sit files).
 
-```cpp
-XPLM_API int        XPLMLoadDataFile(
-                         XPLMDataFileType     inFileType,
-                         const char *         inFilePath    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns boolean -> assign to local/var
+local my_result = XPLMLoadDataFile(
+    inFileType,    -- XPLMDataFileType
+    inFilePath     -- string
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataFileType](#xplmdatafiletype)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSaveDataFile" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSaveDataFile { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM200</span>
 
+</div>
+
 Saves the current situation or replay; paths are relative to the X-System folder.
 
-```cpp
-XPLM_API int        XPLMSaveDataFile(
-                         XPLMDataFileType     inFileType,
-                         const char *         inFilePath
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns boolean -> assign to local/var
+local my_result = XPLMSaveDataFile(
+    inFileType,    -- XPLMDataFileType
+    inFilePath     -- string
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataFileType](#xplmdatafiletype)
 </div>
 
 ---
@@ -244,4 +208,4 @@ XPLM_API int        XPLMSaveDataFile(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

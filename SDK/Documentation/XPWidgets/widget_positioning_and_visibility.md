@@ -4,9 +4,13 @@
 
 <div class="sym-block sym-function" data-name="XPPlaceWidgetWithin" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPPlaceWidgetWithin { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This function changes which container a widget resides in. You may NOT use this
 function on a root widget! inSubWidget is the widget that will be moved. Pass
@@ -20,12 +24,12 @@ NOTE: this routine does not reposition the sub widget in global coordinates. If 
 container has layout management code, it will reposition the subwidget for you,
 otherwise you must do it with SetWidgetGeometry.
 
-```cpp
-XPLM_API void       XPPlaceWidgetWithin(
-                         XPWidgetID           inSubWidget,
-                         XPWidgetID           inContainer
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPPlaceWidgetWithin(
+    inSubWidget,    -- XPWidgetID
+    inContainer     -- XPWidgetID
+)</code></pre>
+</div>
 
 </div>
 
@@ -33,17 +37,22 @@ XPLM_API void       XPPlaceWidgetWithin(
 
 <div class="sym-block sym-function" data-name="XPCountChildWidgets" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPCountChildWidgets { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This routine returns the number of widgets another widget contains.
 
-```cpp
-XPLM_API int        XPCountChildWidgets(
-                         XPWidgetID           inWidget
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int -> assign to local/var
+local my_result = XPCountChildWidgets(
+    inWidget     -- XPWidgetID
+)</code></pre>
+</div>
 
 </div>
 
@@ -51,20 +60,25 @@ XPLM_API int        XPCountChildWidgets(
 
 <div class="sym-block sym-function" data-name="XPGetNthChildWidget" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPGetNthChildWidget { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine returns the widget ID of a child widget by index. Indexes are 0
 based, from 0 to the number of widgets in the parentone minus one, inclusive. If
 the index is invalid, 0 is returned.
 
-```cpp
-XPLM_API XPWidgetID XPGetNthChildWidget(
-                         XPWidgetID           inWidget,
-                         int                  inIndex
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPWidgetID -> assign to local/var
+local my_widgetID = XPGetNthChildWidget(
+    inWidget,    -- XPWidgetID
+    inIndex      -- int
+)</code></pre>
+</div>
 
 </div>
 
@@ -72,17 +86,22 @@ XPLM_API XPWidgetID XPGetNthChildWidget(
 
 <div class="sym-block sym-function" data-name="XPGetParentWidget" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPGetParentWidget { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 Returns the parent of a widget, or 0 if the widget has no parent. Root widgets never have parents and therefore always return 0.
 
-```cpp
-XPLM_API XPWidgetID XPGetParentWidget(
-                         XPWidgetID           inWidget
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPWidgetID -> assign to local/var
+local my_widgetID = XPGetParentWidget(
+    inWidget     -- XPWidgetID
+)</code></pre>
+</div>
 
 </div>
 
@@ -90,19 +109,23 @@ XPLM_API XPWidgetID XPGetParentWidget(
 
 <div class="sym-block sym-function" data-name="XPShowWidget" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPShowWidget { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine makes a widget visible if it is not already. Note that if a widget
 is not in a rooted widget hierarchy or one of its parents is not visible, it will
 still not be visible to the user.
 
-```cpp
-XPLM_API void       XPShowWidget(
-                         XPWidgetID           inWidget
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPShowWidget(
+    inWidget     -- XPWidgetID
+)</code></pre>
+</div>
 
 </div>
 
@@ -110,18 +133,22 @@ XPLM_API void       XPShowWidget(
 
 <div class="sym-block sym-function" data-name="XPHideWidget" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPHideWidget { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 Makes a widget invisible. See XPShowWidget for considerations of when a widget might
 not be visible despite its own visibility state.
 
-```cpp
-XPLM_API void       XPHideWidget(
-                         XPWidgetID           inWidget
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPHideWidget(
+    inWidget     -- XPWidgetID
+)</code></pre>
+</div>
 
 </div>
 
@@ -129,19 +156,24 @@ XPLM_API void       XPHideWidget(
 
 <div class="sym-block sym-function" data-name="XPIsWidgetVisible" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPIsWidgetVisible { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This returns 1 if a widget is visible, 0 if it is not. Note that this routine takes
 into consideration whether a parent is invisible. Use this routine to tell if the user can see
 the widget.
 
-```cpp
-XPLM_API int        XPIsWidgetVisible(
-                         XPWidgetID           inWidget
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns boolean -> assign to local/var
+local my_result = XPIsWidgetVisible(
+    inWidget     -- XPWidgetID
+)</code></pre>
+</div>
 
 </div>
 
@@ -149,18 +181,23 @@ XPLM_API int        XPIsWidgetVisible(
 
 <div class="sym-block sym-function" data-name="XPFindRootWidget" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPFindRootWidget { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 Returns the Widget ID of the root widget that contains the passed
 in widget or NULL if the passed in widget is not in a rooted hierarchy.
 
-```cpp
-XPLM_API XPWidgetID XPFindRootWidget(
-                         XPWidgetID           inWidget
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPWidgetID -> assign to local/var
+local my_widgetID = XPFindRootWidget(
+    inWidget     -- XPWidgetID
+)</code></pre>
+</div>
 
 </div>
 
@@ -168,9 +205,13 @@ XPLM_API XPWidgetID XPFindRootWidget(
 
 <div class="sym-block sym-function" data-name="XPBringRootWidgetToFront" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPBringRootWidgetToFront { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine makes the specified widget be in the frontmost widget hierarchy.
 If this widget is a root widget, its widget hierarchy comes to front, otherwise
@@ -178,11 +219,11 @@ the widget's root is brought to the front. If this widget is not in an active
 widget hiearchy (e.g. there is no root widget at the top of the tree), this routine
 does nothing.
 
-```cpp
-XPLM_API void       XPBringRootWidgetToFront(
-                         XPWidgetID           inWidget
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPBringRootWidgetToFront(
+    inWidget     -- XPWidgetID
+)</code></pre>
+</div>
 
 </div>
 
@@ -190,19 +231,24 @@ XPLM_API void       XPBringRootWidgetToFront(
 
 <div class="sym-block sym-function" data-name="XPIsWidgetInFront" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPIsWidgetInFront { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine returns true if this widget's hierarchy is the frontmost hierarchy.
 It returns false if the widget's hierarchy is not in front, or if the widget is not
 in a rooted hierarchy.
 
-```cpp
-XPLM_API int        XPIsWidgetInFront(
-                         XPWidgetID           inWidget
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns boolean -> assign to local/var
+local my_result = XPIsWidgetInFront(
+    inWidget     -- XPWidgetID
+)</code></pre>
+</div>
 
 </div>
 
@@ -210,22 +256,24 @@ XPLM_API int        XPIsWidgetInFront(
 
 <div class="sym-block sym-function" data-name="XPGetWidgetGeometry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPGetWidgetGeometry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This routine returns the bounding box of a widget in global coordinates.
 Pass NULL for any parameter you are not interested in.
 
-```cpp
-XPLM_API void       XPGetWidgetGeometry(
-                         XPWidgetID           inWidget,
-                         int *                outLeft,    /* Can be NULL */
-                         int *                outTop,    /* Can be NULL */
-                         int *                outRight,    /* Can be NULL */
-                         int *                outBottom    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPGetWidgetGeometry(
+    inWidget     -- XPWidgetID
+)
+-- outs = { outLeft, outTop, outRight, outBottom }</code></pre>
+</div>
 
 </div>
 
@@ -233,21 +281,25 @@ XPLM_API void       XPGetWidgetGeometry(
 
 <div class="sym-block sym-function" data-name="XPSetWidgetGeometry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPSetWidgetGeometry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This function changes the bounding box of a widget.
 
-```cpp
-XPLM_API void       XPSetWidgetGeometry(
-                         XPWidgetID           inWidget,
-                         int                  inLeft,
-                         int                  inTop,
-                         int                  inRight,
-                         int                  inBottom
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPSetWidgetGeometry(
+    inWidget,    -- XPWidgetID
+    inLeft,      -- int
+    inTop,       -- int
+    inRight,     -- int
+    inBottom     -- int
+)</code></pre>
+</div>
 
 </div>
 
@@ -255,9 +307,13 @@ XPLM_API void       XPSetWidgetGeometry(
 
 <div class="sym-block sym-function" data-name="XPGetWidgetForLocation" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPGetWidgetForLocation { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Given a widget and a location, this routine returns the widget ID of the
 child of that widget that owns that location. If inRecursive is true
@@ -271,15 +327,16 @@ NOTE: if a widget's geometry extends outside its parents geometry, it will not
 be returned by this call for mouse locations outside the parent geometry. The
 parent geometry limits the child's eligibility for mouse location.
 
-```cpp
-XPLM_API XPWidgetID XPGetWidgetForLocation(
-                         XPWidgetID           inContainer,
-                         int                  inXOffset,
-                         int                  inYOffset,
-                         int                  inRecursive,
-                         int                  inVisibleOnly
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPWidgetID -> assign to local/var
+local my_widgetID = XPGetWidgetForLocation(
+    inContainer,      -- XPWidgetID
+    inXOffset,        -- int
+    inYOffset,        -- int
+    inRecursive,      -- int
+    inVisibleOnly     -- boolean
+)</code></pre>
+</div>
 
 </div>
 
@@ -287,9 +344,13 @@ XPLM_API XPWidgetID XPGetWidgetForLocation(
 
 <div class="sym-block sym-function" data-name="XPGetWidgetExposedGeometry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPGetWidgetExposedGeometry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine returns the bounds of the area of a widget that is completely
 within its parent widgets. Since a widget's bounding box can be outside
@@ -299,15 +360,13 @@ your widget's shape, but use this routine to find out what area to actually
 draw into. Note that the widget library does not use OpenGL clipping to
 keep frame rates up, although you could use it internally.
 
-```cpp
-XPLM_API void       XPGetWidgetExposedGeometry(
-                         XPWidgetID           inWidgetID,
-                         int *                outLeft,    /* Can be NULL */
-                         int *                outTop,    /* Can be NULL */
-                         int *                outRight,    /* Can be NULL */
-                         int *                outBottom    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPGetWidgetExposedGeometry(
+    inWidgetID     -- XPWidgetID
+)
+-- outs = { outLeft, outTop, outRight, outBottom }</code></pre>
+</div>
 
 </div>
 
@@ -316,4 +375,4 @@ XPLM_API void       XPGetWidgetExposedGeometry(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

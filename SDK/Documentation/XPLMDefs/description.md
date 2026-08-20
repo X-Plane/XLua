@@ -12,4 +12,4 @@ headers.  You can do this using the -D command line option or a preprocessor hea
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

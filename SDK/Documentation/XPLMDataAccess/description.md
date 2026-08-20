@@ -84,4 +84,4 @@ feature-enable API for more details.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

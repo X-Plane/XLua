@@ -4,9 +4,13 @@
 
 <div class="sym-block sym-enum" data-name="XPWidgetMessage" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPWidgetMessage { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 Widgets receive 32-bit messages indicating what action is to be taken or
 notifications of events. The list of messages may be expanded.
@@ -41,6 +45,10 @@ notifications of events. The list of messages may be expanded.
 
 </div>
 
+**Used by:**
+
+- [XPWidgetFunc_t](widget_callback_function.md#xpwidgetfunc_t)
+
 </div>
 
 ---
@@ -48,4 +56,4 @@ notifications of events. The list of messages may be expanded.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

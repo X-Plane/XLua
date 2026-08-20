@@ -27,4 +27,4 @@ used to select a character set; since X-Plane 9 all localization is done via UTF
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

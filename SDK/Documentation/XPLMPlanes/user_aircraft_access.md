@@ -6,9 +6,13 @@ These routines are used to initialize and manipulate the user's aircraft.
 
 <div class="sym-block sym-enum" data-name="XPLMInitResult" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMInitResult { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span> <span class="sym-badge badge-version">XPLM430</span>
+
+</div>
 
 Result codes from initializing or updating the user's aircraft. Initialization can fail due to
 unparsable/invalid data, or due to the contents of the initialization containing parameters the
@@ -39,9 +43,13 @@ only use the result code for flow control.
 
 <div class="sym-block sym-function" data-name="XPLMInitFlight" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMInitFlight { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM430</span>
+
+</div>
 
 Initialize a new flight, ending th user's current flight. The flight config is provided as json string.
 See https://developer.x-plane.com/article/flight-initialization-api/ for the JSON format specification.
@@ -49,11 +57,12 @@ See https://developer.x-plane.com/article/flight-initialization-api/ for the JSO
 Returns a XPLMInitResult enum value specifying whether the initalization succeeeded (and if not, what
 caused it to fail).
 
-```cpp
-XPLM_API XPLMInitResultXPLMInitFlight(
-                         char const*          inJsonData
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMInitResult -> assign to local/var
+local my_initResult = XPLMInitFlight(
+    inJsonData     -- char const
+)</code></pre>
+</div>
 
 </div>
 
@@ -61,9 +70,13 @@ XPLM_API XPLMInitResultXPLMInitFlight(
 
 <div class="sym-block sym-function" data-name="XPLMUpdateFlight" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMUpdateFlight { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM430</span>
+
+</div>
 
 Updates the user's 'current flight, modifying some flight parameters. The flight config is provided as
 a JSON string, see https://developer.x-plane.com/article/flight-initialization-api/ for the JSON format
@@ -72,11 +85,12 @@ specification.
 Returns an XPLMInitResult enum value specifying whether the update suceeeded (and if not, what caused
 it to fail).
 
-```cpp
-XPLM_API XPLMInitResultXPLMUpdateFlight(
-                         char const*          inJsonData
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMInitResult -> assign to local/var
+local my_initResult = XPLMUpdateFlight(
+    inJsonData     -- char const
+)</code></pre>
+</div>
 
 </div>
 
@@ -84,9 +98,13 @@ XPLM_API XPLMInitResultXPLMUpdateFlight(
 
 <div class="sym-block sym-function" data-name="XPLMSetUsersAircraft" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetUsersAircraft { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine changes the user's aircraft.  Note that this will reinitialize the user
 to be on the nearest airport's first runway.  Pass in a full path (hard drive and
@@ -96,11 +114,11 @@ Use XPLMInitFlight for complete control over initialization.
 
 **WARNING**: this API takes a full, not relative aicraft path.
 
-```cpp
-XPLM_API void       XPLMSetUsersAircraft(
-                         const char *         inAircraftPath
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetUsersAircraft(
+    inAircraftPath     -- string
+)</code></pre>
+</div>
 
 </div>
 
@@ -108,20 +126,24 @@ XPLM_API void       XPLMSetUsersAircraft(
 
 <div class="sym-block sym-function" data-name="XPLMPlaceUserAtAirport" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMPlaceUserAtAirport { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine places the user at a given airport.  Specify the airport by its X-Plane
 airport ID (e.g. 'KBOS').
 
 Use XPLMInitFlight for complete control over initialization.
 
-```cpp
-XPLM_API void       XPLMPlaceUserAtAirport(
-                         const char *         inAirportCode
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMPlaceUserAtAirport(
+    inAirportCode     -- string
+)</code></pre>
+</div>
 
 </div>
 
@@ -129,9 +151,13 @@ XPLM_API void       XPLMPlaceUserAtAirport(
 
 <div class="sym-block sym-function" data-name="XPLMPlaceUserAtLocation" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMPlaceUserAtLocation { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 Places the user at a specific location after performing any necessary scenery loads.
 
@@ -141,15 +167,15 @@ its engines running, regardless of the user's preferences (i.e., regardless of w
 
 Use XPLMInitFlight for complete control over initialization.
 
-```cpp
-XPLM_API void       XPLMPlaceUserAtLocation(
-                         double               latitudeDegrees,
-                         double               longitudeDegrees,
-                         float                elevationMetersMSL,
-                         float                headingDegreesTrue,
-                         float                speedMetersPerSecond
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMPlaceUserAtLocation(
+    latitudeDegrees,         -- float
+    longitudeDegrees,        -- float
+    elevationMetersMSL,      -- float
+    headingDegreesTrue,      -- float
+    speedMetersPerSecond     -- float
+)</code></pre>
+</div>
 
 </div>
 
@@ -158,4 +184,4 @@ XPLM_API void       XPLMPlaceUserAtLocation(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

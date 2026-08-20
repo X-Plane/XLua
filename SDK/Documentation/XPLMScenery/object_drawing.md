@@ -8,40 +8,53 @@ balance every successful call to XPLMLoadObject with a call to XPLMUnloadObject!
 
 <div class="sym-block sym-typedef" data-name="XPLMObjectRef" data-type="typedef" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMObjectRef { .symbol-title }
 
 <span class="sym-badge badge-typedef">typedef</span> <span class="sym-badge badge-version">XPLM200</span>
 
+</div>
+
 An XPLMObjectRef is a opaque handle to an .obj file that has been loaded into memory.
 
-```cpp
-typedef void * XPLMObjectRef;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local my_objectRef = nil  -- XPLMObjectRef</code></pre>
+</div>
 
+
+**Used by:**
+
+- [XPLMObjectLoaded_f](#xplmobjectloaded_f)
+- [XPLMUnloadObject](#xplmunloadobject)
 </div>
 
 ---
 
 <div class="sym-block sym-struct" data-name="XPLMDrawInfo_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMDrawInfo_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span> <span class="sym-badge badge-version">XPLM200</span>
 
+</div>
+
 The XPLMDrawInfo_t structure contains positioning info for one object that is to be drawn.
 Be sure to set structSize to the size of the structure for future expansion.
 
-```cpp
-typedef struct {
-     int                       structSize;
-     float                     x;
-     float                     y;
-     float                     z;
-     float                     pitch;
-     float                     heading;
-     float                     roll;
-} XPLMDrawInfo_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_DrawInfo_t = {
+    structSize  = 0,       -- int
+    x           = 0.0,     -- float
+    y           = 0.0,     -- float
+    z           = 0.0,     -- float
+    pitch       = 0.0,     -- float
+    heading     = 0.0,     -- float
+    roll        = 0.0,     -- float
+}</code></pre>
+</div>
 
 </div>
 
@@ -49,24 +62,28 @@ typedef struct {
 
 <div class="sym-block sym-struct" data-name="XPLMDrawInfoDouble_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMDrawInfoDouble_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span> <span class="sym-badge badge-version">XPLM420</span>
 
+</div>
+
 The XPLMDrawInfo_t structure contains positioning info for one object that is to be drawn.
 Be sure to set structSize to the size of the structure for future expansion.
 
-```cpp
-typedef struct {
-     int                       structSize;
-     double                    x;
-     double                    y;
-     double                    z;
-     double                    pitch;
-     double                    heading;
-     double                    roll;
-} XPLMDrawInfoDouble_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_DrawInfoDouble_t = {
+    structSize  = 0,       -- int
+    x           = 0.0,     -- float
+    y           = 0.0,     -- float
+    z           = 0.0,     -- float
+    pitch       = 0.0,     -- float
+    heading     = 0.0,     -- float
+    roll        = 0.0,     -- float
+}</code></pre>
+</div>
 
 </div>
 
@@ -74,9 +91,13 @@ typedef struct {
 
 <div class="sym-block sym-callback" data-name="XPLMObjectLoaded_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMObjectLoaded_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span> <span class="sym-badge badge-version">XPLM210</span>
+
+</div>
 
 You provide this callback when loading an object asynchronously; it will be called once the object is
 loaded. Your refcon is passed back. The object ref passed in is the newly loaded object (ready for use) or
@@ -85,22 +106,32 @@ NULL if an error occured. It will not be called more than once per object.
 If your plugin is disabled, this callback will be delivered as soon as the plugin is re-enabled. If your
 plugin is unloaded before this callback is ever called, the SDK will release the object handle for you.
 
-```cpp
-typedef void (* XPLMObjectLoaded_f)(
-                         XPLMObjectRef        inObject,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_ObjectLoaded_callback(
+    inObject,    -- XPLMObjectRef
+    inRefcon     -- any Lua var/table
+)
+    -- your code here
+end</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMObjectRef](#xplmobjectref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMLoadObject" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMLoadObject { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM200</span>
+
+</div>
 
 This routine loads an OBJ file and returns a handle to it. If X-Plane has already loaded the object, the
 handle to the existing object is returned. Do not assume you will get the same handle back twice, but do make
@@ -117,11 +148,12 @@ file is misformatted). This routine will load any object that can be used in the
 It is important that the datarefs an object uses for animation already be registered before you load the
 object. For this reason it may be necessary to defer object loading until the sim has fully started.
 
-```cpp
-XPLM_API XPLMObjectRefXPLMLoadObject(
-                         const char *         inPath
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMObjectRef -> assign to local/var
+local my_objectRef = XPLMLoadObject(
+    inPath     -- string
+)</code></pre>
+</div>
 
 </div>
 
@@ -129,9 +161,13 @@ XPLM_API XPLMObjectRefXPLMLoadObject(
 
 <div class="sym-block sym-function" data-name="XPLMLoadObjectAsync" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMLoadObjectAsync { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM210</span>
+
+</div>
 
 This routine loads an object asynchronously; control is returned to you immediately while X-Plane loads
 the object. The sim will not stop flying while the object loads. For large objects, it may be several
@@ -143,71 +179,46 @@ cannot be loaded, you will not find out until the callback function is called wi
 There is no way to cancel an asynchronous object load; you must wait for the load to complete and then
 release the object if it is no longer desired.
 
-```cpp
-XPLM_API void       XPLMLoadObjectAsync(
-                         const char *         inPath,
-                         XPLMObjectLoaded_f   inCallback,
-                         void *               inRefcon
-                    );
-```
-
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMLoadObjectAsync(
+    inPath,        -- string
+    inCallback,    -- see XPLMObjectLoaded_f
+    inRefcon       -- any Lua var/table
+)</code></pre>
 </div>
 
----
 
-<div class="sym-block sym-function" data-name="XPLMDrawObjects" data-type="function" markdown="1">
+**See associated types:**
 
-## XPLMDrawObjects { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-deprecated">XPLM_DEPRECATED</span>
-
-__Deprecation Warning__: use XPLMInstancing to draw 3-d objects by creating instances, rather than
-these APIs from draw callbacks.
-
-XPLMDrawObjects draws an object from an OBJ file one or more times. You pass in the object and an array
-of XPLMDrawInfo_t structs, one for each place you would like the object to be drawn.
-
-X-Plane will attempt to cull the objects based on LOD and visibility, and will pick the appropriate LOD.
-
-Lighting is a boolean; pass true to show the night version of object with night-only lights lit up. Pass false
-to show the daytime version of the object.
-
-earth_relative controls the coordinate system. If this is true, the rotations you specify are applied to
-the object after its coordinate system is transformed from local to earth-relative coordinates -- that is, an
-object with no rotations will point toward true north and the Y axis will be up against gravity. If this is false, the
-object is drawn with your rotations from local coordanates -- that is, an object with no rotations is drawn
-pointing down the -Z axis and the Y axis of the object matches the local coordinate Y axis.
-
-```cpp
-XPLM_API void       XPLMDrawObjects(
-                         XPLMObjectRef        inObject,
-                         int                  inCount,
-                         XPLMDrawInfo_t *     inLocations,
-                         int                  lighting,
-                         int                  earth_relative
-                    );
-```
-
+- [XPLMObjectLoaded_f](#xplmobjectloaded_f)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMUnloadObject" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMUnloadObject { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM200</span>
+
+</div>
 
 This routine marks an object as no longer being used by your plugin. Objects are reference counted: once
 no plugins are using an object, it is purged from memory. Make sure to call XPLMUnloadObject once for each
 successful call to XPLMLoadObject.
 
-```cpp
-XPLM_API void       XPLMUnloadObject(
-                         XPLMObjectRef        inObject
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMUnloadObject(
+    inObject     -- XPLMObjectRef
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMObjectRef](#xplmobjectref)
 </div>
 
 ---
@@ -215,4 +226,4 @@ XPLM_API void       XPLMUnloadObject(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

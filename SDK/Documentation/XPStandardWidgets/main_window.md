@@ -8,11 +8,17 @@ dialogs.
 
 <div class="sym-block sym-define" data-name="xpWidgetClass_MainWindow" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## xpWidgetClass_MainWindow { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
-`#define xpWidgetClass_MainWindow 1`
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">xpWidgetClass_MainWindow  -- 1</code></pre>
+</div>
 
 </div>
 
@@ -20,9 +26,13 @@ dialogs.
 
 <div class="sym-block sym-enum" data-name="Main Window Type Values" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Main Window Type Values { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 These type values are used to control the appearance of a main window.
 
@@ -41,9 +51,13 @@ These type values are used to control the appearance of a main window.
 
 <div class="sym-block sym-enum" data-name="Main Window Properties" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Main Window Properties { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 <div class="enum-table" markdown="1">
 
@@ -60,9 +74,13 @@ These type values are used to control the appearance of a main window.
 
 <div class="sym-block sym-enum" data-name="MainWindow Messages" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## MainWindow Messages { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 <div class="enum-table" markdown="1">
 
@@ -79,4 +97,4 @@ These type values are used to control the appearance of a main window.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

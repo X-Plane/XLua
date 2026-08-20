@@ -4,9 +4,13 @@
 
 <div class="sym-block sym-typedef" data-name="XPLMNavRef" data-type="typedef" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMNavRef { .symbol-title }
 
 <span class="sym-badge badge-typedef">typedef</span>
+
+</div>
 
 XPLMNavRef is an iterator into the navigation database.  The navigation
 database is essentially an array, but it is not necessarily densely populated.
@@ -18,19 +22,32 @@ Use XPLMNavRef to refer to a nav-aid.
 XPLM_NAV_NOT_FOUND is returned by functions that return an XPLMNavRef
 when the iterator must be invalid.
 
-```cpp
-typedef int XPLMNavRef;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local my_navRef = nil  -- XPLMNavRef</code></pre>
+</div>
 
+
+**Used by:**
+
+- [XPLMGetFMSEntryInfo](flight_management_computer.md#xplmgetfmsentryinfo)
+- [XPLMGetFMSFlightPlanEntryInfo](flight_management_computer.md#xplmgetfmsflightplanentryinfo)
+- [XPLMGetNavAidInfo](#xplmgetnavaidinfo)
+- [XPLMGetNextNavAid](#xplmgetnextnavaid)
+- [XPLMSetFMSEntryInfo](flight_management_computer.md#xplmsetfmsentryinfo)
+- [XPLMSetFMSFlightPlanEntryInfo](flight_management_computer.md#xplmsetfmsflightplanentryinfo)
 </div>
 
 ---
 
 <div class="sym-block sym-enum" data-name="XPLMNavType" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMNavType { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 These enumerations define the different types of navaids.  They are each
 defined with a separate bit so that they may be bit-wise added together
@@ -62,17 +79,32 @@ set a lat/lon waypoint.
 
 </div>
 
+**Used by:**
+
+- [XPLMFindFirstNavAidOfType](#xplmfindfirstnavaidoftype)
+- [XPLMFindLastNavAidOfType](#xplmfindlastnavaidoftype)
+- [XPLMFindNavAid](#xplmfindnavaid)
+- [XPLMGetFMSEntryInfo](flight_management_computer.md#xplmgetfmsentryinfo)
+- [XPLMGetFMSFlightPlanEntryInfo](flight_management_computer.md#xplmgetfmsflightplanentryinfo)
+- [XPLMGetNavAidInfo](#xplmgetnavaidinfo)
+
 </div>
 
 ---
 
 <div class="sym-block sym-define" data-name="XPLM_NAV_NOT_FOUND" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLM_NAV_NOT_FOUND { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
-`#define XPLM_NAV_NOT_FOUND -1`
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLM_NAV_NOT_FOUND  -- -1</code></pre>
+</div>
 
 </div>
 
@@ -80,16 +112,22 @@ set a lat/lon waypoint.
 
 <div class="sym-block sym-function" data-name="XPLMGetFirstNavAid" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetFirstNavAid { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This returns the very first navaid in the database.  Use this to traverse
 the entire database.  Returns XPLM_NAV_NOT_FOUND if the nav database is empty.
 
-```cpp
-XPLM_API XPLMNavRef XPLMGetFirstNavAid(void);
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMNavRef -> assign to local/var
+local my_navRef = XPLMGetFirstNavAid(
+)</code></pre>
+</div>
 
 </div>
 
@@ -97,70 +135,101 @@ XPLM_API XPLMNavRef XPLMGetFirstNavAid(void);
 
 <div class="sym-block sym-function" data-name="XPLMGetNextNavAid" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetNextNavAid { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Given a valid navaid ref, this routine returns the next navaid.  It returns
 XPLM_NAV_NOT_FOUND if the navaid passed in was invalid or if the navaid
 passed in was the last one in the database.  Use this routine to iterate
 across all like-typed navaids or the entire database.
 
-```cpp
-XPLM_API XPLMNavRef XPLMGetNextNavAid(
-                         XPLMNavRef           inNavAidRef
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMNavRef -> assign to local/var
+local my_navRef = XPLMGetNextNavAid(
+    inNavAidRef     -- XPLMNavRef
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavRef](#xplmnavref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMFindFirstNavAidOfType" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMFindFirstNavAidOfType { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine returns the ref of the first navaid of the given type in the
 database or XPLM_NAV_NOT_FOUND if there are no navaids of that type in the
 database.  You must pass exactly one navaid type to this routine.
 
-```cpp
-XPLM_API XPLMNavRef XPLMFindFirstNavAidOfType(
-                         XPLMNavType          inType
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMNavRef -> assign to local/var
+local my_navRef = XPLMFindFirstNavAidOfType(
+    inType     -- XPLMNavType
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavType](#xplmnavtype)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMFindLastNavAidOfType" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMFindLastNavAidOfType { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine returns the ref of the last navaid of the given type in the
 database or XPLM_NAV_NOT_FOUND if there are no navaids of that type in the
 database.  You must pass exactly one navaid type to this routine.
 
-```cpp
-XPLM_API XPLMNavRef XPLMFindLastNavAidOfType(
-                         XPLMNavType          inType
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMNavRef -> assign to local/var
+local my_navRef = XPLMFindLastNavAidOfType(
+    inType     -- XPLMNavType
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavType](#xplmnavtype)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMFindNavAid" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMFindNavAid { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine provides a number of searching capabilities for the nav database.
 XPLMFindNavAid will search through every navaid whose type is within inType
@@ -186,26 +255,35 @@ This routine provides a simple way to do a number of useful searches:
 * Find the VOR whose ID is "BOS".
 * Find the nearest airport whose name contains "Chicago".
 
-```cpp
-XPLM_API XPLMNavRef XPLMFindNavAid(
-                         const char *         inNameFragment,    /* Can be NULL */
-                         const char *         inIDFragment,    /* Can be NULL */
-                         float *              inLat,    /* Can be NULL */
-                         float *              inLon,    /* Can be NULL */
-                         int *                inFrequency,    /* Can be NULL */
-                         XPLMNavType          inType
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMNavRef -> assign to local/var
+local my_navRef = XPLMFindNavAid(
+    inNameFragment,    -- string
+    inIDFragment,      -- string
+    inLat,             -- float
+    inLon,             -- float
+    inFrequency,       -- int
+    inType             -- XPLMNavType
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavType](#xplmnavtype)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetNavAidInfo" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetNavAidInfo { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine returns information about a navaid.  Any non-null field is filled
 out with information if it is available.
@@ -221,21 +299,19 @@ The outReg parameter tells if the navaid is within the local "region" of loaded
 DSFs.  (This information may not be particularly useful to plugins.)  The parameter
 is a single byte value 1 for true or 0 for false, not a C string.
 
-```cpp
-XPLM_API void       XPLMGetNavAidInfo(
-                         XPLMNavRef           inRef,
-                         XPLMNavType *        outType,    /* Can be NULL */
-                         float *              outLatitude,    /* Can be NULL */
-                         float *              outLongitude,    /* Can be NULL */
-                         float *              outHeight,    /* Can be NULL */
-                         int *                outFrequency,    /* Can be NULL */
-                         float *              outHeading,    /* Can be NULL */
-                         char *               outID,    /* Can be NULL */
-                         char *               outName,    /* Can be NULL */
-                         char *               outReg    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPLMGetNavAidInfo(
+    inRef     -- XPLMNavRef
+)
+-- outs = { outType, outLatitude, outLongitude, outHeight, outFrequency, outHeading, outID, outName, outReg }</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavRef](#xplmnavref)
+- [XPLMNavType](#xplmnavtype)
 </div>
 
 ---
@@ -243,4 +319,4 @@ XPLM_API void       XPLMGetNavAidInfo(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

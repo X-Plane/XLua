@@ -7,11 +7,17 @@ parts of a window. It always shows its descriptor as its string and is otherwise
 
 <div class="sym-block sym-define" data-name="xpWidgetClass_Caption" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## xpWidgetClass_Caption { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
-`#define xpWidgetClass_Caption 6`
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">xpWidgetClass_Caption  -- 6</code></pre>
+</div>
 
 </div>
 
@@ -19,9 +25,13 @@ parts of a window. It always shows its descriptor as its string and is otherwise
 
 <div class="sym-block sym-enum" data-name="Caption Properties" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Caption Properties { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 <div class="enum-table" markdown="1">
 
@@ -38,4 +48,4 @@ parts of a window. It always shows its descriptor as its string and is otherwise
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

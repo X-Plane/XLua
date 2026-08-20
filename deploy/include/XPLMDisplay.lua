@@ -232,7 +232,7 @@ local XPLMDeviceID = {
 --- This is the prototype for drawing callbacks for custom devices' bezel. You are passed in the red, green, and blue values you can optinally use for tinting your bezel accoring to ambiant light. Refcon is a unique value that you specify when creating the device, allowing you to slip a pointer to your own data to the callback. Upon entry the OpenGL context will be correctly set up for you and OpenGL will be in panel coordinates for 2d drawing. The OpenGL state (texturing, etc.) will be unknown.
 ---@alias XPLMAvionicsBezelCallback_f fun(inAmbiantR: number, inAmbiantG: number, inAmbiantB: number, inRefcon: any)
 
---- This is the prototype for screen brightness callbacks for custom devices. If you provide a callback, you can return the ratio of the screen's maximum brightness that the simulator should use when displaying the screen in the 3D cockpit. inRheoValue is the current ratio value (between 0 and 1) of the instrument brightness rheostat to which the device is bound. inAmbientBrightness is the value (between 0 and 1) that the callback should return for the screen to be at a usable brightness based on ambient light (if your device has a photo cell and automatically adjusts its brightness, you can return this and your screen will be at the optimal brightness to be readable, but not blind the pilot). inBusVoltsRatio is the ratio of the nominal voltage currently present on the bus to which the device is bound, or -1 if the device is not bound to the current aircraft. Refcon is a unique value that you specify when creating the device, allowing you to slip a pointer to your own data to the callback.
+--- This is the prototype for screen brightness callbacks for custom devices. If you provide a callback, you can return the ratio of the screen's maximum brightness that the simulator should use when displaying the screen in the 3D cockpit. inRheoValue is the current ratio value (between 0 and 1) of the instrument brightness rheostat to which the device is bound. inAmbientBrightness is the value (between 0 and 1) that the callback should return for the screen to be at a usable brightness based on ambient light (if your device has a photo cell and automatically adjusts its brightness, you can return this and your screen will be at the optimal brightness to be readable, but not blind the pilot). inBusVoltsRatio is the ratio of the nominal voltage currently present on the electrical bus powering the device. This is the same value XPLMGetAvionicsBusVoltsRatio() returns, including its handling of devices wired to several buses: 1.0 if the author assigned the device to no bus at all, and -1 if the device is not bound to the current aircraft. Refcon is a unique value that you specify when creating the device, allowing you to slip a pointer to your own data to the callback.
 ---@alias XPLMAvionicsBrightness_f fun(inRheoValue: number, inAmbiantBrightness: number, inBusVoltsRatio: number, inRefcon: any): number
 
 --- Called for a browser-content-type avionics device when its main frame finishes loading a page. This is NOT a guarantee that the load succeeded: a page that renders an HTTP error response (e.g. a server's 404 page) also "finishes" here. A navigation that fails before the page renders fires XPLMAvionicsBrowserLoadError_f instead. If your page needs to know its own HTTP status, have it report that from JavaScript via a browser function. Set this via browserLoadFinishedFunc in XPLMCreateAvionics_t.
@@ -361,7 +361,11 @@ local XPLMDeviceID = {
 ---@field XPLMGetAvionicsBrightnessRheo fun(inHandle: XPLMAvionicsID): number
 
 ---@class _G
---- Returns the ratio of the nominal voltage (1.0 means full nominal voltage) of the electrical bus to which the given avionics device is bound, or -1 if the device is not bound to the current aircraft.
+--- Returns the ratio of the nominal voltage (1.0 means full nominal voltage) of the electrical bus powering the cockpit device with the given handle.
+---
+--- An aircraft author can wire a device to any combination of the six electrical buses. When more than one is selected, this returns the ratio for the highest-numbered selected bus that both exists on the current aircraft and is above the aircraft's low-voltage red line. If no selected bus meets that test, this returns 0 - so 0 means the device has no usable power, not that a bus measured zero volts.
+---
+--- If the device is bound but the author assigned it to no bus at all, this returns 1.0; X-Plane treats such a device as always powered. If the device is not bound to the current aircraft, this returns -1.
 ---
 ---@field XPLMGetAvionicsBusVoltsRatio fun(inHandle: XPLMAvionicsID): number
 
@@ -550,7 +554,7 @@ local XPLMWindowDecoration = {
 ---@class _G
 ---@field XPLMWindowDecoration XPLMWindowDecoration
 
---- The XPMCreateWindow_t structure defines all of the parameters used to create a modern window using XPLMCreateWindowEx(). The structure will be expanded in future SDK APIs to include more features. Always set the structSize member to the size of your struct in bytes! All windows created by this function in the XPLM300 version of the API are created with the new X-Plane 11 GUI features. This means your plugin will get to "know" about the existence of X-Plane windows other than the main window. All drawing and mouse callbacks for your window will occur in "boxels," giving your windows automatic support for high-DPI scaling in X-Plane. In addition, your windows can opt-in to decoration with the X-Plane 11 window styling, and you can use the XPLMSetWindowPositioningMode() API to make your window "popped out" into a first-class operating system window. Note that this requires dealing with your window's bounds in "global desktop" positioning units, rather than the traditional panel coordinate system. In global desktop coordinates, the main X-Plane window may not have its origin at coordinate (0, 0), and your own window may have negative coordinates. Assuming you don't implicitly assume (0, 0) as your origin, the only API change you should need is to start using XPLMGetMouseLocationGlobal() rather than XPLMGetMouseLocation(), and XPLMGetScreenBoundsGlobal() instead of XPLMGetScreenSize(). If you ask to be decorated as a floating window, you'll get the blue window control bar and blue backing that you see in X-Plane 11's normal "floating" windows (like the map).
+--- XPLMCreateWindow_t defines all of the parameters used to create a modern window using XPLMCreateWindowEx(). The structure has been expanded in later SDK versions and will be expanded again; the fields present in your build are the ones your SDK version defines, and structSize is how X-Plane knows which of them you filled in. Always set the structSize member to the size of your struct in bytes! Of the callbacks, only drawWindowFunc is required, and only for a window that draws through your plugin; see XPLMCreateWindowEx() for the rules. All windows created by this function in the XPLM300 version of the API are created with the new X-Plane 11 GUI features. This means your plugin will get to "know" about the existence of X-Plane windows other than the main window. All drawing and mouse callbacks for your window will occur in "boxels," giving your windows automatic support for high-DPI scaling in X-Plane. In addition, your windows can opt-in to decoration with the X-Plane 11 window styling, and you can use the XPLMSetWindowPositioningMode() API to make your window "popped out" into a first-class operating system window. Note that this requires dealing with your window's bounds in "global desktop" positioning units, rather than the traditional panel coordinate system. In global desktop coordinates, the main X-Plane window may not have its origin at coordinate (0, 0), and your own window may have negative coordinates. Assuming you don't implicitly assume (0, 0) as your origin, the only API change you should need is to start using XPLMGetMouseLocationGlobal() rather than XPLMGetMouseLocation(), and XPLMGetScreenBoundsGlobal() instead of XPLMGetScreenSize(). If you ask to be decorated as a floating window, you'll get the blue window control bar and blue backing that you see in X-Plane 11's normal "floating" windows (like the map).
 ---@class XPLMCreateWindow_t
 ---@field structSize integer Used to inform XPLMCreateWindowEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateWindow_t)
 ---@field left integer Left bound, in global desktop boxels
@@ -567,16 +571,27 @@ local XPLMWindowDecoration = {
 ---@field decorateAsFloatingWindow XPLMWindowDecoration Specifies the type of X-Plane 11-style "wrapper" you want around your window, if any
 ---@field layer XPLMWindowLayer
 ---@field handleRightClickFunc XPLMHandleMouseClick_f A callback to handle the user right-clicking within your window (or NULL to ignore right clicks)
----@field windowContentType XPLMWindowContentType The source of content for this Window (OpenGL, Panel Graphics, CEF, etc.)
+---@field contentType XPLMWindowContentType How this window is drawn: xplm_WindowContentTypeOpenGL (the legacy OpenGL bridge), xplm_WindowContentTypePanelGraphics (native panel-graphics rendering), or xplm_WindowContentTypeBrowser (a CEF web view). A browser window draws itself, so drawWindowFunc is not used; drive the page with XPLMWindowSetURL() and friends.
 ---@field browserLoadFinishedFunc XPLMBrowserLoadFinished_f For browser content: called when the main frame finishes loading (not a success guarantee --error pages finish too). NULL if unused.
 ---@field browserLoadErrorFunc XPLMBrowserLoadError_f For browser content: called when a navigation fails at the network level. NULL if unused.
 
 ---@class _G
---- This routine creates a new "modern" window. You pass in an XPLMCreateWindow_t structure with all
---- of the fields set in.  You must set the structSize of the structure to the size of the
---- actual structure you used.  Also, you must provide functions for every callback---you may
---- not leave them null!  (If you do not support the cursor or mouse wheel, use functions that
---- return the default values.)
+--- This routine creates a new "modern" window.  You pass in an XPLMCreateWindow_t structure with all of the
+--- fields set in, including its structSize, which must be the size of the actual structure you used.
+---
+--- Returns the ID of the new window, or NULL if it could not be created --either because structSize matched
+--- no known SDK version, or because the window needed a drawing callback and none was provided.
+---
+--- Only drawWindowFunc is required, and only for a window whose contentType makes your plugin responsible
+--- for its pixels: xplm_WindowContentTypeOpenGL and xplm_WindowContentTypePanelGraphics.  A browser window
+--- renders its own content and ignores drawWindowFunc.
+---
+--- Every other callback is optional; leave it NULL and your window does not receive that event.  A window
+--- with no handleMouseClickFunc or handleRightClickFunc does not consume clicks, a window with no
+--- handleMouseWheelFunc does not consume scroll wheel events, and a window with no handleCursorFunc gets
+--- the default cursor.  (Whether a click reaches a window underneath yours also depends on your window's
+--- decoration: any decoration other than xplm_WindowDecorationNone stops clicks at your window's bounds.)
+--- The browserLoadFinishedFunc and browserLoadErrorFunc callbacks are only called for browser windows.
 ---
 --- NOTE: For an imgui-drawn window, Lua scripts should use XLuaCreateImguiWindow()
 --- instead; it opens and closes the imgui frame for you and wires the input handlers.
@@ -642,6 +657,7 @@ local XPLMWindowDecoration = {
 ---
 ---@field XPLMWindowInjectScript fun(inWindowID: XPLMWindowID, inScript: string)
 
+--- Handler invoked when the page in a browser-content-type window calls xplane.<name>(arg). You receive the window, the argument serialised as a JSON string, and your refcon; return a JSON string (or NULL) that the JS Promise resolves to.
 ---@alias XPLMBrowserCallback_f fun(inWindowID: XPLMWindowID, inJSON: string, inRefcon: any): string
 
 ---@class _G

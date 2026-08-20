@@ -59,19 +59,25 @@ coalesce consecutive dataref registrations to minimize the number of messages se
 
 <div class="sym-block sym-callback" data-name="XPLMFeatureEnumerator_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMFeatureEnumerator_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
 
+</div>
+
 You pass an XPLMFeatureEnumerator_f to get a list of all features supported by a given version running version of
 X-Plane.  This routine is called once for each feature.
 
-```cpp
-typedef void (* XPLMFeatureEnumerator_f)(
-                         const char *         inFeature,
-                         void *               inRef
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_FeatureEnumerator_callback(
+    inFeature,    -- string
+    inRef         -- any Lua var/table
+)
+    -- your code here
+end</code></pre>
+</div>
 
 </div>
 
@@ -79,17 +85,22 @@ typedef void (* XPLMFeatureEnumerator_f)(
 
 <div class="sym-block sym-function" data-name="XPLMHasFeature" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMHasFeature { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This returns 1 if the given installation of X-Plane supports a feature, or 0 if it does not.
 
-```cpp
-XPLM_API int        XPLMHasFeature(
-                         const char *         inFeature
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns boolean -> assign to local/var
+local my_result = XPLMHasFeature(
+    inFeature     -- string
+)</code></pre>
+</div>
 
 </div>
 
@@ -97,18 +108,23 @@ XPLM_API int        XPLMHasFeature(
 
 <div class="sym-block sym-function" data-name="XPLMIsFeatureEnabled" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMIsFeatureEnabled { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This returns 1 if a feature is currently enabled for your plugin, or 0 if it is not enabled.  It is
 an error to call this routine with an unsupported feature.
 
-```cpp
-XPLM_API int        XPLMIsFeatureEnabled(
-                         const char *         inFeature
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns boolean -> assign to local/var
+local my_result = XPLMIsFeatureEnabled(
+    inFeature     -- string
+)</code></pre>
+</div>
 
 </div>
 
@@ -116,19 +132,23 @@ XPLM_API int        XPLMIsFeatureEnabled(
 
 <div class="sym-block sym-function" data-name="XPLMEnableFeature" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMEnableFeature { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This routine enables or disables a feature for your plugin.  This will change the running behavior
 of X-Plane and your plugin in some way, depending on the feature.
 
-```cpp
-XPLM_API void       XPLMEnableFeature(
-                         const char *         inFeature,
-                         int                  inEnable
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMEnableFeature(
+    inFeature,    -- string
+    inEnable      -- boolean
+)</code></pre>
+</div>
 
 </div>
 
@@ -136,20 +156,28 @@ XPLM_API void       XPLMEnableFeature(
 
 <div class="sym-block sym-function" data-name="XPLMEnumerateFeatures" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMEnumerateFeatures { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This routine calls your enumerator callback once for each feature that this running version of X-Plane supports.
 Use this routine to determine all of the features that X-Plane can support. Callbacks are synchronous.
 
-```cpp
-XPLM_API void       XPLMEnumerateFeatures(
-                         XPLMFeatureEnumerator_f inEnumerator,    /* Can be NULL */
-                         void *               inRef
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMEnumerateFeatures(
+    inEnumerator,    -- see XPLMFeatureEnumerator_f
+    inRef            -- any Lua var/table
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMFeatureEnumerator_f](#xplmfeatureenumerator_f)
 </div>
 
 ---
@@ -157,4 +185,4 @@ XPLM_API void       XPLMEnumerateFeatures(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

@@ -6,11 +6,17 @@ This widget implements a progress indicator as seen when X-Plane starts up.
 
 <div class="sym-block sym-define" data-name="xpWidgetClass_Progress" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## xpWidgetClass_Progress { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
-`#define xpWidgetClass_Progress 8`
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">xpWidgetClass_Progress  -- 8</code></pre>
+</div>
 
 </div>
 
@@ -18,9 +24,13 @@ This widget implements a progress indicator as seen when X-Plane starts up.
 
 <div class="sym-block sym-enum" data-name="Progress Indicator Properties" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Progress Indicator Properties { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 <div class="enum-table" markdown="1">
 
@@ -39,4 +49,4 @@ This widget implements a progress indicator as seen when X-Plane starts up.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

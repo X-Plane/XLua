@@ -17,4 +17,4 @@ ID as a parameter so you can know which widget is messaging no matter who it is 
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

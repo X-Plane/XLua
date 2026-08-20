@@ -4,9 +4,13 @@
 
 <div class="sym-block sym-enum" data-name="XPLMFlightLoopPhaseType" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMFlightLoopPhaseType { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span> <span class="sym-badge badge-version">XPLM210</span>
+
+</div>
 
 You can register a flight loop callback to run either before or after the flight model is
 integrated by X-Plane.
@@ -26,26 +30,39 @@ integrated by X-Plane.
 
 <div class="sym-block sym-typedef" data-name="XPLMFlightLoopID" data-type="typedef" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMFlightLoopID { .symbol-title }
 
 <span class="sym-badge badge-typedef">typedef</span> <span class="sym-badge badge-version">XPLM210</span>
 
+</div>
+
 This is an opaque identifier for a flight loop callback. You can use this identifier to easily
 track and remove your callbacks, or to use the new flight loop APIs.
 
-```cpp
-typedef void * XPLMFlightLoopID;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local my_flightLoopID = nil  -- XPLMFlightLoopID</code></pre>
+</div>
 
+
+**Used by:**
+
+- [XPLMDestroyFlightLoop](#xplmdestroyflightloop)
+- [XPLMScheduleFlightLoop](#xplmscheduleflightloop)
 </div>
 
 ---
 
 <div class="sym-block sym-callback" data-name="XPLMFlightLoop_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMFlightLoop_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
+
+</div>
 
 This is your flight loop callback. Each time the flight loop is iterated through,
 you receive this call at the end.
@@ -74,14 +91,17 @@ that do nothing lowers X-Plane's frame rate.
 
 Your callback will NOT be unregistered if you return 0; it will merely be inactive.
 
-```cpp
-typedef float (* XPLMFlightLoop_f)(
-                         float                inElapsedSinceLastCall,
-                         float                inElapsedTimeSinceLastFlightLoop,
-                         int                  inCounter,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_FlightLoop_callback(
+    inElapsedSinceLastCall,              -- float
+    inElapsedTimeSinceLastFlightLoop,    -- float
+    inCounter,                           -- int
+    inRefcon                             -- any Lua var/table
+)
+    -- your code here
+    return nil  -- float
+end</code></pre>
+</div>
 
 </div>
 
@@ -89,31 +109,43 @@ typedef float (* XPLMFlightLoop_f)(
 
 <div class="sym-block sym-struct" data-name="XPLMCreateFlightLoop_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCreateFlightLoop_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span> <span class="sym-badge badge-version">XPLM210</span>
 
+</div>
+
 XPLMCreateFlightLoop_t contains the parameters to create a new flight loop callback. The structure
 may be expanded in future SDKs - always set structSize to the size of your structure in bytes.
 
-```cpp
-typedef struct {
-     int                       structSize;
-     XPLMFlightLoopPhaseType   phase;
-     XPLMFlightLoop_f          callbackFunc;
-     userref                   refcon;
-} XPLMCreateFlightLoop_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_CreateFlightLoop_t = {
+    structSize    = 0,       -- int
+    phase         = nil,     -- XPLMFlightLoopPhaseType
+    callbackFunc  = nil,     -- see XPLMFlightLoop_f
+    refcon        = nil,     -- any Lua var/table
+}</code></pre>
+</div>
 
+
+**See available callback(s):**
+
+- [XPLMFlightLoop_f](#xplmflightloop_f)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetElapsedTime" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetElapsedTime { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine returns the elapsed time since the sim started up in decimal seconds. This is a wall timer;
 it keeps counting upward even if the sim is pasued.
@@ -121,9 +153,11 @@ it keeps counting upward even if the sim is pasued.
 __WARNING__: XPLMGetElapsedTime is not a very good timer!  It lacks precision in both its data type
 and its source.  Do not attempt to use it for timing critical applications like network multiplayer.
 
-```cpp
-XPLM_API float      XPLMGetElapsedTime(void);
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns float -> assign to local/var
+local my_result = XPLMGetElapsedTime(
+)</code></pre>
+</div>
 
 </div>
 
@@ -131,95 +165,21 @@ XPLM_API float      XPLMGetElapsedTime(void);
 
 <div class="sym-block sym-function" data-name="XPLMGetCycleNumber" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetCycleNumber { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This routine returns a counter starting at zero for each sim cycle computed/video frame rendered.
 
-```cpp
-XPLM_API int        XPLMGetCycleNumber(void);
-```
-
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int -> assign to local/var
+local my_result = XPLMGetCycleNumber(
+)</code></pre>
 </div>
-
----
-
-<div class="sym-block sym-function" data-name="XPLMRegisterFlightLoopCallback" data-type="function" markdown="1">
-
-## XPLMRegisterFlightLoopCallback { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span>
-
-This routine registers your flight loop callback. Pass in a pointer to a flight
-loop function and a refcon (an optional reference value determined by you).
-inInterval defines when you will be called. Pass in
-a positive number to specify seconds from registration time to the next callback.
-Pass in a negative number to indicate when you will be called (e.g. pass -1 to be
-called at the next cylcle). Pass 0 to not be called; your callback will be inactive.
-
-(This legacy function only installs pre-flight-loop callbacks; use XPLMCreateFlightLoop
-for more control.)
-
-```cpp
-XPLM_API void       XPLMRegisterFlightLoopCallback(
-                         XPLMFlightLoop_f     inFlightLoop,
-                         float                inInterval,
-                         void *               inRefcon
-                    );
-```
-
-</div>
-
----
-
-<div class="sym-block sym-function" data-name="XPLMUnregisterFlightLoopCallback" data-type="function" markdown="1">
-
-## XPLMUnregisterFlightLoopCallback { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span>
-
-This routine unregisters your flight loop callback. Do NOT call it from your
-flight loop callback. Once your flight loop callback is unregistered, it will not
-be called again.
-
-Only use this on flight loops registered via XPLMRegisterFlightLoopCallback.
-
-```cpp
-XPLM_API void       XPLMUnregisterFlightLoopCallback(
-                         XPLMFlightLoop_f     inFlightLoop,
-                         void *               inRefcon
-                    );
-```
-
-</div>
-
----
-
-<div class="sym-block sym-function" data-name="XPLMSetFlightLoopCallbackInterval" data-type="function" markdown="1">
-
-## XPLMSetFlightLoopCallbackInterval { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span>
-
-This routine sets when a callback will be called. Do NOT call it from your callback;
-use the return value of the callback to change your callback interval from inside
-your callback.
-
-inInterval is formatted the same way as in XPLMRegisterFlightLoopCallback; positive
-for seconds, negative for cycles, and 0 for deactivating the callback. If
-inRelativeToNow is true, times are from the time of this call; otherwise they are from
-the time the callback was last called (or the time it was registered if it has never
-been called.
-
-```cpp
-XPLM_API void       XPLMSetFlightLoopCallbackInterval(
-                         XPLMFlightLoop_f     inFlightLoop,
-                         float                inInterval,
-                         int                  inRelativeToNow,
-                         void *               inRefcon
-                    );
-```
 
 </div>
 
@@ -227,48 +187,69 @@ XPLM_API void       XPLMSetFlightLoopCallbackInterval(
 
 <div class="sym-block sym-function" data-name="XPLMCreateFlightLoop" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCreateFlightLoop { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM210</span>
+
+</div>
 
 This routine creates a flight loop callback and returns its ID. The flight loop callback is created
 using the input param struct, and is inited to be unscheduled. Use XPLMScheduleFlightLoop
 to schedule it.
 
-```cpp
-XPLM_API XPLMFlightLoopIDXPLMCreateFlightLoop(
-                         XPLMCreateFlightLoop_t * inParams
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMFlightLoopID -> assign to local/var
+local my_flightLoopID = XPLMCreateFlightLoop(
+    inParams     -- see XPLMCreateFlightLoop_t
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMCreateFlightLoop_t](#xplmcreateflightloop_t)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMDestroyFlightLoop" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMDestroyFlightLoop { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM210</span>
 
+</div>
+
 This routine destroys a flight loop callback by ID. Only call it on flight loops created with
 the newer XPLMCreateFlightLoop API.
 
-```cpp
-XPLM_API void       XPLMDestroyFlightLoop(
-                         XPLMFlightLoopID     inFlightLoopID
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMDestroyFlightLoop(
+    inFlightLoopID     -- XPLMFlightLoopID
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMFlightLoopID](#xplmflightloopid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMScheduleFlightLoop" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMScheduleFlightLoop { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM210</span>
+
+</div>
 
 This routine schedules a flight loop callback for future execution. If inInterval is negative, it is run
 in a certain number of frames based on the absolute value of the input. If the interval is positive, it is
@@ -277,14 +258,18 @@ a duration in seconds.
 If inRelativeToNow is true, times are interpreted relative to the time this routine is called; otherwise
 they are relative to the last call time or the time the flight loop was registered (if never called).
 
-```cpp
-XPLM_API void       XPLMScheduleFlightLoop(
-                         XPLMFlightLoopID     inFlightLoopID,
-                         float                inInterval,
-                         int                  inRelativeToNow
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMScheduleFlightLoop(
+    inFlightLoopID,     -- XPLMFlightLoopID
+    inInterval,         -- float
+    inRelativeToNow     -- boolean
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMFlightLoopID](#xplmflightloopid)
 </div>
 
 ---
@@ -292,4 +277,4 @@ XPLM_API void       XPLMScheduleFlightLoop(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

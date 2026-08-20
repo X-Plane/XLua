@@ -6,11 +6,17 @@ The general graphics widget can show one of many icons available from X-Plane.
 
 <div class="sym-block sym-define" data-name="xpWidgetClass_GeneralGraphics" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## xpWidgetClass_GeneralGraphics { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
-`#define xpWidgetClass_GeneralGraphics 7`
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">xpWidgetClass_GeneralGraphics  -- 7</code></pre>
+</div>
 
 </div>
 
@@ -18,9 +24,13 @@ The general graphics widget can show one of many icons available from X-Plane.
 
 <div class="sym-block sym-enum" data-name="General Graphics Types Values" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## General Graphics Types Values { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 These define the icon for the general graphics.
 
@@ -56,9 +66,13 @@ These define the icon for the general graphics.
 
 <div class="sym-block sym-enum" data-name="General Graphics Properties" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## General Graphics Properties { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 <div class="enum-table" markdown="1">
 
@@ -75,4 +89,4 @@ These define the icon for the general graphics.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

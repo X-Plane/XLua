@@ -10,27 +10,39 @@ trees of widgets to create complex user interfaces.
 
 <div class="sym-block sym-typedef" data-name="XPWidgetID" data-type="typedef" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPWidgetID { .symbol-title }
 
 <span class="sym-badge badge-typedef">typedef</span>
+
+</div>
 
 A Widget ID is an opaque unique non-zero handle identifying your widget. Use 0 to specify
 "no widget". This type is defined as wide enough to hold a pointer. You receive a widget
 ID when you create a new widget and then use that widget ID to further refer to the widget.
 
-```cpp
-typedef void * XPWidgetID;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local my_widgetID = nil  -- XPWidgetID</code></pre>
+</div>
 
+
+**Used by:**
+
+- [XPWidgetFunc_t](widget_callback_function.md#xpwidgetfunc_t)
 </div>
 
 ---
 
 <div class="sym-block sym-enum" data-name="XPWidgetPropertyID" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPWidgetPropertyID { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 Properties are values attached to instances of your widgets. A property is
 identified by a 32-bit ID and its value is the width of a pointer.
@@ -64,20 +76,24 @@ own property IDs as well.
 
 <div class="sym-block sym-struct" data-name="XPMouseState_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPMouseState_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span>
 
+</div>
+
 When the mouse is clicked or dragged, a pointer to this structure is passed to your widget function.
 
-```cpp
-typedef struct {
-     int                       x;
-     int                       y;
-     int                       button;
-     int                       delta;
-} XPMouseState_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_MouseState_t = {
+    x       = 0,       -- int
+    y       = 0,       -- int
+    button  = 0,       -- int
+    delta   = 0,       -- int
+}</code></pre>
+</div>
 
 </div>
 
@@ -85,19 +101,23 @@ typedef struct {
 
 <div class="sym-block sym-struct" data-name="XPKeyState_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPKeyState_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span>
 
+</div>
+
 When a key is pressed, a pointer to this struct is passed to your widget function.
 
-```cpp
-typedef struct {
-     char                      key;
-     XPLMKeyFlags              flags;
-     char                      vkey;
-} XPKeyState_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_KeyState_t = {
+    key    = nil,     -- char
+    flags  = nil,     -- XPLMKeyFlags
+    vkey   = nil,     -- char
+}</code></pre>
+</div>
 
 </div>
 
@@ -105,20 +125,24 @@ typedef struct {
 
 <div class="sym-block sym-struct" data-name="XPWidgetGeometryChange_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPWidgetGeometryChange_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span>
 
+</div>
+
 This structure contains the deltas for your widget's geometry when it changes.
 
-```cpp
-typedef struct {
-     int                       dx;
-     int                       dy;
-     int                       dwidth;
-     int                       dheight;
-} XPWidgetGeometryChange_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_WidgetGeometryChange_t = {
+    dx       = 0,       -- int
+    dy       = 0,       -- int
+    dwidth   = 0,       -- int
+    dheight  = 0,       -- int
+}</code></pre>
+</div>
 
 </div>
 
@@ -126,9 +150,13 @@ typedef struct {
 
 <div class="sym-block sym-enum" data-name="XPDispatchMode" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPDispatchMode { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 The dispatching modes describe how the widgets library sends out messages.  Currently there are three modes:
 
@@ -150,17 +178,21 @@ The dispatching modes describe how the widgets library sends out messages.  Curr
 
 <div class="sym-block sym-typedef" data-name="XPWidgetClass" data-type="typedef" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPWidgetClass { .symbol-title }
 
 <span class="sym-badge badge-typedef">typedef</span>
+
+</div>
 
 Widget classes define predefined widget types. A widget class basically specifies
 from a library the widget function to be used for the widget. Most widgets can
 be made right from classes.
 
-```cpp
-typedef int XPWidgetClass;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local my_widgetClass = nil  -- XPWidgetClass</code></pre>
+</div>
 
 </div>
 
@@ -168,13 +200,19 @@ typedef int XPWidgetClass;
 
 <div class="sym-block sym-define" data-name="xpWidgetClass_None" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## xpWidgetClass_None { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
+</div>
+
 An unspecified widget class.  Other widget classes are in XPStandardWidgets.h
 
-`#define xpWidgetClass_None 0`
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">xpWidgetClass_None  -- 0</code></pre>
+</div>
 
 </div>
 
@@ -183,4 +221,4 @@ An unspecified widget class.  Other widget classes are in XPStandardWidgets.h
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

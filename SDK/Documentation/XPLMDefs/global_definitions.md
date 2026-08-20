@@ -6,9 +6,13 @@ These definitions are used in all parts of the SDK.
 
 <div class="sym-block sym-typedef" data-name="XPLMPluginID" data-type="typedef" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMPluginID { .symbol-title }
 
 <span class="sym-badge badge-typedef">typedef</span>
+
+</div>
 
 Each plug-in is identified by a unique integer ID.  This ID can be used to disable
 or enable a plug-in, or discover what plug-in is 'running' at the time.  A plug-in
@@ -22,9 +26,9 @@ XPLMUtiltiies.h .
 
 -1 indicates no plug-in.
 
-```cpp
-typedef int XPLMPluginID;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local my_pluginID = nil  -- XPLMPluginID</code></pre>
+</div>
 
 </div>
 
@@ -32,9 +36,13 @@ typedef int XPLMPluginID;
 
 <div class="sym-block sym-enum" data-name="XPLMKeyFlags" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMKeyFlags { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 These bitfields define modifier keys in a platform independent way.
 When a key is pressed, a series of messages are sent to your plugin.  The down
@@ -72,9 +80,13 @@ are ever set --- the down/up flags are never returned by that call.
 
 <div class="sym-block sym-enum" data-name="XPLMCursorStatus" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCursorStatus { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span> <span class="sym-badge badge-version">XPLM200</span>
+
+</div>
 
 XPLMCursorStatus describes how you would like X-Plane to manage the cursor.  See XPLMHandleCursor_f for more info.
 
@@ -116,9 +128,13 @@ XPLMCursorStatus describes how you would like X-Plane to manage the cursor.  See
 
 <div class="sym-block sym-enum" data-name="XPLMMouseStatus" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMouseStatus { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 When the mouse is clicked, your mouse click routine is called repeatedly.  It is first called with the
 mouse down message.  It is then called zero or more times with the mouse-drag message, and finally it
@@ -141,13 +157,19 @@ you are guaranteed to not receive a drag or mouse-up event without first receivi
 
 <div class="sym-block sym-define" data-name="XPLM_NO_PLUGIN_ID" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLM_NO_PLUGIN_ID { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
+</div>
+
 No plugin.
 
-`#define XPLM_NO_PLUGIN_ID (-1)`
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLM_NO_PLUGIN_ID  -- (-1)</code></pre>
+</div>
 
 </div>
 
@@ -155,13 +177,19 @@ No plugin.
 
 <div class="sym-block sym-define" data-name="XPLM_PLUGIN_XPLANE" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLM_PLUGIN_XPLANE { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
+</div>
+
 X-Plane itself
 
-`#define XPLM_PLUGIN_XPLANE (0)`
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLM_PLUGIN_XPLANE  -- (0)</code></pre>
+</div>
 
 </div>
 
@@ -169,13 +197,19 @@ X-Plane itself
 
 <div class="sym-block sym-define" data-name="kXPLM_Version" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## kXPLM_Version { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
+</div>
+
 The current XPLM revision is 4.4.0 (440).
 
-`#define kXPLM_Version (440)`
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">kXPLM_Version  -- (440)</code></pre>
+</div>
 
 </div>
 
@@ -183,17 +217,21 @@ The current XPLM revision is 4.4.0 (440).
 
 <div class="sym-block sym-struct" data-name="XPLMFixedString150_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMFixedString150_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span>
 
+</div>
+
 A container for a fixed-size string buffer of 150 characters.
 
-```cpp
-typedef struct {
-     char[150]                 buffer;
-} XPLMFixedString150_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_FixedString150_t = {
+    buffer  = nil,     -- char
+}</code></pre>
+</div>
 
 </div>
 
@@ -202,4 +240,4 @@ typedef struct {
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

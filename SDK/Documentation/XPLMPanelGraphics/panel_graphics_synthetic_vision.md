@@ -19,9 +19,13 @@ a G1000 or other SVT-capable avionics installed.
 
 <div class="sym-block sym-enum" data-name="XPLMSVTFeatures" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSVTFeatures { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 Bit flags that control which visual layers an SVT display renders. Combine
 flags with bitwise OR to enable multiple layers.
@@ -42,27 +46,35 @@ flags with bitwise OR to enable multiple layers.
 
 </div>
 
+**Used by:**
+
+- [XPLMSVTDisplayDrawIn](#xplmsvtdisplaydrawin)
+
 </div>
 
 ---
 
 <div class="sym-block sym-struct" data-name="XPLMCreateSVT_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCreateSVT_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span>
+
+</div>
 
 Parameters for creating an SVT display. Set structSize to the size of your
 struct so that future SDK versions can add fields without breaking existing
 plugins.
 
-```cpp
-typedef struct {
-     int                       structSize;
-     int                       pilotIndex;
-     float                     pixelsPerDegree;
-} XPLMCreateSVT_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_CreateSVT_t = {
+    structSize       = 0,       -- int
+    pilotIndex       = 0,       -- int
+    pixelsPerDegree  = 0.0,     -- float
+}</code></pre>
+</div>
 
 </div>
 
@@ -70,26 +82,39 @@ typedef struct {
 
 <div class="sym-block sym-typedef" data-name="XPLMSVTDisplayRef" data-type="typedef" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSVTDisplayRef { .symbol-title }
 
 <span class="sym-badge badge-typedef">typedef</span>
 
+</div>
+
 An opaque handle to an SVT display instance. Create one with
 XPLMCreateSVTDisplay and destroy it with XPLMDestroySVTDisplay.
 
-```cpp
-typedef void * XPLMSVTDisplayRef;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local my_sVTDisplayRef = nil  -- XPLMSVTDisplayRef</code></pre>
+</div>
 
+
+**Used by:**
+
+- [XPLMDestroySVTDisplay](#xplmdestroysvtdisplay)
+- [XPLMSVTDisplayDrawIn](#xplmsvtdisplaydrawin)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMCreateSVTDisplay" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCreateSVTDisplay { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This function creates a new SVT display instance. The display begins loading
 terrain tiles for the current aircraft position immediately. You can draw it
@@ -110,53 +135,70 @@ The returned handle must be destroyed with XPLMDestroySVTDisplay when no
 longer needed. Handles are automatically destroyed when the owning plugin is
 unloaded.
 
-```cpp
-XPLM_API XPLMSVTDisplayRefXPLMCreateSVTDisplay(
-                         XPLMCreateSVT_t *    params
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMSVTDisplayRef -> assign to local/var
+local my_sVTDisplayRef = XPLMCreateSVTDisplay(
+    params     -- see XPLMCreateSVT_t
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMCreateSVT_t](#xplmcreatesvt_t)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMDestroySVTDisplay" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMDestroySVTDisplay { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This function destroys an SVT display and frees all associated resources.
 
-```cpp
-XPLM_API void       XPLMDestroySVTDisplay(
-                         XPLMSVTDisplayRef    svt
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMDestroySVTDisplay(
+    svt     -- XPLMSVTDisplayRef
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMSVTDisplayRef](#xplmsvtdisplayref)
 </div>
 
 ---
 
 <div class="sym-block sym-struct" data-name="XPLMSVTCustomData_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSVTCustomData_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span>
 
-```cpp
-typedef struct {
-     float                     pitchDeg;
-     float                     rollDeg;
-     float                     headingMagDeg;
-     float                     magVarDeg;
-     float                     indicatedAltFt;
-     float                     baroSettingInHg;
-     int                       hsiSource;
-     float                     hdefDots;
-     float                     vdefDots;
-} XPLMSVTCustomData_t;
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_SVTCustomData_t = {
+    pitchDeg         = 0.0,     -- float
+    rollDeg          = 0.0,     -- float
+    headingMagDeg    = 0.0,     -- float
+    magVarDeg        = 0.0,     -- float
+    indicatedAltFt   = 0.0,     -- float
+    baroSettingInHg  = 0.0,     -- float
+    hsiSource        = 0,       -- int
+    hdefDots         = 0.0,     -- float
+    vdefDots         = 0.0,     -- float
+}</code></pre>
+</div>
 
 </div>
 
@@ -164,9 +206,13 @@ typedef struct {
 
 <div class="sym-block sym-function" data-name="XPLMSVTDisplayDrawIn" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSVTDisplayDrawIn { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This function renders the SVT display directly into the active panel surface
 within the specified rectangular region. SVT sets up its own 3-D perspective
@@ -184,18 +230,24 @@ terrain tiles have not finished loading yet, this function does nothing.
 - left, top, right, bottom: the bounding rectangle in panel coordinates.
 - dataOverrides. Pass nullptr for default sim state.
 
-```cpp
-XPLM_API void       XPLMSVTDisplayDrawIn(
-                         XPLMSVTDisplayRef    svt,
-                         XPLMSVTFeatures      features,
-                         int                  left,
-                         int                  top,
-                         int                  right,
-                         int                  bottom,
-                         XPLMSVTCustomData_t* dataOverrides    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSVTDisplayDrawIn(
+    svt,              -- XPLMSVTDisplayRef
+    features,         -- XPLMSVTFeatures
+    left,             -- int
+    top,              -- int
+    right,            -- int
+    bottom,           -- int
+    dataOverrides     -- see XPLMSVTCustomData_t
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMSVTCustomData_t](#xplmsvtcustomdata_t)
+- [XPLMSVTDisplayRef](#xplmsvtdisplayref)
+- [XPLMSVTFeatures](#xplmsvtfeatures)
 </div>
 
 ---
@@ -203,4 +255,4 @@ XPLM_API void       XPLMSVTDisplayDrawIn(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

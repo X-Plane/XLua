@@ -24,9 +24,13 @@ has an FMS or other avionics installed.
 
 <div class="sym-block sym-enum" data-name="XPLMMapLayers" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMapLayers { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 Bit flags that control which visual layers a map display renders. Combine
 flags with bitwise OR to enable multiple layers. NOTE: Not all layers can
@@ -56,9 +60,13 @@ are only visible at close-in zoom levels.
 
 <div class="sym-block sym-enum" data-name="XPLMEGPWSStyle" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMEGPWSStyle { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 Flag that controls how the map's EGPWS display layer is rendered.
 
@@ -77,9 +85,13 @@ Flag that controls how the map's EGPWS display layer is rendered.
 
 <div class="sym-block sym-struct" data-name="XPLMMapCustomData_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMapCustomData_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span>
+
+</div>
 
 Per-frame description of what a map display should show: where it is centered, how it is
 oriented, how far it reaches, and what the terrain layers should shade against.
@@ -103,26 +115,26 @@ therefore spans 80 nm across.
 Set structSize to the size of your struct so that future SDK versions can add fields without
 breaking existing plugins.
 
-```cpp
-typedef struct {
-     int                       structSize;
-     float                     datLat;
-     float                     datLon;
-     int                       centerX;
-     int                       centerY;
-     int                       roseRadius;
-     float                     mapRange;
-     int                       orientation;
-     float                     terrainWarn;
-     float                     terrainCaution;
-     float                     acfAlt;
-     int                       gearDown;
-     float                     trueRotation;
-     float                     nearestRwyElev;
-     float                     egpwsBrightness;
-     XPLMEGPWSStyle            egpwsStyle;
-} XPLMMapCustomData_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_MapCustomData_t = {
+    structSize       = 0,       -- int
+    datLat           = 0.0,     -- float
+    datLon           = 0.0,     -- float
+    centerX          = 0,       -- int
+    centerY          = 0,       -- int
+    roseRadius       = 0,       -- int
+    mapRange         = 0.0,     -- float
+    orientation      = 0,       -- int
+    terrainWarn      = 0.0,     -- float
+    terrainCaution   = 0.0,     -- float
+    acfAlt           = 0.0,     -- float
+    gearDown         = 0,       -- int
+    trueRotation     = 0.0,     -- float
+    nearestRwyElev   = 0.0,     -- float
+    egpwsBrightness  = 0.0,     -- float
+    egpwsStyle       = nil,     -- XPLMEGPWSStyle
+}</code></pre>
+</div>
 
 </div>
 
@@ -130,20 +142,24 @@ typedef struct {
 
 <div class="sym-block sym-struct" data-name="XPLMCreateMap_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCreateMap_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span>
+
+</div>
 
 Parameters for creating a base map display. Set structSize to the size of your
 struct so that future SDK versions can add fields without breaking existing
 plugins.
 
-```cpp
-typedef struct {
-     int                       structSize;
-     int                       pilotIndex;
-} XPLMCreateMap_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_CreateMap_t = {
+    structSize  = 0,       -- int
+    pilotIndex  = 0,       -- int
+}</code></pre>
+</div>
 
 </div>
 
@@ -151,26 +167,44 @@ typedef struct {
 
 <div class="sym-block sym-typedef" data-name="XPLMMapDisplayRef" data-type="typedef" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMapDisplayRef { .symbol-title }
 
 <span class="sym-badge badge-typedef">typedef</span>
 
+</div>
+
 An opaque handle to a map display instance. Create one with
 XPLMCreateMapDisplay and destroy it with XPLMDestroyMapDisplay.
 
-```cpp
-typedef void * XPLMMapDisplayRef;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local my_mapDisplayRef = nil  -- XPLMMapDisplayRef</code></pre>
+</div>
 
+
+**Used by:**
+
+- [XPLMDestroyMapDisplay](#xplmdestroymapdisplay)
+- [XPLMMapDisplayDrawIn](#xplmmapdisplaydrawin)
+- [XPLMMapDisplayGetNorthHeading](#xplmmapdisplaygetnorthheading)
+- [XPLMMapDisplayGetTerrainAltitudes](#xplmmapdisplaygetterrainaltitudes)
+- [XPLMMapDisplayProject](#xplmmapdisplayproject)
+- [XPLMMapDisplayScaleMeter](#xplmmapdisplayscalemeter)
+- [XPLMMapDisplayUnproject](#xplmmapdisplayunproject)
 </div>
 
 ---
 
 <div class="sym-block sym-struct" data-name="XPLMMapDrawInfo_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMapDrawInfo_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span>
+
+</div>
 
 Which layers a map shows and where on the panel it goes.
 
@@ -181,16 +215,16 @@ your symbology cannot end up a frame or a zoom step out of step with the terrain
 Set structSize to the size of your struct so that future SDK versions can add fields without
 breaking existing plugins.
 
-```cpp
-typedef struct {
-     int                       structSize;
-     XPLMMapLayers             layers;
-     int                       left;
-     int                       top;
-     int                       right;
-     int                       bottom;
-} XPLMMapDrawInfo_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_MapDrawInfo_t = {
+    structSize  = 0,       -- int
+    layers      = nil,     -- XPLMMapLayers
+    left        = 0,       -- int
+    top         = 0,       -- int
+    right       = 0,       -- int
+    bottom      = 0,       -- int
+}</code></pre>
+</div>
 
 </div>
 
@@ -198,9 +232,13 @@ typedef struct {
 
 <div class="sym-block sym-function" data-name="XPLMCreateMapDisplay" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCreateMapDisplay { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This function creates a new map display instance. The display begins loading
 terrain tiles for the current aircraft position immediately. You can draw it
@@ -210,39 +248,56 @@ The returned handle must be destroyed with XPLMDestroyMapDisplay when no
 longer needed. Handles are automatically destroyed when the owning plugin is
 unloaded.
 
-```cpp
-XPLM_API XPLMMapDisplayRefXPLMCreateMapDisplay(
-                         XPLMCreateMap_t *    params
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMMapDisplayRef -> assign to local/var
+local my_mapDisplayRef = XPLMCreateMapDisplay(
+    params     -- see XPLMCreateMap_t
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMCreateMap_t](#xplmcreatemap_t)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMDestroyMapDisplay" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMDestroyMapDisplay { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This function destroys a map display and frees all associated resources.
 
-```cpp
-XPLM_API void       XPLMDestroyMapDisplay(
-                         XPLMMapDisplayRef    map
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMDestroyMapDisplay(
+    map     -- XPLMMapDisplayRef
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMMapDisplayRef](#xplmmapdisplayref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMMapDisplayDrawIn" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMapDisplayDrawIn { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This function renders the map display directly into the active panel surface
 within the rectangle given by info. Map sets up its own projection to fit that
@@ -261,23 +316,33 @@ half the shorter side of it, range taken from the EFIS range knob, and track-up 
 north-up according to the sim's map mode. The pilotIndex you created the map with
 selects which side's range and altitude are used.
 
-```cpp
-XPLM_API void       XPLMMapDisplayDrawIn(
-                         XPLMMapDisplayRef    map,
-                         XPLMMapDrawInfo_t *  info,
-                         XPLMMapCustomData_t * dataOverrides    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMMapDisplayDrawIn(
+    map,              -- XPLMMapDisplayRef
+    info,             -- see XPLMMapDrawInfo_t
+    dataOverrides     -- see XPLMMapCustomData_t
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMMapCustomData_t](#xplmmapcustomdata_t)
+- [XPLMMapDisplayRef](#xplmmapdisplayref)
+- [XPLMMapDrawInfo_t](#xplmmapdrawinfo_t)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMMapDisplayProject" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMapDisplayProject { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Turns a latitude/longitude into a position in panel coordinates, for the map
 that info describes. This is the inverse of XPLMMapDisplayUnproject.
@@ -295,41 +360,63 @@ terrain tiles have not loaded yet or if the point has no position on this map.
 
 Note that the returned coordinates are in the same space as info's rectangle,
 and like that rectangle they do not account for the panel graphics transform
-stack.
+stack. That is deliberate, and it is what you want: you take these coordinates
+and hand them to a drawing call - XPLMTextureAtlasDrawAt to put a VOR symbol on
+the map, say - and that drawing call applies the transform. Applying it here as
+well would apply it twice.
 
 Passing NULL for dataOverrides projects the sim's own navigation display view, the
 same one XPLMMapDisplayDrawIn draws with NULL.
 
-```cpp
-XPLM_API int        XPLMMapDisplayProject(
-                         XPLMMapDisplayRef    map,
-                         XPLMMapDrawInfo_t *  info,
-                         XPLMMapCustomData_t * dataOverrides,    /* Can be NULL */
-                         double               latitude,
-                         double               longitude,
-                         float *              outX,
-                         float *              outY
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int, plus a table of out values
+local my_result, outs = XPLMMapDisplayProject(
+    map,              -- XPLMMapDisplayRef
+    info,             -- see XPLMMapDrawInfo_t
+    dataOverrides,    -- see XPLMMapCustomData_t
+    latitude,         -- float
+    longitude         -- float
+)
+-- outs = { outX, outY }</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMMapCustomData_t](#xplmmapcustomdata_t)
+- [XPLMMapDisplayRef](#xplmmapdisplayref)
+- [XPLMMapDrawInfo_t](#xplmmapdrawinfo_t)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMMapDisplayUnproject" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMapDisplayUnproject { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
-Turns a position in panel coordinates back into a latitude/longitude, for the
-map that info describes. This is the inverse of XPLMMapDisplayProject.
+</div>
+
+Turns a position back into a latitude/longitude, for the map that info
+describes. This is the inverse of XPLMMapDisplayProject, and like it, x and y
+are in the same space as info's rectangle rather than in transformed
+coordinates.
 
 Use this to turn a touch or click on your map into a place in the world - for
-picking a waypoint, or reading out the position under the cursor.
+picking a waypoint, or reading out the position under the cursor. This needs no
+adjustment on your part in either of its two uses. For a touch, the coordinates
+your XPLMTouchEvent_f receives are already in the space you declared the zone
+in, so as long as you put the zone down under the same transform as the map,
+they are the space this function wants. For culling, you already hold your own
+drawing coordinates, which are likewise untransformed. In both cases, running
+the transform stack over the input - in either direction - would be the bug.
 
 Unlike XPLMMapDisplayDrawIn, this does not have to be called from a drawing
-callback; it is equally valid from a click handler or a flight loop.
+callback; it is equally valid from a click handler or a flight loop, where there
+is no transform stack at all.
 
 Returns 1 on success. Returns 0, leaving outLatitude and outLongitude
 untouched, if the map's terrain tiles have not loaded yet or if the point does
@@ -338,27 +425,37 @@ not correspond to anywhere on the earth.
 Passing NULL for dataOverrides projects the sim's own navigation display view, the
 same one XPLMMapDisplayDrawIn draws with NULL.
 
-```cpp
-XPLM_API int        XPLMMapDisplayUnproject(
-                         XPLMMapDisplayRef    map,
-                         XPLMMapDrawInfo_t *  info,
-                         XPLMMapCustomData_t * dataOverrides,    /* Can be NULL */
-                         float                x,
-                         float                y,
-                         double *             outLatitude,
-                         double *             outLongitude
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int, plus a table of out values
+local my_result, outs = XPLMMapDisplayUnproject(
+    map,              -- XPLMMapDisplayRef
+    info,             -- see XPLMMapDrawInfo_t
+    dataOverrides,    -- see XPLMMapCustomData_t
+    x,                -- float
+    y                 -- float
+)
+-- outs = { outLatitude, outLongitude }</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMMapCustomData_t](#xplmmapcustomdata_t)
+- [XPLMMapDisplayRef](#xplmmapdisplayref)
+- [XPLMMapDrawInfo_t](#xplmmapdrawinfo_t)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMMapDisplayScaleMeter" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMapDisplayScaleMeter { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Returns how many pixels correspond to one meter at a given point on the map
 that info describes. Use it to size symbols and range rings so they stay
@@ -369,25 +466,36 @@ Returns 0 if the map's terrain tiles have not loaded yet.
 Passing NULL for dataOverrides projects the sim's own navigation display view, the
 same one XPLMMapDisplayDrawIn draws with NULL.
 
-```cpp
-XPLM_API float      XPLMMapDisplayScaleMeter(
-                         XPLMMapDisplayRef    map,
-                         XPLMMapDrawInfo_t *  info,
-                         XPLMMapCustomData_t * dataOverrides,    /* Can be NULL */
-                         float                x,
-                         float                y
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns float -> assign to local/var
+local my_result = XPLMMapDisplayScaleMeter(
+    map,              -- XPLMMapDisplayRef
+    info,             -- see XPLMMapDrawInfo_t
+    dataOverrides,    -- see XPLMMapCustomData_t
+    x,                -- float
+    y                 -- float
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMMapCustomData_t](#xplmmapcustomdata_t)
+- [XPLMMapDisplayRef](#xplmmapdisplayref)
+- [XPLMMapDrawInfo_t](#xplmmapdrawinfo_t)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMMapDisplayGetNorthHeading" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMapDisplayGetNorthHeading { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Returns the heading, in degrees clockwise from straight up on the display, at
 which true north lies at a given point on the map that info describes. ADD it
@@ -402,25 +510,36 @@ Returns 0 if the map's terrain tiles have not loaded yet.
 Passing NULL for dataOverrides projects the sim's own navigation display view, the
 same one XPLMMapDisplayDrawIn draws with NULL.
 
-```cpp
-XPLM_API float      XPLMMapDisplayGetNorthHeading(
-                         XPLMMapDisplayRef    map,
-                         XPLMMapDrawInfo_t *  info,
-                         XPLMMapCustomData_t * dataOverrides,    /* Can be NULL */
-                         float                x,
-                         float                y
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns float -> assign to local/var
+local my_result = XPLMMapDisplayGetNorthHeading(
+    map,              -- XPLMMapDisplayRef
+    info,             -- see XPLMMapDrawInfo_t
+    dataOverrides,    -- see XPLMMapCustomData_t
+    x,                -- float
+    y                 -- float
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMMapCustomData_t](#xplmmapcustomdata_t)
+- [XPLMMapDisplayRef](#xplmmapdisplayref)
+- [XPLMMapDrawInfo_t](#xplmmapdrawinfo_t)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMMapDisplayGetTerrainAltitudes" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMapDisplayGetTerrainAltitudes { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This function returns the lowest and highest altitude shown on the map's
 EGPWS terrain display.
@@ -435,14 +554,18 @@ This function must be called from within an avionics drawing callback.
 - min: a pointer to the minimum altitude.
 - max: a pointer to the maximum altitude.
 
-```cpp
-XPLM_API int        XPLMMapDisplayGetTerrainAltitudes(
-                         XPLMMapDisplayRef    map,
-                         float*               min,    /* Can be NULL */
-                         float*               max    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int, plus a table of out values
+local my_result, outs = XPLMMapDisplayGetTerrainAltitudes(
+    map     -- XPLMMapDisplayRef
+)
+-- outs = { min, max }</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMMapDisplayRef](#xplmmapdisplayref)
 </div>
 
 ---
@@ -450,4 +573,4 @@ XPLM_API int        XPLMMapDisplayGetTerrainAltitudes(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

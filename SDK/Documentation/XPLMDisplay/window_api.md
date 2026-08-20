@@ -27,27 +27,72 @@ lower left of the main X-Plane window is not guaranteed to be (0, 0). In both ca
 
 <div class="sym-block sym-typedef" data-name="XPLMWindowID" data-type="typedef" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMWindowID { .symbol-title }
 
 <span class="sym-badge badge-typedef">typedef</span>
+
+</div>
 
 This is an opaque identifier for a window.  You use it to control your window.
 When you create a window (via either XPLMCreateWindow() or XPLMCreateWindowEx()),
 you will specify callbacks to handle drawing, mouse interaction, etc.
 
-```cpp
-typedef void * XPLMWindowID;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local my_windowID = nil  -- XPLMWindowID</code></pre>
+</div>
 
+
+**Used by:**
+
+- [XLuaDestroyImguiWindow](#xluadestroyimguiwindow)
+- [XPLMBringWindowToFront](#xplmbringwindowtofront)
+- [XPLMBrowserCallback_f](#xplmbrowsercallback_f)
+- [XPLMBrowserLoadError_f](#xplmbrowserloaderror_f)
+- [XPLMBrowserLoadFinished_f](#xplmbrowserloadfinished_f)
+- [XPLMDestroyWindow](#xplmdestroywindow)
+- [XPLMDrawWindow_f](#xplmdrawwindow_f)
+- [XPLMGetWindowGeometry](#xplmgetwindowgeometry)
+- [XPLMGetWindowGeometryOS](#xplmgetwindowgeometryos)
+- [XPLMGetWindowGeometryVR](#xplmgetwindowgeometryvr)
+- [XPLMGetWindowIsVisible](#xplmgetwindowisvisible)
+- [XPLMGetWindowRefCon](#xplmgetwindowrefcon)
+- [XPLMHandleCursor_f](#xplmhandlecursor_f)
+- [XPLMHandleKey_f](#xplmhandlekey_f)
+- [XPLMHandleMouseClick_f](#xplmhandlemouseclick_f)
+- [XPLMHandleMouseWheel_f](#xplmhandlemousewheel_f)
+- [XPLMHasKeyboardFocus](#xplmhaskeyboardfocus)
+- [XPLMIsWindowInFront](#xplmiswindowinfront)
+- [XPLMSetWindowGeometry](#xplmsetwindowgeometry)
+- [XPLMSetWindowGeometryOS](#xplmsetwindowgeometryos)
+- [XPLMSetWindowGeometryVR](#xplmsetwindowgeometryvr)
+- [XPLMSetWindowGravity](#xplmsetwindowgravity)
+- [XPLMSetWindowIsVisible](#xplmsetwindowisvisible)
+- [XPLMSetWindowPositioningMode](#xplmsetwindowpositioningmode)
+- [XPLMSetWindowRefCon](#xplmsetwindowrefcon)
+- [XPLMSetWindowResizingLimits](#xplmsetwindowresizinglimits)
+- [XPLMSetWindowTitle](#xplmsetwindowtitle)
+- [XPLMTakeKeyboardFocus](#xplmtakekeyboardfocus)
+- [XPLMWindowAddBrowserFunction](#xplmwindowaddbrowserfunction)
+- [XPLMWindowInjectScript](#xplmwindowinjectscript)
+- [XPLMWindowIsInVR](#xplmwindowisinvr)
+- [XPLMWindowIsPoppedOut](#xplmwindowispoppedout)
+- [XPLMWindowRefresh](#xplmwindowrefresh)
+- [XPLMWindowSetURL](#xplmwindowseturl)
 </div>
 
 ---
 
 <div class="sym-block sym-callback" data-name="XPLMDrawWindow_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMDrawWindow_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
+
+</div>
 
 A callback to handle 2-D drawing of your window.  You are passed in your window and its refcon.
 Draw the window.  You can use other XPLM functions from this header to find the current dimensions of your
@@ -58,22 +103,32 @@ for 2-D window drawing.
 Because you are drawing your window over a background, you can make a translucent
 window easily by simply not filling in your entire window's bounds.
 
-```cpp
-typedef void (* XPLMDrawWindow_f)(
-                         XPLMWindowID         inWindowID,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_DrawWindow_callback(
+    inWindowID,    -- XPLMWindowID
+    inRefcon       -- any Lua var/table
+)
+    -- your code here
+end</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-callback" data-name="XPLMHandleKey_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMHandleKey_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
+
+</div>
 
 This function is called when a key is pressed or keyboard focus is taken away from
 your window.  If losingFocus is 1, you are losing the keyboard focus, otherwise a key
@@ -91,26 +146,36 @@ in XPLMDefs.h define the vkeys using unsigned values (that is 0x80
 instead of -0x80).  So you may need to cast the incoming vkey to an unsigned char
 to get correct comparisons in C.
 
-```cpp
-typedef void (* XPLMHandleKey_f)(
-                         XPLMWindowID         inWindowID,
-                         char                 inKey,
-                         XPLMKeyFlags         inFlags,
-                         char                 inVirtualKey,
-                         void *               inRefcon,
-                         int                  losingFocus
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_HandleKey_callback(
+    inWindowID,      -- XPLMWindowID
+    inKey,           -- char
+    inFlags,         -- XPLMKeyFlags
+    inVirtualKey,    -- char
+    inRefcon,        -- any Lua var/table
+    losingFocus      -- boolean
+)
+    -- your code here
+end</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-callback" data-name="XPLMHandleMouseClick_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMHandleMouseClick_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
+
+</div>
 
 You receive this call for one of three events:
 
@@ -130,25 +195,36 @@ while legacy windows will get pixels. Legacy windows have their origin in the lo
 X-Plane window, while modern windows have their origin in the lower left of the global desktop space.
 In both cases, x increases as you move right, and y increases as you move up.
 
-```cpp
-typedef int (* XPLMHandleMouseClick_f)(
-                         XPLMWindowID         inWindowID,
-                         int                  x,
-                         int                  y,
-                         XPLMMouseStatus      inMouse,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_HandleMouseClick_callback(
+    inWindowID,    -- XPLMWindowID
+    x,             -- int
+    y,             -- int
+    inMouse,       -- XPLMMouseStatus
+    inRefcon       -- any Lua var/table
+)
+    -- your code here
+    return 0  -- int
+end</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-callback" data-name="XPLMHandleCursor_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMHandleCursor_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span> <span class="sym-badge badge-version">XPLM200</span>
+
+</div>
 
 The SDK calls your cursor status callback when the mouse is over your plugin window.  Return a cursor status code
 to indicate how you would like X-Plane to manage the cursor.  If you return xplm_CursorDefault, the SDK will try
@@ -170,24 +246,35 @@ while legacy windows will get pixels. Legacy windows have their origin in the lo
 X-Plane window, while modern windows have their origin in the lower left of the global desktop space.
 In both cases, x increases as you move right, and y increases as you move up.
 
-```cpp
-typedef XPLMCursorStatus (* XPLMHandleCursor_f)(
-                         XPLMWindowID         inWindowID,
-                         int                  x,
-                         int                  y,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_HandleCursor_callback(
+    inWindowID,    -- XPLMWindowID
+    x,             -- int
+    y,             -- int
+    inRefcon       -- any Lua var/table
+)
+    -- your code here
+    return nil  -- XPLMCursorStatus
+end</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-callback" data-name="XPLMHandleMouseWheel_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMHandleMouseWheel_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span> <span class="sym-badge badge-version">XPLM200</span>
+
+</div>
 
 The SDK calls your mouse wheel callback when one of the mouse wheels is scrolled within your window.  Return true to consume the
 mouse wheel movement or false to pass them on to a lower window.  (If your window appears opaque to the user, you should consume
@@ -200,26 +287,37 @@ while legacy windows will get pixels. Legacy windows have their origin in the lo
 X-Plane window, while modern windows have their origin in the lower left of the global desktop space.
 In both cases, x increases as you move right, and y increases as you move up.
 
-```cpp
-typedef int (* XPLMHandleMouseWheel_f)(
-                         XPLMWindowID         inWindowID,
-                         int                  x,
-                         int                  y,
-                         int                  wheel,
-                         int                  clicks,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_HandleMouseWheel_callback(
+    inWindowID,    -- XPLMWindowID
+    x,             -- int
+    y,             -- int
+    wheel,         -- int
+    clicks,        -- int
+    inRefcon       -- any Lua var/table
+)
+    -- your code here
+    return true  -- boolean
+end</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-callback" data-name="XPLMBrowserLoadFinished_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMBrowserLoadFinished_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
 
 Called for a browser-content-type window when its main frame finishes loading a
 page. NOT a success guarantee --a rendered HTTP error page (e.g. a 404) also
@@ -227,23 +325,33 @@ finishes here. A navigation that fails before the page renders fires
 XPLMBrowserLoadError_f instead. Set this via browserLoadFinishedFunc in
 XPLMCreateWindow_t.
 
-```cpp
-typedef void (* XPLMBrowserLoadFinished_f)(
-                         XPLMWindowID         inWindow,
-                         const char *         inURL,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_BrowserLoadFinished_callback(
+    inWindow,    -- XPLMWindowID
+    inURL,       -- string
+    inRefcon     -- any Lua var/table
+)
+    -- your code here
+end</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-callback" data-name="XPLMBrowserLoadError_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMBrowserLoadError_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
 
 Called for a browser-content-type window when a navigation fails at the network
 level (bad URL, host unreachable, TLS failure, file not found). inError describes
@@ -251,24 +359,34 @@ the failure. May be followed by XPLMBrowserLoadFinished_f for a substitute error
 page, so treat this as the authoritative signal that the navigation to inURL
 failed. Set this via browserLoadErrorFunc in XPLMCreateWindow_t.
 
-```cpp
-typedef void (* XPLMBrowserLoadError_f)(
-                         XPLMWindowID         inWindow,
-                         const char *         inURL,
-                         const char *         inError,    /* Can be NULL */
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_BrowserLoadError_callback(
+    inWindow,    -- XPLMWindowID
+    inURL,       -- string
+    inError,     -- string
+    inRefcon     -- any Lua var/table
+)
+    -- your code here
+end</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-enum" data-name="XPLMWindowLayer" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMWindowLayer { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 XPLMWindowLayer describes where in the ordering of windows X-Plane should place a particular window.
 Windows in higher layers cover windows in lower layers. So, a given window might be at the top of its particular layer,
@@ -297,9 +415,13 @@ simply be placed in the flight overlay window layer.)
 
 <div class="sym-block sym-enum" data-name="XPLMWindowDecoration" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMWindowDecoration { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span> <span class="sym-badge badge-version">XPLM301</span>
+
+</div>
 
 XPLMWindowDecoration describes how "modern" windows will be displayed. This impacts both how X-Plane draws your window as well as certain mouse handlers.
 
@@ -322,13 +444,21 @@ Your window's decoration can only be specified when you create the window (in th
 
 <div class="sym-block sym-struct" data-name="XPLMCreateWindow_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCreateWindow_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span> <span class="sym-badge badge-version">XPLM200</span>
 
-The XPMCreateWindow_t structure defines all of the parameters used to create a modern window using XPLMCreateWindowEx().  The structure
-will be expanded in future SDK APIs to include more features.  Always set the structSize member to the size of your struct in
-bytes!
+</div>
+
+XPLMCreateWindow_t defines all of the parameters used to create a modern window using XPLMCreateWindowEx().
+The structure has been expanded in later SDK versions and will be expanded again; the fields present in
+your build are the ones your SDK version defines, and structSize is how X-Plane knows which of them you
+filled in.  Always set the structSize member to the size of your struct in bytes!
+
+Of the callbacks, only drawWindowFunc is required, and only for a window that draws through your plugin;
+see XPLMCreateWindowEx() for the rules.
 
 All windows created by this function in the XPLM300 version of the API are created with the new X-Plane 11 GUI features.
 This means your plugin will get to "know" about the existence of X-Plane windows other than the main window.
@@ -345,101 +475,97 @@ rather than XPLMGetMouseLocation(), and XPLMGetScreenBoundsGlobal() instead of X
 If you ask to be decorated as a floating window, you'll get the blue window control bar and blue backing that you see in X-Plane 11's normal
 "floating" windows (like the map).
 
-```cpp
-typedef struct {
-     int                       structSize;
-     int                       left;
-     int                       top;
-     int                       right;
-     int                       bottom;
-     bool                      visible;
-     XPLMDrawWindow_f          drawWindowFunc;
-     XPLMHandleMouseClick_f    handleMouseClickFunc;
-     XPLMHandleKey_f           handleKeyFunc;
-     XPLMHandleCursor_f        handleCursorFunc;
-     XPLMHandleMouseWheel_f    handleMouseWheelFunc;
-     userref                   refcon;
-     XPLMWindowDecoration      decorateAsFloatingWindow;
-     XPLMWindowLayer           layer;
-     XPLMHandleMouseClick_f    handleRightClickFunc;
-     XPLMWindowContentType     windowContentType;
-     XPLMBrowserLoadFinished_f browserLoadFinishedFunc;
-     XPLMBrowserLoadError_f    browserLoadErrorFunc;
-} XPLMCreateWindow_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_CreateWindow_t = {
+    structSize                = 0,       -- int
+    left                      = 0,       -- int
+    top                       = 0,       -- int
+    right                     = 0,       -- int
+    bottom                    = 0,       -- int
+    visible                   = false,   -- boolean
+    drawWindowFunc            = nil,     -- see XPLMDrawWindow_f
+    handleMouseClickFunc      = nil,     -- see XPLMHandleMouseClick_f
+    handleKeyFunc             = nil,     -- see XPLMHandleKey_f
+    handleCursorFunc          = nil,     -- see XPLMHandleCursor_f
+    handleMouseWheelFunc      = nil,     -- see XPLMHandleMouseWheel_f
+    refcon                    = nil,     -- any Lua var/table
+    decorateAsFloatingWindow  = nil,     -- XPLMWindowDecoration
+    layer                     = nil,     -- XPLMWindowLayer
+    handleRightClickFunc      = nil,     -- see XPLMHandleMouseClick_f
+    contentType               = nil,     -- XPLMWindowContentType
+    browserLoadFinishedFunc   = nil,     -- see XPLMBrowserLoadFinished_f
+    browserLoadErrorFunc      = nil,     -- see XPLMBrowserLoadError_f
+}</code></pre>
+</div>
 
+
+**See available callback(s):**
+
+- [XPLMBrowserLoadError_f](#xplmbrowserloaderror_f)
+- [XPLMBrowserLoadFinished_f](#xplmbrowserloadfinished_f)
+- [XPLMDrawWindow_f](#xplmdrawwindow_f)
+- [XPLMHandleCursor_f](#xplmhandlecursor_f)
+- [XPLMHandleKey_f](#xplmhandlekey_f)
+- [XPLMHandleMouseClick_f](#xplmhandlemouseclick_f)
+- [XPLMHandleMouseWheel_f](#xplmhandlemousewheel_f)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMCreateWindowEx" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCreateWindowEx { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM200</span>
 
-This routine creates a new "modern" window. You pass in an XPLMCreateWindow_t structure with all
-of the fields set in.  You must set the structSize of the structure to the size of the
-actual structure you used.  Also, you must provide functions for every callback---you may
-not leave them null!  (If you do not support the cursor or mouse wheel, use functions that
-return the default values.)
+</div>
+
+This routine creates a new "modern" window.  You pass in an XPLMCreateWindow_t structure with all of the
+fields set in, including its structSize, which must be the size of the actual structure you used.
+
+Returns the ID of the new window, or NULL if it could not be created --either because structSize matched
+no known SDK version, or because the window needed a drawing callback and none was provided.
+
+Only drawWindowFunc is required, and only for a window whose contentType makes your plugin responsible
+for its pixels: xplm_WindowContentTypeOpenGL and xplm_WindowContentTypePanelGraphics.  A browser window
+renders its own content and ignores drawWindowFunc.
+
+Every other callback is optional; leave it NULL and your window does not receive that event.  A window
+with no handleMouseClickFunc or handleRightClickFunc does not consume clicks, a window with no
+handleMouseWheelFunc does not consume scroll wheel events, and a window with no handleCursorFunc gets
+the default cursor.  (Whether a click reaches a window underneath yours also depends on your window's
+decoration: any decoration other than xplm_WindowDecorationNone stops clicks at your window's bounds.)
+The browserLoadFinishedFunc and browserLoadErrorFunc callbacks are only called for browser windows.
 
 NOTE: For an imgui-drawn window, Lua scripts should use XLuaCreateImguiWindow()
 instead; it opens and closes the imgui frame for you and wires the input handlers.
 
-```cpp
-XPLM_API XPLMWindowIDXPLMCreateWindowEx(
-                         XPLMCreateWindow_t * inParams
-                    );
-```
-
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMWindowID -> assign to local/var
+local my_windowID = XPLMCreateWindowEx(
+    inParams     -- see XPLMCreateWindow_t
+)</code></pre>
 </div>
 
----
 
-<div class="sym-block sym-function sym-deprecated-block" data-name="XPLMCreateWindow" data-type="function" markdown="1">
+**See associated types:**
 
-## XPLMCreateWindow { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-deprecated">deprecated XPLM300</span>
-
-Deprecated as of XPLM300.
-
-This routine creates a new legacy window. Unlike modern windows (created via XPLMCreateWindowEx()), legacy
-windows do not have access to X-Plane 11 features like automatic scaling for high-DPI screens,
-native window styles, or support for being "popped out" into first-class operating system windows.
-
-Pass in the dimensions and offsets to the window's
-bottom left corner from the bottom left of the screen.  You can specify whether the
-window is initially visible or not.  Also, you pass in three callbacks to run the window
-and a refcon.  This function returns a window ID you can use to refer to the new window.
-
-NOTE: Legacy windows do not have "frames"; you are responsible for drawing the background and
-frame of the window.  Higher level libraries have routines which make this easy.
-
-```cpp
-XPLM_API XPLMWindowIDXPLMCreateWindow(
-                         int                  inLeft,
-                         int                  inTop,
-                         int                  inRight,
-                         int                  inBottom,
-                         int                  inIsVisible,
-                         XPLMDrawWindow_f     inDrawCallback,
-                         XPLMHandleKey_f      inKeyCallback,
-                         XPLMHandleMouseClick_f inMouseCallback,
-                         void *               inRefcon
-                    );
-```
-
+- [XPLMCreateWindow_t](#xplmcreatewindow_t)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMDestroyWindow" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMDestroyWindow { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine destroys a window.  The window's callbacks are not called after this call.
 Keyboard focus is removed from the window before destroying it.
@@ -447,21 +573,88 @@ Keyboard focus is removed from the window before destroying it.
 NOTE: A window created with XLuaCreateImguiWindow() must be destroyed with
 XLuaDestroyImguiWindow(), not this function, so its captured Lua callbacks are released.
 
-```cpp
-XPLM_API void       XPLMDestroyWindow(
-                         XPLMWindowID         inWindowID
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMDestroyWindow(
+    inWindowID     -- XPLMWindowID
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
+</div>
+
+---
+
+<div class="sym-block sym-function sym-lua-only" data-name="XLuaCreateImguiWindow" data-type="function" markdown="1">
+
+<div class="sym-title-row" markdown="1">
+
+## XLuaCreateImguiWindow { .symbol-title }
+
+<span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
+
+Lua only. Creates a modern panel-graphics window pre-wired for imgui drawing
+and input, and returns its XPLMWindowID (or nil on failure).
+
+Pass a single config table. Recognised fields (all optional):
+  left, top, right, bottom    Window geometry in boxels (defaults 100/500/600/100).
+  visible                     Boolean; whether the window starts visible (default true).
+  decorateAsFloatingWindow    An XPLMWindowDecoration value (default xplm_WindowDecorationRoundRectangle).
+  layer                       An XPLMWindowLayer value (default xplm_WindowLayerFloatingWindows).
+  drawWindowFunc              function(windowID, width, height) -- called each frame inside an
+                              imgui frame that is opened and closed for you; the body is pure
+                              imgui widget calls (no NewFrame/Render boilerplate).
+
+The imgui input handlers (mouse, keyboard, cursor, wheel) are installed
+automatically; any input callbacks in the table are ignored by design.
+Destroy the window with XLuaDestroyImguiWindow().
+
+<div class="lua-code" markdown="1">
+<!-- hand-written binding; see the XLua docs -->
+</div>
+
+</div>
+
+---
+
+<div class="sym-block sym-function sym-lua-only" data-name="XLuaDestroyImguiWindow" data-type="function" markdown="1">
+
+<div class="sym-title-row" markdown="1">
+
+## XLuaDestroyImguiWindow { .symbol-title }
+
+<span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
+
+Lua only. Destroys a window created with XLuaCreateImguiWindow() and releases
+its captured Lua callbacks. Do not use on windows created any other way.
+
+<div class="lua-code" markdown="1">
+<!-- hand-written binding; see the XLua docs -->
+</div>
+
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMWindowSetURL" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMWindowSetURL { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
 
 Loads a URL into a browser-content-type window. Safe to call before the
 underlying webview has finished initialising; the load is queued and
@@ -469,43 +662,59 @@ applied as soon as the browser is ready, so plugins may call this
 immediately after `XPLMCreateWindowEx`. Subsequent calls replace the
 pending or current page.
 
-```cpp
-XPLM_API void       XPLMWindowSetURL(
-                         XPLMWindowID         inWindowID,
-                         const char *         inURL
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMWindowSetURL(
+    inWindowID,    -- XPLMWindowID
+    inURL          -- string
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMWindowRefresh" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMWindowRefresh { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
 
 Reloads the current URL in a browser-content-type window. Pass true for
 `inIgnoreCache` to bypass the HTTP cache (the equivalent of a
 shift-reload).
 
-```cpp
-XPLM_API void       XPLMWindowRefresh(
-                         XPLMWindowID         inWindowID,
-                         int                  inIgnoreCache
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMWindowRefresh(
+    inWindowID,       -- XPLMWindowID
+    inIgnoreCache     -- boolean
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMWindowInjectScript" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMWindowInjectScript { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
 
 Executes a JavaScript snippet in the browser window's main frame. The
 script is run once; it has access to the same `xplane.*` namespace
@@ -513,40 +722,64 @@ exposed to the page itself (so it can call functions registered via
 `XPLMWindowAddBrowserFunction`). If injected before the page has
 finished loading, the script may run against an empty document.
 
-```cpp
-XPLM_API void       XPLMWindowInjectScript(
-                         XPLMWindowID         inWindowID,
-                         const char *         inScript
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMWindowInjectScript(
+    inWindowID,    -- XPLMWindowID
+    inScript       -- string
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-callback" data-name="XPLMBrowserCallback_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMBrowserCallback_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span> <span class="sym-badge badge-version">XPLM440</span>
 
-```cpp
-typedef const char * (* XPLMBrowserCallback_f)(
-                         XPLMWindowID         inWindowID,
-                         const char *         inJSON,
-                         void *               inRefcon
-                    );
-```
+</div>
 
+Handler invoked when the page in a browser-content-type window calls
+xplane.<name>(arg). You receive the window, the argument serialised as a
+JSON string, and your refcon; return a JSON string (or NULL) that the JS
+Promise resolves to.
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_BrowserCallback_callback(
+    inWindowID,    -- XPLMWindowID
+    inJSON,        -- string
+    inRefcon       -- any Lua var/table
+)
+    -- your code here
+    return nil  -- string
+end</code></pre>
+</div>
+
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMWindowAddBrowserFunction" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMWindowAddBrowserFunction { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
 
 Registers a callback that the page running in this browser window can
 invoke as `xplane.<inName>(arg)`. The JS call returns a Promise that
@@ -558,35 +791,44 @@ overwrite each other. Each window has its own independent `xplane.*`
 namespace; functions registered on window A are not callable from
 window B.
 
-```cpp
-XPLM_API void       XPLMWindowAddBrowserFunction(
-                         XPLMWindowID         inWindowID,
-                         const char *         inName,
-                         XPLMBrowserCallback_f inFunction,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMWindowAddBrowserFunction(
+    inWindowID,    -- XPLMWindowID
+    inName,        -- string
+    inFunction,    -- see XPLMBrowserCallback_f
+    inRefcon       -- any Lua var/table
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMBrowserCallback_f](#xplmbrowsercallback_f)
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetScreenSize" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetScreenSize { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine returns the size of the main X-Plane OpenGL window in pixels.
 This number can be used to get a rough idea of the amount
 of detail the user will be able to see when drawing in 3-d.
 
-```cpp
-XPLM_API void       XPLMGetScreenSize(
-                         int *                outWidth,    /* Can be NULL */
-                         int *                outHeight    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPLMGetScreenSize(
+)
+-- outs = { outWidth, outHeight }</code></pre>
+</div>
 
 </div>
 
@@ -594,9 +836,13 @@ XPLM_API void       XPLMGetScreenSize(
 
 <div class="sym-block sym-function" data-name="XPLMGetScreenBoundsGlobal" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetScreenBoundsGlobal { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 This routine returns the bounds of the "global" X-Plane desktop, in boxels.
 Unlike the non-global version XPLMGetScreenSize(), this is multi-monitor aware.
@@ -620,14 +866,12 @@ your global desktop area would be the rectangle from (0, 0) to (3840, 2160).
 Note that popped-out windows (windows drawn in their own operating system windows, rather than "floating" within X-Plane)
 are not included in these bounds.
 
-```cpp
-XPLM_API void       XPLMGetScreenBoundsGlobal(
-                         int *                outLeft,    /* Can be NULL */
-                         int *                outTop,    /* Can be NULL */
-                         int *                outRight,    /* Can be NULL */
-                         int *                outBottom    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPLMGetScreenBoundsGlobal(
+)
+-- outs = { outLeft, outTop, outRight, outBottom }</code></pre>
+</div>
 
 </div>
 
@@ -635,23 +879,29 @@ XPLM_API void       XPLMGetScreenBoundsGlobal(
 
 <div class="sym-block sym-callback" data-name="XPLMReceiveMonitorBoundsGlobal_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMReceiveMonitorBoundsGlobal_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span> <span class="sym-badge badge-version">XPLM300</span>
 
+</div>
+
 This function is informed of the global bounds (in boxels) of a particular monitor within the X-Plane global desktop space.
 Note that X-Plane must be running in full screen on a monitor in order for that monitor to be passed to you in this callback.
 
-```cpp
-typedef void (* XPLMReceiveMonitorBoundsGlobal_f)(
-                         int                  inMonitorIndex,
-                         int                  inLeftBx,
-                         int                  inTopBx,
-                         int                  inRightBx,
-                         int                  inBottomBx,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_ReceiveMonitorBoundsGlobal_callback(
+    inMonitorIndex,    -- int
+    inLeftBx,          -- int
+    inTopBx,           -- int
+    inRightBx,         -- int
+    inBottomBx,        -- int
+    inRefcon           -- any Lua var/table
+)
+    -- your code here
+end</code></pre>
+</div>
 
 </div>
 
@@ -659,9 +909,13 @@ typedef void (* XPLMReceiveMonitorBoundsGlobal_f)(
 
 <div class="sym-block sym-function" data-name="XPLMGetAllMonitorBoundsGlobal" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetAllMonitorBoundsGlobal { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 This routine immediately and synchronously calls you back with the bounds (in boxels) of each full-screen X-Plane window
 within the X-Plane global desktop space, one callback per window.
@@ -678,37 +932,47 @@ Note that this function's monitor indices match those provided by XPLMGetAllMoni
 (since the X-Plane global desktop may not match the operating system's global desktop, and one X-Plane boxel may be larger than
 one pixel due to 150% or 200% scaling).
 
-```cpp
-XPLM_API void       XPLMGetAllMonitorBoundsGlobal(
-                         XPLMReceiveMonitorBoundsGlobal_f inMonitorBoundsCallback,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMGetAllMonitorBoundsGlobal(
+    inMonitorBoundsCallback,    -- see XPLMReceiveMonitorBoundsGlobal_f
+    inRefcon                    -- any Lua var/table
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMReceiveMonitorBoundsGlobal_f](#xplmreceivemonitorboundsglobal_f)
 </div>
 
 ---
 
 <div class="sym-block sym-callback" data-name="XPLMReceiveMonitorBoundsOS_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMReceiveMonitorBoundsOS_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 This function is informed of the global bounds (in pixels) of a particular monitor within the operating system's global desktop space.
 Note that a monitor index being passed to you here does not indicate that X-Plane is running in full screen on this monitor,
 or even that any X-Plane windows exist on this monitor.
 
-```cpp
-typedef void (* XPLMReceiveMonitorBoundsOS_f)(
-                         int                  inMonitorIndex,
-                         int                  inLeftPx,
-                         int                  inTopPx,
-                         int                  inRightPx,
-                         int                  inBottomPx,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_ReceiveMonitorBoundsOS_callback(
+    inMonitorIndex,    -- int
+    inLeftPx,          -- int
+    inTopPx,           -- int
+    inRightPx,         -- int
+    inBottomPx,        -- int
+    inRefcon           -- any Lua var/table
+)
+    -- your code here
+end</code></pre>
+</div>
 
 </div>
 
@@ -716,9 +980,13 @@ typedef void (* XPLMReceiveMonitorBoundsOS_f)(
 
 <div class="sym-block sym-function" data-name="XPLMGetAllMonitorBoundsOS" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetAllMonitorBoundsOS { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 This routine immediately and synchronously calls you back with the bounds (in pixels) of each monitor within the operating system's
 global desktop space, one callback per monitor. Note that unlike XPLMGetAllMonitorBoundsGlobal(), this may include monitors that have no X-Plane window on them.
@@ -726,52 +994,30 @@ global desktop space, one callback per monitor. Note that unlike XPLMGetAllMonit
 Note that this function's monitor indices match those provided by XPLMGetAllMonitorBoundsGlobal(), but the coordinates are different
 (since the X-Plane global desktop may not match the operating system's global desktop, and one X-Plane boxel may be larger than one pixel).
 
-```cpp
-XPLM_API void       XPLMGetAllMonitorBoundsOS(
-                         XPLMReceiveMonitorBoundsOS_f inMonitorBoundsCallback,
-                         void *               inRefcon
-                    );
-```
-
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMGetAllMonitorBoundsOS(
+    inMonitorBoundsCallback,    -- see XPLMReceiveMonitorBoundsOS_f
+    inRefcon                    -- any Lua var/table
+)</code></pre>
 </div>
 
----
 
-<div class="sym-block sym-function sym-deprecated-block" data-name="XPLMGetMouseLocation" data-type="function" markdown="1">
+**See associated types:**
 
-## XPLMGetMouseLocation { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-deprecated">deprecated XPLM300</span>
-
-Deprecated in XPLM300. Modern windows should use XPLMGetMouseLocationGlobal() instead.
-
-This routine returns the current mouse location in pixels relative to the main X-Plane window.
-The bottom left corner of the main window is (0, 0).  Pass NULL to not receive info about either parameter.
-
-Because this function gives the mouse position relative to the main X-Plane window (rather than in
-global bounds), this function should only be used by legacy windows. Modern windows should instead
-get the mouse position in global desktop coordinates using XPLMGetMouseLocationGlobal().
-
-Note that unlike XPLMGetMouseLocationGlobal(), if the mouse goes outside the user's
-main monitor (for instance, to a pop out window or a secondary monitor), this function
-will not reflect it.
-
-```cpp
-XPLM_API void       XPLMGetMouseLocation(
-                         int *                outX,    /* Can be NULL */
-                         int *                outY    /* Can be NULL */
-                    );
-```
-
+- [XPLMReceiveMonitorBoundsOS_f](#xplmreceivemonitorboundsos_f)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetMouseLocationGlobal" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetMouseLocationGlobal { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 Returns the current mouse location in global desktop boxels. Unlike
 XPLMGetMouseLocation(), the bottom left of the main X-Plane window is not guaranteed to be
@@ -784,12 +1030,12 @@ This is the mouse location function to use with modern windows (i.e., those crea
 
 Pass NULL to not receive info about either parameter.
 
-```cpp
-XPLM_API void       XPLMGetMouseLocationGlobal(
-                         int *                outX,    /* Can be NULL */
-                         int *                outY    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPLMGetMouseLocationGlobal(
+)
+-- outs = { outX, outY }</code></pre>
+</div>
 
 </div>
 
@@ -797,9 +1043,13 @@ XPLM_API void       XPLMGetMouseLocationGlobal(
 
 <div class="sym-block sym-function" data-name="XPLMGetModifierKeys" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetModifierKeys { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
 
 Returns the modifier keys that are being held down *right now*, as a bitfield of XPLMKeyFlags.
 Unlike the modifier flags delivered with a key event, this reflects the live keyboard state at the
@@ -811,9 +1061,11 @@ xplm_CapsLockFlag.  The xplm_DownFlag and xplm_UpFlag bits (which describe a key
 never returned. As elsewhere in the SDK, the Command key on macOS is folded into xplm_ControlFlag
 rather than reported separately.
 
-```cpp
-XPLM_API XPLMKeyFlagsXPLMGetModifierKeys(void);
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMKeyFlags -> assign to local/var
+local my_keyFlags = XPLMGetModifierKeys(
+)</code></pre>
+</div>
 
 </div>
 
@@ -821,9 +1073,13 @@ XPLM_API XPLMKeyFlagsXPLMGetModifierKeys(void);
 
 <div class="sym-block sym-function" data-name="XPLMGetWindowGeometry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetWindowGeometry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine returns the position and size of a window. The units and coordinate system vary depending
 on the type of window you have.
@@ -837,25 +1093,31 @@ created using XPLMCreateWindowEx()), the units are global desktop boxels.
 
 Pass NULL to not receive any paramter.
 
-```cpp
-XPLM_API void       XPLMGetWindowGeometry(
-                         XPLMWindowID         inWindowID,
-                         int *                outLeft,    /* Can be NULL */
-                         int *                outTop,    /* Can be NULL */
-                         int *                outRight,    /* Can be NULL */
-                         int *                outBottom    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPLMGetWindowGeometry(
+    inWindowID     -- XPLMWindowID
+)
+-- outs = { outLeft, outTop, outRight, outBottom }</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetWindowGeometry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetWindowGeometry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine allows you to set the position and size of a window.
 
@@ -866,48 +1128,62 @@ Note that this only applies to "floating" windows (that is, windows that are dra
 rather than being "popped out" into their own first-class operating system windows). To set the position
 of windows whose positioning mode is xplm_WindowPopOut, you'll need to instead use XPLMSetWindowGeometryOS().
 
-```cpp
-XPLM_API void       XPLMSetWindowGeometry(
-                         XPLMWindowID         inWindowID,
-                         int                  inLeft,
-                         int                  inTop,
-                         int                  inRight,
-                         int                  inBottom
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetWindowGeometry(
+    inWindowID,    -- XPLMWindowID
+    inLeft,        -- int
+    inTop,         -- int
+    inRight,       -- int
+    inBottom       -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetWindowGeometryOS" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetWindowGeometryOS { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM300</span>
 
+</div>
+
 This routine returns the position and size of a "popped out" window (i.e., a window whose positioning
 mode is xplm_WindowPopOut), in operating system pixels.  Pass NULL to not receive any parameter.
 
-```cpp
-XPLM_API void       XPLMGetWindowGeometryOS(
-                         XPLMWindowID         inWindowID,
-                         int *                outLeft,    /* Can be NULL */
-                         int *                outTop,    /* Can be NULL */
-                         int *                outRight,    /* Can be NULL */
-                         int *                outBottom    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPLMGetWindowGeometryOS(
+    inWindowID     -- XPLMWindowID
+)
+-- outs = { outLeft, outTop, outRight, outBottom }</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetWindowGeometryOS" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetWindowGeometryOS { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 This routine allows you to set the position and size, in operating system pixel coordinates, of a popped out window
 (that is, a window whose positioning mode is xplm_WindowPopOut, which exists outside the X-Plane simulation window,
@@ -916,106 +1192,147 @@ in its own first-class operating system window).
 Note that you are responsible for ensuring both that your window is popped out (using XPLMWindowIsPoppedOut()) and
 that a monitor really exists at the OS coordinates you provide (using XPLMGetAllMonitorBoundsOS()).
 
-```cpp
-XPLM_API void       XPLMSetWindowGeometryOS(
-                         XPLMWindowID         inWindowID,
-                         int                  inLeft,
-                         int                  inTop,
-                         int                  inRight,
-                         int                  inBottom
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetWindowGeometryOS(
+    inWindowID,    -- XPLMWindowID
+    inLeft,        -- int
+    inTop,         -- int
+    inRight,       -- int
+    inBottom       -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetWindowGeometryVR" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetWindowGeometryVR { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM301</span>
 
+</div>
+
 Returns the width and height, in boxels, of a window in VR.
 Note that you are responsible for ensuring your window is in VR (using XPLMWindowIsInVR()).
 
-```cpp
-XPLM_API void       XPLMGetWindowGeometryVR(
-                         XPLMWindowID         inWindowID,
-                         int *                outWidthBoxels,    /* Can be NULL */
-                         int *                outHeightBoxels    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPLMGetWindowGeometryVR(
+    inWindowID     -- XPLMWindowID
+)
+-- outs = { outWidthBoxels, outHeightBoxels }</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetWindowGeometryVR" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetWindowGeometryVR { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM301</span>
+
+</div>
 
 This routine allows you to set the size, in boxels, of a window in VR
 (that is, a window whose positioning mode is xplm_WindowVR).
 
 Note that you are responsible for ensuring your window is in VR (using XPLMWindowIsInVR()).
 
-```cpp
-XPLM_API void       XPLMSetWindowGeometryVR(
-                         XPLMWindowID         inWindowID,
-                         int                  widthBoxels,
-                         int                  heightBoxels
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetWindowGeometryVR(
+    inWindowID,      -- XPLMWindowID
+    widthBoxels,     -- int
+    heightBoxels     -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetWindowIsVisible" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetWindowIsVisible { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 Returns true (1) if the specified window is visible.
 
-```cpp
-XPLM_API int        XPLMGetWindowIsVisible(
-                         XPLMWindowID         inWindowID
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns boolean -> assign to local/var
+local my_result = XPLMGetWindowIsVisible(
+    inWindowID     -- XPLMWindowID
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetWindowIsVisible" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetWindowIsVisible { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This routine shows or hides a window.
 
-```cpp
-XPLM_API void       XPLMSetWindowIsVisible(
-                         XPLMWindowID         inWindowID,
-                         int                  inIsVisible
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetWindowIsVisible(
+    inWindowID,     -- XPLMWindowID
+    inIsVisible     -- boolean
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMWindowIsPoppedOut" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMWindowIsPoppedOut { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 True if this window has been popped out (making it a first-class window in the operating system), which
 in turn is true if and only if you have set the window's positioning mode to xplm_WindowPopOut.
@@ -1023,21 +1340,30 @@ in turn is true if and only if you have set the window's positioning mode to xpl
 Only applies to modern windows. (Windows created using the deprecated XPLMCreateWindow(),
 or windows compiled against a pre-XPLM300 version of the SDK cannot be popped out.)
 
-```cpp
-XPLM_API int        XPLMWindowIsPoppedOut(
-                         XPLMWindowID         inWindowID
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns boolean -> assign to local/var
+local my_result = XPLMWindowIsPoppedOut(
+    inWindowID     -- XPLMWindowID
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMWindowIsInVR" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMWindowIsInVR { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM301</span>
+
+</div>
 
 True if this window has been moved to the virtual reality (VR) headset, which
 in turn is true if and only if you have set the window's positioning mode to xplm_WindowVR.
@@ -1045,21 +1371,30 @@ in turn is true if and only if you have set the window's positioning mode to xpl
 Only applies to modern windows. (Windows created using the deprecated XPLMCreateWindow(),
 or windows compiled against a pre-XPLM301 version of the SDK cannot be moved to VR.)
 
-```cpp
-XPLM_API int        XPLMWindowIsInVR(
-                         XPLMWindowID         inWindowID
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns boolean -> assign to local/var
+local my_result = XPLMWindowIsInVR(
+    inWindowID     -- XPLMWindowID
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetWindowGravity" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetWindowGravity { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 A window's "gravity" controls how the window shifts as the whole X-Plane window resizes.
 A gravity of 1 means the window maintains its positioning relative to the right or top edges,
@@ -1076,25 +1411,33 @@ the whole width of your window would change with the X-Plane window.
 Only applies to modern windows. (Windows created using the deprecated XPLMCreateWindow(),
 or windows compiled against a pre-XPLM300 version of the SDK will simply get the default gravity.)
 
-```cpp
-XPLM_API void       XPLMSetWindowGravity(
-                         XPLMWindowID         inWindowID,
-                         float                inLeftGravity,
-                         float                inTopGravity,
-                         float                inRightGravity,
-                         float                inBottomGravity
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetWindowGravity(
+    inWindowID,         -- XPLMWindowID
+    inLeftGravity,      -- float
+    inTopGravity,       -- float
+    inRightGravity,     -- float
+    inBottomGravity     -- float
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetWindowResizingLimits" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetWindowResizingLimits { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 Sets the minimum and maximum size of the client rectangle of the given window. (That is, it does not include
 any window styling that you might have asked X-Plane to apply on your behalf.)
@@ -1103,25 +1446,33 @@ All resizing operations are constrained to these sizes.
 Only applies to modern windows. (Windows created using the deprecated XPLMCreateWindow(),
 or windows compiled against a pre-XPLM300 version of the SDK will have no minimum or maximum size.)
 
-```cpp
-XPLM_API void       XPLMSetWindowResizingLimits(
-                         XPLMWindowID         inWindowID,
-                         int                  inMinWidthBoxels,
-                         int                  inMinHeightBoxels,
-                         int                  inMaxWidthBoxels,
-                         int                  inMaxHeightBoxels
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetWindowResizingLimits(
+    inWindowID,           -- XPLMWindowID
+    inMinWidthBoxels,     -- int
+    inMinHeightBoxels,    -- int
+    inMaxWidthBoxels,     -- int
+    inMaxHeightBoxels     -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-enum" data-name="XPLMWindowPositioningMode" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMWindowPositioningMode { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 XPLMWindowPositionMode describes how X-Plane will position your window on the user's screen. X-Plane will maintain
 this positioning mode even as the user resizes their window or adds/removes full-screen monitors.
@@ -1143,15 +1494,23 @@ pre-XPLM300 version of the SDK will simply get the "free" positioning mode.
 
 </div>
 
+**Used by:**
+
+- [XPLMSetWindowPositioningMode](#xplmsetwindowpositioningmode)
+
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetWindowPositioningMode" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetWindowPositioningMode { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 Sets the policy for how X-Plane will position your window.
 
@@ -1163,121 +1522,171 @@ from, e.g., XPLMGetAllMonitorBoundsOS().
 Only applies to modern windows. (Windows created using the deprecated XPLMCreateWindow(),
 or windows compiled against a pre-XPLM300 version of the SDK will always use xplm_WindowPositionFree.)
 
-```cpp
-XPLM_API void       XPLMSetWindowPositioningMode(
-                         XPLMWindowID         inWindowID,
-                         XPLMWindowPositioningMode inPositioningMode,
-                         int                  inMonitorIndex
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetWindowPositioningMode(
+    inWindowID,           -- XPLMWindowID
+    inPositioningMode,    -- XPLMWindowPositioningMode
+    inMonitorIndex        -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
+- [XPLMWindowPositioningMode](#xplmwindowpositioningmode)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetWindowTitle" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetWindowTitle { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM300</span>
+
+</div>
 
 Sets the name for a window. This only applies to windows that opted-in to styling
 as an X-Plane 11 floating window (i.e., with styling mode xplm_WindowDecorationRoundRectangle)
 when they were created using XPLMCreateWindowEx().
 
-```cpp
-XPLM_API void       XPLMSetWindowTitle(
-                         XPLMWindowID         inWindowID,
-                         const char *         inWindowTitle
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetWindowTitle(
+    inWindowID,       -- XPLMWindowID
+    inWindowTitle     -- string
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetWindowRefCon" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetWindowRefCon { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 Returns a window's reference constant, the unique value you can use for your own purposes.
 
-```cpp
-XPLM_API void *     XPLMGetWindowRefCon(
-                         XPLMWindowID         inWindowID
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMGetWindowRefCon(
+    inWindowID     -- XPLMWindowID
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetWindowRefCon" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetWindowRefCon { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 Sets a window's reference constant.  Use this to pass data to yourself in the callbacks.
 
-```cpp
-XPLM_API void       XPLMSetWindowRefCon(
-                         XPLMWindowID         inWindowID,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetWindowRefCon(
+    inWindowID,    -- XPLMWindowID
+    inRefcon       -- any Lua var/table
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMTakeKeyboardFocus" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMTakeKeyboardFocus { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine gives a specific window keyboard focus.  Keystrokes will be sent to
 that window.  Pass a window ID of 0 to remove keyboard focus from any plugin-created windows
 and instead pass keyboard strokes directly to X-Plane.
 
-```cpp
-XPLM_API void       XPLMTakeKeyboardFocus(
-                         XPLMWindowID         inWindow
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMTakeKeyboardFocus(
+    inWindow     -- XPLMWindowID
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMHasKeyboardFocus" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMHasKeyboardFocus { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Returns true (1) if the indicated window has keyboard focus.
 Pass a window ID of 0 to see if no plugin window has focus, and all keystrokes
 will go directly to X-Plane.
 
-```cpp
-XPLM_API int        XPLMHasKeyboardFocus(
-                         XPLMWindowID         inWindow
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns boolean -> assign to local/var
+local my_result = XPLMHasKeyboardFocus(
+    inWindow     -- XPLMWindowID
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMBringWindowToFront" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMBringWindowToFront { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine brings the window to the front of the Z-order for its layer.  Windows are brought to the
 front automatically when they are created. Beyond that, you should make sure you are front before
@@ -1289,21 +1698,29 @@ but there is a modal window (in layer xplm_WindowLayerModal) above you, you woul
 not be the true frontmost window after calling this. (After all, the window layers are
 strictly ordered, and no window in a lower layer can ever be above any window in a higher one.)
 
-```cpp
-XPLM_API void       XPLMBringWindowToFront(
-                         XPLMWindowID         inWindow
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMBringWindowToFront(
+    inWindow     -- XPLMWindowID
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMIsWindowInFront" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMIsWindowInFront { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine returns true if the window you passed in is the frontmost visible window in its layer (XPLMWindowLayer).
 
@@ -1316,12 +1733,17 @@ Note that legacy windows are always placed in layer xplm_WindowLayerFlightOverla
 default to xplm_WindowLayerFloatingWindows. This means it's perfectly consistent to have two different
 plugin-created windows (one legacy, one modern) *both* be in the front (of their different layers!) at the same time.
 
-```cpp
-XPLM_API int        XPLMIsWindowInFront(
-                         XPLMWindowID         inWindow
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns boolean -> assign to local/var
+local my_result = XPLMIsWindowInFront(
+    inWindow     -- XPLMWindowID
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWindowID](#xplmwindowid)
 </div>
 
 ---
@@ -1329,4 +1751,4 @@ XPLM_API int        XPLMIsWindowInFront(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

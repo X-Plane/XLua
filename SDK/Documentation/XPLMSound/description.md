@@ -10,4 +10,4 @@ own events, you can get a pointer to the FMOD Studio instance.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

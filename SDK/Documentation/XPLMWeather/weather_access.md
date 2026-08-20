@@ -4,20 +4,24 @@
 
 <div class="sym-block sym-struct" data-name="XPLMWeatherInfoWinds_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMWeatherInfoWinds_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span>
 
-```cpp
-typedef struct {
-     float                     alt_msl;
-     float                     speed;
-     float                     direction;
-     float                     gust_speed;
-     float                     shear;
-     float                     turbulence;
-} XPLMWeatherInfoWinds_t;
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_WeatherInfoWinds_t = {
+    alt_msl     = 0.0,     -- float
+    speed       = 0.0,     -- float
+    direction   = 0.0,     -- float
+    gust_speed  = 0.0,     -- float
+    shear       = 0.0,     -- float
+    turbulence  = 0.0,     -- float
+}</code></pre>
+</div>
 
 </div>
 
@@ -25,18 +29,22 @@ typedef struct {
 
 <div class="sym-block sym-struct" data-name="XPLMWeatherInfoClouds_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMWeatherInfoClouds_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span>
 
-```cpp
-typedef struct {
-     float                     cloud_type;
-     float                     coverage;
-     float                     alt_top;
-     float                     alt_base;
-} XPLMWeatherInfoClouds_t;
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_WeatherInfoClouds_t = {
+    cloud_type  = 0.0,     -- float
+    coverage    = 0.0,     -- float
+    alt_top     = 0.0,     -- float
+    alt_base    = 0.0,     -- float
+}</code></pre>
+</div>
 
 </div>
 
@@ -44,13 +52,19 @@ typedef struct {
 
 <div class="sym-block sym-define" data-name="XPLM_NUM_WIND_LAYERS" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLM_NUM_WIND_LAYERS { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
+</div>
+
 The number of wind layers that are expected in the latest version of XPLMWeatherInfo_t .
 
-`#define XPLM_NUM_WIND_LAYERS 13`
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLM_NUM_WIND_LAYERS  -- 13</code></pre>
+</div>
 
 </div>
 
@@ -58,13 +72,19 @@ The number of wind layers that are expected in the latest version of XPLMWeather
 
 <div class="sym-block sym-define" data-name="XPLM_NUM_CLOUD_LAYERS" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLM_NUM_CLOUD_LAYERS { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
+</div>
+
 The number of cloud layers that are expected in the latest version of XPLMWeatherInfo_t .
 
-`#define XPLM_NUM_CLOUD_LAYERS 3`
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLM_NUM_CLOUD_LAYERS  -- 3</code></pre>
+</div>
 
 </div>
 
@@ -72,13 +92,19 @@ The number of cloud layers that are expected in the latest version of XPLMWeathe
 
 <div class="sym-block sym-define" data-name="XPLM_NUM_TEMPERATURE_LAYERS" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLM_NUM_TEMPERATURE_LAYERS { .symbol-title }
 
 <span class="sym-badge badge-define">define</span> <span class="sym-badge badge-version">XPLM420</span>
 
+</div>
+
 The number of temperature layers that are expected in the latest version of XPLMWeatherInfo_t .
 
-`#define XPLM_NUM_TEMPERATURE_LAYERS 13`
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLM_NUM_TEMPERATURE_LAYERS  -- 13</code></pre>
+</div>
 
 </div>
 
@@ -86,13 +112,19 @@ The number of temperature layers that are expected in the latest version of XPLM
 
 <div class="sym-block sym-define" data-name="XPLM_WIND_UNDEFINED_LAYER" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLM_WIND_UNDEFINED_LAYER { .symbol-title }
 
 <span class="sym-badge badge-define">define</span> <span class="sym-badge badge-version">XPLM420</span>
 
+</div>
+
 Use this value to designate a wind layer as undefined when setting.
 
-`#define XPLM_WIND_UNDEFINED_LAYER -1`
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLM_WIND_UNDEFINED_LAYER  -- -1</code></pre>
+</div>
 
 </div>
 
@@ -100,13 +132,19 @@ Use this value to designate a wind layer as undefined when setting.
 
 <div class="sym-block sym-define" data-name="XPLM_TEMP_UNDEFINED_LAYER" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLM_TEMP_UNDEFINED_LAYER { .symbol-title }
 
 <span class="sym-badge badge-define">define</span> <span class="sym-badge badge-version">XPLM440</span>
 
+</div>
+
 Use this value to designate a temperature-related layer as undefined when setting.
 
-`#define XPLM_TEMP_UNDEFINED_LAYER -274`
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLM_TEMP_UNDEFINED_LAYER  -- -274</code></pre>
+</div>
 
 </div>
 
@@ -114,13 +152,19 @@ Use this value to designate a temperature-related layer as undefined when settin
 
 <div class="sym-block sym-define" data-name="XPLM_DEFAULT_WXR_RADIUS_NM" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLM_DEFAULT_WXR_RADIUS_NM { .symbol-title }
 
 <span class="sym-badge badge-define">define</span> <span class="sym-badge badge-version">XPLM420</span>
 
+</div>
+
 Default radius of weather data points set using XPLMSetWeatherAtLocation and XPLMSetWeatherAtAirport.
 
-`#define XPLM_DEFAULT_WXR_RADIUS_NM 30`
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLM_DEFAULT_WXR_RADIUS_NM  -- 30</code></pre>
+</div>
 
 </div>
 
@@ -128,13 +172,19 @@ Default radius of weather data points set using XPLMSetWeatherAtLocation and XPL
 
 <div class="sym-block sym-define" data-name="XPLM_DEFAULT_WXR_LIMIT_MSL_FT" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLM_DEFAULT_WXR_LIMIT_MSL_FT { .symbol-title }
 
 <span class="sym-badge badge-define">define</span> <span class="sym-badge badge-version">XPLM420</span>
 
+</div>
+
 Default vertical limit of effect of weather data points set using XPLMSetWeatherAtLocation and XPLMSetWeatherAtAirport.
 
-`#define XPLM_DEFAULT_WXR_LIMIT_MSL_FT 10000`
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLM_DEFAULT_WXR_LIMIT_MSL_FT  -- 10000</code></pre>
+</div>
 
 </div>
 
@@ -142,45 +192,49 @@ Default vertical limit of effect of weather data points set using XPLMSetWeather
 
 <div class="sym-block sym-struct" data-name="XPLMWeatherInfo_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMWeatherInfo_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span>
+
+</div>
 
 Basic weather conditions at a specific point. To specify exactly what data you intend to send or receive, it
 is required to set the structSize appropriately.
 
 Version 2 data starts at "temp_layers".
 
-```cpp
-typedef struct {
-     int                       structSize;
-     float                     temperature_alt;
-     float                     dewpoint_alt;
-     float                     pressure_alt;
-     float                     precip_rate_alt;
-     float                     wind_dir_alt;
-     float                     wind_spd_alt;
-     float                     turbulence_alt;
-     float                     wave_height;
-     float                     wave_length;
-     int                       wave_dir;
-     float                     wave_speed;
-     float                     visibility;
-     float                     precip_rate;
-     float                     thermal_climb;
-     float                     pressure_sl;
-     XPLMWeatherInfoWinds_t[XPLM_NUM_WIND_LAYERS] wind_layers;
-     XPLMWeatherInfoClouds_t[XPLM_NUM_CLOUD_LAYERS] cloud_layers;
-     float[XPLM_NUM_TEMPERATURE_LAYERS] temp_layers;
-     float[XPLM_NUM_TEMPERATURE_LAYERS] dewp_layers;
-     float                     troposphere_alt;
-     float                     troposphere_temp;
-     float                     age;
-     float                     radius_nm;
-     float                     max_altitude_msl_ft;
-     float                     snow_coverage_pct;
-} XPLMWeatherInfo_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_WeatherInfo_t = {
+    structSize           = 0,       -- int
+    temperature_alt      = 0.0,     -- float
+    dewpoint_alt         = 0.0,     -- float
+    pressure_alt         = 0.0,     -- float
+    precip_rate_alt      = 0.0,     -- float
+    wind_dir_alt         = 0.0,     -- float
+    wind_spd_alt         = 0.0,     -- float
+    turbulence_alt       = 0.0,     -- float
+    wave_height          = 0.0,     -- float
+    wave_length          = 0.0,     -- float
+    wave_dir             = 0,       -- int
+    wave_speed           = 0.0,     -- float
+    visibility           = 0.0,     -- float
+    precip_rate          = 0.0,     -- float
+    thermal_climb        = 0.0,     -- float
+    pressure_sl          = 0.0,     -- float
+    wind_layers          = nil,     -- see XPLMWeatherInfoWinds_t
+    cloud_layers         = nil,     -- see XPLMWeatherInfoClouds_t
+    temp_layers          = nil,     -- float
+    dewp_layers          = nil,     -- float
+    troposphere_alt      = 0.0,     -- float
+    troposphere_temp     = 0.0,     -- float
+    age                  = 0.0,     -- float
+    radius_nm            = 0.0,     -- float
+    max_altitude_msl_ft  = 0.0,     -- float
+    snow_coverage_pct    = 0.0,     -- float
+}</code></pre>
+</div>
 
 </div>
 
@@ -188,9 +242,13 @@ typedef struct {
 
 <div class="sym-block sym-function" data-name="XPLMGetMETARForAirport" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetMETARForAirport { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Get the last-downloaded METAR report for an airport by ICAO code. Note that the actual weather at that airport may have evolved
 significantly since the last downloaded METAR. outMETAR must point to a char buffer of at least 150 characters.
@@ -198,12 +256,13 @@ THIS CALL DOES NOT RETURN THE CURRENT WEATHER AT THE AIRPORT, and returns an emp
 
 This call is not intended to be used per-frame. It should be called only during the pre-flight loop callback.
 
-```cpp
-XPLM_API void       XPLMGetMETARForAirport(
-                         const char *         airport_id,
-                         XPLMFixedString150_t * outMETAR
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPLMGetMETARForAirport(
+    airport_id     -- string
+)
+-- outs = { outMETAR }</code></pre>
+</div>
 
 </div>
 
@@ -211,9 +270,13 @@ XPLM_API void       XPLMGetMETARForAirport(
 
 <div class="sym-block sym-function" data-name="XPLMGetWeatherAtLocation" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetWeatherAtLocation { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Get the current weather conditions at a given location. Note that this does not work world-wide, only within the
 surrounding region. Return true if detailed weather (i.e. an airport-specific METAR) was found, false if not. In both cases, the structure
@@ -224,24 +287,33 @@ which are undocumented. Never expect to read the exact numbers you may have set,
 
 This call is not intended to be used per-frame. It should be called only during the pre-flight loop callback.
 
-```cpp
-XPLM_API int        XPLMGetWeatherAtLocation(
-                         double               latitude,
-                         double               longitude,
-                         double               altitude_m,
-                         XPLMWeatherInfo_t *  out_info
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns boolean, plus a table of out values
+local my_result, outs = XPLMGetWeatherAtLocation(
+    latitude,      -- float
+    longitude,     -- float
+    altitude_m     -- float
+)
+-- outs = { out_info }</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWeatherInfo_t](#xplmweatherinfo_t)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMBeginWeatherUpdate" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMBeginWeatherUpdate { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM420</span>
+
+</div>
 
 Inform the simulator that you are starting a batch update of weather information. If you are providing multiple weather updates,
 using this call may improve performance by telling the simulator not to update weather until you are done.
@@ -250,9 +322,10 @@ This call is not intended to be used per-frame.  It should be called only during
 You must call XPLMEndWeatherUpdate before you return from the callback; XPLMBeginWeatherUpdate in one
 callback and XPLMEndWeatherUpdate in a later callback, even within the same frame, is not permitted.
 
-```cpp
-XPLM_API void       XPLMBeginWeatherUpdate(void);
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMBeginWeatherUpdate(
+)</code></pre>
+</div>
 
 </div>
 
@@ -260,9 +333,13 @@ XPLM_API void       XPLMBeginWeatherUpdate(void);
 
 <div class="sym-block sym-function" data-name="XPLMEndWeatherUpdate" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMEndWeatherUpdate { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM420</span>
+
+</div>
 
 Inform the simulator that you are ending a batch update of weather information. If you have called XPLMBeginWeatherUpdate, you MUST
 call XPLMEndWeatherUpdate before exiting your callback otherwise any accumulated weather data will be discarded.
@@ -282,12 +359,12 @@ updateImmediately : If true, immediately reset and recalculate the weather. If f
 
 This call is not intended to be used per-frame. It should be called only during the pre-flight loop callback.
 
-```cpp
-XPLM_API void       XPLMEndWeatherUpdate(
-                         int                  isIncremental,
-                         int                  updateImmediately
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMEndWeatherUpdate(
+    isIncremental,        -- boolean
+    updateImmediately     -- boolean
+)</code></pre>
+</div>
 
 </div>
 
@@ -295,9 +372,13 @@ XPLM_API void       XPLMEndWeatherUpdate(
 
 <div class="sym-block sym-function" data-name="XPLMSetWeatherAtLocation" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetWeatherAtLocation { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM420</span>
+
+</div>
 
 Set the current weather conditions at a given location on the ground and above it.. Please see the notes on individual fields in
 XPLMSetWeatherAtAirport, and notes on timing in XPLMEndWeatherUpdate.
@@ -313,36 +394,44 @@ the simulated state, not any particular input. This applies equally to static an
 
 This call is not intended to be used per-frame. It should be called only during the pre-flight loop callback.
 
-```cpp
-XPLM_API void       XPLMSetWeatherAtLocation(
-                         double               latitude,
-                         double               longitude,
-                         double               ground_altitude_msl,
-                         XPLMWeatherInfo_t *  in_info
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetWeatherAtLocation(
+    latitude,               -- float
+    longitude,              -- float
+    ground_altitude_msl,    -- float
+    in_info                 -- see XPLMWeatherInfo_t
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWeatherInfo_t](#xplmweatherinfo_t)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMEraseWeatherAtLocation" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMEraseWeatherAtLocation { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM420</span>
+
+</div>
 
 Erase weather conditions set by your plugin at a given location. You must give exactly the same coordinates that you used to create a weather record at this point.
 It does NOT mean 'create clear weather at this location'.
 
 This call is not intended to be used per-frame. It should be called only during the pre-flight loop callback.
 
-```cpp
-XPLM_API void       XPLMEraseWeatherAtLocation(
-                         double               latitude,
-                         double               longitude
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMEraseWeatherAtLocation(
+    latitude,     -- float
+    longitude     -- float
+)</code></pre>
+</div>
 
 </div>
 
@@ -350,9 +439,13 @@ XPLM_API void       XPLMEraseWeatherAtLocation(
 
 <div class="sym-block sym-function" data-name="XPLMSetWeatherAtAirport" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetWeatherAtAirport { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM420</span>
+
+</div>
 
 Set the current weather conditions at a given airport. Unlike XPLMSetWeatherAtLocation, this call will replace any existing
 weather records for that airport from other sources (i.e. downloaded METARs) instead of being used as just another weather sample.
@@ -379,33 +472,41 @@ the simulated state, not any particular input. This applies equally to static an
 
 This call is not intended to be used per-frame. It should be called only during the pre-flight loop callback.
 
-```cpp
-XPLM_API void       XPLMSetWeatherAtAirport(
-                         const char *         airport_id,
-                         XPLMWeatherInfo_t *  in_info
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetWeatherAtAirport(
+    airport_id,    -- string
+    in_info        -- see XPLMWeatherInfo_t
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMWeatherInfo_t](#xplmweatherinfo_t)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMEraseWeatherAtAirport" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMEraseWeatherAtAirport { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM420</span>
+
+</div>
 
 Erase the current weather conditions set by your plugin at a given airport, allowing records from other sources to be used.
 It does NOT mean 'create clear weather at this airport'.
 
 This call is not intended to be used per-frame. It should be called only during the pre-flight loop callback.
 
-```cpp
-XPLM_API void       XPLMEraseWeatherAtAirport(
-                         const char *         airport_id
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMEraseWeatherAtAirport(
+    airport_id     -- string
+)</code></pre>
+</div>
 
 </div>
 
@@ -414,4 +515,4 @@ XPLM_API void       XPLMEraseWeatherAtAirport(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

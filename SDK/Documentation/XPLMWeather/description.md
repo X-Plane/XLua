@@ -11,4 +11,4 @@ how the data is processed will change over time as the weather engine changes, e
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

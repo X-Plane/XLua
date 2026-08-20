@@ -17,11 +17,17 @@ this object with a filter function (more instructions can be found on the SDK we
 
 <div class="sym-block sym-define" data-name="xpWidgetClass_TextField" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## xpWidgetClass_TextField { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
-`#define xpWidgetClass_TextField 4`
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">xpWidgetClass_TextField  -- 4</code></pre>
+</div>
 
 </div>
 
@@ -29,9 +35,13 @@ this object with a filter function (more instructions can be found on the SDK we
 
 <div class="sym-block sym-enum" data-name="Text Field Type Values" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Text Field Type Values { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 These control the look of the text field.
 
@@ -51,9 +61,13 @@ These control the look of the text field.
 
 <div class="sym-block sym-enum" data-name="Text Field Properties" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Text Field Properties { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 <div class="enum-table" markdown="1">
 
@@ -77,9 +91,13 @@ These control the look of the text field.
 
 <div class="sym-block sym-enum" data-name="Text Field Messages" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Text Field Messages { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 <div class="enum-table" markdown="1">
 
@@ -96,4 +114,4 @@ These control the look of the text field.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

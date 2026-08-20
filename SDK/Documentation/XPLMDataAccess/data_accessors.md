@@ -19,128 +19,183 @@ array-out-of-bounds error.
 
 <div class="sym-block sym-function" data-name="XPLMGetDatai" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDatai { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 Read an integer dataref and return its value.
 The return value is the dataref value or 0 if the dataref is NULL or the plugin is disabled.
 
-```cpp
-XPLM_API int        XPLMGetDatai(
-                         XPLMDataRef          inDataRef
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int -> assign to local/var
+local my_result = XPLMGetDatai(
+    inDataRef     -- XPLMDataRef
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataRef](reading_and_writing_data.md#xplmdataref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetDatai" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDatai { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 Write a new value to an integer dataref.
 This routine is a no-op if the plugin publishing the dataref is disabled, the dataref is NULL, or the dataref is not writable.
 
-```cpp
-XPLM_API void       XPLMSetDatai(
-                         XPLMDataRef          inDataRef,
-                         int                  inValue
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetDatai(
+    inDataRef,    -- XPLMDataRef
+    inValue       -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataRef](reading_and_writing_data.md#xplmdataref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetDataf" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDataf { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 Read a single precision floating point dataref and return its value.
 The return value is the dataref value or 0.0 if the dataref is NULL or the plugin is disabled.
 
-```cpp
-XPLM_API float      XPLMGetDataf(
-                         XPLMDataRef          inDataRef
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns float -> assign to local/var
+local my_result = XPLMGetDataf(
+    inDataRef     -- XPLMDataRef
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataRef](reading_and_writing_data.md#xplmdataref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetDataf" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDataf { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Write a new value to a single precision floating point dataref.
 This routine is a no-op if the plugin publishing the dataref is disabled, the dataref is NULL, or the
 dataref is not writable.
 
-```cpp
-XPLM_API void       XPLMSetDataf(
-                         XPLMDataRef          inDataRef,
-                         float                inValue
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetDataf(
+    inDataRef,    -- XPLMDataRef
+    inValue       -- float
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataRef](reading_and_writing_data.md#xplmdataref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetDatad" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDatad { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 Read a double precision floating point dataref and return its value.
 The return value is the dataref value or 0.0 if the dataref is NULL or the plugin is disabled.
 
-```cpp
-XPLM_API double     XPLMGetDatad(
-                         XPLMDataRef          inDataRef
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns float -> assign to local/var
+local my_result = XPLMGetDatad(
+    inDataRef     -- XPLMDataRef
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataRef](reading_and_writing_data.md#xplmdataref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetDatad" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDatad { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Write a new value to a double precision floating point dataref.
 This routine is a no-op if the plugin publishing the dataref is disabled, the dataref is NULL, or the
 dataref is not writable.
 
-```cpp
-XPLM_API void       XPLMSetDatad(
-                         XPLMDataRef          inDataRef,
-                         double               inValue
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetDatad(
+    inDataRef,    -- XPLMDataRef
+    inValue       -- float
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataRef](reading_and_writing_data.md#xplmdataref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetDatavi" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDatavi { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Read a part of an integer array dataref. If you pass NULL for outValues, the routine will return the
 size of the array, ignoring inOffset and inMax.
@@ -153,24 +208,33 @@ Note: the semantics of array datarefs are entirely implemented by the plugin (or
 the dataref, not the SDK itself; the above description is how these datarefs are intended to work, but a
 rogue plugin may have different behavior.
 
-```cpp
-XPLM_API int        XPLMGetDatavi(
-                         XPLMDataRef          inDataRef,
-                         int *                outValues,    /* Can be NULL */
-                         ArrayOffset          inOffset,
-                         ArraySize            inMax
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int, plus a table of out values
+local my_result, outs = XPLMGetDatavi(
+    inDataRef,    -- XPLMDataRef
+    inOffset,     -- ArrayOffset
+    inMax         -- ArraySize
+)
+-- outs = { outValues }</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataRef](reading_and_writing_data.md#xplmdataref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetDatavi" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDatavi { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Write part or all of an integer array dataref. The values passed by inValues are written into the
 dataref starting at inOffset. Up to inCount values are written; however if the values would write past
@@ -180,24 +244,32 @@ Note: the semantics of array datarefs are entirely implemented by the plugin (or
 the dataref, not the SDK itself; the above description is how these datarefs are intended to work, but a
 rogue plugin may have different behavior.
 
-```cpp
-XPLM_API void       XPLMSetDatavi(
-                         XPLMDataRef          inDataRef,
-                         int *                inValues,
-                         ArrayOffset          inoffset,
-                         ArraySize            inCount
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetDatavi(
+    inDataRef,    -- XPLMDataRef
+    inValues,     -- int
+    inoffset,     -- ArrayOffset
+    inCount       -- ArraySize
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataRef](reading_and_writing_data.md#xplmdataref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetDatavf" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDatavf { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Read a part of a single precision floating point array dataref. If you pass NULL for outValues, the
 routine will return the size of the array, ignoring inOffset and inMax.
@@ -212,24 +284,33 @@ the dataref, not the SDK
 itself; the above description is how these datarefs are intended to work, but a rogue plugin may have
 different behavior.
 
-```cpp
-XPLM_API int        XPLMGetDatavf(
-                         XPLMDataRef          inDataRef,
-                         float *              outValues,    /* Can be NULL */
-                         ArrayOffset          inOffset,
-                         ArraySize            inMax
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int, plus a table of out values
+local my_result, outs = XPLMGetDatavf(
+    inDataRef,    -- XPLMDataRef
+    inOffset,     -- ArrayOffset
+    inMax         -- ArraySize
+)
+-- outs = { outValues }</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataRef](reading_and_writing_data.md#xplmdataref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetDatavf" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDatavf { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Write part or all of a single precision floating point array dataref. The values passed by inValues are
 written into the dataref starting at
@@ -241,24 +322,32 @@ the dataref, not the SDK
 itself; the above description is how these datarefs are intended to work, but a rogue plugin may have
 different behavior.
 
-```cpp
-XPLM_API void       XPLMSetDatavf(
-                         XPLMDataRef          inDataRef,
-                         float *              inValues,
-                         ArrayOffset          inoffset,
-                         ArraySize            inCount
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetDatavf(
+    inDataRef,    -- XPLMDataRef
+    inValues,     -- float
+    inoffset,     -- ArrayOffset
+    inCount       -- ArraySize
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataRef](reading_and_writing_data.md#xplmdataref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetDatab" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDatab { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Read a part of a byte array dataref. If you pass NULL for outValues, the routine will return the size of
 the array, ignoring inOffset and inMax.
@@ -273,24 +362,33 @@ the dataref, not the SDK
 itself; the above description is how these datarefs are intended to work, but a rogue plugin may have
 different behavior.
 
-```cpp
-XPLM_API int        XPLMGetDatab(
-                         XPLMDataRef          inDataRef,
-                         byte *               outValue,    /* Can be NULL */
-                         ArrayOffset          inOffset,
-                         ArraySize            inMaxBytes
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int, plus a table of out values
+local my_result, outs = XPLMGetDatab(
+    inDataRef,     -- XPLMDataRef
+    inOffset,      -- ArrayOffset
+    inMaxBytes     -- ArraySize
+)
+-- outs = { outValue }</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataRef](reading_and_writing_data.md#xplmdataref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetDatab" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDatab { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Write part or all of a byte array dataref. The values passed by inValues are written into the dataref
 starting at
@@ -302,15 +400,19 @@ the dataref, not the SDK
 itself; the above description is how these datarefs are intended to work, but a rogue plugin may have
 different behavior.
 
-```cpp
-XPLM_API void       XPLMSetDatab(
-                         XPLMDataRef          inDataRef,
-                         byte *               inValue,
-                         ArrayOffset          inOffset,
-                         ArraySize            inLength
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetDatab(
+    inDataRef,    -- XPLMDataRef
+    inValue,      -- byte
+    inOffset,     -- ArrayOffset
+    inLength      -- ArraySize
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataRef](reading_and_writing_data.md#xplmdataref)
 </div>
 
 ---
@@ -318,4 +420,4 @@ XPLM_API void       XPLMSetDatab(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

@@ -190,7 +190,7 @@ extern "C" int XLuaCreateImguiWindow(lua_State* L) {
 
     XPLMCreateWindow_t p = {};
     apply_geometry(L, 1, p);
-    p.windowContentType = xplm_WindowContentTypePanelGraphics;
+    p.contentType = xplm_WindowContentTypePanelGraphics;
 
     auto* ctx = new window_ctx(L);
     ctx->draw_cb = capture_field_func(L, 1, "drawWindowFunc");

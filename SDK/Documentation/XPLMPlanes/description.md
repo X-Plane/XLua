@@ -22,4 +22,4 @@ X-Plane path as accessed via XPLMGetSystemPath.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

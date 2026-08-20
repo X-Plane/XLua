@@ -6,4 +6,4 @@ These APIs provide facilities to find and work with other plugins and manage oth
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

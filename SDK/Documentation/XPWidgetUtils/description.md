@@ -23,4 +23,4 @@ and you don't need to; simply return 1.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

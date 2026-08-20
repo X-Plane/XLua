@@ -10,9 +10,13 @@ weather radar installed), the draw call is silently skipped.
 
 <div class="sym-block sym-enum" data-name="XPLMTextureSource" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMTextureSource { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 An XPLMTextureSource identifies a stock simulator texture that can be drawn
 with the texture source drawing functions.
@@ -26,15 +30,24 @@ with the texture source drawing functions.
 
 </div>
 
+**Used by:**
+
+- [XPLMTextureSourceDrawIn](#xplmtexturesourcedrawin)
+- [XPLMTextureSourceDrawMesh](#xplmtexturesourcedrawmesh)
+
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMTextureSourceDrawIn" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMTextureSourceDrawIn { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This function draws a texture source scaled to fill a rectangular region. The
 texture is stretched or compressed to exactly match the specified bounds.
@@ -44,26 +57,34 @@ texture is stretched or compressed to exactly match the specified bounds.
   XPLMMakeColor(1, 1, 1, 1) for no tinting.
 - left, top, right, bottom: the bounding rectangle in panel coordinates.
 
-```cpp
-XPLM_API void       XPLMTextureSourceDrawIn(
-                         XPLMTextureSource    tex,
-                         uint32_t             tint,
-                         int                  left,
-                         int                  top,
-                         int                  right,
-                         int                  bottom
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMTextureSourceDrawIn(
+    tex,       -- XPLMTextureSource
+    tint,      -- see uint32_t / XPLMMakeColor
+    left,      -- int
+    top,       -- int
+    right,     -- int
+    bottom     -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMTextureSource](#xplmtexturesource)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMTextureSourceDrawMesh" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMTextureSourceDrawMesh { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This function draws a texture source onto an arbitrary triangle-strip mesh.
 Each vertex specifies both a panel-space position and a normalized texture
@@ -75,15 +96,20 @@ control over how the texture is mapped onto geometry.
 - mesh: an array of XPLMTextureVertex_t vertices defining the triangle strip.
 - count: the number of vertices. Must be at least 3.
 
-```cpp
-XPLM_API void       XPLMTextureSourceDrawMesh(
-                         XPLMTextureSource    tex,
-                         uint32_t             tint,
-                         const XPLMTextureVertex_t * mesh,
-                         ArraySize            count
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMTextureSourceDrawMesh(
+    tex,      -- XPLMTextureSource
+    tint,     -- see uint32_t / XPLMMakeColor
+    mesh,     -- see XPLMTextureVertex_t
+    count     -- ArraySize
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMTextureSource](#xplmtexturesource)
+- [XPLMTextureVertex_t](panel_graphics_texture_atlas.md#xplmtexturevertex_t)
 </div>
 
 ---
@@ -91,4 +117,4 @@ XPLM_API void       XPLMTextureSourceDrawMesh(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

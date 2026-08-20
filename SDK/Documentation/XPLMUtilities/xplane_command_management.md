@@ -33,9 +33,13 @@ is not legal to pass all the begin messages to X-Plane but hide all the end mess
 
 <div class="sym-block sym-enum" data-name="XPLMCommandPhase" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCommandPhase { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 The phases of a command.
 
@@ -49,15 +53,23 @@ The phases of a command.
 
 </div>
 
+**Used by:**
+
+- [XPLMCommandCallback_f](#xplmcommandcallback_f)
+
 </div>
 
 ---
 
 <div class="sym-block sym-typedef" data-name="XPLMCommandRef" data-type="typedef" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCommandRef { .symbol-title }
 
 <span class="sym-badge badge-typedef">typedef</span>
+
+</div>
 
 A command ref is an opaque identifier for an X-Plane command. Command references stay the same for the
 life of your plugin but not between executions of X-Plane. Command refs are used to execute commands, create
@@ -66,19 +78,32 @@ commands, and create callbacks for particular commands.
 Note that a command is not "owned" by a particular plugin. Since many plugins may participate in a
 command's execution, the command does not go away if the plugin that created it is unloaded.
 
-```cpp
-typedef void * XPLMCommandRef;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local my_commandRef = nil  -- XPLMCommandRef</code></pre>
+</div>
 
+
+**Used by:**
+
+- [XPLMCommandBegin](#xplmcommandbegin)
+- [XPLMCommandCallback_f](#xplmcommandcallback_f)
+- [XPLMCommandEnd](#xplmcommandend)
+- [XPLMCommandOnce](#xplmcommandonce)
+- [XPLMRegisterCommandHandler](#xplmregistercommandhandler)
+- [XPLMUnregisterCommandHandler](#xplmunregistercommandhandler)
 </div>
 
 ---
 
 <div class="sym-block sym-callback" data-name="XPLMCommandCallback_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCommandCallback_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
+
+</div>
 
 A command callback is a function in your plugin that is called when a command is pressed. Your callback
 receives the command reference for the particular command, the phase of the command that is executing, and a
@@ -87,32 +112,45 @@ reference pointer that you specify when registering the callback.
 Your command handler should return true to let processing of the command continue to other plugins and
 X-Plane, or false to halt processing, potentially bypassing X-Plane code.
 
-```cpp
-typedef int (* XPLMCommandCallback_f)(
-                         XPLMCommandRef       inCommand,
-                         XPLMCommandPhase     inPhase,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_CommandCallback_callback(
+    inCommand,    -- XPLMCommandRef
+    inPhase,      -- XPLMCommandPhase
+    inRefcon      -- any Lua var/table
+)
+    -- your code here
+    return true  -- boolean
+end</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMCommandPhase](#xplmcommandphase)
+- [XPLMCommandRef](#xplmcommandref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMFindCommand" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMFindCommand { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 XPLMFindCommand looks up a command by name, and returns its command reference or NULL if the command
 does not exist.
 
-```cpp
-XPLM_API XPLMCommandRefXPLMFindCommand(
-                         const char *         inName
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMCommandRef -> assign to local/var
+local my_commandRef = XPLMFindCommand(
+    inName     -- string
+)</code></pre>
+</div>
 
 </div>
 
@@ -120,78 +158,107 @@ XPLM_API XPLMCommandRefXPLMFindCommand(
 
 <div class="sym-block sym-function" data-name="XPLMCommandBegin" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCommandBegin { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 XPLMCommandBegin starts the execution of a command, specified by its command reference. The command is
 "held down" until XPLMCommandEnd is called.  You must balance each XPLMCommandBegin call with an XPLMCommandEnd
 call.
 
-```cpp
-XPLM_API void       XPLMCommandBegin(
-                         XPLMCommandRef       inCommand
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMCommandBegin(
+    inCommand     -- XPLMCommandRef
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMCommandRef](#xplmcommandref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMCommandEnd" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCommandEnd { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 XPLMCommandEnd ends the execution of a given command that was started with XPLMCommandBegin.  You must not
 issue XPLMCommandEnd for a command you did not begin.
 
-```cpp
-XPLM_API void       XPLMCommandEnd(
-                         XPLMCommandRef       inCommand
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMCommandEnd(
+    inCommand     -- XPLMCommandRef
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMCommandRef](#xplmcommandref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMCommandOnce" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCommandOnce { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This executes a given command momentarily, that is, the command begins and ends immediately. This is the
 equivalent of calling XPLMCommandBegin() and XPLMCommandEnd() back to back.
 
-```cpp
-XPLM_API void       XPLMCommandOnce(
-                         XPLMCommandRef       inCommand
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMCommandOnce(
+    inCommand     -- XPLMCommandRef
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMCommandRef](#xplmcommandref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMCreateCommand" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCreateCommand { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 XPLMCreateCommand creates a new command for a given string. If the command already exists, the
 existing command reference is returned. The description may appear in user interface contexts, such
 as the joystick configuration screen.
 
-```cpp
-XPLM_API XPLMCommandRefXPLMCreateCommand(
-                         const char *         inName,
-                         const char *         inDescription
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMCommandRef -> assign to local/var
+local my_commandRef = XPLMCreateCommand(
+    inName,           -- string
+    inDescription     -- string
+)</code></pre>
+</div>
 
 </div>
 
@@ -199,9 +266,13 @@ XPLM_API XPLMCommandRefXPLMCreateCommand(
 
 <div class="sym-block sym-function" data-name="XPLMRegisterCommandHandler" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMRegisterCommandHandler { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 XPLMRegisterCommandHandler registers a callback to be called when a command is executed. You provide
 a callback with a reference pointer.
@@ -211,36 +282,40 @@ and returning 0 from your callback will disable X-Plane's processing of the comm
 false, your callback will run after X-Plane. (You can register a single callback both before and after
 a command.)
 
-```cpp
-XPLM_API void       XPLMRegisterCommandHandler(
-                         XPLMCommandRef       inComand,
-                         XPLMCommandCallback_f inHandler,
-                         int                  inBefore,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<!-- hand-written binding; see the XLua docs -->
+</div>
 
+
+**See associated types:**
+
+- [XPLMCommandCallback_f](#xplmcommandcallback_f)
+- [XPLMCommandRef](#xplmcommandref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMUnregisterCommandHandler" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMUnregisterCommandHandler { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 XPLMUnregisterCommandHandler removes a command callback registered with XPLMRegisterCommandHandler.
 
-```cpp
-XPLM_API void       XPLMUnregisterCommandHandler(
-                         XPLMCommandRef       inComand,
-                         XPLMCommandCallback_f inHandler,
-                         int                  inBefore,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<!-- hand-written binding; see the XLua docs -->
+</div>
 
+
+**See associated types:**
+
+- [XPLMCommandCallback_f](#xplmcommandcallback_f)
+- [XPLMCommandRef](#xplmcommandref)
 </div>
 
 ---
@@ -248,4 +323,4 @@ XPLM_API void       XPLMUnregisterCommandHandler(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

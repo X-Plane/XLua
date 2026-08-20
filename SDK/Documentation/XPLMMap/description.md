@@ -40,4 +40,4 @@ user's aircraft, it's not safe to assume that north is at zero degrees rotation.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

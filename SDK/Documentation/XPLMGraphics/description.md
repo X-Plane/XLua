@@ -30,4 +30,4 @@ potentially customize the physics of the current planet.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

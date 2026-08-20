@@ -8,9 +8,13 @@ computationally-intensive preparation you might need for drawing.
 
 <div class="sym-block sym-callback" data-name="XPLMMapPrepareCacheCallback_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMapPrepareCacheCallback_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
+
+</div>
 
 A callback used to allow you to cache whatever information your layer needs to draw in the current map area.
 
@@ -26,37 +30,54 @@ draw call give you bounds outside these total map bounds. So, if you cache the p
 of all the items you might want to draw in the total map area, you can be guaranteed that no draw call
 will be asked to do any new work.
 
-```cpp
-typedef void (* XPLMMapPrepareCacheCallback_f)(
-                         XPLMMapLayerID       inLayer,
-                         const float *        inTotalMapBoundsLeftTopRightBottom,
-                         XPLMMapProjectionID  projection,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_MapPrepareCacheCallback_callback(
+    inLayer,                               -- XPLMMapLayerID
+    inTotalMapBoundsLeftTopRightBottom,    -- float
+    projection,                            -- XPLMMapProjectionID
+    inRefcon                               -- any Lua var/table
+)
+    -- your code here
+end</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMMapLayerID](drawing_callbacks.md#xplmmaplayerid)
+- [XPLMMapProjectionID](drawing_callbacks.md#xplmmapprojectionid)
 </div>
 
 ---
 
 <div class="sym-block sym-callback" data-name="XPLMMapWillBeDeletedCallback_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMapWillBeDeletedCallback_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
+
+</div>
 
 Called just before your map layer gets deleted. Because SDK-created map layers have the same lifetime
 as the X-Plane map that contains them, if the map gets unloaded from memory, your layer will too.
 
 This callback fires exactly once, just before deletion, after which none of the layer's callbacks are used.
 
-```cpp
-typedef void (* XPLMMapWillBeDeletedCallback_f)(
-                         XPLMMapLayerID       inLayer,
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_MapWillBeDeletedCallback_callback(
+    inLayer,     -- XPLMMapLayerID
+    inRefcon     -- any Lua var/table
+)
+    -- your code here
+end</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMMapLayerID](drawing_callbacks.md#xplmmaplayerid)
 </div>
 
 ---
@@ -64,4 +85,4 @@ typedef void (* XPLMMapWillBeDeletedCallback_f)(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

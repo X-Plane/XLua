@@ -8,11 +8,17 @@ bar sends continuous messages as it is dragged.
 
 <div class="sym-block sym-define" data-name="xpWidgetClass_ScrollBar" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## xpWidgetClass_ScrollBar { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
-`#define xpWidgetClass_ScrollBar 5`
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">xpWidgetClass_ScrollBar  -- 5</code></pre>
+</div>
 
 </div>
 
@@ -20,9 +26,13 @@ bar sends continuous messages as it is dragged.
 
 <div class="sym-block sym-enum" data-name="Scroll Bar Type Values" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Scroll Bar Type Values { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 This defines how the scroll bar looks.
 
@@ -41,9 +51,13 @@ This defines how the scroll bar looks.
 
 <div class="sym-block sym-enum" data-name="Scroll Bar Properties" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Scroll Bar Properties { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 <div class="enum-table" markdown="1">
 
@@ -64,9 +78,13 @@ This defines how the scroll bar looks.
 
 <div class="sym-block sym-enum" data-name="Scroll Bar Messages" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Scroll Bar Messages { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 <div class="enum-table" markdown="1">
 
@@ -83,4 +101,4 @@ This defines how the scroll bar looks.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

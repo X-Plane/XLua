@@ -4,9 +4,13 @@
 
 <div class="sym-block sym-function" data-name="XPLMInstanceSetPosition" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMInstanceSetPosition { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Updates both the position of the instance and all datarefs you registered for it.  Call this from a flight loop callback or UI callback.
 
@@ -18,23 +22,31 @@ floating point data.
 
 BUG: before X-Plane 11.50, if you have no dataref registered, you must still pass a valid pointer for data and not null.
 
-```cpp
-XPLM_API void       XPLMInstanceSetPosition(
-                         XPLMInstanceRef      instance,
-                         const XPLMDrawInfo_t * new_position,
-                         const float *        data
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMInstanceSetPosition(
+    instance,        -- XPLMInstanceRef
+    new_position,    -- see XPLMDrawInfo_t
+    data             -- float
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMInstanceRef](instance_creation_and_destruction.md#xplminstanceref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMInstanceSetPositionDouble" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMInstanceSetPositionDouble { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM420</span>
+
+</div>
 
 Updates both the position of the instance and all datarefs you registered for it.  Call this from a flight loop callback or UI callback.
 
@@ -44,23 +56,31 @@ callbacks. Setting instance data from a drawing callback may have undefined cons
 The memory pointed to by the data pointer must be large enough to hold one float for every dataref you have registered, and must contain valid
 floating point data.
 
-```cpp
-XPLM_API void       XPLMInstanceSetPositionDouble(
-                         XPLMInstanceRef      instance,
-                         const XPLMDrawInfoDouble_t * new_position,
-                         const float *        data
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMInstanceSetPositionDouble(
+    instance,        -- XPLMInstanceRef
+    new_position,    -- see XPLMDrawInfoDouble_t
+    data             -- float
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMInstanceRef](instance_creation_and_destruction.md#xplminstanceref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMInstanceSetCoordinateSpace" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMInstanceSetCoordinateSpace { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
 
 XPLMInstanceSetCoordinateSpace changes the coordinate space used to interpret the positions you pass to
 XPLMInstanceSetPosition or XPLMInstanceSetPositionDouble. You can set the coordinate space once up front
@@ -79,14 +99,19 @@ old space's numbers again will move the object.
 Auto-shift (XPLMInstanceSetAutoShift) is independent of the coordinate space: changing the space does not
 turn auto-shift off, but auto-shift only has an effect while the instance is in world space.
 
-```cpp
-XPLM_API void       XPLMInstanceSetCoordinateSpace(
-                         XPLMInstanceRef      instance,
-                         XPLMCoordinateSpace_t space,
-                         int                  aircraft_index
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMInstanceSetCoordinateSpace(
+    instance,          -- XPLMInstanceRef
+    space,             -- see XPLMCoordinateSpace_t
+    aircraft_index     -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMCoordinateSpace_t](multiobject_instance_creation.md#xplmcoordinatespace_t)
+- [XPLMInstanceRef](instance_creation_and_destruction.md#xplminstanceref)
 </div>
 
 ---
@@ -94,4 +119,4 @@ XPLM_API void       XPLMInstanceSetCoordinateSpace(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

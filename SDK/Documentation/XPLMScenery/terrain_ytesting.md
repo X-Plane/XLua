@@ -26,9 +26,13 @@ X-Plane 9. Probes outside this area will return the height of a 0 MSL sphere.
 
 <div class="sym-block sym-enum" data-name="XPLMProbeType" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMProbeType { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 XPLMProbeType defines the type of terrain probe - each probe has a different algorithm. (Only one
 type of probe is provided right now, but future APIs will expose more flexible or powerful or useful
@@ -42,15 +46,23 @@ probes.
 
 </div>
 
+**Used by:**
+
+- [XPLMCreateProbe](#xplmcreateprobe)
+
 </div>
 
 ---
 
 <div class="sym-block sym-enum" data-name="XPLMProbeResult" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMProbeResult { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 Probe results - possible results from a probe query.
 
@@ -70,44 +82,57 @@ Probe results - possible results from a probe query.
 
 <div class="sym-block sym-typedef" data-name="XPLMProbeRef" data-type="typedef" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMProbeRef { .symbol-title }
 
 <span class="sym-badge badge-typedef">typedef</span>
 
+</div>
+
 An XPLMProbeRef is an opaque handle to a probe, used for querying the terrain.
 
-```cpp
-typedef void * XPLMProbeRef;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local my_probeRef = nil  -- XPLMProbeRef</code></pre>
+</div>
 
+
+**Used by:**
+
+- [XPLMDestroyProbe](#xplmdestroyprobe)
+- [XPLMProbeTerrainXYZ](#xplmprobeterrainxyz)
 </div>
 
 ---
 
 <div class="sym-block sym-struct" data-name="XPLMProbeInfo_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMProbeInfo_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span>
 
+</div>
+
 XPLMProbeInfo_t contains the results of a probe call. Make sure to set structSize to the size of the
 struct before using it.
 
-```cpp
-typedef struct {
-     int                       structSize;
-     float                     locationX;
-     float                     locationY;
-     float                     locationZ;
-     float                     normalX;
-     float                     normalY;
-     float                     normalZ;
-     float                     velocityX;
-     float                     velocityY;
-     float                     velocityZ;
-     bool                      is_wet;
-} XPLMProbeInfo_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_ProbeInfo_t = {
+    structSize  = 0,       -- int
+    locationX   = 0.0,     -- float
+    locationY   = 0.0,     -- float
+    locationZ   = 0.0,     -- float
+    normalX     = 0.0,     -- float
+    normalY     = 0.0,     -- float
+    normalZ     = 0.0,     -- float
+    velocityX   = 0.0,     -- float
+    velocityY   = 0.0,     -- float
+    velocityZ   = 0.0,     -- float
+    is_wet      = false,   -- boolean
+}</code></pre>
+</div>
 
 </div>
 
@@ -115,61 +140,88 @@ typedef struct {
 
 <div class="sym-block sym-function" data-name="XPLMCreateProbe" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCreateProbe { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 Creates a new probe object of a given type and returns.
 
-```cpp
-XPLM_API XPLMProbeRefXPLMCreateProbe(
-                         XPLMProbeType        inProbeType
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMProbeRef -> assign to local/var
+local my_probeRef = XPLMCreateProbe(
+    inProbeType     -- XPLMProbeType
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMProbeType](#xplmprobetype)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMDestroyProbe" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMDestroyProbe { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 Deallocates an existing probe object.
 
-```cpp
-XPLM_API void       XPLMDestroyProbe(
-                         XPLMProbeRef         inProbe
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMDestroyProbe(
+    inProbe     -- XPLMProbeRef
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMProbeRef](#xplmproberef)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMProbeTerrainXYZ" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMProbeTerrainXYZ { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Probes the terrain. Pass in the XYZ coordinate of the probe point, a probe object, and an
 XPLMProbeInfo_t struct that
 has its structSize member set properly. Other fields are filled in if we hit terrain, and a probe result
 is returned.
 
-```cpp
-XPLM_API XPLMProbeResultXPLMProbeTerrainXYZ(
-                         XPLMProbeRef         inProbe,
-                         float                inX,
-                         float                inY,
-                         float                inZ,
-                         XPLMProbeInfo_t *    outInfo
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMProbeResult -> assign to local/var
+local my_probeResult = XPLMProbeTerrainXYZ(
+    inProbe,    -- XPLMProbeRef
+    inX,        -- float
+    inY,        -- float
+    inZ,        -- float
+    outInfo     -- see XPLMProbeInfo_t
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMProbeInfo_t](#xplmprobeinfo_t)
+- [XPLMProbeRef](#xplmproberef)
 </div>
 
 ---
@@ -177,4 +229,4 @@ XPLM_API XPLMProbeResultXPLMProbeTerrainXYZ(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

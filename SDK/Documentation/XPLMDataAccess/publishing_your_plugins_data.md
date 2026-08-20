@@ -19,9 +19,13 @@ plugins.
 
 <div class="sym-block sym-callback" data-name="XPLMGetDatai_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDatai_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
+
+</div>
 
 Data provider function pointers.
 
@@ -34,11 +38,14 @@ routines like XPLMGetDatai are just pass-throughs from a caller to your plugin. 
 particularly mindful in implementing array dataref read-write accessors; you are responsible
 for avoiding overruns, supporting offset read/writes, and handling a read with a NULL buffer.
 
-```cpp
-typedef int (* XPLMGetDatai_f)(
-                         void *               inRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_GetDatai_callback(
+    inRefcon     -- any Lua var/table
+)
+    -- your code here
+    return 0  -- int
+end</code></pre>
+</div>
 
 </div>
 
@@ -46,16 +53,22 @@ typedef int (* XPLMGetDatai_f)(
 
 <div class="sym-block sym-callback" data-name="XPLMSetDatai_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDatai_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
 
-```cpp
-typedef void (* XPLMSetDatai_f)(
-                         void *               inRefcon,
-                         int                  inValue
-                    );
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_SetDatai_callback(
+    inRefcon,    -- any Lua var/table
+    inValue      -- int
+)
+    -- your code here
+end</code></pre>
+</div>
 
 </div>
 
@@ -63,15 +76,22 @@ typedef void (* XPLMSetDatai_f)(
 
 <div class="sym-block sym-callback" data-name="XPLMGetDataf_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDataf_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
 
-```cpp
-typedef float (* XPLMGetDataf_f)(
-                         void *               inRefcon
-                    );
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_GetDataf_callback(
+    inRefcon     -- any Lua var/table
+)
+    -- your code here
+    return nil  -- float
+end</code></pre>
+</div>
 
 </div>
 
@@ -79,16 +99,22 @@ typedef float (* XPLMGetDataf_f)(
 
 <div class="sym-block sym-callback" data-name="XPLMSetDataf_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDataf_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
 
-```cpp
-typedef void (* XPLMSetDataf_f)(
-                         void *               inRefcon,
-                         float                inValue
-                    );
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_SetDataf_callback(
+    inRefcon,    -- any Lua var/table
+    inValue      -- float
+)
+    -- your code here
+end</code></pre>
+</div>
 
 </div>
 
@@ -96,15 +122,22 @@ typedef void (* XPLMSetDataf_f)(
 
 <div class="sym-block sym-callback" data-name="XPLMGetDatad_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDatad_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
 
-```cpp
-typedef double (* XPLMGetDatad_f)(
-                         void *               inRefcon
-                    );
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_GetDatad_callback(
+    inRefcon     -- any Lua var/table
+)
+    -- your code here
+    return nil  -- float
+end</code></pre>
+</div>
 
 </div>
 
@@ -112,16 +145,22 @@ typedef double (* XPLMGetDatad_f)(
 
 <div class="sym-block sym-callback" data-name="XPLMSetDatad_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDatad_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
 
-```cpp
-typedef void (* XPLMSetDatad_f)(
-                         void *               inRefcon,
-                         double               inValue
-                    );
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_SetDatad_callback(
+    inRefcon,    -- any Lua var/table
+    inValue      -- float
+)
+    -- your code here
+end</code></pre>
+</div>
 
 </div>
 
@@ -129,18 +168,25 @@ typedef void (* XPLMSetDatad_f)(
 
 <div class="sym-block sym-callback" data-name="XPLMGetDatavi_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDatavi_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
 
-```cpp
-typedef int (* XPLMGetDatavi_f)(
-                         void *               inRefcon,
-                         int *                outValues,    /* Can be NULL */
-                         ArrayOffset          inOffset,
-                         ArraySize            inMax
-                    );
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_GetDatavi_callback(
+    inRefcon,     -- any Lua var/table
+    outValues,    -- int
+    inOffset,     -- ArrayOffset
+    inMax         -- ArraySize
+)
+    -- your code here
+    return 0  -- int
+end</code></pre>
+</div>
 
 </div>
 
@@ -148,18 +194,24 @@ typedef int (* XPLMGetDatavi_f)(
 
 <div class="sym-block sym-callback" data-name="XPLMSetDatavi_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDatavi_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
 
-```cpp
-typedef void (* XPLMSetDatavi_f)(
-                         void *               inRefcon,
-                         int *                inValues,
-                         ArrayOffset          inOffset,
-                         ArraySize            inCount
-                    );
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_SetDatavi_callback(
+    inRefcon,    -- any Lua var/table
+    inValues,    -- int
+    inOffset,    -- ArrayOffset
+    inCount      -- ArraySize
+)
+    -- your code here
+end</code></pre>
+</div>
 
 </div>
 
@@ -167,18 +219,25 @@ typedef void (* XPLMSetDatavi_f)(
 
 <div class="sym-block sym-callback" data-name="XPLMGetDatavf_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDatavf_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
 
-```cpp
-typedef int (* XPLMGetDatavf_f)(
-                         void *               inRefcon,
-                         float *              outValues,    /* Can be NULL */
-                         ArrayOffset          inOffset,
-                         ArraySize            inMax
-                    );
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_GetDatavf_callback(
+    inRefcon,     -- any Lua var/table
+    outValues,    -- float
+    inOffset,     -- ArrayOffset
+    inMax         -- ArraySize
+)
+    -- your code here
+    return 0  -- int
+end</code></pre>
+</div>
 
 </div>
 
@@ -186,18 +245,24 @@ typedef int (* XPLMGetDatavf_f)(
 
 <div class="sym-block sym-callback" data-name="XPLMSetDatavf_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDatavf_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
 
-```cpp
-typedef void (* XPLMSetDatavf_f)(
-                         void *               inRefcon,
-                         float *              inValues,
-                         ArrayOffset          inOffset,
-                         ArraySize            inCount
-                    );
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_SetDatavf_callback(
+    inRefcon,    -- any Lua var/table
+    inValues,    -- float
+    inOffset,    -- ArrayOffset
+    inCount      -- ArraySize
+)
+    -- your code here
+end</code></pre>
+</div>
 
 </div>
 
@@ -205,18 +270,25 @@ typedef void (* XPLMSetDatavf_f)(
 
 <div class="sym-block sym-callback" data-name="XPLMGetDatab_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDatab_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
 
-```cpp
-typedef int (* XPLMGetDatab_f)(
-                         void *               inRefcon,
-                         byte *               outValue,    /* Can be NULL */
-                         ArrayOffset          inOffset,
-                         ArraySize            inMaxLength
-                    );
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_GetDatab_callback(
+    inRefcon,       -- any Lua var/table
+    outValue,       -- byte
+    inOffset,       -- ArrayOffset
+    inMaxLength     -- ArraySize
+)
+    -- your code here
+    return 0  -- int
+end</code></pre>
+</div>
 
 </div>
 
@@ -224,18 +296,24 @@ typedef int (* XPLMGetDatab_f)(
 
 <div class="sym-block sym-callback" data-name="XPLMSetDatab_f" data-type="callback" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDatab_f { .symbol-title }
 
 <span class="sym-badge badge-cb">callback</span>
 
-```cpp
-typedef void (* XPLMSetDatab_f)(
-                         void *               inRefcon,
-                         byte *               inValue,
-                         ArrayOffset          inOffset,
-                         ArraySize            inLength
-                    );
-```
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">function my_SetDatab_callback(
+    inRefcon,    -- any Lua var/table
+    inValue,     -- byte
+    inOffset,    -- ArrayOffset
+    inLength     -- ArraySize
+)
+    -- your code here
+end</code></pre>
+</div>
 
 </div>
 
@@ -243,9 +321,13 @@ typedef void (* XPLMSetDatab_f)(
 
 <div class="sym-block sym-function" data-name="XPLMRegisterDataAccessor" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMRegisterDataAccessor { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine creates a new item of data that can be read and written. Pass in
 the data's full name for searching, the type(s) of the data for accessing, and whether
@@ -256,48 +338,73 @@ do not support or write accessors if you are read-only.
 You are returned a dataref for the new item of data created. You can use this
 dataref to unregister your data later or read or write from it.
 
-```cpp
-XPLM_API XPLMDataRefXPLMRegisterDataAccessor(
-                         const char *         inDataName,
-                         XPLMDataTypeID       inDataType,
-                         int                  inIsWritable,
-                         XPLMGetDatai_f       inReadInt,    /* Can be NULL */
-                         XPLMSetDatai_f       inWriteInt,    /* Can be NULL */
-                         XPLMGetDataf_f       inReadFloat,    /* Can be NULL */
-                         XPLMSetDataf_f       inWriteFloat,    /* Can be NULL */
-                         XPLMGetDatad_f       inReadDouble,    /* Can be NULL */
-                         XPLMSetDatad_f       inWriteDouble,    /* Can be NULL */
-                         XPLMGetDatavi_f      inReadIntArray,    /* Can be NULL */
-                         XPLMSetDatavi_f      inWriteIntArray,    /* Can be NULL */
-                         XPLMGetDatavf_f      inReadFloatArray,    /* Can be NULL */
-                         XPLMSetDatavf_f      inWriteFloatArray,    /* Can be NULL */
-                         XPLMGetDatab_f       inReadData,    /* Can be NULL */
-                         XPLMSetDatab_f       inWriteData,    /* Can be NULL */
-                         void *               inReadRefcon,
-                         void *               inWriteRefcon
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMDataRef -> assign to local/var
+local my_dataRef = XPLMRegisterDataAccessor(
+    inDataName,           -- string
+    inDataType,           -- XPLMDataTypeID
+    inIsWritable,         -- boolean
+    inReadInt,            -- see XPLMGetDatai_f
+    inWriteInt,           -- see XPLMSetDatai_f
+    inReadFloat,          -- see XPLMGetDataf_f
+    inWriteFloat,         -- see XPLMSetDataf_f
+    inReadDouble,         -- see XPLMGetDatad_f
+    inWriteDouble,        -- see XPLMSetDatad_f
+    inReadIntArray,       -- see XPLMGetDatavi_f
+    inWriteIntArray,      -- see XPLMSetDatavi_f
+    inReadFloatArray,     -- see XPLMGetDatavf_f
+    inWriteFloatArray,    -- see XPLMSetDatavf_f
+    inReadData,           -- see XPLMGetDatab_f
+    inWriteData,          -- see XPLMSetDatab_f
+    inReadRefcon,         -- any Lua var/table
+    inWriteRefcon         -- any Lua var/table
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataTypeID](reading_and_writing_data.md#xplmdatatypeid)
+- [XPLMGetDatab_f](#xplmgetdatab_f)
+- [XPLMGetDatad_f](#xplmgetdatad_f)
+- [XPLMGetDataf_f](#xplmgetdataf_f)
+- [XPLMGetDatai_f](#xplmgetdatai_f)
+- [XPLMGetDatavf_f](#xplmgetdatavf_f)
+- [XPLMGetDatavi_f](#xplmgetdatavi_f)
+- [XPLMSetDatab_f](#xplmsetdatab_f)
+- [XPLMSetDatad_f](#xplmsetdatad_f)
+- [XPLMSetDataf_f](#xplmsetdataf_f)
+- [XPLMSetDatai_f](#xplmsetdatai_f)
+- [XPLMSetDatavf_f](#xplmsetdatavf_f)
+- [XPLMSetDatavi_f](#xplmsetdatavi_f)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMUnregisterDataAccessor" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMUnregisterDataAccessor { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Use this routine to unregister any data accessors you may have registered.
 You unregister a dataref by the XPLMDataRef you get back from registration.
 Once you unregister a dataref, your function pointer will not be called anymore.
 
-```cpp
-XPLM_API void       XPLMUnregisterDataAccessor(
-                         XPLMDataRef          inDataRef
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMUnregisterDataAccessor(
+    inDataRef     -- XPLMDataRef
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMDataRef](reading_and_writing_data.md#xplmdataref)
 </div>
 
 ---
@@ -305,4 +412,4 @@ XPLM_API void       XPLMUnregisterDataAccessor(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

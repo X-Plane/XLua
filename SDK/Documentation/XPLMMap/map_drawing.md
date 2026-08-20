@@ -13,9 +13,13 @@ will appear beneath any icons and labels you draw.
 
 <div class="sym-block sym-enum" data-name="XPLMMapOrientation" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMMapOrientation { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 Indicates whether a map element should be match its rotation to the map itself, or to the user interface.
 For instance, the map itself may be rotated such that "up" matches the user's aircraft, but you may want
@@ -31,15 +35,24 @@ In that case, you would have it draw with UI orientation.
 
 </div>
 
+**Used by:**
+
+- [XPLMDrawMapIconFromSheet](#xplmdrawmapiconfromsheet)
+- [XPLMDrawMapLabel](#xplmdrawmaplabel)
+
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMDrawMapIconFromSheet" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMDrawMapIconFromSheet { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Enables plugin-created map layers to draw PNG icons using X-Plane's built-in icon drawing functionality.
 Only valid from within an XPLMIconDrawingCallback_t (but you can request an arbitrary number of icons
@@ -63,47 +76,61 @@ This enables you to use icons of different sizes in the same sheet if you arrang
 This function is only valid from within an XPLMIconDrawingCallback_t
 (but you can request an arbitrary number of icons to be drawn from within your callback).
 
-```cpp
-XPLM_API void       XPLMDrawMapIconFromSheet(
-                         XPLMMapLayerID       layer,
-                         const char *         inPngPath,
-                         int                  s,
-                         int                  t,
-                         int                  ds,
-                         int                  dt,
-                         float                mapX,
-                         float                mapY,
-                         XPLMMapOrientation   orientation,
-                         float                rotationDegrees,
-                         float                mapWidth
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMDrawMapIconFromSheet(
+    layer,              -- XPLMMapLayerID
+    inPngPath,          -- string
+    s,                  -- int
+    t,                  -- int
+    ds,                 -- int
+    dt,                 -- int
+    mapX,               -- float
+    mapY,               -- float
+    orientation,        -- XPLMMapOrientation
+    rotationDegrees,    -- float
+    mapWidth            -- float
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMMapLayerID](drawing_callbacks.md#xplmmaplayerid)
+- [XPLMMapOrientation](#xplmmaporientation)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMDrawMapLabel" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMDrawMapLabel { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 Enables plugin-created map layers to draw text labels using X-Plane's built-in labeling functionality.
 Only valid from within an XPLMMapLabelDrawingCallback_f
 (but you can request an arbitrary number of text labels to be drawn from within your callback).
 
-```cpp
-XPLM_API void       XPLMDrawMapLabel(
-                         XPLMMapLayerID       layer,
-                         const char *         inText,
-                         float                mapX,
-                         float                mapY,
-                         XPLMMapOrientation   orientation,
-                         float                rotationDegrees
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMDrawMapLabel(
+    layer,              -- XPLMMapLayerID
+    inText,             -- string
+    mapX,               -- float
+    mapY,               -- float
+    orientation,        -- XPLMMapOrientation
+    rotationDegrees     -- float
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMMapLayerID](drawing_callbacks.md#xplmmaplayerid)
+- [XPLMMapOrientation](#xplmmaporientation)
 </div>
 
 ---
@@ -111,4 +138,4 @@ XPLM_API void       XPLMDrawMapLabel(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

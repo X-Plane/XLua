@@ -11,4 +11,4 @@ provided to you via the plugin SDK.  (Link against XPLM.lib to use these functio
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

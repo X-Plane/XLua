@@ -12,15 +12,21 @@ waypoints in the flight plan.
 
 <div class="sym-block sym-function" data-name="XPLMCountFMSEntries" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCountFMSEntries { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This routine returns the number of entries in the FMS.
 
-```cpp
-XPLM_API int        XPLMCountFMSEntries(void);
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int -> assign to local/var
+local my_result = XPLMCountFMSEntries(
+)</code></pre>
+</div>
 
 </div>
 
@@ -28,15 +34,21 @@ XPLM_API int        XPLMCountFMSEntries(void);
 
 <div class="sym-block sym-function" data-name="XPLMGetDisplayedFMSEntry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDisplayedFMSEntry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This routine returns the index of the entry the pilot is viewing.
 
-```cpp
-XPLM_API int        XPLMGetDisplayedFMSEntry(void);
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int -> assign to local/var
+local my_result = XPLMGetDisplayedFMSEntry(
+)</code></pre>
+</div>
 
 </div>
 
@@ -44,15 +56,21 @@ XPLM_API int        XPLMGetDisplayedFMSEntry(void);
 
 <div class="sym-block sym-function" data-name="XPLMGetDestinationFMSEntry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDestinationFMSEntry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This routine returns the index of the entry the FMS is flying to.
 
-```cpp
-XPLM_API int        XPLMGetDestinationFMSEntry(void);
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int -> assign to local/var
+local my_result = XPLMGetDestinationFMSEntry(
+)</code></pre>
+</div>
 
 </div>
 
@@ -60,17 +78,21 @@ XPLM_API int        XPLMGetDestinationFMSEntry(void);
 
 <div class="sym-block sym-function" data-name="XPLMSetDisplayedFMSEntry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDisplayedFMSEntry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This routine changes which entry the FMS is showing to the index specified.
 
-```cpp
-XPLM_API void       XPLMSetDisplayedFMSEntry(
-                         int                  inIndex
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetDisplayedFMSEntry(
+    inIndex     -- int
+)</code></pre>
+</div>
 
 </div>
 
@@ -78,17 +100,21 @@ XPLM_API void       XPLMSetDisplayedFMSEntry(
 
 <div class="sym-block sym-function" data-name="XPLMSetDestinationFMSEntry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDestinationFMSEntry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This routine changes which entry the FMS is flying the aircraft toward. The track is from the n-1'th point to the n'th point.
 
-```cpp
-XPLM_API void       XPLMSetDestinationFMSEntry(
-                         int                  inIndex
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetDestinationFMSEntry(
+    inIndex     -- int
+)</code></pre>
+</div>
 
 </div>
 
@@ -96,9 +122,13 @@ XPLM_API void       XPLMSetDestinationFMSEntry(
 
 <div class="sym-block sym-function" data-name="XPLMGetFMSEntryInfo" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetFMSEntryInfo { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine returns information about a given FMS entry. If the entry is an airport
 or navaid, a reference to a nav entry can be returned allowing you to find additional
@@ -115,62 +145,75 @@ XPLM_NAV_NOT_FOUND while no data is available, and instead just remain the value
 variable that you passed the pointer to. Therefore, always initialize the variable
 to XPLM_NAV_NOT_FOUND before passing the pointer to this function.
 
-```cpp
-XPLM_API void       XPLMGetFMSEntryInfo(
-                         int                  inIndex,
-                         XPLMNavType *        outType,    /* Can be NULL */
-                         char *               outID,    /* Can be NULL */
-                         XPLMNavRef *         outRef,    /* Can be NULL */
-                         int *                outAltitude,    /* Can be NULL */
-                         float *              outLat,    /* Can be NULL */
-                         float *              outLon    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPLMGetFMSEntryInfo(
+    inIndex     -- int
+)
+-- outs = { outType, outID, outRef, outAltitude, outLat, outLon }</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavRef](navigation_database_access.md#xplmnavref)
+- [XPLMNavType](navigation_database_access.md#xplmnavtype)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetFMSEntryInfo" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetFMSEntryInfo { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
+
+</div>
 
 This routine changes an entry in the FMS to have the destination navaid passed
 in and the altitude specified.  Use this only for airports, fixes, and radio-beacon
 navaids.  Currently of radio beacons, the FMS can only support VORs and NDBs.
 Use the routines below to clear or fly to a lat/lon.
 
-```cpp
-XPLM_API void       XPLMSetFMSEntryInfo(
-                         int                  inIndex,
-                         XPLMNavRef           inRef,
-                         int                  inAltitudeFt
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetFMSEntryInfo(
+    inIndex,         -- int
+    inRef,           -- XPLMNavRef
+    inAltitudeFt     -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavRef](navigation_database_access.md#xplmnavref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetFMSEntryLatLon" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetFMSEntryLatLon { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This routine changes the entry in the FMS to a lat/lon entry with the given
 coordinates.
 
-```cpp
-XPLM_API void       XPLMSetFMSEntryLatLon(
-                         int                  inIndex,
-                         float                inLat,
-                         float                inLon,
-                         int                  inAltitudeFt
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetFMSEntryLatLon(
+    inIndex,         -- int
+    inLat,           -- float
+    inLon,           -- float
+    inAltitudeFt     -- int
+)</code></pre>
+</div>
 
 </div>
 
@@ -178,17 +221,21 @@ XPLM_API void       XPLMSetFMSEntryLatLon(
 
 <div class="sym-block sym-function" data-name="XPLMClearFMSEntry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMClearFMSEntry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span>
 
+</div>
+
 This routine clears the given entry, potentially shortening the flight plan.
 
-```cpp
-XPLM_API void       XPLMClearFMSEntry(
-                         int                  inIndex
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMClearFMSEntry(
+    inIndex     -- int
+)</code></pre>
+</div>
 
 </div>
 
@@ -196,9 +243,13 @@ XPLM_API void       XPLMClearFMSEntry(
 
 <div class="sym-block sym-enum" data-name="XPLMNavFlightPlan" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMNavFlightPlan { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span> <span class="sym-badge badge-version">XPLM410</span>
+
+</div>
 
 These enumerations defines the flightplan you are accesing using the FMSFlightPlan functions.
 An airplane can have up to two navigation devices (GPS or FMS) and each device can have two flightplans.
@@ -219,126 +270,195 @@ If you are trying to access a flightplan that doesn't exist in your aircraft, e.
 
 </div>
 
+**Used by:**
+
+- [XPLMClearFMSFlightPlanEntry](#xplmclearfmsflightplanentry)
+- [XPLMCountFMSFlightPlanEntries](#xplmcountfmsflightplanentries)
+- [XPLMGetDestinationFMSFlightPlanEntry](#xplmgetdestinationfmsflightplanentry)
+- [XPLMGetDisplayedFMSFlightPlanEntry](#xplmgetdisplayedfmsflightplanentry)
+- [XPLMGetFMSFlightPlanEntryInfo](#xplmgetfmsflightplanentryinfo)
+- [XPLMSetDestinationFMSFlightPlanEntry](#xplmsetdestinationfmsflightplanentry)
+- [XPLMSetDirectToFMSFlightPlanEntry](#xplmsetdirecttofmsflightplanentry)
+- [XPLMSetDisplayedFMSFlightPlanEntry](#xplmsetdisplayedfmsflightplanentry)
+- [XPLMSetFMSFlightPlanEntryInfo](#xplmsetfmsflightplanentryinfo)
+- [XPLMSetFMSFlightPlanEntryLatLon](#xplmsetfmsflightplanentrylatlon)
+- [XPLMSetFMSFlightPlanEntryLatLonWithId](#xplmsetfmsflightplanentrylatlonwithid)
+
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMCountFMSFlightPlanEntries" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCountFMSFlightPlanEntries { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM410</span>
 
+</div>
+
 This routine returns the number of entries in the FMS.
 
-```cpp
-XPLM_API int        XPLMCountFMSFlightPlanEntries(
-                         XPLMNavFlightPlan    inFlightPlan
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int -> assign to local/var
+local my_result = XPLMCountFMSFlightPlanEntries(
+    inFlightPlan     -- XPLMNavFlightPlan
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavFlightPlan](#xplmnavflightplan)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetDisplayedFMSFlightPlanEntry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDisplayedFMSFlightPlanEntry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM410</span>
 
+</div>
+
 This routine returns the index of the entry the pilot is viewing.
 
-```cpp
-XPLM_API int        XPLMGetDisplayedFMSFlightPlanEntry(
-                         XPLMNavFlightPlan    inFlightPlan
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int -> assign to local/var
+local my_result = XPLMGetDisplayedFMSFlightPlanEntry(
+    inFlightPlan     -- XPLMNavFlightPlan
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavFlightPlan](#xplmnavflightplan)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetDestinationFMSFlightPlanEntry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetDestinationFMSFlightPlanEntry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM410</span>
 
+</div>
+
 This routine returns the index of the entry the FMS is flying to.
 
-```cpp
-XPLM_API int        XPLMGetDestinationFMSFlightPlanEntry(
-                         XPLMNavFlightPlan    inFlightPlan
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns int -> assign to local/var
+local my_result = XPLMGetDestinationFMSFlightPlanEntry(
+    inFlightPlan     -- XPLMNavFlightPlan
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavFlightPlan](#xplmnavflightplan)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetDisplayedFMSFlightPlanEntry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDisplayedFMSFlightPlanEntry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM410</span>
 
+</div>
+
 This routine changes which entry the FMS is showing to the index specified.
 
-```cpp
-XPLM_API void       XPLMSetDisplayedFMSFlightPlanEntry(
-                         XPLMNavFlightPlan    inFlightPlan,
-                         int                  inIndex
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetDisplayedFMSFlightPlanEntry(
+    inFlightPlan,    -- XPLMNavFlightPlan
+    inIndex          -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavFlightPlan](#xplmnavflightplan)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetDestinationFMSFlightPlanEntry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDestinationFMSFlightPlanEntry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM410</span>
 
+</div>
+
 This routine changes which entry the FMS is flying the aircraft toward. The track is from the n-1'th point to the n'th point.
 
-```cpp
-XPLM_API void       XPLMSetDestinationFMSFlightPlanEntry(
-                         XPLMNavFlightPlan    inFlightPlan,
-                         int                  inIndex
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetDestinationFMSFlightPlanEntry(
+    inFlightPlan,    -- XPLMNavFlightPlan
+    inIndex          -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavFlightPlan](#xplmnavflightplan)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetDirectToFMSFlightPlanEntry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetDirectToFMSFlightPlanEntry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM410</span>
 
+</div>
+
 This routine changes which entry the FMS is flying the aircraft toward. The track is from the current position of the aircraft directly to the n'th point, ignoring the point before it.
 
-```cpp
-XPLM_API void       XPLMSetDirectToFMSFlightPlanEntry(
-                         XPLMNavFlightPlan    inFlightPlan,
-                         int                  inIndex
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetDirectToFMSFlightPlanEntry(
+    inFlightPlan,    -- XPLMNavFlightPlan
+    inIndex          -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavFlightPlan](#xplmnavflightplan)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMGetFMSFlightPlanEntryInfo" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMGetFMSFlightPlanEntryInfo { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM410</span>
+
+</div>
 
 This routine returns information about a given FMS entry. If the entry is an airport
 or navaid, a reference to a nav entry can be returned allowing you to find additional
@@ -355,154 +475,169 @@ XPLM_NAV_NOT_FOUND while no data is available, and instead just remain the value
 variable that you passed the pointer to. Therefore, always initialize the variable
 to XPLM_NAV_NOT_FOUND before passing the pointer to this function.
 
-```cpp
-XPLM_API void       XPLMGetFMSFlightPlanEntryInfo(
-                         XPLMNavFlightPlan    inFlightPlan,
-                         int                  inIndex,
-                         XPLMNavType *        outType,    /* Can be NULL */
-                         char *               outID,    /* Can be NULL */
-                         XPLMNavRef *         outRef,    /* Can be NULL */
-                         int *                outAltitude,    /* Can be NULL */
-                         float *              outLat,    /* Can be NULL */
-                         float *              outLon    /* Can be NULL */
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns a table of out values
+local outs = XPLMGetFMSFlightPlanEntryInfo(
+    inFlightPlan,    -- XPLMNavFlightPlan
+    inIndex          -- int
+)
+-- outs = { outType, outID, outRef, outAltitude, outLat, outLon }</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavFlightPlan](#xplmnavflightplan)
+- [XPLMNavRef](navigation_database_access.md#xplmnavref)
+- [XPLMNavType](navigation_database_access.md#xplmnavtype)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetFMSFlightPlanEntryInfo" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetFMSFlightPlanEntryInfo { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM410</span>
+
+</div>
 
 This routine changes an entry in the FMS to have the destination navaid passed
 in and the altitude specified.  Use this only for airports, fixes, and radio-beacon
 navaids.  Currently of radio beacons, the FMS can only support VORs, NDBs and TACANs.
 Use the routines below to clear or fly to a lat/lon.
 
-```cpp
-XPLM_API void       XPLMSetFMSFlightPlanEntryInfo(
-                         XPLMNavFlightPlan    inFlightPlan,
-                         int                  inIndex,
-                         XPLMNavRef           inRef,
-                         int                  inAltitudeFt
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetFMSFlightPlanEntryInfo(
+    inFlightPlan,    -- XPLMNavFlightPlan
+    inIndex,         -- int
+    inRef,           -- XPLMNavRef
+    inAltitudeFt     -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavFlightPlan](#xplmnavflightplan)
+- [XPLMNavRef](navigation_database_access.md#xplmnavref)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetFMSFlightPlanEntryLatLon" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetFMSFlightPlanEntryLatLon { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM410</span>
 
+</div>
+
 This routine changes the entry in the FMS to a lat/lon entry with the given
 coordinates.
 
-```cpp
-XPLM_API void       XPLMSetFMSFlightPlanEntryLatLon(
-                         XPLMNavFlightPlan    inFlightPlan,
-                         int                  inIndex,
-                         float                inLat,
-                         float                inLon,
-                         int                  inAltitudeFt
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetFMSFlightPlanEntryLatLon(
+    inFlightPlan,    -- XPLMNavFlightPlan
+    inIndex,         -- int
+    inLat,           -- float
+    inLon,           -- float
+    inAltitudeFt     -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavFlightPlan](#xplmnavflightplan)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMSetFMSFlightPlanEntryLatLonWithId" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMSetFMSFlightPlanEntryLatLonWithId { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM410</span>
 
+</div>
+
 This routine changes the entry in the FMS to a lat/lon entry with the given
 coordinates. You can specify the display ID of the waypoint.
 
-```cpp
-XPLM_API void       XPLMSetFMSFlightPlanEntryLatLonWithId(
-                         XPLMNavFlightPlan    inFlightPlan,
-                         int                  inIndex,
-                         float                inLat,
-                         float                inLon,
-                         int                  inAltitudeFt,
-                         const char*          inId,
-                         unsigned int         inIdLength
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetFMSFlightPlanEntryLatLonWithId(
+    inFlightPlan,    -- XPLMNavFlightPlan
+    inIndex,         -- int
+    inLat,           -- float
+    inLon,           -- float
+    inAltitudeFt,    -- int
+    inId,            -- char
+    inIdLength       -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavFlightPlan](#xplmnavflightplan)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMClearFMSFlightPlanEntry" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMClearFMSFlightPlanEntry { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM410</span>
 
+</div>
+
 This routine clears the given entry, potentially shortening the flight plan.
 
-```cpp
-XPLM_API void       XPLMClearFMSFlightPlanEntry(
-                         XPLMNavFlightPlan    inFlightPlan,
-                         int                  inIndex
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMClearFMSFlightPlanEntry(
+    inFlightPlan,    -- XPLMNavFlightPlan
+    inIndex          -- int
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMNavFlightPlan](#xplmnavflightplan)
 </div>
 
 ---
 
 <div class="sym-block sym-function" data-name="XPLMLoadFMSFlightPlan" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMLoadFMSFlightPlan { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM410</span>
 
+</div>
+
 Loads an X-Plane 11 and later formatted flightplan from the buffer into the FMS or GPS, including instrument procedures.
 Use device index 0 for the pilot-side and device index 1 for the co-pilot side unit.
 
-```cpp
-XPLM_API void       XPLMLoadFMSFlightPlan(
-                         int                  inDevice,
-                         const char *         inBuffer,
-                         unsigned int         inBufferLen
-                    );
-```
-
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMLoadFMSFlightPlan(
+    inDevice,       -- int
+    inBuffer,       -- string
+    inBufferLen     -- int
+)</code></pre>
 </div>
-
----
-
-<div class="sym-block sym-function" data-name="XPLMSaveFMSFlightPlan" data-type="function" markdown="1">
-
-## XPLMSaveFMSFlightPlan { .symbol-title }
-
-<span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM410</span>
-
-Saves an X-Plane 11 formatted flightplan from the FMS or GPS into a char buffer that you provide.
-Use device index 0 for the pilot-side and device index 1 for the co-pilot side unit.
-Provide the length of the buffer you allocated. X-Plane will write a null-terminated string if the full flight plan fits into the buffer.
-If your buffer is too small, X-Plane will write inBufferLen characters, and the resulting buffer is not null-terminated.
-The return value is the number of characters (including null terminator) that X-Plane needed to write the flightplan. If this number is larger than the buffer you provided, the flightplan in the buffer will be incomplete and the buffer not null-terminated.
-
-```cpp
-XPLM_API unsigned intXPLMSaveFMSFlightPlan(
-                         int                  inDevice,
-                         char *               inBuffer,
-                         unsigned int         inBufferLen
-                    );
-```
 
 </div>
 
@@ -511,4 +646,4 @@ XPLM_API unsigned intXPLMSaveFMSFlightPlan(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

@@ -18,11 +18,17 @@ enums will provide the correct graphic (check box or radio button) giving the ex
 
 <div class="sym-block sym-define" data-name="xpWidgetClass_Button" data-type="define" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## xpWidgetClass_Button { .symbol-title }
 
 <span class="sym-badge badge-define">define</span>
 
-`#define xpWidgetClass_Button 3`
+</div>
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">xpWidgetClass_Button  -- 3</code></pre>
+</div>
 
 </div>
 
@@ -30,9 +36,13 @@ enums will provide the correct graphic (check box or radio button) giving the ex
 
 <div class="sym-block sym-enum" data-name="Button Types" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Button Types { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 These define the visual appearance of buttons but not how they respond to the mouse.
 
@@ -54,9 +64,13 @@ These define the visual appearance of buttons but not how they respond to the mo
 
 <div class="sym-block sym-enum" data-name="Button Behavior Values" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Button Behavior Values { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 These define how the button responds to mouse clicks.
 
@@ -76,9 +90,13 @@ These define how the button responds to mouse clicks.
 
 <div class="sym-block sym-enum" data-name="Button Properties" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Button Properties { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 <div class="enum-table" markdown="1">
 
@@ -96,9 +114,13 @@ These define how the button responds to mouse clicks.
 
 <div class="sym-block sym-enum" data-name="Button Messages" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## Button Messages { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span>
+
+</div>
 
 These messages are sent by the button to itself and then up the
 widget chain when the button is clicked. (You may intercept them by providing a widget handler
@@ -120,4 +142,4 @@ for the button itself or by providing a handler in a parent widget.)
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

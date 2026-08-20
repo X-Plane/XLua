@@ -69,8 +69,7 @@ require("XPLMDisplay")
 --- one segment: the first segment runs from vertices[0] to vertices[1], the second
 --- from vertices[2] to vertices[3], and so on.
 ---
---- - count: the number of vertices. Should be even; an odd trailing vertex is
----   ignored.
+--- - count: the number of vertices. Must be even.
 ---
 ---@field XPLMLines fun(color: integer, vertices: XPLMVertex_t[], count: integer)
 
@@ -418,18 +417,20 @@ local XPLMJustification_t = {
 
 ---@class _G
 --- This function loads a PNG image file and adds it to the atlas as a single
---- image. Call this before XPLMTextureAtlasBake.
+--- image. The atlas must not have been baked yet.
 ---
 --- - inImageFilePath: the file system path to a PNG file.
 ---
 --- Returns the zero-based image index assigned to this image.
+---
+--- Returns -1 if the image could not be loaded.
 ---
 ---@field XPLMTextureAtlasAddImageFile fun(inTextureAtlas: XPLMTextureAtlasRef, inImageFilePath: string): integer
 
 ---@class _G
 --- This function loads a PNG image file and subdivides it into a grid of cells,
 --- adding each cell to the atlas as a separate image. This is useful for sprite
---- sheets and image strip assets. Call this before XPLMTextureAtlasBake.
+--- sheets and image strip assets. The atlas must not have been baked yet.
 ---
 --- - inImageFilePath: the file system path to a PNG file.
 --- - inCellsX: the number of columns to divide the image into.
@@ -438,12 +439,14 @@ local XPLMJustification_t = {
 --- Returns the zero-based image index of the first cell (top-left). Subsequent
 --- cells are numbered in row-major order: index + y * inCellsX + x.
 ---
+--- Returns -1 if the image could not be loaded.
+---
 ---@field XPLMTextureAtlasAddImageFileSet fun(inTextureAtlas: XPLMTextureAtlasRef, inImageFilePath: string, inCellsX: integer, inCellsY: integer): integer
 
 ---@class _G
 --- This function adds a single image from raw pixel data to the atlas. The
 --- pixel data must be RGBA format, 4 bytes per pixel, with rows ordered from
---- top to bottom. Call this before XPLMTextureAtlasBake.
+--- top to bottom. The atlas must not have been baked yet.
 ---
 --- - inImage: pointer to the raw RGBA pixel data.
 --- - inWidth: the image width in pixels.
@@ -451,18 +454,22 @@ local XPLMJustification_t = {
 ---
 --- Returns the zero-based image index assigned to this image.
 ---
+--- Returns -1 if the image could not be loaded.
+---
 ---@field XPLMTextureAtlasAddImage fun(inTextureAtlas: XPLMTextureAtlasRef, inImage: userdata, inWidth: integer, inHeight: integer): integer
 
 ---@class _G
---- This function packs all previously added images into a GPU texture. You must
---- call this after adding all images and before any draw calls. Once baked, you
---- cannot add more images to the atlas.
+--- This function packs all previously added images into a GPU texture. Call it
+--- after adding all of your images and before any draw calls. The atlas must not have
+--- been baked yet - an atlas is baked exactly once, and takes no more images after
+--- that.
 ---
 ---@field XPLMTextureAtlasBake fun(inTextureAtlas: XPLMTextureAtlasRef)
 
 ---@class _G
 --- This function returns the width in pixels of a single image (or cell) in the
---- atlas.
+--- atlas. This works both before and after XPLMTextureAtlasBake, and returns the same
+--- answer either way - packing an atlas never resizes your images.
 ---
 --- Returns the image width in pixels.
 ---
@@ -470,7 +477,8 @@ local XPLMJustification_t = {
 
 ---@class _G
 --- This function returns the height in pixels of a single image (or cell) in
---- the atlas.
+--- the atlas. This works both before and after XPLMTextureAtlasBake, and returns the
+--- same answer either way - packing an atlas never resizes your images.
 ---
 --- Returns the image height in pixels.
 ---
@@ -479,7 +487,7 @@ local XPLMJustification_t = {
 ---@class _G
 --- This function draws an atlas image at its native resolution. The image is
 --- positioned with its top-left corner at (inX, inY) and extends rightward and
---- downward by its native pixel dimensions.
+--- downward by its native pixel dimensions. The atlas must already be baked.
 ---
 --- - inTintColor: a color that is multiplied with the texture. Use
 ---   XPLMMakeColor(1, 1, 1, 1) for no tinting.
@@ -491,6 +499,7 @@ local XPLMJustification_t = {
 ---@class _G
 --- This function draws an atlas image scaled to fill a rectangular region. The
 --- image is stretched or compressed to exactly match the specified bounds.
+--- The atlas must already be baked.
 ---
 --- - inTintColor: a color that is multiplied with the texture.
 --- - inLeft, inTop, inRight, inBottom: the bounding rectangle in panel
@@ -505,6 +514,7 @@ local XPLMJustification_t = {
 --- native size, the four edge slices are stretched along one axis, and the
 --- center slice is stretched in both directions. This preserves corners and
 --- borders when scaling UI elements like buttons or panels.
+--- The atlas must already be baked.
 ---
 --- - inTintColor: a color that is multiplied with the texture.
 --- - inLeft, inTop, inRight, inBottom: the bounding rectangle in panel
@@ -517,6 +527,7 @@ local XPLMJustification_t = {
 --- positioning. The image is placed so that the atlas-space pivot point
 --- (inXAtlas, inYAtlas) aligns with the panel-space position (inXPanel,
 --- inYPanel), then scaled and rotated around that point.
+--- The atlas must already be baked.
 ---
 --- - inTintColor: a color that is multiplied with the texture.
 --- - inXPanel, inYPanel: the destination point in panel coordinates.
@@ -547,6 +558,8 @@ local XPLMJustification_t = {
 --- - vertices: an array of XPLMTextureVertex_t vertices defining the triangle
 ---   strip.
 --- - count: the number of vertices. Must be at least 3.
+---
+--- The atlas must already be baked.
 ---
 ---@field XPLMTextureAtlasDrawMesh fun(inTextureAtlas: XPLMTextureAtlasRef, inImageIndex: integer, inTintColor: integer, vertices: XPLMTextureVertex_t[], count: integer)
 
@@ -607,6 +620,8 @@ local XPLMTextureSource = {
 --- amounts. The translation is applied on top of the current transformation
 --- matrix.
 ---
+--- Must be called inside a XPLMTransformPush/XPLMTransformPop pair.
+---
 --- - dx: horizontal offset in pixels, positive to the right.
 --- - dy: vertical offset in pixels, positive upward.
 ---
@@ -615,6 +630,15 @@ local XPLMTextureSource = {
 ---@class _G
 --- This function rotates all subsequent drawing around a center point. The
 --- rotation is applied on top of the current transformation matrix.
+---
+--- Must be called inside a XPLMTransformPush/XPLMTransformPop pair.
+---
+--- While a rotation is in effect, you may not use any routine that works with an
+--- axis-aligned rectangle - scissors, touch zones, XPLMDrawCalls, and the SVT and
+--- map draw-ins. See the section description above for the full list. This is
+--- decided by whether you called this function, not by the angle you passed: a
+--- rotation of zero degrees still counts. Keep rotations in as tight a push/pop
+--- scope as you can, so those routines are available again after the pop.
 ---
 --- - centerX, centerY: the center of rotation in panel coordinates.
 --- - angle: the rotation angle in degrees, positive counterclockwise.
@@ -625,6 +649,12 @@ local XPLMTextureSource = {
 --- This function scales all subsequent drawing relative to the origin of the
 --- current coordinate system. The scale is applied on top of the current
 --- transformation matrix.
+---
+--- Must be called inside a XPLMTransformPush/XPLMTransformPop pair.
+---
+--- Neither factor may be zero: a zero scale collapses the coordinate system onto
+--- a line, so a position expressed in it can no longer be recovered. Negative
+--- factors are fine and mirror your drawing.
 ---
 --- - scaleX: horizontal scale factor. 1.0 is no change, 2.0 doubles width.
 --- - scaleY: vertical scale factor. 1.0 is no change, 2.0 doubles height.
@@ -653,14 +683,12 @@ local XPLMTextureSource = {
 ---@field XPLMScissorSet fun(left: integer, top: integer, right: integer, bottom: integer)
 
 ---@class _G
---- This function sets the scissors box to the intersection of the existing
---- scissors box. The result is always a same or smaller drawable area.
---- This is useful for nested clipping.
+--- This function sets the scissor rectangle to the intersection of the current
+--- scissor rectangle and the rectangle you pass in. The result is always the
+--- same or a smaller drawable area. This is useful for nested clipping.
 ---
---- - left: inset from the left edge, in pixels.
---- - top: inset from the top edge, in pixels.
---- - right: inset from the right edge, in pixels.
---- - bottom: inset from the bottom edge, in pixels.
+--- - left, top, right, bottom: the scissor bounds in panel coordinates, the
+---   same coordinate space used by XPLMScissorSet.
 ---
 ---@field XPLMScissorIntersect fun(left: integer, top: integer, right: integer, bottom: integer)
 
@@ -670,6 +698,25 @@ local XPLMTextureSource = {
 --- shapes that define your mask region, then call XPLMEndSetupStencilMask to
 --- finish.
 ---
+--- Color writing is off while you record, so no color you draw with reaches the
+--- screen and its red, green and blue never matter. Alpha is a different story,
+--- because a fragment whose final alpha is exactly zero is thrown away before it
+--- can mark the stencil:
+---
+--- - Polygons and quadstrips are not alpha tested. One drawn in a fully
+---   transparent color still marks the stencil exactly as an opaque one does, so
+---   the geometry alone defines the mask.
+--- - Texture atlas draws are alpha tested. A texel whose alpha is zero, after
+---   multiplication by the tint color you pass, does not mark the stencil - so the
+---   image's alpha channel cuts the shape of the mask, and this is the way to
+---   record a mask that is not simply a polygon. Passing a tint color whose alpha
+---   is zero records nothing at all.
+---
+--- The test is against exactly zero, not a threshold: an alpha of 1 out of 255
+--- marks the stencil as completely as an alpha of 255 does. Nothing in between is
+--- partially masked - the stencil is one bit per channel, so a pixel is either in
+--- the mask or out of it.
+---
 --- The stencil buffer is eight bits wide, so you can record up to eight
 --- independent masks and pick among them later with XPLMUseStencilMask - one bit
 --- per mask - without having to re-draw them.
@@ -678,9 +725,12 @@ local XPLMTextureSource = {
 ---   geometry is drawn.
 --- - mask: a bitmask selecting which stencil bits are written.
 ---
---- Both parameters must be in the range 0 to 255, and every bit set in bits must
---- also be set in mask - a bit outside the mask can never be written. Stencil
---- testing must be off (see XPLMUseStencilMask) when you call this.
+--- Both parameters must be in the range 0 to 255 - the buffer is only eight bits
+--- wide, so a bit above that can never be stored - and every bit set in bits must
+--- also be set in mask, since a bit outside the mask can never be written.
+--- Breaking either rule is an error, reported to Log.txt and through your error
+--- callback, and the call is ignored: out-of-range values are not truncated for
+--- you. Stencil testing must be off (see XPLMUseStencilMask) when you call this.
 ---
 ---@field XPLMBeginSetupStencilMask fun(bits: integer, mask: integer)
 
@@ -704,8 +754,11 @@ local XPLMTextureSource = {
 --- - bits: the reference bit pattern to test against.
 --- - mask: a bitmask selecting which stencil bits participate in the test.
 ---
---- Both parameters must be in the range 0 to 255, and every bit set in bits must
---- also be set in mask - a bit outside the mask can never match.
+--- Both parameters must be in the range 0 to 255 - the buffer is only eight bits
+--- wide, so a bit above that can never be set in it - and every bit set in bits
+--- must also be set in mask, since a bit outside the mask can never match. Breaking
+--- either rule is an error, reported to Log.txt and through your error callback,
+--- and the call is ignored: out-of-range values are not truncated for you.
 ---
 --- You may call this as often as you like within one drawing callback to switch
 --- between masks you have recorded; each call replaces the previous test. Pass
@@ -753,7 +806,7 @@ local XPLMTouchZone = {
 ---@class _G
 ---@field XPLMTouchZone XPLMTouchZone
 
---- Your touch event callback is invoked when the user interacts with a touch zone whose type is xplm_TouchZone_Identifier. You receive the zone's identifier, the mouse status, the current position, the delta from the initial click point, and the mouse button involved.
+--- Your touch event callback is invoked when the user interacts with a touch zone whose type is xplm_TouchZone_Identifier. You receive the zone's identifier, the mouse status, the current position, the delta from the initial click point, and the mouse button involved. The position and the deltas are in the coordinate system that was in force when you declared the zone with XPLMAccumulateTouchZone, so they are directly comparable to the numbers you drew and declared with - you do not need to undo the transform stack, and you do not need the window or device geometry to make sense of them. The coordinate system is latched when the gesture begins, so every event in one drag arrives in the same space even if you move or rescale the zone part way through.
 ---@alias XPLMTouchEvent_f fun(identifier: integer, status: XPLMMouseStatus, x: integer, y: integer, dx: integer, dy: integer, button: integer, ref: any)
 
 --- XPLMTouchZoneSpec_t describes a single interactive touch zone on the panel. Pass a pointer to this struct to XPLMAccumulateTouchZone during your drawing callback. The structure may be expanded in future SDKs - always set structSize to the size of your structure in bytes.
@@ -773,9 +826,16 @@ local XPLMTouchZone = {
 --- your panel. Zones registered later take priority over earlier ones when they
 --- overlap.
 ---
+--- The rectangle is in the coordinates you are drawing in: X-Plane puts it
+--- through the transform stack for you, so pass the same numbers you drew the
+--- button with and do not apply the offset or scale yourself.
+---
 --- Returns true if the zone is currently being clicked or held by the user,
 --- false otherwise. You can use this to provide visual feedback (for example,
 --- drawing a button in its pressed state).
+---
+--- Calling this while a rotation is in effect, or while recording a retained
+--- drawing, is an error. See the section description above for why.
 ---
 ---@field XPLMAccumulateTouchZone fun(inSpec: XPLMTouchZoneSpec_t): boolean
 
@@ -793,6 +853,20 @@ local XPLMTouchZone = {
 ---@field XPLMAvionicsSetTouchEventHandler fun(avionic: XPLMAvionicsID, handler: XPLMTouchEvent_f, ref: any)
 
 ---@class _G
+--- This function registers a callback to receive touch events for zones of type
+--- xplm_TouchZone_Identifier accumulated by a window's drawing callback. It is
+--- the window equivalent of XPLMAvionicsSetTouchEventHandler.
+---
+--- Note that only the registration is thread safe. Your XPLMTouchEvent_f itself
+--- is always called on the main thread, so it is free to call anything a callback
+--- may normally call - including
+--- XPLMGetWindowGeometry. In practice you should not need the geometry: the
+--- coordinates you are handed are already in the space you declared the zone in.
+---
+--- - window: the window whose touch zones this handler serves.
+--- - handler: your XPLMTouchEvent_f callback.
+--- - ref: a reference pointer passed through to your callback.
+---
 ---@field XPLMWindowSetTouchEventHandler fun(window: XPLMWindowID, handler: XPLMTouchEvent_f, ref: any)
 
 --- An opaque handle to a recorded sequence of drawing commands. Create one by bracketing draw calls between XPLMBeginRetainedDrawing and XPLMEndRetainedDrawing. Destroy it with XPLMDestroyRetainedDrawing when it is no longer needed.
@@ -820,6 +894,14 @@ local XPLMTouchZone = {
 --- This function replays a previously recorded sequence of drawing commands.
 --- You can call this multiple times per frame and across multiple frames to
 --- efficiently re-draw the same content.
+---
+--- The drawing happens where you replay it, in the state in force at that point,
+--- so you can freely translate, scale and rotate a retained drawing to place it -
+--- this is one of the main reasons to use one.
+---
+--- The exception is a drawing that contains something axis-aligned: scissors,
+--- XPLMDrawCalls, an SVT display or a map display. Replaying such a drawing while
+--- a rotation is in effect is an error. Translate and scale are always fine.
 ---
 ---@field XPLMDrawRetained fun(drawing: XPLMRetainedDrawing_t)
 
@@ -1062,7 +1144,10 @@ local XPLMEGPWSStyle = {
 ---
 --- Note that the returned coordinates are in the same space as info's rectangle,
 --- and like that rectangle they do not account for the panel graphics transform
---- stack.
+--- stack. That is deliberate, and it is what you want: you take these coordinates
+--- and hand them to a drawing call - XPLMTextureAtlasDrawAt to put a VOR symbol on
+--- the map, say - and that drawing call applies the transform. Applying it here as
+--- well would apply it twice.
 ---
 --- Passing NULL for dataOverrides projects the sim's own navigation display view, the
 --- same one XPLMMapDisplayDrawIn draws with NULL.
@@ -1070,14 +1155,23 @@ local XPLMEGPWSStyle = {
 ---@field XPLMMapDisplayProject fun(map: XPLMMapDisplayRef, info: XPLMMapDrawInfo_t, dataOverrides: XPLMMapCustomData_t, latitude: number, longitude: number): integer, { outX: userdata, outY: userdata }
 
 ---@class _G
---- Turns a position in panel coordinates back into a latitude/longitude, for the
---- map that info describes. This is the inverse of XPLMMapDisplayProject.
+--- Turns a position back into a latitude/longitude, for the map that info
+--- describes. This is the inverse of XPLMMapDisplayProject, and like it, x and y
+--- are in the same space as info's rectangle rather than in transformed
+--- coordinates.
 ---
 --- Use this to turn a touch or click on your map into a place in the world - for
---- picking a waypoint, or reading out the position under the cursor.
+--- picking a waypoint, or reading out the position under the cursor. This needs no
+--- adjustment on your part in either of its two uses. For a touch, the coordinates
+--- your XPLMTouchEvent_f receives are already in the space you declared the zone
+--- in, so as long as you put the zone down under the same transform as the map,
+--- they are the space this function wants. For culling, you already hold your own
+--- drawing coordinates, which are likewise untransformed. In both cases, running
+--- the transform stack over the input - in either direction - would be the bug.
 ---
 --- Unlike XPLMMapDisplayDrawIn, this does not have to be called from a drawing
---- callback; it is equally valid from a click handler or a flight loop.
+--- callback; it is equally valid from a click handler or a flight loop, where there
+--- is no transform stack at all.
 ---
 --- Returns 1 on success. Returns 0, leaving outLatitude and outLongitude
 --- untouched, if the map's terrain tiles have not loaded yet or if the point does

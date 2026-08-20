@@ -6,9 +6,13 @@ Create an instance out of one or more objects with a single extensible call.
 
 <div class="sym-block sym-enum" data-name="XPLMCoordinateSpace_t" data-type="enum" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCoordinateSpace_t { .symbol-title }
 
 <span class="sym-badge badge-enum">enum</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
 
 This enum defines the coordinate space used to interpret the positions of an instance created with
 XPLMCreateInstanceEx(). By default, instances are in world space (the sim's global cartesian coordinate
@@ -27,32 +31,40 @@ distinction lets X-Plane light the objects correctly in a future release.
 
 </div>
 
+**Used by:**
+
+- [XPLMInstanceSetCoordinateSpace](instance_manipulation.md#xplminstancesetcoordinatespace)
+
 </div>
 
 ---
 
 <div class="sym-block sym-struct" data-name="XPLMInstanceObject_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMInstanceObject_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
 
 XPLMInstanceObject_t describes a single object within a multi-object instance: the object itself plus a
 fixed offset from the instance's origin. Every object in an instance moves rigidly together when you
 reposition the instance with XPLMInstanceSetPosition; this offset places each object relative to that
 shared origin and never changes after the instance is created.
 
-```cpp
-typedef struct {
-     XPLMObjectRef             object;
-     float                     x;
-     float                     y;
-     float                     z;
-     float                     pitch;
-     float                     heading;
-     float                     roll;
-} XPLMInstanceObject_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_InstanceObject_t = {
+    object   = nil,     -- XPLMObjectRef
+    x        = 0.0,     -- float
+    y        = 0.0,     -- float
+    z        = 0.0,     -- float
+    pitch    = 0.0,     -- float
+    heading  = 0.0,     -- float
+    roll     = 0.0,     -- float
+}</code></pre>
+</div>
 
 </div>
 
@@ -60,9 +72,13 @@ typedef struct {
 
 <div class="sym-block sym-struct" data-name="XPLMCreateInstance_t" data-type="struct" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCreateInstance_t { .symbol-title }
 
 <span class="sym-badge badge-struct">struct</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
 
 XPLMCreateInstance_t defines all of the parameters used to create an instance via XPLMCreateInstanceEx().
 It is a strict superset of the older XPLMCreateInstance() call: it lets you build an instance out of more
@@ -70,17 +86,17 @@ than one object, choose the coordinate space, and enable auto-shift, all in a si
 will be expanded in future SDK versions to include more features. Always set the structSize member to the
 size of your struct in bytes!
 
-```cpp
-typedef struct {
-     int                       structSize;
-     const XPLMInstanceObject_t * objects;
-     int                       objectCount;
-     const char **             datarefs;
-     XPLMCoordinateSpace_t     coordinateSpace;
-     int                       aircraftIndex;
-     int                       autoShift;
-} XPLMCreateInstance_t;
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">local My_CreateInstance_t = {
+    structSize       = 0,       -- int
+    objects          = nil,     -- see XPLMInstanceObject_t
+    objectCount      = 0,       -- int
+    datarefs         = nil,     -- char
+    coordinateSpace  = nil,     -- see XPLMCoordinateSpace_t
+    aircraftIndex    = 0,       -- int
+    autoShift        = 0,       -- int
+}</code></pre>
+</div>
 
 </div>
 
@@ -88,9 +104,13 @@ typedef struct {
 
 <div class="sym-block sym-function" data-name="XPLMCreateInstanceEx" data-type="function" markdown="1">
 
+<div class="sym-title-row" markdown="1">
+
 ## XPLMCreateInstanceEx { .symbol-title }
 
 <span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
 
 XPLMCreateInstanceEx creates a new instance from one or more objects and returns a handle to it. It is a
 strict superset of XPLMCreateInstance(): in addition to a single object, you can register several objects
@@ -105,12 +125,17 @@ objects in the instance.
 The set of objects is fixed when the instance is created; you cannot add or remove objects later. Destroy
 the instance with XPLMDestroyInstance() exactly as for an instance made with XPLMCreateInstance().
 
-```cpp
-XPLM_API XPLMInstanceRefXPLMCreateInstanceEx(
-                         const XPLMCreateInstance_t * inParams
-                    );
-```
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMInstanceRef -> assign to local/var
+local my_instanceRef = XPLMCreateInstanceEx(
+    inParams     -- see XPLMCreateInstance_t
+)</code></pre>
+</div>
 
+
+**See associated types:**
+
+- [XPLMCreateInstance_t](#xplmcreateinstance_t)
 </div>
 
 ---
@@ -118,4 +143,4 @@ XPLM_API XPLMInstanceRefXPLMCreateInstanceEx(
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>

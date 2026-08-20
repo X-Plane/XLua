@@ -28,4 +28,4 @@ and replay it efficiently on subsequent frames.
 
 
 <!-- whitespace for navigation purposes -->
-<div style="height:100vh;"></div>
+<div class="page-spacer"></div>
