@@ -237,6 +237,12 @@ Using "Developer > Reload the Current Aircraft and Art" X-Plane menu will reload
 
 Since 1.2.0, you can also reload your scripts via the aircraft menu, or via the `laminar/xlua/reload_all_scripts` command.
 
+If you don't need the menu item, you can create a file `config.ini` in `plugins/xlua/config.ini` and add the line:
+```ini
+show_plugin_menu=false
+```
+Which will not create the menu item. The command to reload your scripts is uneffected, which allows you to implement your own menu item.
+
 On some complex aircraft, you might also need to reset your scripts if the "Start with engines running" checkbox on the "Flight Configuration" screen changes. In this case, you can insert the `XLuaReloadOnFlightChange()` instruction once on any of your scripts, in any place. Note that this DOES NOT invoke an immediate reload of the scripts, but only flags the aircraft scripts to be reloaded when the flight configuration changes, which is something that XLua didn't do before.
 
 ### FAQ

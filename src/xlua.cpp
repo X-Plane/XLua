@@ -18,6 +18,8 @@
 #define XPLM210
 #endif
 
+#include <algorithm>
+#include <fstream>
 #include <XPLMPlugin.h>
 #include <XPLMDataAccess.h>
 #include <XPLMUtilities.h>
@@ -25,6 +27,7 @@
 #include <XPLMMenus.h>
 #include <XPLMPlanes.h>
 
+#include "log.h"
 #include "module.h"
 #include "xpdatarefs.h"
 #include "xpcommands.h"
@@ -252,6 +255,61 @@ static void MenuHandler(void* menuRef, void* itemRef)
 	}
 }
 
+static vector<string> load_file(const string& path)
+{
+	std::ifstream f(path.c_str());
+
+	if (!f.is_open())
+	{
+		log_message(nullptr, "Could not open file %s.\n", path.c_str());
+		return {};
+	}
+
+	vector<string> result;
+	string line;
+
+	while (getline(f, line))
+	{
+		result.push_back(line);
+	}
+
+	return result;
+}
+
+static std::string trim(std::string s) {
+	auto notspace = [](int ch) { return !std::isspace(ch); };
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(), notspace));
+	s.erase(std::find_if(s.rbegin(), s.rend(), notspace).base(), s.end());
+	return s;
+}
+
+
+static bool GetShowMenuConfig(const string& path)
+{
+	vector<string> config = load_file(path);
+	if (config.empty())
+		return true;
+
+	for (auto config_line : config)
+	{
+		const string::size_type pos = config_line.find("show_plugin_menu");
+		if (pos == string::npos)
+			return true;
+
+		const string::size_type eq = config_line.find('=', pos);
+		if (eq == string::npos)
+			return true;
+
+		const string val = trim(config_line.substr(eq + 1));
+		if (val == "false" || val == "0")
+			return false;
+
+		return true;
+	}
+
+	return true;
+}
+
 PLUGIN_API int XPluginStart(
 						char *		outName,
 						char *		outSig,
@@ -294,10 +352,13 @@ PLUGIN_API int XPluginStart(
 	}
 	plugin_base_path += XPLMGetDirectorySeparator();
 
+	const string configPath = plugin_base_path + "config.ini";
+	const bool addMenu = GetShowMenuConfig(configPath);
+
 	// Do we want to add a "reset" menu item? Only for the user's plane.
 	XPLMGetNthAircraftModel(XPLM_USER_AIRCRAFT, pName, pPath);
 	char *PDest = strrchr(pPath, *XPLMGetDirectorySeparator());
-	if (PDest != nullptr)
+	if (PDest != nullptr && addMenu)
 	{
 		*PDest = 0;
 		const size_t acPathLen = strlen(pPath);
