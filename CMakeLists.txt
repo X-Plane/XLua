@@ -11,8 +11,26 @@ project(xlua
 # ─────────────────────────────────────────────────────────────────────────────
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# CMAKE_CXX_EXTENSIONS is left at its default on purpose: an in-tree X-Plane build
-# compiles -std=gnu++20 everywhere, and forcing -std=c++20 here alone is gratuitous drift.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Standalone vs in-tree
+# This file is both a root project (our own GitHub Actions CI, which ships the
+# binaries) and a subdirectory of the X-Plane tree. The X-Plane tree imposes its
+# own compiler/runtime environment, so a few settings only make sense there.
+# Everything below defaults to the standalone behaviour this project has always
+# had; the in-tree branches are the exceptions.
+# ─────────────────────────────────────────────────────────────────────────────
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(XLUA_IN_XPLANE_TREE FALSE)
+    message(STATUS "XLua: standalone build")
+else()
+    set(XLUA_IN_XPLANE_TREE TRUE)
+    message(STATUS "XLua: building inside the X-Plane tree")
+endif()
+
+if(NOT XLUA_IN_XPLANE_TREE)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+endif()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # LuaJIT source
@@ -123,15 +141,6 @@ if(WIN32)
         LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL     "${CMAKE_BINARY_DIR}/win_x64"
     )
 
-    # No MSVC_RUNTIME_LIBRARY here on purpose. The old value was
-    # "MultiThreaded$<$<CONFIG:Debug>:Debug>", which never matches an X-Plane config
-    # name (DEV_NOOPT, DEV_OPT, NODEV_OPT, ...) and so always selected the release
-    # CRT while build_flags() injected /D_DEBUG — MSVC keys #pragma detect_mismatch
-    # off _DEBUG, not off the /MT flag, so that mismatched. Standalone builds get
-    # CMake's default; in-tree builds inherit CMAKE_MSVC_RUNTIME_LIBRARY from
-    # cmake/windows.cmake. The vendored lua51.lib used to force static-release via a
-    # hardcoded /DEFAULTLIB:LIBCMT; conan LuaJIT is built against our own profile.
-
     target_compile_definitions(xlua2 PRIVATE
         IBM=1 APL=0 LIN=0
         WIN32 _WINDOWS _USRDLL SIMDATA_EXPORTS
@@ -140,9 +149,33 @@ if(WIN32)
 
     target_compile_options(xlua2 PRIVATE /W3)
 
-    # MODULE targets read CMAKE_MODULE_LINKER_FLAGS, which the X-Plane tree never
-    # sets — so unlike every other plugin we would get no PDB. Ask for one directly.
-    target_link_options(xlua2 PRIVATE /DEBUG)
+    if(NOT XLUA_IN_XPLANE_TREE)
+        # Standalone CI builds with --config Release, so these all match.
+        set_target_properties(xlua2 PROPERTIES
+            # Static CRT — matches <RuntimeLibrary>MultiThreaded[Debug]</RuntimeLibrary>,
+            # and required by lua_sdk/lua51.lib, which carries /DEFAULTLIB:LIBCMT.
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+        target_compile_definitions(xlua2 PRIVATE
+            $<$<CONFIG:Debug>:_DEBUG>
+            $<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
+
+        target_compile_options(xlua2 PRIVATE
+            $<$<CONFIG:Release>:/O2 /Oi /Gy /GF>   # MaxSpeed, inline, func-level linking, string pool
+            $<$<CONFIG:Debug>:/Od /Zi>)
+    else()
+        # No MSVC_RUNTIME_LIBRARY in-tree: "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        # matches no X-Plane config name (DEV_NOOPT, DEV_OPT, NODEV_OPT, ...), so it
+        # always picked the release CRT while build_flags() injected /D_DEBUG — and
+        # MSVC keys #pragma detect_mismatch off _DEBUG, not off /MT. Inherit
+        # CMAKE_MSVC_RUNTIME_LIBRARY from cmake/windows.cmake instead. The CONFIG
+        # genexes above are dead in-tree for the same reason; optimisation comes
+        # from build_flags().
+        #
+        # A MODULE reads CMAKE_MODULE_LINKER_FLAGS, which the X-Plane tree never
+        # sets, so unlike every other plugin we would get no PDB. Ask for one.
+        target_link_options(xlua2 PRIVATE /DEBUG)
+    endif()
 
     target_link_libraries(xlua2 PRIVATE
         "${PROJECT_SOURCE_DIR}/SDK/Libraries/Win/XPLM_64.lib"
@@ -171,11 +204,18 @@ elseif(APPLE)
         INSTALL_RPATH ""
     )
 
-    # OSX_ARCHITECTURES and OSX_DEPLOYMENT_TARGET are deliberately not set. The old
-    # values ("x86_64;arm64" and "10.11") cannot work in-tree: conan packages are
+    # Standalone builds ship this binary, so it must stay a universal build at the
+    # historical deployment target. Neither can work in-tree: conan packages are
     # built one arch at a time, and libc++ marks std::filesystem — which xlua.cpp
-    # uses — unavailable before macOS 10.15, which is a hard compile error.
-    # Standalone builds get the CMake/SDK defaults; in-tree builds follow the tree.
+    # uses — unavailable before macOS 10.15, a hard compile error. In-tree we
+    # follow whatever the enclosing build sets.
+    if(NOT XLUA_IN_XPLANE_TREE)
+        set_target_properties(xlua2 PROPERTIES
+            # Universal binary — matches ONLY_ACTIVE_ARCH = NO with default ARCHS
+            OSX_ARCHITECTURES     "x86_64;arm64"
+            # Matches target-level MACOSX_DEPLOYMENT_TARGET = 10.11
+            OSX_DEPLOYMENT_TARGET "10.11")
+    endif()
 
     target_compile_definitions(xlua2 PRIVATE APL=1 IBM=0 LIN=0)
 
@@ -238,36 +278,43 @@ elseif(UNIX)
         -fvisibility=hidden
     )
 
-    # Match the X-Plane SDK's plugins, which force the legacy libGL rather than GLVND.
-    set(OpenGL_GL_PREFERENCE LEGACY)
+    if(XLUA_IN_XPLANE_TREE)
+        # Match the X-Plane SDK's plugins, which force legacy libGL over GLVND.
+        set(OpenGL_GL_PREFERENCE LEGACY)
+    endif()
     find_package(OpenGL REQUIRED)
 
     target_link_libraries(xlua2 PRIVATE OpenGL::GL)
 
-    # The X-Plane tree compiles -stdlib=libc++ -nostdlib++ and links with the `clang`
-    # driver, so no C++ runtime is linked for us. Because we deliberately omit
-    # --no-undefined (see below), forgetting this links clean and then fails at
-    # dlopen — X-Plane exports almost nothing, so std::* never resolves.
-    # -nostdlib++ at link time stops the driver adding libstdc++ on top of libc++.
-    target_link_options(xlua2 PRIVATE -nostdlib++)
+    # Everything below is an X-Plane-tree concern only. A standalone build just uses
+    # the compiler's own C++ runtime, which is why this project never linked libc++
+    # explicitly — and ubuntu-latest, where our CI runs, has no libc++.a at all.
+    if(XLUA_IN_XPLANE_TREE)
+        # The X-Plane tree compiles -stdlib=libc++ -nostdlib++ and links with the
+        # `clang` driver, so no C++ runtime is linked for us. Because we deliberately
+        # omit --no-undefined (see below), forgetting this links clean and then fails
+        # at dlopen — X-Plane exports almost nothing, so std::* never resolves.
+        # -nostdlib++ at link time stops the driver adding libstdc++ on top.
+        target_link_options(xlua2 PRIVATE -nostdlib++)
 
-    if(DYNAMIC_LIBCXX)
-        target_link_libraries(xlua2 PRIVATE c++ c++abi)
-    else()
-        # Absolute paths rather than "libc++.a": CMake rewrites a bare libfoo.a link
-        # item to -lfoo, and ld then prefers libc++.so wherever both are installed.
-        # This plugin is committed into aircraft and shipped, so it must not pick up
-        # a libc++.so.1 runtime dependency that a customer's machine may not have.
-        # libc++ before libc++abi — libc++.a references __cxa_* from libc++abi.a.
-        find_library(XLUA_LIBCXX_A    NAMES libc++.a    REQUIRED)
-        find_library(XLUA_LIBCXXABI_A NAMES libc++abi.a REQUIRED)
-        target_link_libraries(xlua2 PRIVATE ${XLUA_LIBCXX_A} ${XLUA_LIBCXXABI_A})
+        if(DYNAMIC_LIBCXX)
+            target_link_libraries(xlua2 PRIVATE c++ c++abi)
+        else()
+            # Absolute paths rather than "libc++.a": CMake rewrites a bare libfoo.a
+            # link item to -lfoo, and ld then prefers libc++.so wherever both are
+            # installed. This plugin is committed into aircraft and shipped, so it
+            # must not pick up a libc++.so.1 dependency a customer may not have.
+            # libc++ before libc++abi — libc++.a references __cxa_* from libc++abi.a.
+            find_library(XLUA_LIBCXX_A    NAMES libc++.a    REQUIRED)
+            find_library(XLUA_LIBCXXABI_A NAMES libc++abi.a REQUIRED)
+            target_link_libraries(xlua2 PRIVATE ${XLUA_LIBCXX_A} ${XLUA_LIBCXXABI_A})
+        endif()
+
+        # LuaJIT comes from conan as a static archive, so nothing needs finding at
+        # runtime — without this CMake bakes the local conan cache path in as
+        # RUNPATH, and that would ship inside every aircraft's copy of the plugin.
+        set_target_properties(xlua2 PROPERTIES SKIP_BUILD_RPATH TRUE)
     endif()
-
-    # LuaJIT comes from conan as a static archive, so nothing needs to be found at
-    # runtime — without this CMake bakes the local conan cache path in as RUNPATH,
-    # and that path would ship inside every aircraft's copy of the plugin.
-    set_target_properties(xlua2 PROPERTIES SKIP_BUILD_RPATH TRUE)
 
     target_link_options(xlua2 PRIVATE
         -m64
