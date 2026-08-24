@@ -72,42 +72,83 @@ add_library(xlua2 MODULE
     imgui/imgui_draw.cpp
     imgui/imgui_tables.cpp
     imgui/imgui_widgets.cpp
-
-	SDK/XLua_glue/XLua_Register_glue.cpp
-	SDK/XLua_glue/XPLMCamera_glue.cpp
-	SDK/XLua_glue/XPLMDataAccess_glue.cpp
-	SDK/XLua_glue/XPLMDefs_glue.cpp
-	SDK/XLua_glue/XPLMDisplay_glue.cpp
-	SDK/XLua_glue/XPLMGraphics_glue.cpp
-	SDK/XLua_glue/XPLMInstance_glue.cpp
-	SDK/XLua_glue/XPLMMap_glue.cpp
-	SDK/XLua_glue/XPLMMenus_glue.cpp
-	SDK/XLua_glue/XPLMNavigation_glue.cpp
-	SDK/XLua_glue/XPLMPlanes_glue.cpp
-	SDK/XLua_glue/XPLMPlugin_glue.cpp
-	SDK/XLua_glue/XPLMProcessing_glue.cpp
-	SDK/XLua_glue/XPLMPanelGraphics_glue.cpp
-	SDK/XLua_glue/XPLMScenery_glue.cpp
-	SDK/XLua_glue/XPLMSound_glue.cpp
-	SDK/XLua_glue/XPLMUtilities_glue.cpp
-	SDK/XLua_glue/XPLMWeather_glue.cpp
 )
 
-target_compile_definitions(xlua2 PRIVATE
-    XPLM200=1
-    XPLM210=1
-    XPLM300=1
-    XPLM301=1
-    XPLM302=1
-    XPLM303=1
-    XPLM400=1
-    XPLM410=1
-    XPLM420=1
-    XPLM430=1
-    XPLM440=1
-    XPLMPG1=1
-    -DLUA_BINDINGS_LOCAL_STATE
+# ────────────────────────────────────────────────────────────────────────────
+# Lua binding glue, and the XPLM headers it was generated against
+#
+# These two always move together. The glue includes "XPLMDefs.h" and friends
+# unqualified, so whichever CHeaders directory lands first on the include path
+# wins, and glue generated from a newer SDK will not compile against older
+# headers. In-tree both come from xplanesdk, so the bindings always match the
+# XPLM this build actually exports; standalone uses the snapshot committed here.
+# ────────────────────────────────────────────────────────────────────────────
+set(XLUA_GLUE_BASE
+    XLua_Register_glue.cpp
+    XPLMCamera_glue.cpp
+    XPLMDataAccess_glue.cpp
+    XPLMDefs_glue.cpp
+    XPLMDisplay_glue.cpp
+    XPLMGraphics_glue.cpp
+    XPLMInstance_glue.cpp
+    XPLMMap_glue.cpp
+    XPLMMenus_glue.cpp
+    XPLMNavigation_glue.cpp
+    XPLMPanelGraphics_glue.cpp
+    XPLMPlanes_glue.cpp
+    XPLMPlugin_glue.cpp
+    XPLMProcessing_glue.cpp
+    XPLMScenery_glue.cpp
+    XPLMSound_glue.cpp
+    XPLMUtilities_glue.cpp
+    XPLMWeather_glue.cpp
 )
+
+if(XLUA_IN_XPLANE_TREE)
+    # Explicit list, never a glob: a configured build directory can still hold glue
+    # left over from an older set of XML masters, which would not compile.
+    foreach(g IN LISTS XLUA_GLUE_BASE)
+        list(APPEND XLUA_GLUE_SOURCES
+            "${CMAKE_BINARY_DIR}/SDK/COMMON/xplanesdk/Src/HeaderParser/XLua_glue/${g}")
+    endforeach()
+    set_source_files_properties(${XLUA_GLUE_SOURCES} PROPERTIES GENERATED TRUE)
+else()
+    foreach(g IN LISTS XLUA_GLUE_BASE)
+        list(APPEND XLUA_GLUE_SOURCES "${PROJECT_SOURCE_DIR}/SDK/XLua_glue/${g}")
+    endforeach()
+endif()
+
+target_sources(xlua2 PRIVATE ${XLUA_GLUE_SOURCES})
+
+if(XLUA_IN_XPLANE_TREE)
+    # XPLM_VERSIONS is CACHE INTERNAL, so it is readable here once xplanesdk has been
+    # added — which SDK/COMMON/CMakeLists.txt does before us. Not CORE_DEFINITIONS:
+    # the top level fills that in after add_subdirectory(SDK), so it is empty here.
+    # XPLMPG1 is deliberately absent — the generated XPLMPanelGraphics.h gates on
+    # XPLM440, and XPLMPG1 appears nowhere in the tree.
+    foreach(def ${XPLM_VERSIONS})
+        target_compile_definitions(xlua2 PRIVATE ${def}=1)
+    endforeach()
+else()
+    target_compile_definitions(xlua2 PRIVATE
+        XPLM200=1
+        XPLM210=1
+        XPLM300=1
+        XPLM301=1
+        XPLM302=1
+        XPLM303=1
+        XPLM400=1
+        XPLM410=1
+        XPLM420=1
+        XPLM430=1
+        XPLM440=1
+        # The committed XPLMPanelGraphics.h still gates on XPLMPG1, unlike the
+        # generated one.
+        XPLMPG1=1
+    )
+endif()
+
+target_compile_definitions(xlua2 PRIVATE LUA_BINDINGS_LOCAL_STATE)
 
 # Strip the default "lib" prefix and use .xpl on all platforms.
 set_target_properties(xlua2 PROPERTIES
@@ -116,11 +157,25 @@ set_target_properties(xlua2 PROPERTIES
 )
 
 target_include_directories(xlua2 PRIVATE
-    "${PROJECT_SOURCE_DIR}/SDK/CHeaders/XPLM"
-    "${PROJECT_SOURCE_DIR}/SDK/CHeaders/Widgets"
     "${PROJECT_SOURCE_DIR}/imgui"
     "${PROJECT_SOURCE_DIR}/src"
 )
+
+if(XLUA_IN_XPLANE_TREE)
+    # XPWidgets -> XPLM -> sdk_headers gives us the generated XPLM/Widgets headers,
+    # the libraries this tree actually built, and an ordering edge onto header
+    # generation. Same path register_plugin() uses for every other in-tree plugin.
+    target_link_libraries(xlua2 PRIVATE XPWidgets)
+    # Mandatory, not belt-and-braces: linking sdk_headers supplies the include dirs,
+    # but the build-order edge for the generated .cpp files does not cross
+    # directories on its own.
+    add_dependencies(xlua2 sdk_headers_target)
+else()
+    target_include_directories(xlua2 PRIVATE
+        "${PROJECT_SOURCE_DIR}/SDK/CHeaders/XPLM"
+        "${PROJECT_SOURCE_DIR}/SDK/CHeaders/Widgets"
+    )
+endif()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Windows (x64 only — 32-bit X-Plane is discontinued)
@@ -177,11 +232,14 @@ if(WIN32)
         target_link_options(xlua2 PRIVATE /DEBUG)
     endif()
 
-    target_link_libraries(xlua2 PRIVATE
-        "${PROJECT_SOURCE_DIR}/SDK/Libraries/Win/XPLM_64.lib"
-        "${PROJECT_SOURCE_DIR}/SDK/Libraries/Win/XPWidgets_64.lib"
-        Opengl32.lib
-    )
+    target_link_libraries(xlua2 PRIVATE Opengl32.lib)
+
+    if(NOT XLUA_IN_XPLANE_TREE)
+        target_link_libraries(xlua2 PRIVATE
+            "${PROJECT_SOURCE_DIR}/SDK/Libraries/Win/XPLM_64.lib"
+            "${PROJECT_SOURCE_DIR}/SDK/Libraries/Win/XPWidgets_64.lib"
+        )
+    endif()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # macOS — universal binary (x86_64 + arm64), Mach-O bundle (mh_bundle)
@@ -222,20 +280,22 @@ elseif(APPLE)
     # GCC_SYMBOLS_PRIVATE_EXTERN = YES → -fvisibility=hidden
     target_compile_options(xlua2 PRIVATE -fvisibility=hidden)
 
-    # Frameworks — searched relative to SDK/Libraries/Mac (FRAMEWORK_SEARCH_PATHS)
     find_library(OPENGL_LIB       OpenGL       REQUIRED)
     find_library(COREFOUNDATION_LIB CoreFoundation REQUIRED)
-    find_library(XPLM_LIB         XPLM         REQUIRED
-        HINTS "${PROJECT_SOURCE_DIR}/SDK/Libraries/Mac")
-    find_library(XPWIDGETS_LIB    XPWidgets    REQUIRED
-        HINTS "${PROJECT_SOURCE_DIR}/SDK/Libraries/Mac")
 
     target_link_libraries(xlua2 PRIVATE
         ${OPENGL_LIB}
         ${COREFOUNDATION_LIB}
-        ${XPLM_LIB}
-        ${XPWIDGETS_LIB}
     )
+
+    if(NOT XLUA_IN_XPLANE_TREE)
+        # Frameworks — searched relative to SDK/Libraries/Mac (FRAMEWORK_SEARCH_PATHS)
+        find_library(XPLM_LIB      XPLM      REQUIRED
+            HINTS "${PROJECT_SOURCE_DIR}/SDK/Libraries/Mac")
+        find_library(XPWIDGETS_LIB XPWidgets REQUIRED
+            HINTS "${PROJECT_SOURCE_DIR}/SDK/Libraries/Mac")
+        target_link_libraries(xlua2 PRIVATE ${XPLM_LIB} ${XPWIDGETS_LIB})
+    endif()
 
     # Export only the five X-Plane plugin entry points; hide everything else.
     # Matches OTHER_LDFLAGS -Wl,-exported_symbol pairs in pbxproj.
@@ -290,6 +350,12 @@ elseif(UNIX)
     # the compiler's own C++ runtime, which is why this project never linked libc++
     # explicitly — and ubuntu-latest, where our CI runs, has no libc++.a at all.
     if(XLUA_IN_XPLANE_TREE)
+        # Linking XPWidgets drags the SDK's whole interface onto our link line,
+        # including fmod, which this plugin never calls — without --as-needed those
+        # become DT_NEEDED entries on an artifact that ships inside every aircraft.
+        # Libraries we genuinely use (XPLM, XPWidgets) are unaffected.
+        target_link_options(xlua2 PRIVATE -Wl,--as-needed)
+
         # The X-Plane tree compiles -stdlib=libc++ -nostdlib++ and links with the
         # `clang` driver, so no C++ runtime is linked for us. Because we deliberately
         # omit --no-undefined (see below), forgetting this links clean and then fails
