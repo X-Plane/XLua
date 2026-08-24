@@ -11,7 +11,23 @@ project(xlua
 # ─────────────────────────────────────────────────────────────────────────────
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+# CMAKE_CXX_EXTENSIONS is left at its default on purpose: an in-tree X-Plane build
+# compiles -std=gnu++20 everywhere, and forcing -std=c++20 here alone is gratuitous drift.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LuaJIT source
+# In-tree X-Plane builds get LuaJIT from conan — SDK/COMMON/CMakeLists.txt calls
+# find_package(luajit) before add_subdirectory(), so the imported target exists by
+# the time we are configured. Standalone builds (including XLua's own GitHub
+# Actions CI) have no conan and fall back to the vendored libs in lua_sdk/.
+# ─────────────────────────────────────────────────────────────────────────────
+if(TARGET luajit::luajit)
+    set(XLUA_LUAJIT_FROM_CONAN TRUE)
+    message(STATUS "XLua: using conan LuaJIT")
+else()
+    set(XLUA_LUAJIT_FROM_CONAN FALSE)
+    message(STATUS "XLua: using vendored LuaJIT from lua_sdk/")
+endif()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Plugin target
@@ -82,11 +98,10 @@ set_target_properties(xlua2 PROPERTIES
 )
 
 target_include_directories(xlua2 PRIVATE
-    "${CMAKE_SOURCE_DIR}/lua_sdk"
-    "${CMAKE_SOURCE_DIR}/SDK/CHeaders/XPLM"
-    "${CMAKE_SOURCE_DIR}/SDK/CHeaders/Widgets"
-    "${CMAKE_SOURCE_DIR}/imgui"
-    "${CMAKE_SOURCE_DIR}/src"
+    "${PROJECT_SOURCE_DIR}/SDK/CHeaders/XPLM"
+    "${PROJECT_SOURCE_DIR}/SDK/CHeaders/Widgets"
+    "${PROJECT_SOURCE_DIR}/imgui"
+    "${PROJECT_SOURCE_DIR}/src"
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -94,8 +109,8 @@ target_include_directories(xlua2 PRIVATE
 # ─────────────────────────────────────────────────────────────────────────────
 if(WIN32)
     target_include_directories(xlua2 PRIVATE
-        "${CMAKE_SOURCE_DIR}/fmod/win/studio/inc"
-        "${CMAKE_SOURCE_DIR}/fmod/win/core/inc"
+        "${PROJECT_SOURCE_DIR}/fmod/win/studio/inc"
+        "${PROJECT_SOURCE_DIR}/fmod/win/core/inc"
     )
 
     set_target_properties(xlua2 PROPERTIES
@@ -106,28 +121,32 @@ if(WIN32)
         LIBRARY_OUTPUT_DIRECTORY_RELEASE        "${CMAKE_BINARY_DIR}/win_x64"
         LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/win_x64"
         LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL     "${CMAKE_BINARY_DIR}/win_x64"
-        # Static CRT — matches <RuntimeLibrary>MultiThreaded[Debug]</RuntimeLibrary>
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
+
+    # No MSVC_RUNTIME_LIBRARY here on purpose. The old value was
+    # "MultiThreaded$<$<CONFIG:Debug>:Debug>", which never matches an X-Plane config
+    # name (DEV_NOOPT, DEV_OPT, NODEV_OPT, ...) and so always selected the release
+    # CRT while build_flags() injected /D_DEBUG — MSVC keys #pragma detect_mismatch
+    # off _DEBUG, not off the /MT flag, so that mismatched. Standalone builds get
+    # CMake's default; in-tree builds inherit CMAKE_MSVC_RUNTIME_LIBRARY from
+    # cmake/windows.cmake. The vendored lua51.lib used to force static-release via a
+    # hardcoded /DEFAULTLIB:LIBCMT; conan LuaJIT is built against our own profile.
 
     target_compile_definitions(xlua2 PRIVATE
         IBM=1 APL=0 LIN=0
         WIN32 _WINDOWS _USRDLL SIMDATA_EXPORTS
         _CRT_SECURE_NO_WARNINGS
-        $<$<CONFIG:Debug>:_DEBUG>
-        $<$<NOT:$<CONFIG:Debug>>:NDEBUG>
     )
 
-    target_compile_options(xlua2 PRIVATE
-        /W3
-        $<$<CONFIG:Release>:/O2 /Oi /Gy /GF>   # MaxSpeed, inline, func-level linking, string pool
-        $<$<CONFIG:Debug>:/Od /Zi>
-    )
+    target_compile_options(xlua2 PRIVATE /W3)
+
+    # MODULE targets read CMAKE_MODULE_LINKER_FLAGS, which the X-Plane tree never
+    # sets — so unlike every other plugin we would get no PDB. Ask for one directly.
+    target_link_options(xlua2 PRIVATE /DEBUG)
 
     target_link_libraries(xlua2 PRIVATE
-        "${CMAKE_SOURCE_DIR}/SDK/Libraries/Win/XPLM_64.lib"
-        "${CMAKE_SOURCE_DIR}/SDK/Libraries/Win/XPWidgets_64.lib"
-        "${CMAKE_SOURCE_DIR}/lua_sdk/lua51.lib"
+        "${PROJECT_SOURCE_DIR}/SDK/Libraries/Win/XPLM_64.lib"
+        "${PROJECT_SOURCE_DIR}/SDK/Libraries/Win/XPWidgets_64.lib"
         Opengl32.lib
     )
 
@@ -136,8 +155,8 @@ if(WIN32)
 # ─────────────────────────────────────────────────────────────────────────────
 elseif(APPLE)
     target_include_directories(xlua2 PRIVATE
-        "${CMAKE_SOURCE_DIR}/fmod/mac/studio/inc"
-        "${CMAKE_SOURCE_DIR}/fmod/mac/core/inc"
+        "${PROJECT_SOURCE_DIR}/fmod/mac/studio/inc"
+        "${PROJECT_SOURCE_DIR}/fmod/mac/core/inc"
     )
 
     set_target_properties(xlua2 PROPERTIES
@@ -145,14 +164,18 @@ elseif(APPLE)
         LIBRARY_OUTPUT_DIRECTORY            "${CMAKE_BINARY_DIR}/mac_x64"
         LIBRARY_OUTPUT_DIRECTORY_DEBUG      "${CMAKE_BINARY_DIR}/mac_x64"
         LIBRARY_OUTPUT_DIRECTORY_RELEASE    "${CMAKE_BINARY_DIR}/mac_x64"
-        # Universal binary — matches ONLY_ACTIVE_ARCH = NO with default ARCHS
-        OSX_ARCHITECTURES        "x86_64;arm64"
-        # Matches target-level MACOSX_DEPLOYMENT_TARGET = 10.11
-        OSX_DEPLOYMENT_TARGET    "10.11"
         # Suppress version fields (DYLIB_COMPATIBILITY_VERSION / DYLIB_CURRENT_VERSION = "")
         MACHO_COMPATIBILITY_VERSION ""
         MACHO_CURRENT_VERSION       ""
+        # Don't inherit @loader_path/../Frameworks from an enclosing app build.
+        INSTALL_RPATH ""
     )
+
+    # OSX_ARCHITECTURES and OSX_DEPLOYMENT_TARGET are deliberately not set. The old
+    # values ("x86_64;arm64" and "10.11") cannot work in-tree: conan packages are
+    # built one arch at a time, and libc++ marks std::filesystem — which xlua.cpp
+    # uses — unavailable before macOS 10.15, which is a hard compile error.
+    # Standalone builds get the CMake/SDK defaults; in-tree builds follow the tree.
 
     target_compile_definitions(xlua2 PRIVATE APL=1 IBM=0 LIN=0)
 
@@ -163,36 +186,38 @@ elseif(APPLE)
     find_library(OPENGL_LIB       OpenGL       REQUIRED)
     find_library(COREFOUNDATION_LIB CoreFoundation REQUIRED)
     find_library(XPLM_LIB         XPLM         REQUIRED
-        HINTS "${CMAKE_SOURCE_DIR}/SDK/Libraries/Mac")
+        HINTS "${PROJECT_SOURCE_DIR}/SDK/Libraries/Mac")
     find_library(XPWIDGETS_LIB    XPWidgets    REQUIRED
-        HINTS "${CMAKE_SOURCE_DIR}/SDK/Libraries/Mac")
+        HINTS "${PROJECT_SOURCE_DIR}/SDK/Libraries/Mac")
 
     target_link_libraries(xlua2 PRIVATE
         ${OPENGL_LIB}
         ${COREFOUNDATION_LIB}
         ${XPLM_LIB}
         ${XPWIDGETS_LIB}
-        # LuaJIT universal static lib (matches OTHER_LDFLAGS entry in pbxproj)
-        "${CMAKE_SOURCE_DIR}/lua_sdk/libluajit_mac.a"
     )
 
     # Export only the five X-Plane plugin entry points; hide everything else.
     # Matches OTHER_LDFLAGS -Wl,-exported_symbol pairs in pbxproj.
-    target_link_options(xlua2 PRIVATE
-        -Wl,-exported_symbol,_XPluginStart
-        -Wl,-exported_symbol,_XPluginEnable
-        -Wl,-exported_symbol,_XPluginDisable
-        -Wl,-exported_symbol,_XPluginStop
-        -Wl,-exported_symbol,_XPluginReceiveMessage
-    )
+    # Skipped under a sanitizer so the runtime can interpose freely and so reports
+    # symbolize — same reasoning as cmake/linux.cmake in the X-Plane tree.
+    if(NOT SANITIZE)
+        target_link_options(xlua2 PRIVATE
+            -Wl,-exported_symbol,_XPluginStart
+            -Wl,-exported_symbol,_XPluginEnable
+            -Wl,-exported_symbol,_XPluginDisable
+            -Wl,-exported_symbol,_XPluginStop
+            -Wl,-exported_symbol,_XPluginReceiveMessage
+        )
+    endif()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Linux (x86_64 only)
 # ─────────────────────────────────────────────────────────────────────────────
 elseif(UNIX)
     target_include_directories(xlua2 PRIVATE
-        "${CMAKE_SOURCE_DIR}/fmod/lin/studio/inc"
-        "${CMAKE_SOURCE_DIR}/fmod/lin/core/inc"
+        "${PROJECT_SOURCE_DIR}/fmod/lin/studio/inc"
+        "${PROJECT_SOURCE_DIR}/fmod/lin/core/inc"
     )
 
     set_target_properties(xlua2 PROPERTIES
@@ -202,32 +227,98 @@ elseif(UNIX)
 
     target_compile_definitions(xlua2 PRIVATE APL=0 IBM=0 LIN=1)
 
+    # -fPIC is load-bearing, not redundant: the X-Plane tree puts -fno-PIE in
+    # directory-scope compile options (cmake/clang.cmake), which overrides the -fPIC
+    # CMake adds automatically for a MODULE. Target options come last, so this wins.
+    # Drop it and the link fails with "relocation R_X86_64_32S ... can not be used
+    # when making a shared object".
     target_compile_options(xlua2 PRIVATE
         -m64
         -fPIC
         -fvisibility=hidden
     )
 
+    # Match the X-Plane SDK's plugins, which force the legacy libGL rather than GLVND.
+    set(OpenGL_GL_PREFERENCE LEGACY)
     find_package(OpenGL REQUIRED)
 
-    # LuaJIT static lib from lua_sdk/
-    target_link_libraries(xlua2 PRIVATE
-        OpenGL::GL
-        "${CMAKE_SOURCE_DIR}/lua_sdk/libluajit.a"
-    )
+    target_link_libraries(xlua2 PRIVATE OpenGL::GL)
+
+    # The X-Plane tree compiles -stdlib=libc++ -nostdlib++ and links with the `clang`
+    # driver, so no C++ runtime is linked for us. Because we deliberately omit
+    # --no-undefined (see below), forgetting this links clean and then fails at
+    # dlopen — X-Plane exports almost nothing, so std::* never resolves.
+    # -nostdlib++ at link time stops the driver adding libstdc++ on top of libc++.
+    target_link_options(xlua2 PRIVATE -nostdlib++)
+
+    if(DYNAMIC_LIBCXX)
+        target_link_libraries(xlua2 PRIVATE c++ c++abi)
+    else()
+        # Absolute paths rather than "libc++.a": CMake rewrites a bare libfoo.a link
+        # item to -lfoo, and ld then prefers libc++.so wherever both are installed.
+        # This plugin is committed into aircraft and shipped, so it must not pick up
+        # a libc++.so.1 runtime dependency that a customer's machine may not have.
+        # libc++ before libc++abi — libc++.a references __cxa_* from libc++abi.a.
+        find_library(XLUA_LIBCXX_A    NAMES libc++.a    REQUIRED)
+        find_library(XLUA_LIBCXXABI_A NAMES libc++abi.a REQUIRED)
+        target_link_libraries(xlua2 PRIVATE ${XLUA_LIBCXX_A} ${XLUA_LIBCXXABI_A})
+    endif()
+
+    # LuaJIT comes from conan as a static archive, so nothing needs to be found at
+    # runtime — without this CMake bakes the local conan cache path in as RUNPATH,
+    # and that path would ship inside every aircraft's copy of the plugin.
+    set_target_properties(xlua2 PROPERTIES SKIP_BUILD_RPATH TRUE)
 
     target_link_options(xlua2 PRIVATE
         -m64
         -static-libgcc
-        # Restrict exported symbols to those listed in exports.txt.
-        # No quotes around the path — CMake escapes them, causing ld to treat
-        # the quotes as part of the filename.  The path contains no spaces so
-        # quoting is unnecessary.
-        -Wl,--version-script=${CMAKE_SOURCE_DIR}/exports.txt
         # --no-undefined is omitted intentionally: XPLM symbols are unresolved
         # at link time and resolved at runtime by X-Plane (matches Makefile).
     )
 
+    # Restrict exported symbols to those listed in exports.txt.
+    # No quotes around the path — CMake escapes them, causing ld to treat
+    # the quotes as part of the filename.  The path contains no spaces so
+    # quoting is unnecessary.
+    # Skipped under a sanitizer, mirroring cmake/linux.cmake in the X-Plane tree.
+    if(NOT SANITIZE)
+        target_link_options(xlua2 PRIVATE
+            -Wl,--version-script=${PROJECT_SOURCE_DIR}/exports.txt
+        )
+    endif()
+
 else()
     message(FATAL_ERROR "Unsupported platform")
+endif()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LuaJIT
+# Sources include <lua.h>, <lua.hpp> and <luajit.h> by include path (the same way
+# the MOBILE build already did), so both branches below just have to put the right
+# directory in front of them.
+# ─────────────────────────────────────────────────────────────────────────────
+if(XLUA_LUAJIT_FROM_CONAN)
+    target_link_libraries(xlua2 PRIVATE luajit::luajit)
+else()
+    # lua_sdk/ first: its headers are the ones the prebuilt static libs were built
+    # from. luajit/src supplies lua.hpp and luajit.h, which lua_sdk/ does not carry.
+    target_include_directories(xlua2 PRIVATE
+        "${PROJECT_SOURCE_DIR}/lua_sdk"
+        "${PROJECT_SOURCE_DIR}/luajit/src"
+    )
+
+    if(WIN32)
+        target_link_libraries(xlua2 PRIVATE "${PROJECT_SOURCE_DIR}/lua_sdk/lua51.lib")
+    elseif(APPLE)
+        target_link_libraries(xlua2 PRIVATE "${PROJECT_SOURCE_DIR}/lua_sdk/libluajit_mac.a")
+    else()
+        target_link_libraries(xlua2 PRIVATE "${PROJECT_SOURCE_DIR}/lua_sdk/libluajit.a")
+    endif()
+endif()
+
+# A MODULE reads CMAKE_MODULE_LINKER_FLAGS, which the X-Plane tree never sets, so
+# -fsanitize= reaches our compiles but not our link. Pass it through explicitly;
+# the runtime itself still comes from the host process at dlopen time.
+if(UNIX AND SANITIZE)
+    target_link_options(xlua2 PRIVATE -fsanitize=${SANITIZE})
 endif()
