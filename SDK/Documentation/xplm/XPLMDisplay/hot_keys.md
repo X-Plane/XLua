@@ -78,6 +78,9 @@ and a callback function and opaque pointer to pass in).  A new hot key ID
 is returned.  During execution, the actual key associated with your hot key
 may change, but you are insulated from this.
 
+- inRefcon: a value that will be passed to your callback, used for passing arbitrary data to
+  yourself later.
+
 <div class="xplm-code" markdown="1">
 
 ```cpp

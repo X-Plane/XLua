@@ -494,6 +494,9 @@ typedef int (* XPLMAvionicsCallback_f)(
  * click in the 3d cockpit, or if your pop-up's bezel has buttons that the
  * user can click. Return true to consume the event, or false to let X-Plane
  * process it (for stock avionics devices).
+ * 
+ * - x, y: the coordinate at which the mouse was clicked.
+ * - inMouse: the type of mouse event - down-click, drag, or up-click.
  *
  */
 typedef int (* XPLMAvionicsMouse_f)(
@@ -514,6 +517,8 @@ typedef int (* XPLMAvionicsMouse_f)(
  * avionics devices). The number of "clicks" indicates how far the wheel was
  * turned since the last callback. The wheel is 0 for the vertical axis or 1
  * for the horizontal axis (for OS/mouse combinations that support this).
+ * 
+ * - x, y: the coordinate at which the wheel was scrolled.
  *
  */
 typedef int (* XPLMAvionicsMouseWheel_f)(
@@ -532,6 +537,8 @@ typedef int (* XPLMAvionicsMouseWheel_f)(
  * your screen or (2D-popup) bezel. Return xplm_CursorDefault to let X-Plane
  * use which cursor to show, or other values to force the cursor to a
  * particular one (see XPLMCursorStatus).
+ * 
+ * - x, y: the coordinate at which the mouse is hovering.
  *
  */
 typedef XPLMCursorStatus (* XPLMAvionicsCursor_f)(
@@ -1557,6 +1564,8 @@ typedef void (* XPLMHandleKey_f)(
  * You receive the x and y of the click, your window, and a refcon.  Return 1
  * to consume the click, or 0 to pass it through.
  * 
+ * - inMouse: the type of mouse event - down-click, drag, or up-click.
+ * 
  * WARNING: passing clicks through windows (as of this writing) causes mouse
  * tracking problems in X-Plane; do not use this feature!
  * 
@@ -1770,10 +1779,15 @@ typedef int XPLMWindowDecoration;
 /*
  * XPLMCreateWindow_t
  * 
- * The XPMCreateWindow_t structure defines all of the parameters used to
- * create a modern window using XPLMCreateWindowEx().  The structure will be
- * expanded in future SDK APIs to include more features.  Always set the
- * structSize member to the size of your struct in bytes!
+ * XPLMCreateWindow_t defines all of the parameters used to create a modern
+ * window using XPLMCreateWindowEx(). The structure has been expanded in later
+ * SDK versions and will be expanded again; the fields present in your build
+ * are the ones your SDK version defines, and structSize is how X-Plane knows
+ * which of them you filled in.  Always set the structSize member to the size
+ * of your struct in bytes!
+ * 
+ * Of the callbacks, only drawWindowFunc is required, and only for a window
+ * that draws through your plugin; see XPLMCreateWindowEx() for the rules.
  * 
  * All windows created by this function in the XPLM300 version of the API are
  * created with the new X-Plane 11 GUI features. This means your plugin will
@@ -1859,8 +1873,12 @@ typedef struct {
 #endif /* XPLM300 */
 
 #if defined(XPLM440)
-    /* The source of content for this Window (OpenGL, Panel Graphics, CEF, etc.)  */
-     XPLMWindowContentType     windowContentType;
+    /* How this window is drawn: xplm_WindowContentTypeOpenGL (the legacy OpenGL  *
+     * bridge), xplm_WindowContentTypePanelGraphics (native panel-graphics        *
+     * rendering), or xplm_WindowContentTypeBrowser (a CEF web view). A browser   *
+     * window draws itself, so drawWindowFunc is not used; drive the page with    *
+     * XPLMWindowSetURL() and friends.                                            */
+     XPLMWindowContentType     contentType;
 #endif /* XPLM440 */
 
 #if defined(XPLM440)
@@ -1881,12 +1899,28 @@ typedef struct {
 /*
  * XPLMCreateWindowEx
  * 
- * This routine creates a new "modern" window. You pass in an
- * XPLMCreateWindow_t structure with all of the fields set in.  You must set
- * the structSize of the structure to the size of the actual structure you
- * used.  Also, you must provide functions for every callback---you may not
- * leave them null!  (If you do not support the cursor or mouse wheel, use
- * functions that return the default values.)
+ * This routine creates a new "modern" window.  You pass in an
+ * XPLMCreateWindow_t structure with all of the fields set in, including its
+ * structSize, which must be the size of the actual structure you used.
+ * 
+ * Returns the ID of the new window, or NULL if it could not be created
+ * --either because structSize matched no known SDK version, or because the
+ * window needed a drawing callback and none was provided.
+ * 
+ * Only drawWindowFunc is required, and only for a window whose contentType
+ * makes your plugin responsible for its pixels: xplm_WindowContentTypeOpenGL
+ * and xplm_WindowContentTypePanelGraphics.  A browser window renders its own
+ * content and ignores drawWindowFunc.
+ * 
+ * Every other callback is optional; leave it NULL and your window does not
+ * receive that event.  A window with no handleMouseClickFunc or
+ * handleRightClickFunc does not consume clicks, a window with no
+ * handleMouseWheelFunc does not consume scroll wheel events, and a window
+ * with no handleCursorFunc gets the default cursor.  (Whether a click reaches
+ * a window underneath yours also depends on your window's decoration: any
+ * decoration other than xplm_WindowDecorationNone stops clicks at your
+ * window's bounds.) The browserLoadFinishedFunc and browserLoadErrorFunc
+ * callbacks are only called for browser windows.
  * 
  * NOTE: For an imgui-drawn window, Lua scripts should use
  * XLuaCreateImguiWindow() instead; it opens and closes the imgui frame for
@@ -1918,6 +1952,9 @@ XPLM_API XPLMWindowID XPLMCreateWindowEx(
  * NOTE: Legacy windows do not have "frames"; you are responsible for drawing
  * the background and frame of the window.  Higher level libraries have
  * routines which make this easy.
+ * 
+ * - inRefcon: a reference which will be passed into each of your window
+ *   callbacks. Use this to pass information to yourself as needed.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -2000,6 +2037,11 @@ XPLM_API void       XPLMWindowInjectScript(
 #if defined(XPLM440)
 /*
  * XPLMBrowserCallback_f
+ * 
+ * Handler invoked when the page in a browser-content-type window calls
+ * xplane.<name>(arg). You receive the window, the argument serialised as a
+ * JSON string, and your refcon; return a JSON string (or NULL) that the JS
+ * Promise resolves to.
  *
  */
 typedef const char * (* XPLMBrowserCallback_f)(
@@ -2702,6 +2744,9 @@ XPLM_API int        XPLMIsWindowInFront(
  * VKEY #define macros in XPLMDefs.h define the vkeys using unsigned values
  * (that is 0x80 instead of -0x80).  So you may need to cast the incoming vkey
  * to an unsigned char to get correct comparisons in C.
+ * 
+ * - inRefcon: a value you supply during registration, used for passing
+ *   arbitrary data to yourself.
  *
  */
 typedef int (* XPLMKeySniffer_f)(
@@ -2720,6 +2765,9 @@ typedef int (* XPLMKeySniffer_f)(
  * because the user has "focused" a window.  Consuming the key or taking
  * action based on the key will produce very weird results.  Returns true if
  * successful.
+ * 
+ * - inRefcon: a value that will be passed to your callback, used for passing
+ *   arbitrary data to yourself later.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -2779,6 +2827,9 @@ typedef void * XPLMHotKeyID;
  * callback function and opaque pointer to pass in).  A new hot key ID is
  * returned.  During execution, the actual key associated with your hot key
  * may change, but you are insulated from this.
+ * 
+ * - inRefcon: a value that will be passed to your callback, used for passing
+ *   arbitrary data to yourself later.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */

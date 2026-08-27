@@ -56,6 +56,20 @@ Be sure to set structSize to the size of the structure for future expansion.
 }</code></pre>
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Set this to the size of this structure! |
+| x | float | X location of the object in local coordinates. |
+| y | float | Y location of the object in local coordinates. |
+| z | float | Z location of the object in local coordinates. |
+| pitch | float | Pitch in degres to rotate the object, positive is up. |
+| heading | float | Heading in local coordinates to rotate the object, clockwise. |
+| roll | float | Roll to rotate the object. |
+
+</div>
+
 </div>
 
 ---
@@ -83,6 +97,20 @@ Be sure to set structSize to the size of the structure for future expansion.
     heading     = 0.0,     -- float
     roll        = 0.0,     -- float
 }</code></pre>
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Set this to the size of this structure! |
+| x | float | X location of the object in local coordinates. |
+| y | float | Y location of the object in local coordinates. |
+| z | float | Z location of the object in local coordinates. |
+| pitch | float | Pitch in degres to rotate the object, positive is up. |
+| heading | float | Heading in local coordinates to rotate the object, clockwise. |
+| roll | float | Roll to rotate the object. |
+
 </div>
 
 </div>

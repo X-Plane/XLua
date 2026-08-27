@@ -335,6 +335,25 @@ commands write to the stencil buffer instead of to the screen. Draw the
 shapes that define your mask region, then call XPLMEndSetupStencilMask to
 finish.
 
+Color writing is off while you record, so no color you draw with reaches the
+screen and its red, green and blue never matter. Alpha is a different story,
+because a fragment whose final alpha is exactly zero is thrown away before it
+can mark the stencil:
+
+- Polygons and quadstrips are not alpha tested. One drawn in a fully
+  transparent color still marks the stencil exactly as an opaque one does, so
+  the geometry alone defines the mask.
+- Texture atlas draws are alpha tested. A texel whose alpha is zero, after
+  multiplication by the tint color you pass, does not mark the stencil - so the
+  image's alpha channel cuts the shape of the mask, and this is the way to
+  record a mask that is not simply a polygon. Passing a tint color whose alpha
+  is zero records nothing at all.
+
+The test is against exactly zero, not a threshold: an alpha of 1 out of 255
+marks the stencil as completely as an alpha of 255 does. Nothing in between is
+partially masked - the stencil is one bit per channel, so a pixel is either in
+the mask or out of it.
+
 The stencil buffer is eight bits wide, so you can record up to eight
 independent masks and pick among them later with XPLMUseStencilMask - one bit
 per mask - without having to re-draw them.
@@ -343,9 +362,12 @@ per mask - without having to re-draw them.
   geometry is drawn.
 - mask: a bitmask selecting which stencil bits are written.
 
-Both parameters must be in the range 0 to 255, and every bit set in bits must
-also be set in mask - a bit outside the mask can never be written. Stencil
-testing must be off (see XPLMUseStencilMask) when you call this.
+Both parameters must be in the range 0 to 255 - the buffer is only eight bits
+wide, so a bit above that can never be stored - and every bit set in bits must
+also be set in mask, since a bit outside the mask can never be written.
+Breaking either rule is an error, reported to Log.txt and through your error
+callback, and the call is ignored: out-of-range values are not truncated for
+you. Stencil testing must be off (see XPLMUseStencilMask) when you call this.
 
 <div class="xplm-code" markdown="1">
 
@@ -410,8 +432,11 @@ drawn.
 - bits: the reference bit pattern to test against.
 - mask: a bitmask selecting which stencil bits participate in the test.
 
-Both parameters must be in the range 0 to 255, and every bit set in bits must
-also be set in mask - a bit outside the mask can never match.
+Both parameters must be in the range 0 to 255 - the buffer is only eight bits
+wide, so a bit above that can never be set in it - and every bit set in bits
+must also be set in mask, since a bit outside the mask can never match. Breaking
+either rule is an error, reported to Log.txt and through your error callback,
+and the call is ignored: out-of-range values are not truncated for you.
 
 You may call this as often as you like within one drawing callback to switch
 between masks you have recorded; each call replaces the previous test. Pass

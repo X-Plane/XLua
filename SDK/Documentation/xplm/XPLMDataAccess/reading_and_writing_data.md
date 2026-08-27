@@ -121,6 +121,18 @@ typedef struct {
 
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Used to inform XPLMGetDatarefInfo() of the SDK version you compiled against; should always be set to sizeof(XPLMDataRefInfo_t) |
+| name | const char * | The full name/path of the data ref |
+| type | XPLMDataTypeID |  |
+| writable | int | TRUE if the data ref permits writing to it. FALSE if it's read-only. |
+| owner | XPLMPluginID | The handle to the plugin that registered this dataref. |
+
+</div>
+
 </div>
 
 ---
@@ -161,6 +173,10 @@ XPLM_API int XPLMCountDataRefs(void);
 
 Given an offset and count, this function will return an array of XPLMDataRefs in that range.
 The offset/count idiom is useful for things like pagination.
+
+- offset: an integer index offset.
+- count: an integer count of the number of datarefs to return, starting from the offset index.
+- outDataRefs: a pre-allocated array (sized to count) to receive the XPLMDataRefs.
 
 <div class="xplm-code" markdown="1">
 
@@ -266,6 +282,8 @@ datarefs that X-Plane writes to on every frame of simulation.  In some cases, th
 is writable but you have to set a separate "override" dataref to 1 to stop X-Plane from
 writing it.
 
+- inDataRef: either a valid handle to a dataref, or NULL.
+
 <div class="xplm-code" markdown="1">
 
 ```cpp
@@ -302,6 +320,8 @@ your plugin is reloaded anyway). Orphaned datarefs can be safely read and return
 you never need to call XPLMIsDataRefGood to 'check' the safety of a dataref. (XPLMIsDataRefGood
 performs some slow checking of the handle validity, so it has a performance cost.)
 
+- inDataRef: either a valid handle to a dataref, or NULL.
+
 <div class="xplm-code" markdown="1">
 
 ```cpp
@@ -332,6 +352,8 @@ XPLM_API int XPLMIsDataRefGood(
 
 This routine returns the types of the dataref for accessor use. If a dataref
 is available in multiple data types, the bit-wise OR of these types will be returned.
+
+- inDataRef: either a valid handle to a dataref, or NULL.
 
 <div class="xplm-code" markdown="1">
 

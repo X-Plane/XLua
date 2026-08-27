@@ -108,6 +108,24 @@ will call your callbacks. Likewise, when that map is deleted, your layer will be
 }</code></pre>
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Used to inform XPLMCreateMapLayer() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateMapLayer_t) |
+| mapToCreateLayerIn | string | Globally unique string identifying the map you want this layer to appear in. As of XPLM300, this is limited to one of XPLM_MAP_USER_INTERFACE or XPLM_MAP_IOS |
+| layerType | XPLMMapLayerType | The type of layer you are creating, used to determine draw order (all plugin-created markings layers are drawn above all plugin-created fill layers) |
+| willBeDeletedCallback | XPLMMapWillBeDeletedCallback_f | Optional callback to inform you this layer is being deleted (due to its owning map being destroyed) |
+| prepCacheCallback | XPLMMapPrepareCacheCallback_f | Optional callback you want to use to prepare your draw cache when the map bounds change (set to NULL if you don't want this callback) |
+| drawCallback | XPLMMapDrawingCallback_f | Optional callback you want to use for arbitrary OpenGL drawing, which goes beneath all icons in the map's layering system (set to NULL if you don't want this callback) |
+| iconCallback | XPLMMapIconDrawingCallback_f | Optional callback you want to use for drawing icons, which go above all built-in X-Plane icons (except the aircraft) in the map's layering system (set to NULL if you don't want this callback) |
+| labelCallback | XPLMMapLabelDrawingCallback_f | Optional callback you want to use for drawing map labels, which go above all built-in X-Plane icons and labels (except those of aircraft) in the map's layering system (set to NULL if you don't want this callback) |
+| showUiToggle | boolean | True if you want a checkbox to be created in the map UI to toggle this layer on and off; false if the layer should simply always be enabled |
+| layerName | string | Short label to use for this layer in the user interface |
+| refcon | any Lua var/table | A reference to arbitrary data that will be passed to your callbacks |
+
+</div>
+
 
 **See available callback(s):**
 
@@ -196,6 +214,9 @@ add a custom map layer using XPLMCreateMapLayer().
 
 No OpenGL drawing is permitted within this callback.
 
+- mapIdentifier: the globally unique string that identifies the map being created. As of XPLM300,
+  this is limited to one of XPLM_MAP_USER_INTERFACE or XPLM_MAP_IOS.
+
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">function my_MapCreatedCallback_callback(
     mapIdentifier,    -- string
@@ -252,6 +273,9 @@ check for maps that were created previously.
 
 Returns true if the map with the specified identifier already exists in X-Plane. In that case, you can
 safely call XPLMCreateMapLayer() specifying that your layer should be added to that map.
+
+- mapIdentifier: the globally unique string that identifies the map you're asking about. As of XPLM300,
+  this is limited to one of XPLM_MAP_USER_INTERFACE or XPLM_MAP_IOS.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">-- returns boolean -> assign to local/var

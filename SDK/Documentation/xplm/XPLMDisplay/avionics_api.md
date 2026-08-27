@@ -147,6 +147,9 @@ typedef int (* XPLMAvionicsCallback_f)(
 
 Mouse click callback for clicks into your screen or (2D-popup) bezel, useful if the device you are making simulates a touch-screen the user can click in the 3d cockpit, or if your pop-up's bezel has buttons that the user can click. Return true to consume the event, or false to let X-Plane process it (for stock avionics devices).
 
+- x, y: the coordinate at which the mouse was clicked.
+- inMouse: the type of mouse event - down-click, drag, or up-click.
+
 <div class="xplm-code" markdown="1">
 
 ```cpp
@@ -175,6 +178,8 @@ typedef int (* XPLMAvionicsMouse_f)(
 </div>
 
 Mouse wheel callback for scroll actions into your screen or (2D-popup) bezel, useful if your bezel has knobs that can be turned using the mouse wheel, or if you want to simulate pinch-to-zoom on a touchscreen. Return true to consume the event, or false to let X-Plane process it (for stock avionics devices). The number of "clicks" indicates how far the wheel was turned since the last callback. The wheel is 0 for the vertical axis or 1 for the horizontal axis (for OS/mouse combinations that support this).
+
+- x, y: the coordinate at which the wheel was scrolled.
 
 <div class="xplm-code" markdown="1">
 
@@ -205,6 +210,8 @@ typedef int (* XPLMAvionicsMouseWheel_f)(
 </div>
 
 Cursor callback that decides which cursor to show when the mouse is over your screen or (2D-popup) bezel. Return xplm_CursorDefault to let X-Plane use which cursor to show, or other values to force the cursor to a particular one (see XPLMCursorStatus).
+
+- x, y: the coordinate at which the mouse is hovering.
 
 <div class="xplm-code" markdown="1">
 
@@ -347,6 +354,28 @@ typedef struct {
      XPLMWindowContentType     contentType;
 } XPLMCustomizeAvionics_t;
 ```
+
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Used to inform XPLMRegisterAvionicsCallbacksEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCustomizeAvionics_t) |
+| deviceId | XPLMDeviceID | The built-in avionics device to which you want your drawing applied. |
+| drawCallbackBefore | XPLMAvionicsCallback_f | The draw callback to be called before X-Plane draws. |
+| drawCallbackAfter | XPLMAvionicsCallback_f | The draw callback to be called after X-Plane has drawn. |
+| bezelClickCallback | XPLMAvionicsMouse_f | The mouse click callback that is called when the user clicks onto the device's bezel. |
+| bezelRightClickCallback | XPLMAvionicsMouse_f | The mouse click callback that is called when the user clicks onto the device's bezel. |
+| bezelScrollCallback | XPLMAvionicsMouseWheel_f | The callback that is called when the users uses the scroll wheel over the device's bezel. |
+| bezelCursorCallback | XPLMAvionicsCursor_f | The callback that lets you determine what cursor should be shown when the mouse is over the device's bezel. |
+| screenTouchCallback | XPLMAvionicsMouse_f | The mouse click callback that is called when the user clicks onto the device's screen. |
+| screenRightTouchCallback | XPLMAvionicsMouse_f | The right mouse click callback that is called when the user clicks onto the device's screen. |
+| screenScrollCallback | XPLMAvionicsMouseWheel_f | The callback that is called when the users uses the scroll wheel over the device's screen. |
+| screenCursorCallback | XPLMAvionicsCursor_f | The callback that lets you determine what cursor should be shown when the mouse is over the device's screen. |
+| keyboardCallback | XPLMAvionicsKeyboard_f | The key callback that is called when the user types in the device's popup. |
+| refcon | void* | A reference which will be passed into each of your draw callbacks. Use this to pass information to yourself as needed. |
+| contentType | XPLMWindowContentType | How this device's screen is drawn: xplm_WindowContentTypeOpenGL (the legacy OpenGL bridge) or xplm_WindowContentTypePanelGraphics (native panel-graphics rendering). xplm_WindowContentTypeBrowser is not valid for avionics. |
 
 </div>
 
@@ -705,6 +734,40 @@ typedef struct {
      XPLMAvionicsBrowserLoadError_f browserLoadErrorFunc;
 } XPLMCreateAvionics_t;
 ```
+
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Used to inform XPLMCreateAvionicsEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateAvionics_t) |
+| screenWidth | int | Width of the device's screen in pixels. |
+| screenHeight | int | Height of the device's screen in pixels. |
+| bezelWidth | int | Width of the bezel around your device's screen for 2D pop-ups. |
+| bezelHeight | int | Height of the bezel around your device's screen for 2D pop-ups. |
+| screenOffsetX | int | The screen's lateral offset into the bezel for 2D pop-ups. |
+| screenOffsetY | int | The screen's vertical offset into the bezel for 2D pop-ups. |
+| drawOnDemand | int | If set to true (1), X-Plane won't call your plugin to re-render the device's screen every frame. Instead, you should tell X-Plane you want to refresh your screen with XPLMAvionicsNeedsDrawing(), and X-Plane will call you before rendering the next simulator frame. |
+| bezelDrawCallback | XPLMAvionicsBezelCallback_f | The draw callback you will use to draw the 2D-popup bezel. This is called only when the popup window is visible, and X-Plane is about to draw the bezel in it. |
+| drawCallback | XPLMAvionicsScreenCallback_f | The draw callback you will be using to draw into the device's screen framebuffer. |
+| bezelClickCallback | XPLMAvionicsMouse_f | The mouse click callback that is called when the user clicks onto your bezel. |
+| bezelRightClickCallback | XPLMAvionicsMouse_f | The mouse click callback that is called when the user clicks onto your bezel. |
+| bezelScrollCallback | XPLMAvionicsMouseWheel_f | The callback that is called when the users uses the scroll wheel over your avionics' bezel. |
+| bezelCursorCallback | XPLMAvionicsCursor_f | The callback that lets you determine what cursor should be shown when the mouse is over your device's bezel. |
+| screenTouchCallback | XPLMAvionicsMouse_f | The mouse click callback that is called when the user clicks onto your screen. |
+| screenRightTouchCallback | XPLMAvionicsMouse_f | The right mouse click callback that is called when the user clicks onto your screen. |
+| screenScrollCallback | XPLMAvionicsMouseWheel_f | The callback that is called when the users uses the scroll wheel over your avionics' screen. |
+| screenCursorCallback | XPLMAvionicsCursor_f | The callback that lets you determine what cursor should be shown when the mouse is over your device's screen. |
+| keyboardCallback | XPLMAvionicsKeyboard_f | The key callback that is called when the user types in your popup. |
+| brightnessCallback | XPLMAvionicsBrightness_f | The callback that is called to determine the absolute brightness of the device's screen. Set to NULL to use X-Plane's default behaviour. |
+| deviceID | char const* | A null-terminated string of maximum 64 characters to uniquely identify your cockpit device. This must be unique (you cannot re-use an ID that X-Plane or another plugin provides), and it must not contain spaces. This is the string the OBJ file must reference when marking polygons with ATTR_cockpit_device. The string is copied when you call XPLMCreateAvionicsEx, so you don't need to hold this string in memory after the call. |
+| deviceName | char const* | A null-terminated string to give a user-readable name to your device, which can be presented in UI dialogs. |
+| refcon | void* | A reference which will be passed into your draw and mouse callbacks. Use this to pass information to yourself as needed. |
+| contentType | XPLMWindowContentType | How this device's screen is drawn: xplm_WindowContentTypeOpenGL (the legacy OpenGL bridge), xplm_WindowContentTypePanelGraphics (native panel-graphics rendering), or xplm_WindowContentTypeBrowser (a CEF web view). For a browser device the single web page covers the whole bezel including the screen; X-Plane copies the screen sub-rectangle into the device's framebuffer, so your drawCallback/bezelDrawCallback are not used. Drive the page with XPLMAvionicsSetURL() and friends. Browser content is only valid for devices you create here, not when customising a built-in device. |
+| windowWithChrome | int | If set to true (1), X-Plane will draw the chrome with the close and pop-out buttons outside of your bezel, rather than having the buttons steal pixels from your bezel. |
+| browserLoadFinishedFunc | XPLMAvionicsBrowserLoadFinished_f | For browser content (xplm_WindowContentTypeBrowser): called when a page's main frame finishes loading. Not a success guarantee --a rendered HTTP error page finishes too. Set to NULL if you don't need it. |
+| browserLoadErrorFunc | XPLMAvionicsBrowserLoadError_f | For browser content (xplm_WindowContentTypeBrowser): called when a navigation fails at the network level, with a description of the failure. Set to NULL if you don't need it. |
 
 </div>
 

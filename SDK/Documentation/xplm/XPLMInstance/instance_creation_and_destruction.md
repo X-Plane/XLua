@@ -57,6 +57,9 @@ XPLMCreateInstance creates a new instance, managed by your plug-in, and returns 
 * The instance dataref array must be a valid pointer to a null-terminated array.  That is, if you do not want any
   datarefs, you must pass a pointer to a one-element array containing a null item.  You cannot pass null for the array itself.
 
+- datarefs: a NULL-terminated list of dataref identifiers. E.g., { "sim/aircraft/view/acf_peX",
+  "sim/aircraft/view/acf_peY", "sim/aircraft/view/acf_peZ", NULL }
+
 <div class="xplm-code" markdown="1">
 
 ```cpp

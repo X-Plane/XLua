@@ -65,6 +65,24 @@ typedef struct {
 
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | The size of the draw state struct. |
+| gearPosition | float | A ratio from [0..1] describing how far the landing gear is extended. |
+| flapRatio | float | Ratio of flap deployment, 0 = up, 1 = full deploy. |
+| spoilerRatio | float | Ratio of spoiler deployment, 0 = none, 1 = full deploy. |
+| speedBrakeRatio | float | Ratio of speed brake deployment, 0 = none, 1 = full deploy. |
+| slatRatio | float | Ratio of slat deployment, 0 = none, 1 = full deploy. |
+| wingSweep | float | Wing sweep ratio, 0 = forward, 1 = swept. |
+| thrust | float | Thrust power, 0 = none, 1 = full fwd, -1 = full reverse. |
+| yokePitch | float | Total pitch input for this plane. |
+| yokeHeading | float | Total Heading input for this plane. |
+| yokeRoll | float | Total Roll input for this plane. |
+
+</div>
+
 </div>
 
 ---

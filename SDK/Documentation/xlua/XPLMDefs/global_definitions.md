@@ -233,6 +233,14 @@ A container for a fixed-size string buffer of 150 characters.
 }</code></pre>
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| buffer | char | The size of the struct. |
+
+</div>
+
 </div>
 
 ---

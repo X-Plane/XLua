@@ -186,6 +186,8 @@ You receive this call for one of three events:
 You receive the x and y of the click, your window,
 and a refcon.  Return 1 to consume the click, or 0 to pass it through.
 
+- inMouse: the type of mouse event - down-click, drag, or up-click.
+
 WARNING: passing clicks through windows (as of this writing) causes mouse tracking
 problems in X-Plane; do not use this feature!
 
@@ -452,9 +454,13 @@ Your window's decoration can only be specified when you create the window (in th
 
 </div>
 
-The XPMCreateWindow_t structure defines all of the parameters used to create a modern window using XPLMCreateWindowEx().  The structure
-will be expanded in future SDK APIs to include more features.  Always set the structSize member to the size of your struct in
-bytes!
+XPLMCreateWindow_t defines all of the parameters used to create a modern window using XPLMCreateWindowEx().
+The structure has been expanded in later SDK versions and will be expanded again; the fields present in
+your build are the ones your SDK version defines, and structSize is how X-Plane knows which of them you
+filled in.  Always set the structSize member to the size of your struct in bytes!
+
+Of the callbacks, only drawWindowFunc is required, and only for a window that draws through your plugin;
+see XPLMCreateWindowEx() for the rules.
 
 All windows created by this function in the XPLM300 version of the API are created with the new X-Plane 11 GUI features.
 This means your plugin will get to "know" about the existence of X-Plane windows other than the main window.
@@ -488,10 +494,35 @@ If you ask to be decorated as a floating window, you'll get the blue window cont
     decorateAsFloatingWindow  = nil,     -- XPLMWindowDecoration
     layer                     = nil,     -- XPLMWindowLayer
     handleRightClickFunc      = nil,     -- see XPLMHandleMouseClick_f
-    windowContentType         = nil,     -- XPLMWindowContentType
+    contentType               = nil,     -- XPLMWindowContentType
     browserLoadFinishedFunc   = nil,     -- see XPLMBrowserLoadFinished_f
     browserLoadErrorFunc      = nil,     -- see XPLMBrowserLoadError_f
 }</code></pre>
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Used to inform XPLMCreateWindowEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateWindow_t) |
+| left | int | Left bound, in global desktop boxels |
+| top | int | Top bound, in global desktop boxels |
+| right | int | Right bound, in global desktop boxels |
+| bottom | int | Bottom bound, in global desktop boxels |
+| visible | boolean |  |
+| drawWindowFunc | XPLMDrawWindow_f | A callback to draw your window's contents. Required for OpenGL and panel-graphics content; may be NULL only for browser content, which draws itself. |
+| handleMouseClickFunc | XPLMHandleMouseClick_f | A callback to handle the user left-clicking within your window (or NULL to ignore left clicks) |
+| handleKeyFunc | XPLMHandleKey_f | A callback to handle keyboard input (or NULL to ignore keyboard input) |
+| handleCursorFunc | XPLMHandleCursor_f | A callback to determine the cursor shape over your window (or NULL for the default cursor) |
+| handleMouseWheelFunc | XPLMHandleMouseWheel_f | A callback to handle scroll-wheel events (or NULL to ignore them) |
+| refcon | any Lua var/table | A reference which will be passed into each of your window callbacks. Use this to pass information to yourself as needed. |
+| decorateAsFloatingWindow | XPLMWindowDecoration | Specifies the type of X-Plane 11-style "wrapper" you want around your window, if any |
+| layer | XPLMWindowLayer |  |
+| handleRightClickFunc | XPLMHandleMouseClick_f | A callback to handle the user right-clicking within your window (or NULL to ignore right clicks) |
+| contentType | XPLMWindowContentType | How this window is drawn: xplm_WindowContentTypeOpenGL (the legacy OpenGL bridge), xplm_WindowContentTypePanelGraphics (native panel-graphics rendering), or xplm_WindowContentTypeBrowser (a CEF web view). A browser window draws itself, so drawWindowFunc is not used; drive the page with XPLMWindowSetURL() and friends. |
+| browserLoadFinishedFunc | XPLMBrowserLoadFinished_f | For browser content: called when the main frame finishes loading (not a success guarantee --error pages finish too). NULL if unused. |
+| browserLoadErrorFunc | XPLMBrowserLoadError_f | For browser content: called when a navigation fails at the network level. NULL if unused. |
+
 </div>
 
 
@@ -518,11 +549,22 @@ If you ask to be decorated as a floating window, you'll get the blue window cont
 
 </div>
 
-This routine creates a new "modern" window. You pass in an XPLMCreateWindow_t structure with all
-of the fields set in.  You must set the structSize of the structure to the size of the
-actual structure you used.  Also, you must provide functions for every callback---you may
-not leave them null!  (If you do not support the cursor or mouse wheel, use functions that
-return the default values.)
+This routine creates a new "modern" window.  You pass in an XPLMCreateWindow_t structure with all of the
+fields set in, including its structSize, which must be the size of the actual structure you used.
+
+Returns the ID of the new window, or NULL if it could not be created --either because structSize matched
+no known SDK version, or because the window needed a drawing callback and none was provided.
+
+Only drawWindowFunc is required, and only for a window whose contentType makes your plugin responsible
+for its pixels: xplm_WindowContentTypeOpenGL and xplm_WindowContentTypePanelGraphics.  A browser window
+renders its own content and ignores drawWindowFunc.
+
+Every other callback is optional; leave it NULL and your window does not receive that event.  A window
+with no handleMouseClickFunc or handleRightClickFunc does not consume clicks, a window with no
+handleMouseWheelFunc does not consume scroll wheel events, and a window with no handleCursorFunc gets
+the default cursor.  (Whether a click reaches a window underneath yours also depends on your window's
+decoration: any decoration other than xplm_WindowDecorationNone stops clicks at your window's bounds.)
+The browserLoadFinishedFunc and browserLoadErrorFunc callbacks are only called for browser windows.
 
 NOTE: For an imgui-drawn window, Lua scripts should use XLuaCreateImguiWindow()
 instead; it opens and closes the imgui frame for you and wires the input handlers.
@@ -731,6 +773,11 @@ finished loading, the script may run against an empty document.
 <span class="sym-badge badge-cb">callback</span> <span class="sym-badge badge-version">XPLM440</span>
 
 </div>
+
+Handler invoked when the page in a browser-content-type window calls
+xplane.<name>(arg). You receive the window, the argument serialised as a
+JSON string, and your refcon; return a JSON string (or NULL) that the JS
+Promise resolves to.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">function my_BrowserCallback_callback(

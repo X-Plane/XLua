@@ -65,6 +65,20 @@ typedef struct {
 
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Set this to the size of this structure! |
+| x | float | X location of the object in local coordinates. |
+| y | float | Y location of the object in local coordinates. |
+| z | float | Z location of the object in local coordinates. |
+| pitch | float | Pitch in degres to rotate the object, positive is up. |
+| heading | float | Heading in local coordinates to rotate the object, clockwise. |
+| roll | float | Roll to rotate the object. |
+
+</div>
+
 </div>
 
 ---
@@ -95,6 +109,20 @@ typedef struct {
      double                    roll;
 } XPLMDrawInfoDouble_t;
 ```
+
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Set this to the size of this structure! |
+| x | double | X location of the object in local coordinates. |
+| y | double | Y location of the object in local coordinates. |
+| z | double | Z location of the object in local coordinates. |
+| pitch | double | Pitch in degres to rotate the object, positive is up. |
+| heading | double | Heading in local coordinates to rotate the object, clockwise. |
+| roll | double | Roll to rotate the object. |
 
 </div>
 

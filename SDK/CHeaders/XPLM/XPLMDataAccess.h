@@ -223,6 +223,12 @@ XPLM_API int        XPLMCountDataRefs(void);
  * Given an offset and count, this function will return an array of
  * XPLMDataRefs in that range.  The offset/count idiom is useful for things
  * like pagination.
+ * 
+ * - offset: an integer index offset.
+ * - count: an integer count of the number of datarefs to return, starting
+ *   from the offset index.
+ * - outDataRefs: a pre-allocated array (sized to count) to receive the
+ *   XPLMDataRefs.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -274,6 +280,8 @@ XPLM_API XPLMDataRef XPLMFindDataRef(
  * can happen for datarefs that X-Plane writes to on every frame of
  * simulation.  In some cases, the dataref is writable but you have to set a
  * separate "override" dataref to 1 to stop X-Plane from writing it.
+ * 
+ * - inDataRef: either a valid handle to a dataref, or NULL.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -293,6 +301,8 @@ XPLM_API int        XPLMCanWriteDataRef(
  * to call XPLMIsDataRefGood to 'check' the safety of a dataref.
  * (XPLMIsDataRefGood performs some slow checking of the handle validity, so
  * it has a performance cost.)
+ * 
+ * - inDataRef: either a valid handle to a dataref, or NULL.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -305,6 +315,8 @@ XPLM_API int        XPLMIsDataRefGood(
  * This routine returns the types of the dataref for accessor use. If a
  * dataref is available in multiple data types, the bit-wise OR of these types
  * will be returned.
+ * 
+ * - inDataRef: either a valid handle to a dataref, or NULL.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */

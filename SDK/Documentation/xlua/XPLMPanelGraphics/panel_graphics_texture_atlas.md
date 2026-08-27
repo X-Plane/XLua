@@ -95,6 +95,17 @@ array means the same thing to either one.
 }</code></pre>
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| x | float | Horizontal position in panel coordinates, pixels. |
+| y | float | Vertical position in panel coordinates, pixels. |
+| s | float | Horizontal texture coordinate, 0.0 (left) to 1.0 (right), within the image. |
+| t | float | Vertical texture coordinate, 0.0 (bottom) to 1.0 (top), within the image. |
+
+</div>
+
 </div>
 
 ---

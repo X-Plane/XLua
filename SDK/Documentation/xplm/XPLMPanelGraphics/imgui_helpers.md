@@ -64,6 +64,18 @@ typedef struct {
 
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| tex_ref | void * | Texture handle from XPLMCreateTexture. That is the ONLY valid source - this is not a general texture handle, and passing anything else (an XPLMTextureAtlasRef, say) is undefined behavior, not a no-op. |
+| scissors[4] | float | Clip rect: {left, top, right, bottom} in window-local top-left coords. |
+| idx_offset | int | First index into XPLMMesh_t::indices to use. |
+| element_count | int | Number of indices to consume (must be a multiple of 3 for triangles). Zero is allowed and produces no output. |
+| vtx_offset | int | Added to each fetched index before vertex lookup. |
+
+</div>
+
 </div>
 
 ---
@@ -94,6 +106,17 @@ typedef struct {
      const uint16_t*           indices;
 } XPLMMesh_t;
 ```
+
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| vertex_count | int |  |
+| vertices | const float * | Pointer to vertex_count * 5 floats. |
+| index_count | int |  |
+| indices | const uint16_t* |  |
 
 </div>
 

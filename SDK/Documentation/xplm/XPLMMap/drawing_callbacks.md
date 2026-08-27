@@ -133,6 +133,20 @@ All drawing done from within this callback appears beneath all built-in X-Plane 
 the built-in "fill" layers (layers providing major details, like terrain and water).
 Note, however, that the relative ordering between the drawing callbacks of different plugins is not guaranteed.
 
+- inMapBoundsLeftTopRightBottom: a 4-element array defining the currently visible map bounds
+  (in map units; to convert to latitude/longitude, use the map projection APIs).
+- zoomRatio: any ratio (negative or positive), where 0 indicates the whole map is visible. A
+  negative zoom means the user zoomed out beyond the full map bounds. When the map is fully
+  zoomed in, the zoom ratio may exceed 30.
+- mapUnitsPerUserInterfaceUnit: if your layer is drawing in the standard X-Plane map window,
+  this is map units per boxel; if you're drawing within the sim itself, this is the map units
+  per "virtual device pixel," whose size in real screen pixels is of course fluid since the
+  user can move the camera relative to the in-sim map.
+- mapStyle: the user-selected map style being drawn currently.
+- projection: the map projection in use (this is guaranteed to match the projection last
+  passed to your XPLMMapPrepareCacheCallback_f, if applicable).
+- inRefcon: a reference to arbitrary data from when you registered this layer.
+
 <div class="xplm-code" markdown="1">
 
 ```cpp
@@ -179,6 +193,20 @@ above all built-in X-Plane map icons of the same layer type ("fill" or "markings
 XPLMMapLayerType in your XPLMCreateMapLayer_t). Note, however, that the relative ordering between
 the drawing callbacks of different plugins is not guaranteed.
 
+- inMapBoundsLeftTopRightBottom: a 4-element array defining the currently visible map bounds
+  (in map units; to convert to latitude/longitude, use the map projection APIs).
+- zoomRatio: any ratio (negative or positive), where 0 indicates the whole map is visible. A
+  negative zoom means the user zoomed out beyond the full map bounds. When the map is fully
+  zoomed in, the zoom ratio may exceed 30.
+- mapUnitsPerUserInterfaceUnit: if your layer is drawing in the standard X-Plane map window,
+  this is map units per boxel; if you're drawing within the sim itself, this is the map units
+  per "virtual device pixel," whose size in real screen pixels is of course fluid since the
+  user can move the camera relative to the in-sim map.
+- mapStyle: the user-selected map style being drawn currently.
+- projection: the map projection in use (this is guaranteed to match the projection last
+  passed to your XPLMMapPrepareCacheCallback_f, if applicable).
+- inRefcon: a reference to arbitrary data from when you registered this layer.
+
 <div class="xplm-code" markdown="1">
 
 ```cpp
@@ -224,6 +252,20 @@ Labels enqueued by this function will appear above all OpenGL drawing (performed
 above all built-in map icons and labels of the same layer type ("fill" or "markings," as determined by the
 XPLMMapLayerType in your XPLMCreateMapLayer_t). Note, however, that the relative ordering between
 the drawing callbacks of different plugins is not guaranteed.
+
+- inMapBoundsLeftTopRightBottom: a 4-element array defining the currently visible map bounds
+  (in map units; to convert to latitude/longitude, use the map projection APIs).
+- zoomRatio: any ratio (negative or positive), where 0 indicates the whole map is visible. A
+  negative zoom means the user zoomed out beyond the full map bounds. When the map is fully
+  zoomed in, the zoom ratio may exceed 30.
+- mapUnitsPerUserInterfaceUnit: if your layer is drawing in the standard X-Plane map window,
+  this is map units per boxel; if you're drawing within the sim itself, this is the map units
+  per "virtual device pixel," whose size in real screen pixels is of course fluid since the
+  user can move the camera relative to the in-sim map.
+- mapStyle: the user-selected map style being drawn currently.
+- projection: the map projection in use (this is guaranteed to match the projection last
+  passed to your XPLMMapPrepareCacheCallback_f, if applicable).
+- inRefcon: a reference to arbitrary data from when you registered this layer.
 
 <div class="xplm-code" markdown="1">
 

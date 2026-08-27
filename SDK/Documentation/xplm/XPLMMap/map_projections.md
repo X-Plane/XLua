@@ -10,6 +10,9 @@ can tell you how many map units correspond to 1 meter at a given point.
 Finally, the map projection can give you the current rotation of the map. Since X-Plane 11 maps can rotate to
 match the heading of the aircraft, the map's rotation can potentially change every frame.
 
+The projection argument these routines take is the map projection currently in use by your layer, as
+handed to your drawing or prepare-cache callback.
+
 ---
 
 <div class="sym-block sym-function" data-name="XPLMMapProject" data-type="function" markdown="1">

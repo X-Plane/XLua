@@ -200,6 +200,18 @@ int MakeXPLMVertexColor_t(lua_State* L)
  *
  */
 
+void RegEnum_XPLMLineCap_t(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_LineCapButt");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_LineCapRound");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_LineCapSquare");
+	lua_setglobal(L, "XPLMLineCap_t");
+}
+
 int XLuaMakeColor(lua_State* L)
 {
 	float red = xlua_checknumber(L, 1);
@@ -211,6 +223,15 @@ int XLuaMakeColor(lua_State* L)
 	lua_pushinteger(L, res);
 
 	return 1;
+}
+
+int XLuaSetLineCap(lua_State* L)
+{
+	XPLMLineCap_t lineCap = xlua_checkinteger(L, 1);
+
+	XPLMSetLineCap(lineCap);
+
+	return 0;
 }
 
 int XLuaLines(lua_State* L)

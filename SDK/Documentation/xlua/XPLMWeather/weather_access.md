@@ -23,6 +23,19 @@
 }</code></pre>
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| alt_msl | float | Altitude MSL, meters. |
+| speed | float | Wind speed, meters/sec.  When setting, use a negative value to signify 'undefined'. |
+| direction | float | Direction (true) |
+| gust_speed | float | Gust speed, meters/sec. Total speed, not increase above wind speed. |
+| shear | float | Shear arc, degrees i.e. 50% of this arc in either direction from base |
+| turbulence | float | Clear-air turbulence ratio |
+
+</div>
+
 </div>
 
 ---
@@ -44,6 +57,17 @@
     alt_top     = 0.0,     -- float
     alt_base    = 0.0,     -- float
 }</code></pre>
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| cloud_type | float | Cloud type, float enum |
+| coverage | float | Coverage ratio |
+| alt_top | float | Altitude MSL, meters |
+| alt_base | float | Altitude MSL, meters |
+
 </div>
 
 </div>
@@ -236,6 +260,39 @@ Version 2 data starts at "temp_layers".
 }</code></pre>
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | The size of the struct. Required for both reading and writing. |
+| temperature_alt | float | Temperature at the given altitude in Celsius |
+| dewpoint_alt | float | Dewpoint at the given altitude in Celsius |
+| pressure_alt | float | Pressure at the given altitude in Pascals. Pass 0 when setting to use sea-level pressure instead of QNH. |
+| precip_rate_alt | float | Precipitation rate at the given altitude. Unused when setting. |
+| wind_dir_alt | float | Wind direction at the given altitude. Unused when setting. |
+| wind_spd_alt | float | Wind speed at the given altitude, meters/sec. Unused when setting. |
+| turbulence_alt | float | Turbulence ratio at the given altitude. Unused when setting. |
+| wave_height | float | Height of water waves in meters |
+| wave_length | float | Length of water waves in meters. Unused when setting. |
+| wave_dir | int | Direction from which water waves are coming |
+| wave_speed | float | Speed of wave advance in meters/sec. Unused when setting. |
+| visibility | float | Base visibility at 0 altitude, meters |
+| precip_rate | float | Base precipitation ratio at 0 altitude |
+| thermal_climb | float | Climb rate due to thermals, meters/sec |
+| pressure_sl | float | Pressure at sealevel in Pascals. Used when setting ONLY if pressure_alt (i.e. QNH) is not valid. |
+| wind_layers | XPLMWeatherInfoWinds_t | Defined wind layers. Not all layers are always defined. |
+| cloud_layers | XPLMWeatherInfoClouds_t | Defined cloud layers. Not all layers are always defined. |
+| temp_layers | float | Temperatures at altitude, in degrees C. Layer altitudes are the same globally - see the 'sim/weather/region/atmosphere_alt_levels_m' dataref. |
+| dewp_layers | float | Dewpoints at altitude, in degrees C. Layer altitudes are the same globally - see the 'sim/weather/region/atmosphere_alt_levels_m' dataref. |
+| troposphere_alt | float | The altitude in MSL of the troposphere. |
+| troposphere_temp | float | The temperature in degrees C of the troposphere. |
+| age | float | Age in seconds of this weather report. Age affects how strongly the report affects the resulting weather. |
+| radius_nm | float | Horizontal radius of effect of this weather report, nautical miles. |
+| max_altitude_msl_ft | float | Vertical limit of effect of this weather report, feet MSL. This affects all data with an altitude component unless otherwise noted. |
+| snow_coverage_pct | float | Snow coverage, percent (0-1). |
+
+</div>
+
 </div>
 
 ---
@@ -354,8 +411,8 @@ this is somewhere between one and two minutes but do not rely on this remaining 
 Setting future weather ensures that there is no sudden jump in weather conditions when you make a change mid-cycle. In some situations, notably
 for an initial setup, you may want to ensure that the weather is changed instantly. To do this, set 'updateImmediately' as true.
 
-isIncremental     : If true, append or modify existing records created by your plugin. If false, clear any existing records.
-updateImmediately : If true, immediately reset and recalculate the weather. If false, your new data will be used when the weather next recalculates.
+- isIncremental: If true, append or modify existing records created by your plugin. If false, clear any existing records.
+- updateImmediately: If true, immediately reset and recalculate the weather. If false, your new data will be used when the weather next recalculates.
 
 This call is not intended to be used per-frame. It should be called only during the pre-flight loop callback.
 

@@ -108,6 +108,25 @@ TYPE
    PXPLMVertexColor_t = ^XPLMVertexColor_t;
 
    {
+    XPLMLineCap_t
+    
+    This enumeration specifies the way lines drawn with XPLMPanelGraphics end.
+    The default value is xplm_LineCapButt
+   }
+   XPLMLineCap_t = (
+     { Lines are capped by straight edges at the start and end point.             }
+      xplm_LineCapButt                         = 0
+ 
+     { Lines are capped by half circles centered on the start and end points.     }
+     ,xplm_LineCapRound                        = 1
+ 
+     { Lines are capped by half squares centered on the start and end points.     }
+     ,xplm_LineCapSquare                       = 2
+ 
+   );
+   PXPLMLineCap_t = ^XPLMLineCap_t;
+
+   {
     XPLMMakeColor
     
     This function packs four floating-point color components into a single
@@ -122,6 +141,19 @@ TYPE
                                         green               : Single;
                                         blue                : Single;
                                         alpha               : Single) : Cardinal;
+    cdecl; external XPLM_DLL;
+
+   {
+    XPLMSetLineCap
+    
+    This function sets what caps are used when drawing subsequent lines. The
+    default value at the start of a drawing callback is xplm_LineCapButt.
+    
+    - lineCap: the new line cap style.
+   }
+    { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
+   PROCEDURE XPLMSetLineCap(
+                                        lineCap             : XPLMLineCap_t);
     cdecl; external XPLM_DLL;
 
    {
@@ -1371,6 +1403,25 @@ TYPE
     shapes that define your mask region, then call XPLMEndSetupStencilMask to
     finish.
     
+    Color writing is off while you record, so no color you draw with reaches
+    the screen and its red, green and blue never matter. Alpha is a different
+    story, because a fragment whose final alpha is exactly zero is thrown away
+    before it can mark the stencil:
+    
+    - Polygons and quadstrips are not alpha tested. One drawn in a fully
+      transparent color still marks the stencil exactly as an opaque one does,
+      so the geometry alone defines the mask.
+    - Texture atlas draws are alpha tested. A texel whose alpha is zero, after
+      multiplication by the tint color you pass, does not mark the stencil - so
+      the image's alpha channel cuts the shape of the mask, and this is the way
+      to record a mask that is not simply a polygon. Passing a tint color whose
+      alpha is zero records nothing at all.
+    
+    The test is against exactly zero, not a threshold: an alpha of 1 out of 255
+    marks the stencil as completely as an alpha of 255 does. Nothing in between
+    is partially masked - the stencil is one bit per channel, so a pixel is
+    either in the mask or out of it.
+    
     The stencil buffer is eight bits wide, so you can record up to eight
     independent masks and pick among them later with XPLMUseStencilMask - one
     bit per mask - without having to re-draw them.
@@ -1379,9 +1430,13 @@ TYPE
       geometry is drawn.
     - mask: a bitmask selecting which stencil bits are written.
     
-    Both parameters must be in the range 0 to 255, and every bit set in bits
-    must also be set in mask - a bit outside the mask can never be written.
-    Stencil testing must be off (see XPLMUseStencilMask) when you call this.
+    Both parameters must be in the range 0 to 255 - the buffer is only eight
+    bits wide, so a bit above that can never be stored - and every bit set in
+    bits must also be set in mask, since a bit outside the mask can never be
+    written. Breaking either rule is an error, reported to Log.txt and through
+    your error callback, and the call is ignored: out-of-range values are not
+    truncated for you. Stencil testing must be off (see XPLMUseStencilMask)
+    when you call this.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMBeginSetupStencilMask(
@@ -1415,8 +1470,12 @@ TYPE
     - bits: the reference bit pattern to test against.
     - mask: a bitmask selecting which stencil bits participate in the test.
     
-    Both parameters must be in the range 0 to 255, and every bit set in bits
-    must also be set in mask - a bit outside the mask can never match.
+    Both parameters must be in the range 0 to 255 - the buffer is only eight
+    bits wide, so a bit above that can never be set in it - and every bit set
+    in bits must also be set in mask, since a bit outside the mask can never
+    match. Breaking either rule is an error, reported to Log.txt and through
+    your error callback, and the call is ignored: out-of-range values are not
+    truncated for you.
     
     You may call this as often as you like within one drawing callback to
     switch between masks you have recorded; each call replaces the previous
@@ -1514,9 +1573,14 @@ TYPE
     XPLMTouchEvent_f
     
     Your touch event callback is invoked when the user interacts with a touch
-    zone whose type is xplm_TouchZone_Identifier. You receive the zone's
-    identifier, the mouse status, the current position, the delta from the
-    initial click point, and the mouse button involved.
+    zone whose type is xplm_TouchZone_Identifier.
+    
+    - identifier: the identifier from the XPLMTouchZoneSpec_t that was touched.
+    - status: xplm_MouseDown, xplm_MouseDrag, or xplm_MouseUp.
+    - x, y: the current mouse position.
+    - dx, dy: the delta from the initial click point. A translation cannot
+      affect a delta, so only the scale applies.
+    - button: the mouse button - 0 for left, 1 for right.
     
     The position and the deltas are in the coordinate system that was in force
     when you declared the zone with XPLMAccumulateTouchZone, so they are
@@ -2417,6 +2481,8 @@ TYPE
      ,xplm_PGO_draw_map                        = 40
  
      ,xplm_PGO_drawcalls                       = 41
+ 
+     ,xplm_PGO_linecap                         = 42
  
    );
    PXPLMPGOpcode = ^XPLMPGOpcode;

@@ -99,6 +99,17 @@ size of your structure in bytes.
 }</code></pre>
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Set to sizeof(XPLMFontMetrics_t). |
+| lineHeight | float | Total line height including leading, in pixels. |
+| lineAscent | float | Distance from the baseline to the top of the tallest glyph, in pixels. |
+| lineDescent | float | Distance from the baseline to the bottom of the lowest descender, in pixels. This value is positive. |
+
+</div>
+
 </div>
 
 ---

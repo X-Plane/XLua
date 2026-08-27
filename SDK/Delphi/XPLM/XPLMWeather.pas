@@ -291,10 +291,11 @@ TYPE
     for an initial setup, you may want to ensure that the weather is changed
     instantly. To do this, set 'updateImmediately' as true.
     
-    isIncremental     : If true, append or modify existing records created by
-    your plugin. If false, clear any existing records. updateImmediately : If
-    true, immediately reset and recalculate the weather. If false, your new
-    data will be used when the weather next recalculates.
+    - isIncremental: If true, append or modify existing records created by your
+      plugin. If false, clear any existing records.
+    - updateImmediately: If true, immediately reset and recalculate the
+      weather. If false, your new data will be used when the weather next
+      recalculates.
     
     This call is not intended to be used per-frame. It should be called only
     during the pre-flight loop callback.

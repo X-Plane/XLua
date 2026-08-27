@@ -44,6 +44,22 @@ typedef struct {
 
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| left | int |  |
+| top | int |  |
+| right | int |  |
+| bottom | int |  |
+| visible | int |  |
+| descriptor | const char * |  |
+| isRoot | int | Whether this widget is a root widget |
+| containerIndex | int | The index of the widget to be contained within, or a constant |
+| widgetClass | XPWidgetClass |  |
+
+</div>
+
 </div>
 
 ---

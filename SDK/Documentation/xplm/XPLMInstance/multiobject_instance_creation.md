@@ -70,6 +70,20 @@ typedef struct {
 
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| object | XPLMObjectRef | A fully-loaded object to draw as part of the instance. |
+| x | float | X offset from the instance origin, in instance-local coordinates. |
+| y | float | Y offset from the instance origin, in instance-local coordinates. |
+| z | float | Z offset from the instance origin, in instance-local coordinates. |
+| pitch | float | Pitch of this object relative to the instance, in degrees, positive up. |
+| heading | float | Heading of this object relative to the instance, in degrees, clockwise. |
+| roll | float | Roll of this object relative to the instance, in degrees. |
+
+</div>
+
 </div>
 
 ---
@@ -103,6 +117,20 @@ typedef struct {
      int                       autoShift;
 } XPLMCreateInstance_t;
 ```
+
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Used to inform XPLMCreateInstanceEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateInstance_t). |
+| objects | const XPLMInstanceObject_t * | An array of objects (each with its own offset) that make up the instance. Must point to at least objectCount entries. |
+| objectCount | int | The number of entries in the objects array. Must be at least 1. |
+| datarefs | const char ** | A single NULL-terminated list of dataref identifiers shared by every object in the instance, exactly as in XPLMCreateInstance(). The data you later pass to XPLMInstanceSetPosition() fills one shared block for all objects. You cannot pass null for the array itself. |
+| coordinateSpace | XPLMCoordinateSpace_t | The coordinate space in which instance positions are interpreted (see XPLMCoordinateSpace_t). Use xplm_CoordSpace_World for the classic behavior. |
+| aircraftIndex | int | Aircraft index (0 = user aircraft). Only used when coordinateSpace is xplm_CoordSpace_AircraftInterior or xplm_CoordSpace_AircraftExterior. |
+| autoShift | int | If non-zero, enables auto-shift (see XPLMInstanceSetAutoShift). Ignored for non-world coordinate spaces. |
 
 </div>
 

@@ -30,6 +30,14 @@ draw call give you bounds outside these total map bounds. So, if you cache the p
 of all the items you might want to draw in the total map area, you can be guaranteed that no draw call
 will be asked to do any new work.
 
+- inTotalMapBoundsLeftTopRightBottom: a 4-element array defining the map's new total bounds
+  (in map units; to convert to latitude/longitude, use the map projection APIs). This is the
+  maximal area you will ever be asked to draw (at least until you receive the next prepare
+  cache call).
+- projection: the map projection in use; guaranteed to match the projection passed to all map
+  drawing calls until the next prepare cache call.
+- inRefcon: a reference to arbitrary data from when you registered this layer.
+
 <div class="xplm-code" markdown="1">
 
 ```cpp
@@ -66,6 +74,8 @@ Called just before your map layer gets deleted. Because SDK-created map layers h
 as the X-Plane map that contains them, if the map gets unloaded from memory, your layer will too.
 
 This callback fires exactly once, just before deletion, after which none of the layer's callbacks are used.
+
+- inRefcon: a reference to arbitrary data from when you registered this layer.
 
 <div class="xplm-code" markdown="1">
 

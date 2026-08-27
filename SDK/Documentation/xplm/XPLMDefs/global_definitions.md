@@ -247,6 +247,14 @@ typedef struct {
 
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| buffer[150] | char | The size of the struct. |
+
+</div>
+
 </div>
 
 ---

@@ -103,6 +103,17 @@ typedef struct {
 
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| x | int |  |
+| y | int |  |
+| button | int | Mouse button number, left = 0 (right button not yet supported. |
+| delta | int | Scroll wheel delta (button in this case would be the wheel axis number). |
+
+</div>
+
 </div>
 
 ---
@@ -128,6 +139,16 @@ typedef struct {
      char                      vkey;
 } XPKeyState_t;
 ```
+
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| key | char | The ASCII key that was pressed.  WARNING: this may be 0 for some non-ASCII key sequences. |
+| flags | XPLMKeyFlags | The flags.  Make sure to check this if you only want key-downs! |
+| vkey | char | The virtual key code for the key |
 
 </div>
 
@@ -157,6 +178,17 @@ typedef struct {
      int                       dheight;
 } XPWidgetGeometryChange_t;
 ```
+
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| dx | int |  |
+| dy | int | +Y = the widget moved up |
+| dwidth | int |  |
+| dheight | int |  |
 
 </div>
 

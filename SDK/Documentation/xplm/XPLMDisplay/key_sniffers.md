@@ -31,6 +31,8 @@ macros in XPLMDefs.h define the vkeys using unsigned values (that is 0x80
 instead of -0x80).  So you may need to cast the incoming vkey to an unsigned char
 to get correct comparisons in C.
 
+- inRefcon: a value you supply during registration, used for passing arbitrary data to yourself.
+
 <div class="xplm-code" markdown="1">
 
 ```cpp
@@ -64,6 +66,9 @@ consume.  You should ALMOST ALWAYS sniff non-control keys after the window syste
 system consumes a key, it is because the user has "focused" a window.  Consuming
 the key or taking action based on the key will produce very weird results.  Returns
 true if successful.
+
+- inRefcon: a value that will be passed to your callback, used for passing arbitrary data to
+  yourself later.
 
 <div class="xplm-code" markdown="1">
 

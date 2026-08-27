@@ -80,6 +80,16 @@ typedef struct {
 
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Set to sizeof(XPLMCreateSVT_t). |
+| pilotIndex | int | 0 for pilot-side AHRS, 1 for copilot-side AHRS. |
+| pixelsPerDegree | float | Vertical scale of the 3-d view, in pixels per degree at the center of the display.  Must be greater than zero; the G1000 PFD uses 14. |
+
+</div>
+
 </div>
 
 ---
@@ -216,6 +226,22 @@ typedef struct {
      float                     vdefDots;
 } XPLMSVTCustomData_t;
 ```
+
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| pitchDeg | float | pitch override (degrees). |
+| rollDeg | float | roll/bank override (degrees). |
+| headingMagDeg | float | magnetic heading override (degrees). |
+| magVarDeg | float | magnetic variation override (degrees). |
+| indicatedAltFt | float | indicated altitude override (feet). |
+| baroSettingInHg | float | altimeter setting override ( inHg). |
+| hsiSource | int | HSI source override. |
+| hdefDots | float | horizontal CDI deviation override (float). |
+| vdefDots | float | vertical GS deviation override (float). |
 
 </div>
 

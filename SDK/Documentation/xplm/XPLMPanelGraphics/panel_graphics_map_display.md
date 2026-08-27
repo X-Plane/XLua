@@ -140,6 +140,29 @@ typedef struct {
 
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Set to sizeof(XPLMMapCustomData_t). This is checked; a size X-Plane does not recognise is an error and is reported. X-Plane never modifies the structure you pass. |
+| datLat | float | datum lat (degrees). |
+| datLon | float | datum lon (degrees). |
+| centerX | int | map center x, in the same panel coordinates as XPLMMapDrawInfo_t's rectangle. |
+| centerY | int | map center y, in the same panel coordinates as XPLMMapDrawInfo_t's rectangle. |
+| roseRadius | int | center of the map out to the compass rose (pixels). |
+| mapRange | float | center of the map out to the compass rose (nautical miles). |
+| orientation | int | map orientation (0=north up, 1=Track up, 2=Hdg up, 3=custom). |
+| terrainWarn | float | terrain warning altitude (red, feet). |
+| terrainCaution | float | terrain caution altitude (yellow, feet). |
+| acfAlt | float | ownship altitude (feet). |
+| gearDown | int | ownship gear status (1=gear down). |
+| trueRotation | float | if map orientation is custom, the true heading that points up (so 90 puts east at the top and true north to the left). |
+| nearestRwyElev | float | altitude in feet of the nearest runway, used for EGPWS terrain display. |
+| egpwsBrightness | float | brightness of the EGPWS overlay. |
+| egpwsStyle | XPLMEGPWSStyle | style of the EGPWS overlay. Must be one of the XPLMEGPWSStyle constants. |
+
+</div>
+
 </div>
 
 ---
@@ -166,6 +189,15 @@ typedef struct {
      int                       pilotIndex;
 } XPLMCreateMap_t;
 ```
+
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Set to sizeof(XPLMCreateMap_t). |
+| pilotIndex | int | 0 for pilot-side GPS position, 1 for copilot-side GPS position. |
 
 </div>
 
@@ -239,6 +271,19 @@ typedef struct {
      int                       bottom;
 } XPLMMapDrawInfo_t;
 ```
+
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Set to sizeof(XPLMMapDrawInfo_t). |
+| layers | XPLMMapLayers | Bitwise OR of XPLMMapLayers flags to show. |
+| left | int | Bounding rectangle in panel coordinates. |
+| top | int | Bounding rectangle in panel coordinates. |
+| right | int | Bounding rectangle in panel coordinates. |
+| bottom | int | Bounding rectangle in panel coordinates. |
 
 </div>
 

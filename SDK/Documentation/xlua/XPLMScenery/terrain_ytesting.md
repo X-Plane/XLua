@@ -134,6 +134,24 @@ struct before using it.
 }</code></pre>
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Size of structure in bytes - always set this before calling the XPLM. |
+| locationX | float | Resulting X location of the terrain point we hit, in local OpenGL coordinates. |
+| locationY | float | Resulting Y location of the terrain point we hit, in local OpenGL coordinates. |
+| locationZ | float | Resulting Z location of the terrain point we hit, in local OpenGL coordinates. |
+| normalX | float | X component of the normal vector to the terrain we found. |
+| normalY | float | Y component of the normal vector to the terrain we found. |
+| normalZ | float | Z component of the normal vector to the terrain we found. |
+| velocityX | float | X component of the velocity vector of the terrain we found. |
+| velocityY | float | Y component of the velocity vector of the terrain we found. |
+| velocityZ | float | Z component of the velocity vector of the terrain we found. |
+| is_wet | boolean | Tells if the surface we hit is water (otherwise it is land). |
+
+</div>
+
 </div>
 
 ---

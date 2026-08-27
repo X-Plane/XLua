@@ -37,6 +37,15 @@ A 2-D vertex with an x and y position in panel coordinates.
 }</code></pre>
 </div>
 
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| x | float | Horizontal position in panel coordinates, pixels. |
+| y | float | Vertical position in panel coordinates, pixels. |
+
+</div>
+
 </div>
 
 ---
@@ -62,6 +71,46 @@ to each vertex; colors are interpolated across the primitive.
     color  = nil,     -- see uint32_t / XPLMMakeColor
 }</code></pre>
 </div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| x | float | Horizontal position in panel coordinates, pixels. |
+| y | float | Vertical position in panel coordinates, pixels. |
+| color | uint32_t / XPLMMakeColor | Packed ABGR color as returned by XPLMMakeColor. |
+
+</div>
+
+</div>
+
+---
+
+<div class="sym-block sym-enum" data-name="XPLMLineCap_t" data-type="enum" markdown="1">
+
+<div class="sym-title-row" markdown="1">
+
+## XPLMLineCap_t { .symbol-title }
+
+<span class="sym-badge badge-enum">enum</span>
+
+</div>
+
+This enumeration specifies the way lines drawn with XPLMPanelGraphics end. The default value is xplm_LineCapButt
+
+<div class="enum-table" markdown="1">
+
+| Name | Value | Description |
+|:--|:--|:--|
+| xplm_LineCapButt | 0 | Lines are capped by straight edges at the start and end point. |
+| xplm_LineCapRound | 1 | Lines are capped by half circles centered on the start and end points. |
+| xplm_LineCapSquare | 2 | Lines are capped by half squares centered on the start and end points. |
+
+</div>
+
+**Used by:**
+
+- [XPLMSetLineCap](#xplmsetlinecap)
 
 </div>
 
@@ -92,6 +141,35 @@ local my_result = XPLMMakeColor(
 )</code></pre>
 </div>
 
+</div>
+
+---
+
+<div class="sym-block sym-function" data-name="XPLMSetLineCap" data-type="function" markdown="1">
+
+<div class="sym-title-row" markdown="1">
+
+## XPLMSetLineCap { .symbol-title }
+
+<span class="sym-badge badge-fn">function</span>
+
+</div>
+
+This function sets what caps are used when drawing subsequent lines. The default
+value at the start of a drawing callback is xplm_LineCapButt.
+
+- lineCap: the new line cap style.
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">XPLMSetLineCap(
+    lineCap     -- see XPLMLineCap_t
+)</code></pre>
+</div>
+
+
+**See associated types:**
+
+- [XPLMLineCap_t](#xplmlinecap_t)
 </div>
 
 ---

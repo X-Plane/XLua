@@ -66,9 +66,14 @@ This enumeration specifies how a touch zone responds to user interaction.
 </div>
 
 Your touch event callback is invoked when the user interacts with a touch
-zone whose type is xplm_TouchZone_Identifier. You receive the zone's
-identifier, the mouse status, the current position, the delta from the
-initial click point, and the mouse button involved.
+zone whose type is xplm_TouchZone_Identifier.
+
+- identifier: the identifier from the XPLMTouchZoneSpec_t that was touched.
+- status: xplm_MouseDown, xplm_MouseDrag, or xplm_MouseUp.
+- x, y: the current mouse position.
+- dx, dy: the delta from the initial click point. A translation cannot affect a
+  delta, so only the scale applies.
+- button: the mouse button - 0 for left, 1 for right.
 
 The position and the deltas are in the coordinate system that was in force
 when you declared the zone with XPLMAccumulateTouchZone, so they are directly
@@ -123,6 +128,21 @@ structSize to the size of your structure in bytes.
     right       = 0,       -- int
     bottom      = 0,       -- int
 }</code></pre>
+</div>
+
+<div class="field-table" markdown="1">
+
+| Field | Type | Description |
+|:--|:--|:--|
+| structSize | int | Set to sizeof(XPLMTouchZoneSpec_t). This is checked; a size X-Plane does not recognise is an error and is reported. |
+| type | XPLMTouchZone | How the zone responds to interaction. |
+| command | XPLMCommandRef | The command to fire. Only used when type is xplm_TouchZone_Command. |
+| identifier | int | An integer you assign to identify this zone in your XPLMTouchEvent_f callback. Only used when type is xplm_TouchZone_Identifier. |
+| left | int | Left edge of the zone, in the coordinates you are drawing in. X-Plane applies the transform stack for you - do not pre-offset this. |
+| top | int | Top edge of the zone, in the coordinates you are drawing in. X-Plane applies the transform stack for you - do not pre-offset this. |
+| right | int | Right edge of the zone, in the coordinates you are drawing in. X-Plane applies the transform stack for you - do not pre-offset this. |
+| bottom | int | Bottom edge of the zone, in the coordinates you are drawing in. X-Plane applies the transform stack for you - do not pre-offset this. |
+
 </div>
 
 </div>
