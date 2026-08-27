@@ -1976,10 +1976,10 @@ XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos)
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, stackpos, "windowContentType");
+	lua_getfield(L, stackpos, "contentType");
 	if (!lua_isnil(L, -1))
 	{
-		out.windowContentType = static_cast<XPLMWindowContentType>(luaL_checkinteger(L, -1));
+		out.contentType = static_cast<XPLMWindowContentType>(luaL_checkinteger(L, -1));
 	}
 	lua_pop(L, 1);
 
@@ -2044,8 +2044,8 @@ void XPLMCreateWindow_t_to_table(lua_State* L, XPLMCreateWindow_t const& src)
 	lua_pushinteger(L, src.layer);
 	lua_settable(L, -3);
 
-	lua_pushstring(L, "windowContentType");
-	lua_pushinteger(L, src.windowContentType);
+	lua_pushstring(L, "contentType");
+	lua_pushinteger(L, src.contentType);
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "browserLoadFinishedFunc");

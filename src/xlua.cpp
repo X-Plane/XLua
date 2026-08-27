@@ -527,7 +527,7 @@ void ShowProfiler()
 	params.decorateAsFloatingWindow = xplm_WindowDecorationRoundRectangle;
 	params.layer                    = xplm_WindowLayerFloatingWindows;
 	params.handleRightClickFunc     = &XplmImguiContext::HandleRightClick;
-	params.windowContentType		= xplm_WindowContentTypePanelGraphics;
+	params.contentType		= xplm_WindowContentTypePanelGraphics;
 
 	profilerWnd.reset(XPLMCreateWindowEx(&params));
 	XPLMSetWindowTitle(profilerWnd.get(), "XLua Profiler");
