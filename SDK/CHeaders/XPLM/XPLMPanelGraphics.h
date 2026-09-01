@@ -112,6 +112,30 @@ typedef struct {
 } XPLMVertexColor_t;
 
 /*
+ * XPLMLineCap_t
+ * 
+ * This enumeration specifies the way lines drawn with XPLMPanelGraphics end.
+ * The default value is xplm_LineCapButt
+ *
+ */
+enum {
+
+    /* Lines are capped by straight edges at the start and end point.             */
+    xplm_LineCapButt                         = 0,
+
+
+    /* Lines are capped by half circles centered on the start and end points.     */
+    xplm_LineCapRound                        = 1,
+
+
+    /* Lines are capped by half squares centered on the start and end points.     */
+    xplm_LineCapSquare                       = 2,
+
+
+};
+typedef int XPLMLineCap_t;
+
+/*
  * XPLMMakeColor
  * 
  * This function packs four floating-point color components into a single
@@ -127,6 +151,19 @@ XPLM_API uint32_t   XPLMMakeColor(
                          float                green,
                          float                blue,
                          float                alpha);
+
+/*
+ * XPLMSetLineCap
+ * 
+ * This function sets what caps are used when drawing subsequent lines. The
+ * default value at the start of a drawing callback is xplm_LineCapButt.
+ * 
+ * - lineCap: the new line cap style.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetLineCap(
+                         XPLMLineCap_t        lineCap);
 
 /*
  * XPLMLines
@@ -1573,9 +1610,14 @@ typedef int XPLMTouchZone;
  * XPLMTouchEvent_f
  * 
  * Your touch event callback is invoked when the user interacts with a touch
- * zone whose type is xplm_TouchZone_Identifier. You receive the zone's
- * identifier, the mouse status, the current position, the delta from the
- * initial click point, and the mouse button involved.
+ * zone whose type is xplm_TouchZone_Identifier.
+ * 
+ * - identifier: the identifier from the XPLMTouchZoneSpec_t that was touched.
+ * - status: xplm_MouseDown, xplm_MouseDrag, or xplm_MouseUp.
+ * - x, y: the current mouse position.
+ * - dx, dy: the delta from the initial click point. A translation cannot
+ *   affect a delta, so only the scale applies.
+ * - button: the mouse button - 0 for left, 1 for right.
  * 
  * The position and the deltas are in the coordinate system that was in force
  * when you declared the zone with XPLMAccumulateTouchZone, so they are

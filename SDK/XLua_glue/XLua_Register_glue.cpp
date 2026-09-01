@@ -300,6 +300,7 @@ extern "C"
 	int XLuaSetFMSFlightPlanEntryInfo(lua_State* L);
 	int XLuaSetFMSFlightPlanEntryLatLon(lua_State* L);
 	int XLuaSetFMSFlightPlanEntryLatLonWithId(lua_State* L);
+	int XLuaSetLineCap(lua_State* L);
 	int XLuaSetMenuItemName(lua_State* L);
 	int XLuaSetObjectAvionics(lua_State* L);
 	int XLuaSetUsersAircraft(lua_State* L);
@@ -408,6 +409,7 @@ extern "C"
 	void RegEnum_XPLMJustification_t(lua_State* L);
 	void RegEnum_XPLMKeyFlags(lua_State* L);
 	void RegEnum_XPLMLanguageCode(lua_State* L);
+	void RegEnum_XPLMLineCap_t(lua_State* L);
 	void RegEnum_XPLMMapLayerType(lua_State* L);
 	void RegEnum_XPLMMapLayers(lua_State* L);
 	void RegEnum_XPLMMapOrientation(lua_State* L);
@@ -714,6 +716,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMSetFMSFlightPlanEntryInfo", XLuaSetFMSFlightPlanEntryInfo);
 	lua_register(L, "XPLMSetFMSFlightPlanEntryLatLon", XLuaSetFMSFlightPlanEntryLatLon);
 	lua_register(L, "XPLMSetFMSFlightPlanEntryLatLonWithId", XLuaSetFMSFlightPlanEntryLatLonWithId);
+	lua_register(L, "XPLMSetLineCap", XLuaSetLineCap);
 	lua_register(L, "XPLMSetMenuItemName", XLuaSetMenuItemName);
 	lua_register(L, "XPLMSetObjectAvionics", XLuaSetObjectAvionics);
 	lua_register(L, "XPLMSetUsersAircraft", XLuaSetUsersAircraft);
@@ -806,6 +809,7 @@ void add_xplm_to_interp(lua_State* L)
 	RegEnum_XPLMJustification_t(L);
 	RegEnum_XPLMKeyFlags(L);
 	RegEnum_XPLMLanguageCode(L);
+	RegEnum_XPLMLineCap_t(L);
 	RegEnum_XPLMMapLayerType(L);
 	RegEnum_XPLMMapLayers(L);
 	RegEnum_XPLMMapOrientation(L);

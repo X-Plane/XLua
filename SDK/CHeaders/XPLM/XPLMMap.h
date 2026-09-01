@@ -138,6 +138,25 @@ typedef int XPLMMapStyle;
  * providing major details, like terrain and water). Note, however, that the
  * relative ordering between the drawing callbacks of different plugins is not
  * guaranteed.
+ * 
+ * - inMapBoundsLeftTopRightBottom: a 4-element array defining the currently
+ *   visible map bounds (in map units; to convert to latitude/longitude, use
+ *   the map projection APIs).
+ * - zoomRatio: any ratio (negative or positive), where 0 indicates the whole
+ *   map is visible. A negative zoom means the user zoomed out beyond the full
+ *   map bounds. When the map is fully zoomed in, the zoom ratio may exceed
+ *   30.
+ * - mapUnitsPerUserInterfaceUnit: if your layer is drawing in the standard
+ *   X-Plane map window, this is map units per boxel; if you're drawing within
+ *   the sim itself, this is the map units per "virtual device pixel," whose
+ *   size in real screen pixels is of course fluid since the user can move the
+ *   camera relative to the in-sim map.
+ * - mapStyle: the user-selected map style being drawn currently.
+ * - projection: the map projection in use (this is guaranteed to match the
+ *   projection last passed to your XPLMMapPrepareCacheCallback_f, if
+ *   applicable).
+ * - inRefcon: a reference to arbitrary data from when you registered this
+ *   layer.
  *
  */
 typedef void (* XPLMMapDrawingCallback_f)(
@@ -164,6 +183,25 @@ typedef void (* XPLMMapDrawingCallback_f)(
  * determined by the XPLMMapLayerType in your XPLMCreateMapLayer_t). Note,
  * however, that the relative ordering between the drawing callbacks of
  * different plugins is not guaranteed.
+ * 
+ * - inMapBoundsLeftTopRightBottom: a 4-element array defining the currently
+ *   visible map bounds (in map units; to convert to latitude/longitude, use
+ *   the map projection APIs).
+ * - zoomRatio: any ratio (negative or positive), where 0 indicates the whole
+ *   map is visible. A negative zoom means the user zoomed out beyond the full
+ *   map bounds. When the map is fully zoomed in, the zoom ratio may exceed
+ *   30.
+ * - mapUnitsPerUserInterfaceUnit: if your layer is drawing in the standard
+ *   X-Plane map window, this is map units per boxel; if you're drawing within
+ *   the sim itself, this is the map units per "virtual device pixel," whose
+ *   size in real screen pixels is of course fluid since the user can move the
+ *   camera relative to the in-sim map.
+ * - mapStyle: the user-selected map style being drawn currently.
+ * - projection: the map projection in use (this is guaranteed to match the
+ *   projection last passed to your XPLMMapPrepareCacheCallback_f, if
+ *   applicable).
+ * - inRefcon: a reference to arbitrary data from when you registered this
+ *   layer.
  *
  */
 typedef void (* XPLMMapIconDrawingCallback_f)(
@@ -190,6 +228,25 @@ typedef void (* XPLMMapIconDrawingCallback_f)(
  * as determined by the XPLMMapLayerType in your XPLMCreateMapLayer_t). Note,
  * however, that the relative ordering between the drawing callbacks of
  * different plugins is not guaranteed.
+ * 
+ * - inMapBoundsLeftTopRightBottom: a 4-element array defining the currently
+ *   visible map bounds (in map units; to convert to latitude/longitude, use
+ *   the map projection APIs).
+ * - zoomRatio: any ratio (negative or positive), where 0 indicates the whole
+ *   map is visible. A negative zoom means the user zoomed out beyond the full
+ *   map bounds. When the map is fully zoomed in, the zoom ratio may exceed
+ *   30.
+ * - mapUnitsPerUserInterfaceUnit: if your layer is drawing in the standard
+ *   X-Plane map window, this is map units per boxel; if you're drawing within
+ *   the sim itself, this is the map units per "virtual device pixel," whose
+ *   size in real screen pixels is of course fluid since the user can move the
+ *   camera relative to the in-sim map.
+ * - mapStyle: the user-selected map style being drawn currently.
+ * - projection: the map projection in use (this is guaranteed to match the
+ *   projection last passed to your XPLMMapPrepareCacheCallback_f, if
+ *   applicable).
+ * - inRefcon: a reference to arbitrary data from when you registered this
+ *   layer.
  *
  */
 typedef void (* XPLMMapLabelDrawingCallback_f)(
@@ -235,6 +292,15 @@ typedef void (* XPLMMapLabelDrawingCallback_f)(
  * total map bounds. So, if you cache the projected map coordinates of all the
  * items you might want to draw in the total map area, you can be guaranteed
  * that no draw call will be asked to do any new work.
+ * 
+ * - inTotalMapBoundsLeftTopRightBottom: a 4-element array defining the map's
+ *   new total bounds (in map units; to convert to latitude/longitude, use the
+ *   map projection APIs). This is the maximal area you will ever be asked to
+ *   draw (at least until you receive the next prepare cache call).
+ * - projection: the map projection in use; guaranteed to match the projection
+ *   passed to all map drawing calls until the next prepare cache call.
+ * - inRefcon: a reference to arbitrary data from when you registered this
+ *   layer.
  *
  */
 typedef void (* XPLMMapPrepareCacheCallback_f)(
@@ -252,6 +318,9 @@ typedef void (* XPLMMapPrepareCacheCallback_f)(
  * 
  * This callback fires exactly once, just before deletion, after which none of
  * the layer's callbacks are used.
+ * 
+ * - inRefcon: a reference to arbitrary data from when you registered this
+ *   layer.
  *
  */
 typedef void (* XPLMMapWillBeDeletedCallback_f)(
@@ -411,6 +480,10 @@ XPLM_API int        XPLMDestroyMapLayer(
  * XPLMCreateMapLayer().
  * 
  * No OpenGL drawing is permitted within this callback.
+ * 
+ * - mapIdentifier: the globally unique string that identifies the map being
+ *   created. As of XPLM300, this is limited to one of XPLM_MAP_USER_INTERFACE
+ *   or XPLM_MAP_IOS.
  *
  */
 typedef void (* XPLMMapCreatedCallback_f)(
@@ -439,6 +512,10 @@ XPLM_API void       XPLMRegisterMapCreationHook(
  * Returns true if the map with the specified identifier already exists in
  * X-Plane. In that case, you can safely call XPLMCreateMapLayer() specifying
  * that your layer should be added to that map.
+ * 
+ * - mapIdentifier: the globally unique string that identifies the map you're
+ *   asking about. As of XPLM300, this is limited to one of
+ *   XPLM_MAP_USER_INTERFACE or XPLM_MAP_IOS.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -522,6 +599,24 @@ typedef int XPLMMapOrientation;
  * This function is only valid from within an XPLMIconDrawingCallback_t (but
  * you can request an arbitrary number of icons to be drawn from within your
  * callback).
+ * 
+ * - layer: the map layer you want to add icons to.
+ * - inPngPath: an X-Plane-relative path to the PNG you would like to draw as
+ *   an icon.
+ * - s: the column index of the sub-image (cell) you want to draw; 0 is the
+ *   leftmost column, ds - 1 is the rightmost.
+ * - t: the row index of the sub-image (cell) you want to draw; 0 is the
+ *   bottommost row, dt - 1 is the topmost.
+ * - ds, dt: the number of columns and rows in your texture sheet.
+ * - mapX, mapY: the coordinate (in map units) at which the icon should be
+ *   centered.
+ * - orientation: the orientation of the icon; this affects what the rotation
+ *   parameter is defined relative to.
+ * - rotationDegrees: the rotation, in degrees, of the icon relative to your
+ *   orientation. Depending on the orientation, this is relative either to the
+ *   map's 'up' or the UI's 'up'---not north.
+ * - mapWidth: the width (in map units) of the icon. Note that the icon's
+ *   height will be scaled relative to its width.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -545,6 +640,15 @@ XPLM_API void       XPLMDrawMapIconFromSheet(
  * built-in labeling functionality. Only valid from within an
  * XPLMMapLabelDrawingCallback_f (but you can request an arbitrary number of
  * text labels to be drawn from within your callback).
+ * 
+ * - layer: the map layer you want to add labels to.
+ * - mapX, mapY: the coordinate (in map units) at which the text should be
+ *   centered.
+ * - orientation: the orientation of the text; this affects what the rotation
+ *   parameter is defined relative to.
+ * - rotationDegrees: the rotation, in degrees, of the text relative to your
+ *   orientation. Depending on the orientation, this is relative either to the
+ *   map's 'up' or the UI's 'up'---not north.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -574,6 +678,9 @@ XPLM_API void       XPLMDrawMapLabel(
  * Finally, the map projection can give you the current rotation of the map.
  * Since X-Plane 11 maps can rotate to match the heading of the aircraft, the
  * map's rotation can potentially change every frame.
+ * 
+ * The projection argument these routines take is the map projection currently
+ * in use by your layer, as handed to your drawing or prepare-cache callback.
  *
  */
 

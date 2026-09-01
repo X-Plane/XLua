@@ -84,6 +84,10 @@ typedef void * XPLMInstanceRef;
  *   array.  That is, if you do not want any datarefs, you must pass a pointer
  *   to a one-element array containing a null item.  You cannot pass null for
  *   the array itself.
+ * 
+ * - datarefs: a NULL-terminated list of dataref identifiers. E.g., {
+ *   "sim/aircraft/view/acf_peX", "sim/aircraft/view/acf_peY",
+ *   "sim/aircraft/view/acf_peZ", NULL }
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -345,8 +349,10 @@ XPLM_API void       XPLMInstanceSetPositionDouble(
  * relative to the specified aircraft's CG and body axes; in camera space,
  * positions are relative to the camera/view.
  * 
- * For the two aircraft spaces, aircraft_index specifies which aircraft (0 =
- * user's aircraft). For world and camera space, aircraft_index is ignored.
+ * For the two aircraft spaces (xplm_CoordSpace_AircraftInterior and
+ * xplm_CoordSpace_AircraftExterior), aircraft_index specifies which aircraft
+ * (0 = user's aircraft). For world and camera space, aircraft_index is
+ * ignored.
  * 
  * Changing the coordinate space does not make the instance jump: X-Plane
  * re-expresses the instance's current world location in the new space, so the

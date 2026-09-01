@@ -494,6 +494,9 @@ typedef int (* XPLMAvionicsCallback_f)(
  * click in the 3d cockpit, or if your pop-up's bezel has buttons that the
  * user can click. Return true to consume the event, or false to let X-Plane
  * process it (for stock avionics devices).
+ * 
+ * - x, y: the coordinate at which the mouse was clicked.
+ * - inMouse: the type of mouse event - down-click, drag, or up-click.
  *
  */
 typedef int (* XPLMAvionicsMouse_f)(
@@ -514,6 +517,8 @@ typedef int (* XPLMAvionicsMouse_f)(
  * avionics devices). The number of "clicks" indicates how far the wheel was
  * turned since the last callback. The wheel is 0 for the vertical axis or 1
  * for the horizontal axis (for OS/mouse combinations that support this).
+ * 
+ * - x, y: the coordinate at which the wheel was scrolled.
  *
  */
 typedef int (* XPLMAvionicsMouseWheel_f)(
@@ -532,6 +537,8 @@ typedef int (* XPLMAvionicsMouseWheel_f)(
  * your screen or (2D-popup) bezel. Return xplm_CursorDefault to let X-Plane
  * use which cursor to show, or other values to force the cursor to a
  * particular one (see XPLMCursorStatus).
+ * 
+ * - x, y: the coordinate at which the mouse is hovering.
  *
  */
 typedef XPLMCursorStatus (* XPLMAvionicsCursor_f)(
@@ -1557,6 +1564,8 @@ typedef void (* XPLMHandleKey_f)(
  * You receive the x and y of the click, your window, and a refcon.  Return 1
  * to consume the click, or 0 to pass it through.
  * 
+ * - inMouse: the type of mouse event - down-click, drag, or up-click.
+ * 
  * WARNING: passing clicks through windows (as of this writing) causes mouse
  * tracking problems in X-Plane; do not use this feature!
  * 
@@ -1943,6 +1952,9 @@ XPLM_API XPLMWindowID XPLMCreateWindowEx(
  * NOTE: Legacy windows do not have "frames"; you are responsible for drawing
  * the background and frame of the window.  Higher level libraries have
  * routines which make this easy.
+ * 
+ * - inRefcon: a reference which will be passed into each of your window
+ *   callbacks. Use this to pass information to yourself as needed.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -2732,6 +2744,9 @@ XPLM_API int        XPLMIsWindowInFront(
  * VKEY #define macros in XPLMDefs.h define the vkeys using unsigned values
  * (that is 0x80 instead of -0x80).  So you may need to cast the incoming vkey
  * to an unsigned char to get correct comparisons in C.
+ * 
+ * - inRefcon: a value you supply during registration, used for passing
+ *   arbitrary data to yourself.
  *
  */
 typedef int (* XPLMKeySniffer_f)(
@@ -2750,6 +2765,9 @@ typedef int (* XPLMKeySniffer_f)(
  * because the user has "focused" a window.  Consuming the key or taking
  * action based on the key will produce very weird results.  Returns true if
  * successful.
+ * 
+ * - inRefcon: a value that will be passed to your callback, used for passing
+ *   arbitrary data to yourself later.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -2809,6 +2827,9 @@ typedef void * XPLMHotKeyID;
  * callback function and opaque pointer to pass in).  A new hot key ID is
  * returned.  During execution, the actual key associated with your hot key
  * may change, but you are insulated from this.
+ * 
+ * - inRefcon: a value that will be passed to your callback, used for passing
+ *   arbitrary data to yourself later.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
