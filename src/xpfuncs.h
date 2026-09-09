@@ -11,34 +11,24 @@
 #ifndef xpfuncs_h
 #define xpfuncs_h
 
+#define NOMINMAX
+
+#include <map>
 #include <string>
-#include <string.h>
 
 extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
+	#include <lua.h>
 };
 
-void	add_xpfuncs_to_interp(lua_State * interp);
-std::string get_log_prefix(char l='I');
+void	add_xlua_funcs_to_interp(lua_State * interp, int compat_version);
+extern std::map<int, char const*> gXPMessageParamTypes;
 
-template <typename T>
-T xlua_checkuserdata(lua_State * L, int narg, const char * msg)
-{
-    T* ret = static_cast<T*>(lua_touserdata(L, narg));
-    if(ret == NULL)
-        luaL_argerror(L, narg, msg);
-    return *ret;
-}
+extern std::string const kTimerCallbackSig;
+extern std::string const kDatarefCallbackSig;
+extern std::string const kFilterCallbackSig;
+extern std::string const kCommandCallbackSig;
 
-template<typename T>
-void xlua_pushuserdata(lua_State * state, T data)
-{
-    T* ud = static_cast<T*>(lua_newuserdata(state, sizeof(T)));
-    memcpy(ud, &data, sizeof(T));
-}
-
-void InitScripts(void);
-void CleanupScripts(void);
+void InitScripts();
+void CleanupScripts();
 
 #endif /* xpfuncs_h */

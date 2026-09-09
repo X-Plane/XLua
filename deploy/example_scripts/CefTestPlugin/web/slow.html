@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>slow.html</title>
+</head>
+<body style="background:#1f2024;color:#e6e6e6;padding:30px;font-family:sans-serif;">
+    <h1 style="color:#ffd07a;">slow.html</h1>
+    <p>Synchronously busy-loops to simulate a slow page load. Used by the destroy-mid-load test.</p>
+    <p>If you can read this without the host crashing, mid-load destroy was handled but didn't actually trigger; otherwise the page was torn down before you saw this.</p>
+    <script>
+        // Synchronous spin to delay the load event.
+        var t0 = Date.now();
+        while (Date.now() - t0 < 5000) {}
+        document.body.appendChild(document.createTextNode("(spin done)"));
+    </script>
+</body>
+</html>

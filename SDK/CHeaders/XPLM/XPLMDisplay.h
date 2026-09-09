@@ -2,161 +2,238 @@
 #define _XPLMDisplay_h_
 
 /*
- * Copyright 2005-2012 Sandy Barbour and Ben Supnik
- * 
- * All rights reserved.  See license.txt for usage.
- * 
- * X-Plane SDK Version: 2.1.1                                                  
+ * Copyright 2005-2026 Laminar Research, Sandy Barbour and Ben Supnik All
+ * rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
  *
  */
 
+/***************************************************************************
+ * XPLMDisplay
+ ***************************************************************************/
 /*
- * XPLM Display APIs - THEORY OF OPERATION 
+ * This API provides the basic hooks to draw in X-Plane and create user
+ * interface. All X-Plane drawing is done in OpenGL. The X-Plane plug-in
+ * manager takes care of properly setting up the OpenGL context and matrices. 
+ * You do not decide when in your code's execution to draw; X-Plane tells you
+ * (via callbacks) when it is ready to have your plugin draw.
  * 
- * This API provides the basic hooks to draw in X-Plane and create user 
- * interface. All X-Plane drawing is done in OpenGL.  The X-Plane plug-in 
- * manager takes care of properly setting up the OpenGL context and matrices.  
- * You do not decide when in your code's  execution to draw; X-Plane tells you 
- * when it is ready to have your plugin draw. 
+ * X-Plane's drawing strategy is straightforward: every "frame" the screen is
+ * rendered by drawing the 3-D scene (dome, ground, objects, airplanes, etc.)
+ * and then drawing the cockpit on top of it.  Alpha blending is used to
+ * overlay the cockpit over the world (and the gauges over the panel, etc.).
+ * X-Plane user interface elements (including windows like the map, the main
+ * menu, etc.) are then drawn on top of the cockpit.
  * 
- * X-Plane's drawing strategy is straightforward: every "frame" the screen is 
- * rendered by drawing the 3-d scene (dome, ground, objects, airplanes, etc.)  
- * and then drawing the cockpit on top of it.  Alpha blending is used to 
- * overlay the cockpit over the world (and the gauges over the panel, etc.). 
+ * There are two ways you can draw: directly and in a window.
  * 
- * There are two ways you can draw: directly and in a window. 
+ * Direct drawing (deprecated!---more on that below) involves drawing to the
+ * screen before or after X-Plane finishes a phase of drawing.  When you draw
+ * directly, you can specify whether X-Plane is to complete this phase or not.
+ * This allows you to do three things: draw before X-Plane does (under it),
+ * draw after X-Plane does (over it), or draw instead of X-Plane.
  * 
- * Direct drawing involves drawing to the screen before or after X-Plane 
- * finishes a phase of drawing.  When you draw directly, you can specify 
- * whether x-plane is to complete this phase or not.  This allows you to do 
- * three things: draw before x-plane does (under it), draw after x-plane does 
- * (over it), or draw instead of  x-plane. 
+ * To draw directly, you register a callback and specify which phase you want
+ * to intercept.  The plug-in manager will call you over and over to draw that
+ * phase.
  * 
- * To draw directly, you register a callback and specify what phase you want 
- * to intercept.  The plug-in manager will call you over and over to draw that 
- * phase. 
+ * Direct drawing allows you to override scenery, panels, or anything.  Note
+ * that you cannot assume that you are the only plug-in drawing at this phase.
  * 
- * Direct drawing allows you to override scenery, panels, or anything.  Note 
- * that  you cannot assume that you are the only plug-in drawing at this 
- * phase. 
+ * Direct drawing is deprecated; at some point in the X-Plane 11 run, it will
+ * likely become unsupported entirely as X-Plane transitions from OpenGL to
+ * modern graphics API backends (e.g., Vulkan, Metal, etc.). In the long term,
+ * plugins should use the XPLMInstance API for drawing 3-D objects---this will
+ * be much more efficient than general 3-D OpenGL drawing, and it will
+ * actually be supported by the new graphics backends. We do not yet know what
+ * the post-transition API for generic 3-D drawing will look like (if it
+ * exists at all).
  * 
- * Window drawing provides slightly higher level functionality.  With window 
- * drawing you create a window that takes up a portion of the screen.  Window 
- * drawing is always two dimensional.  Window drawing is front-to-back 
- * controlled; you can  specify that you want your window to be brought on 
- * top, and other plug-ins may put their window on top of you.  Window drawing 
- * also allows you to sign up for  key presses and receive mouse clicks. 
+ * In contrast to direct drawing, window drawing provides a higher level
+ * functionality. With window drawing, you create a 2-D window that takes up a
+ * portion of the screen. Window drawing is always two dimensional.  Window
+ * drawing is depth controlled; you can specify that you want your window to
+ * be brought on top, and other plug-ins may put their window on top of you. 
+ * Window drawing also allows you to sign up for key presses and receive mouse
+ * clicks.
  * 
- * There are three ways to get keystrokes: 
+ * Drawing into the screen of an avionics device, like a GPS or a Primary
+ * Flight Display, is a way  to extend or replace X-Plane's avionics. Most
+ * screens can be displayed both in a 3d cockpit or 
+ * 2d panel, and also in separate popup windows. By installing drawing
+ *  callbacks for a certain avionics  device, you can change or extend the
+ *  appearance of that device regardless whether it's installed  in a 3d
+ *  cockpit or used in a separate display for home cockpits because you leave
+ *  the window managing to X-Plane.
  * 
- * If you create a window, the window can take keyboard focus.  It will then 
- * receive all keystrokes.  If no window has focus, X-Plane receives 
- * keystrokes.  Use this to implement typing in dialog boxes, etc.  Only one 
- * window may have focus at a time; your window will be notified if it loses 
- * focus. 
+ * There are three ways to get keystrokes:
  * 
- * If you need to associate key strokes with commands/functions in your 
- * plug-in, use a hot key.  A hoy is a key-specific callback.  Hotkeys are 
- * sent based on virtual key strokes, so any key may be distinctly mapped with 
- * any modifiers.  Hot keys  can be remapped by other plug-ins.  As a plug-in, 
- * you don't have to worry about  what your hot key ends up mapped to; other 
- * plug-ins may provide a UI for remapping keystrokes.  So hotkeys allow a 
- * user to resolve conflicts and customize keystrokes. 
- * 
- * If you need low level access to the keystroke stream, install a key 
- * sniffer.  Key sniffers can be installed above everything or right in front 
- * of the sim.                                                                 
+ * 1. If you create a window, the window can take keyboard focus.  It will
+ *    then receive all keystrokes.  If no window has focus, X-Plane receives
+ *    keystrokes.  Use this to implement typing in dialog boxes, etc.  Only
+ *    one window may have focus at a time; your window will be notified if it
+ *    loses focus.
+ * 2. If you need low level access to the keystroke stream, install a key
+ *    sniffer.  Key sniffers can be installed above everything or right in
+ *    front of the sim.
+ * 3. If you would like to associate key strokes with commands/functions in
+ *    your plug-in, you should simply register a command (via
+ *    XPLMCreateCommand()) and allow users to bind whatever key they choose to
+ *    that command. Another (now deprecated) method of doing so is to use a
+ *    hot key---a key-specific callback.  Hotkeys are sent based on virtual
+ *    key strokes, so any key may be distinctly mapped with any modifiers. 
+ *    Hot keys can be remapped by other plug-ins.  As a plug-in, you don't
+ *    have to worry about what your hot key ends up mapped to; other plug-ins
+ *    may provide a UI for remapping keystrokes.  So hotkeys allow a user to
+ *    resolve conflicts and customize keystrokes.
  *
  */
+
 
 #include "XPLMDefs.h"
+
+#include "XPLMUtilities.h"
+
+#include "XPLMScenery.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
 /***************************************************************************
  * DRAWING CALLBACKS
  ***************************************************************************/
 /*
- * Basic drawing callbacks, for low level intercepting of render loop. The 
- * purpose of drawing callbacks is to provide targeted additions or  
- * replacements to x-plane's graphics environment (for example, to add extra 
- * custom objects, or replace drawing of the AI aircraft).  Do not assume that 
- * the drawing callbacks will be called in the order implied by the 
- * enumerations. Also do not assume that each drawing phase ends before 
- * another begins; they may be nested.                                         
+ * Basic drawing callbacks, for low level intercepting of X-Plane's render
+ * loop. The purpose of drawing callbacks is to provide targeted additions or
+ * replacements to X-Plane's graphics environment (for example, to add extra
+ * custom objects, or replace drawing of the AI aircraft).  Do not assume that
+ * the drawing callbacks will be called in the order implied by the
+ * enumerations. Also do not assume that each drawing phase ends before
+ * another begins; they may be nested.
+ * 
+ * Note that all APIs in this section are deprecated, and will likely be
+ * removed during the X-Plane 11 run as part of the transition to
+ * Vulkan/Metal/etc. See the XPLMInstance API for future-proof drawing of 3-D
+ * objects.
  *
  */
-
 
 
 /*
  * XPLMDrawingPhase
  * 
- * This constant indicates which part of drawing we are in.  Drawing is done 
- * from the back to the front.  We get a callback before or after each item. 
- * Metaphases provide access to the beginning and end of the 3d (scene) and 2d 
- * (cockpit) drawing in a manner that is independent of new phases added  via 
- * x-plane implementation. 
+ * This constant indicates which part of drawing we are in.  Drawing is done
+ * from the back to the front.  We get a callback before or after each item.
+ * Metaphases provide access to the beginning and end of the 3d (scene) and
+ * 2d (cockpit) drawing in a manner that is independent of new phases added
+ *  via X-Plane implementation.
  * 
- * WARNING: As X-Plane's scenery evolves, some drawing phases may cease to  
- * exist and new ones may be invented.  If you need a particularly specific 
- * use of these codes, consult Austin and/or be prepared to revise your code 
- * as X-Plane evolves.                                                         
+ * **NOTE**: As of XPLM302 the legacy 3D drawing phases (xplm_Phase_FirstScene
+ *   to xplm_Phase_LastScene) are deprecated. When running under X-Plane 11.50
+ *   with the modern Vulkan or Metal backend, X-Plane will no longer call
+ *   these drawing phases. There is a new drawing phase, xplm_Phase_Modern3D,
+ *   which is supported under OpenGL and Vulkan which is called out roughly
+ *   where the old before xplm_Phase_Airplanes phase was for blending. This
+ *   phase is *NOT* supported under Metal and comes with potentially
+ *   substantial performance overhead. Please do *NOT* opt into this phase if
+ *   you don't do any actual drawing that requires the depth buffer in some
+ *   way!
+ * 
+ * **WARNING**: As X-Plane's scenery evolves, some drawing phases may cease to
+ *   exist and new ones may be invented.  If you need a particularly specific
+ *   use of these codes, consult Austin and/or be prepared to revise your code
+ *   as X-Plane evolves.
  *
  */
 enum {
-     /* This is the earliest point at which you can draw in 3-d.                    */
-     xplm_Phase_FirstScene                    = 0
 
-     /* Drawing of land and water.                                                  */
-    ,xplm_Phase_Terrain                       = 5
+#if defined(XPLM_DEPRECATED)
+    /* Deprecated as of XPLM302. This is the earliest point at which you can draw *
+     * in 3-d.                                                                    */
+    xplm_Phase_FirstScene                    = 0,
 
-     /* Drawing runways and other airport detail.                                   */
-    ,xplm_Phase_Airports                      = 10
+#endif /* XPLM_DEPRECATED */
 
-     /* Drawing roads, trails, trains, etc.                                         */
-    ,xplm_Phase_Vectors                       = 15
+#if defined(XPLM_DEPRECATED)
+    /* Deprecated as of XPLM302. Drawing of land and water.                       */
+    xplm_Phase_Terrain                       = 5,
 
-     /* 3-d objects (houses, smokestacks, etc.                                      */
-    ,xplm_Phase_Objects                       = 20
+#endif /* XPLM_DEPRECATED */
 
-     /* External views of airplanes, both yours and the AI aircraft.                */
-    ,xplm_Phase_Airplanes                     = 25
+#if defined(XPLM_DEPRECATED)
+    /* Deprecated as of XPLM302. Drawing runways and other airport detail.        */
+    xplm_Phase_Airports                      = 10,
 
-     /* This is the last point at which you can draw in 3-d.                        */
-    ,xplm_Phase_LastScene                     = 30
+#endif /* XPLM_DEPRECATED */
 
-     /* This is the first phase where you can draw in 2-d.                          */
-    ,xplm_Phase_FirstCockpit                  = 35
+#if defined(XPLM_DEPRECATED)
+    /* Deprecated as of XPLM302. Drawing roads, trails, trains, etc.              */
+    xplm_Phase_Vectors                       = 15,
 
-     /* The non-moving parts of the aircraft panel.                                 */
-    ,xplm_Phase_Panel                         = 40
+#endif /* XPLM_DEPRECATED */
 
-     /* The moving parts of the aircraft panel.                                     */
-    ,xplm_Phase_Gauges                        = 45
+#if defined(XPLM_DEPRECATED)
+    /* Deprecated as of XPLM302. 3-d objects (houses, smokestacks, etc.           */
+    xplm_Phase_Objects                       = 20,
 
-     /* Floating windows from plugins.                                              */
-    ,xplm_Phase_Window                        = 50
+#endif /* XPLM_DEPRECATED */
 
-     /* The last change to draw in 2d.                                              */
-    ,xplm_Phase_LastCockpit                   = 55
+#if defined(XPLM_DEPRECATED)
+    /* Deprecated as of XPLM302. External views of airplanes, both yours and the  *
+     * AI aircraft.                                                               */
+    xplm_Phase_Airplanes                     = 25,
+
+#endif /* XPLM_DEPRECATED */
+
+#if defined(XPLM_DEPRECATED)
+    /* Deprecated as of XPLM302. This is the last point at which you can draw in  *
+     * 3-d.                                                                       */
+    xplm_Phase_LastScene                     = 30,
+
+#endif /* XPLM_DEPRECATED */
+
+#if defined(XPLM302)
+    /* A chance to do modern 3D drawing.                                          */
+    xplm_Phase_Modern3D                      = 31,
+
+#endif /* XPLM302 */
+
+    /* This is the first phase where you can draw in 2-d.                         */
+    xplm_Phase_FirstCockpit                  = 35,
+
+
+    /* The non-moving parts of the aircraft panel.                                */
+    xplm_Phase_Panel                         = 40,
+
+
+    /* The moving parts of the aircraft panel.                                    */
+    xplm_Phase_Gauges                        = 45,
+
+
+    /* Floating windows from plugins.                                             */
+    xplm_Phase_Window                        = 50,
+
+
+    /* The last chance to draw in 2d.                                             */
+    xplm_Phase_LastCockpit                   = 55,
+
 
 #if defined(XPLM200)
-     /* 3-d Drawing for the local map.  Use regular OpenGL coordinates to draw in   *
-      * this phase.                                                                 */
-    ,xplm_Phase_LocalMap3D                    = 100
+    /* Removed as of XPLM300; Use the full-blown XPLMMap API instead.             */
+    xplm_Phase_LocalMap3D                    = 100,
 
 #endif /* XPLM200 */
+
 #if defined(XPLM200)
-     /* 2-d Drawing of text over the local map.                                     */
-    ,xplm_Phase_LocalMap2D                    = 101
+    /* Removed as of XPLM300; Use the full-blown XPLMMap API instead.             */
+    xplm_Phase_LocalMap2D                    = 101,
 
 #endif /* XPLM200 */
+
 #if defined(XPLM200)
-     /* Drawing of the side-profile view in the local map screen.                   */
-    ,xplm_Phase_LocalMapProfile               = 102
+    /* Removed as of XPLM300; Use the full-blown XPLMMap API instead.             */
+    xplm_Phase_LocalMapProfile               = 102,
 
 #endif /* XPLM200 */
 
@@ -166,181 +243,1262 @@ typedef int XPLMDrawingPhase;
 /*
  * XPLMDrawCallback_f
  * 
- * This is the prototype for a low level drawing callback.  You are passed in 
- * the phase and whether it is before or after.  If you are before the phase, 
- * return 1 to let x-plane draw or 0 to suppress x-plane drawing.  If you are 
- * after the phase the return value is ignored. 
+ * This is the prototype for a low level drawing callback.  You are passed in
+ * the phase and whether it is before or after.  If you are before the phase,
+ * return true to let X-Plane draw or false to suppress X-Plane drawing.  If
+ * you are after the phase the return value is ignored.
  * 
- * Refcon is a unique value that you specify when registering the callback, 
- * allowing you to slip a pointer to your own data to the callback. 
+ * Refcon is a unique value that you specify when registering the callback,
+ * allowing you to slip a pointer to your own data to the callback.
  * 
- * Upon entry the OpenGL context will be correctly set up for you and OpenGL 
- * will be in 'local' coordinates for 3d drawing and panel coordinates for 2d 
- * drawing.  The OpenGL state (texturing, etc.) will be unknown.               
+ * Upon entry the OpenGL context will be correctly set up for you and OpenGL
+ * will be in 'local' coordinates for 3d drawing and panel coordinates for 2d
+ * drawing.  The OpenGL state (texturing, etc.) will be unknown.
  *
  */
 typedef int (* XPLMDrawCallback_f)(
-                                   XPLMDrawingPhase     inPhase,    
-                                   int                  inIsBefore,    
-                                   void *               inRefcon);    
-
-/*
- * XPLMKeySniffer_f
- * 
- * This is the prototype for a low level key-sniffing function.  Window-based 
- * UI _should not use this_!  The windowing system provides high-level 
- * mediated keyboard access.  By comparison, the key sniffer provides low 
- * level keyboard access. 
- * 
- * Key sniffers are provided to allow libraries to provide non-windowed user  
- * interaction.  For example, the MUI library uses a key sniffer to do pop-up 
- * text entry. 
- * 
- * inKey is the character pressed, inRefCon is a value you supply during 
- * registration. Return 1 to pass the key on to the next sniffer, the window 
- * mgr, x-plane, or whomever is down stream.  Return 0 to consume the key. 
- * 
- * Warning: this API declares virtual keys as a signed character; however the 
- * VKEY #define macros in XPLMDefs.h define the vkeys using unsigned values 
- * (that is 0x80 instead of -0x80).  So you may need to cast the incoming vkey 
- * to an unsigned char to get correct comparisons in C.                        
- *
- */
-typedef int (* XPLMKeySniffer_f)(
-                                   char                 inChar,    
-                                   XPLMKeyFlags         inFlags,    
-                                   char                 inVirtualKey,    
-                                   void *               inRefcon);    
+                         XPLMDrawingPhase     inPhase,
+                         int                  inIsBefore,
+                         void*                inRefcon);
 
 /*
  * XPLMRegisterDrawCallback
  * 
- * This routine registers a low level drawing callback.  Pass in the phase you 
- * want to be called for and whether you want to be called before or after.  
- * This routine returns 1 if the registration was successful, or 0 if the 
- * phase does not exist in this version of x-plane.  You may register a 
- * callback multiple times for the same or different phases as long as the 
- * refcon is unique each time.                                                 
+ * This routine registers a low level drawing callback.  Pass in the phase you
+ * want to be called for and whether you want to be called before or after. 
+ * This routine returns true if the registration was successful, or false if
+ * the phase does not exist in this version of X-Plane.  You may register a
+ * callback multiple times for the same or different phases as long as the
+ * refcon is unique each time.
+ * 
+ * Note that this function will likely be removed during the X-Plane 11 run as
+ * part of the transition to Vulkan/Metal/etc. See the XPLMInstance API for
+ * future-proof drawing of 3-D objects.
  *
  */
-XPLM_API int                  XPLMRegisterDrawCallback(
-                                   XPLMDrawCallback_f   inCallback,    
-                                   XPLMDrawingPhase     inPhase,    
-                                   int                  inWantsBefore,    
-                                   void *               inRefcon);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMRegisterDrawCallback(
+                         XPLMDrawCallback_f   inCallback,
+                         XPLMDrawingPhase     inPhase,
+                         int                  inWantsBefore,
+                         void*                inRefcon);
 
 /*
  * XPLMUnregisterDrawCallback
  * 
- * This routine unregisters a draw callback.  You must unregister a callback 
- * for each  time you register a callback if you have registered it multiple 
- * times with different refcons.  The routine returns 1 if it can find the 
- * callback to unregister, 0 otherwise.                                        
+ * This routine unregisters a draw callback.  You must unregister a callback
+ * for each time you register a callback if you have registered it multiple
+ * times with different refcons.  The routine returns true if it can find the
+ * callback to unregister, false otherwise.
+ * 
+ * Note that this function will likely be removed during the X-Plane 11 run as
+ * part of the transition to Vulkan/Metal/etc. See the XPLMInstance API for
+ * future-proof drawing of 3-D objects.
  *
  */
-XPLM_API int                  XPLMUnregisterDrawCallback(
-                                   XPLMDrawCallback_f   inCallback,    
-                                   XPLMDrawingPhase     inPhase,    
-                                   int                  inWantsBefore,    
-                                   void *               inRefcon);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMUnregisterDrawCallback(
+                         XPLMDrawCallback_f   inCallback,
+                         XPLMDrawingPhase     inPhase,
+                         int                  inWantsBefore,
+                         void*                inRefcon);
+
+#if defined(XPLM400)
+/***************************************************************************
+ * AVIONICS API
+ ***************************************************************************/
+/*
+ * The Avionics API allows you to customize the drawing and behaviour of the
+ * built-in cockpit devices (GNS, G1000, etc.), and create your own cockpit
+ * devices. For built-in devices, you can draw before and/or after X-Plane
+ * does, and optionally prevent X-Plane from drawing the screen at all.
+ * Customized built-in devices and custom devices are available in the 3D
+ * cockpit as well as in the form of pop-up/pop-out windows.
+ * 
+ * The API also allows you to receive mouse interaction events for your device
+ * (click down, drag, and up, mouse wheel scroll, cursor) for both screen and
+ * bezel. While these always work when the device is popped-up in its window,
+ * you must add a `ATTR_manip_device` manipulator on top of your screen in
+ * order to receive mouse events from the 3D cockpit.
+ * 
+ * You can also use the avionics API to control the state and location of
+ * cockpit devices' pop-up windows.
+ * 
+ * When working with avionics devices, all co-ordinates you receive when
+ * drawing or dealing with click events are in texels. The x-axis grows right,
+ * the y-axis grows up. In bezel callbacks, the origin is at the bottom left
+ * corner of the bezel. In screen callbacks, the origin is at the bottom-left
+ * of the screen. X-Plane takes care of scaling your screen and bezel if the
+ * user pops out the device's window: you should always draw your screen and
+ * bezel as if they were at the size you specified when registering callbacks
+ * or creating a device.
+ *
+ */
+
+
+#if defined(XPLM440)
+/*
+ * XPLMWindowContentType
+ * 
+ * XPLMWindowContentType describes how the content for a window (or an
+ * avionics device's screen) is provided.
+ *
+ */
+enum {
+
+    /* The window is drawn by calling back your plugin, which will draw using     *
+     * OpenGL and XPLM APIs. You provide mouse and keyboard hooks for interaction.*/
+    xplm_WindowContentTypeOpenGL             = 0,
+
+
+    /* The window is drawn by calling back your plugin, which will draw using     *
+     * panel graphics APIs. You provide mouse and keyboard hooks for interaction. */
+    xplm_WindowContentTypePanelGraphics      = 1,
+
+
+    /* The window content is specified using a web page.                          */
+    xplm_WindowContentTypeBrowser            = 2,
+
+
+};
+typedef int XPLMWindowContentType;
+#endif /* XPLM440 */
 
 /*
- * XPLMRegisterKeySniffer
+ * XPLMDeviceID
  * 
- * This routine registers a key sniffing callback.  You specify whether you 
- * want to sniff before the window system, or only sniff keys the window 
- * system does not consume.  You should ALMOST ALWAYS sniff non-control keys 
- * after the window system.  When the window system consumes a key, it is 
- * because the user has "focused" a window.  Consuming the key or taking 
- * action based on the key will produce very weird results.  Returns 1 if 
- * successful.                                                                 
+ * This constant indicates the device we want to override or enhance. We can
+ * get a callback before or after each item.
  *
  */
-XPLM_API int                  XPLMRegisterKeySniffer(
-                                   XPLMKeySniffer_f     inCallback,    
-                                   int                  inBeforeWindows,    
-                                   void *               inRefcon);    
+enum {
+
+    /* GNS430, pilot side.                                                        */
+    xplm_device_GNS430_1                     = 0,
+
+
+    /* GNS430, copilot side.                                                      */
+    xplm_device_GNS430_2                     = 1,
+
+
+    /* GNS530, pilot side.                                                        */
+    xplm_device_GNS530_1                     = 2,
+
+
+    /* GNS530, copilot side.                                                      */
+    xplm_device_GNS530_2                     = 3,
+
+
+    /* generic airliner CDU, pilot side.                                          */
+    xplm_device_CDU739_1                     = 4,
+
+
+    /* generic airliner CDU, copilot side.                                        */
+    xplm_device_CDU739_2                     = 5,
+
+
+    /* G1000 Primary Flight Display, pilot side.                                  */
+    xplm_device_G1000_PFD_1                  = 6,
+
+
+    /* G1000 Multifunction Display.                                               */
+    xplm_device_G1000_MFD                    = 7,
+
+
+    /* G1000 Primary Flight Display, copilot side.                                */
+    xplm_device_G1000_PFD_2                  = 8,
+
+
+    /* Primus CDU, pilot side.                                                    */
+    xplm_device_CDU815_1                     = 9,
+
+
+    /* Primus CDU, copilot side.                                                  */
+    xplm_device_CDU815_2                     = 10,
+
+
+    /* Primus Primary Flight Display, pilot side.                                 */
+    xplm_device_Primus_PFD_1                 = 11,
+
+
+    /* Primus Primary Flight Display, copilot side.                               */
+    xplm_device_Primus_PFD_2                 = 12,
+
+
+    /* Primus Multifunction Display, pilot side.                                  */
+    xplm_device_Primus_MFD_1                 = 13,
+
+
+    /* Primus Multifunction Display, copilot side.                                */
+    xplm_device_Primus_MFD_2                 = 14,
+
+
+    /* Primus Multifunction Display, central.                                     */
+    xplm_device_Primus_MFD_3                 = 15,
+
+
+    /* Primus Radio Management Unit, pilot side.                                  */
+    xplm_device_Primus_RMU_1                 = 16,
+
+
+    /* Primus Radio Management Unit, copilot side.                                */
+    xplm_device_Primus_RMU_2                 = 17,
+
+
+    /* Airbus MCDU, pilot side.                                                   */
+    xplm_device_MCDU_1                       = 18,
+
+
+    /* Airbus MCDU, copilot side.                                                 */
+    xplm_device_MCDU_2                       = 19,
+
+
+#if defined(XPLM430)
+    /* Airbus MCDU 3.                                                             */
+    xplm_device_MCDU_3                       = 24,
+
+#endif /* XPLM430 */
+
+};
+typedef int XPLMDeviceID;
 
 /*
- * XPLMUnregisterKeySniffer
+ * XPLMAvionicsCallback_f
  * 
- * This routine unregisters a key sniffer.  You must unregister a key sniffer 
- * for every time you register one with the exact same signature.  Returns 1 
- * if successful.                                                              
+ * This is the prototype for drawing callbacks for customized built-in device.
+ * You are passed in the device you are enhancing/replacing, and (if this is
+ * used for a built-in device that you are customizing) whether it is before
+ * or after X-Plane drawing. If you are before X-Plane, return true to let
+ * X-Plane draw or false to suppress X-Plane drawing. If you are called after
+ * X-Plane, the return value is ignored.
+ * 
+ * Refcon is a unique value that you specify when registering the callback,
+ * allowing you to slip a pointer to your own data to the callback.
+ * 
+ * Upon entry the OpenGL context will be correctly set up for you and OpenGL
+ * will be in panel coordinates for 2d drawing.  The OpenGL state (texturing,
+ * etc.) will be unknown.
  *
  */
-XPLM_API int                  XPLMUnregisterKeySniffer(
-                                   XPLMKeySniffer_f     inCallback,    
-                                   int                  inBeforeWindows,    
-                                   void *               inRefcon);    
+typedef int (* XPLMAvionicsCallback_f)(
+                         XPLMDeviceID         inDeviceID,
+                         int                  inIsBefore,
+                         void*                inRefcon);
+
+#if defined(XPLM410)
+/*
+ * XPLMAvionicsMouse_f
+ * 
+ * Mouse click callback for clicks into your screen or (2D-popup) bezel,
+ * useful if the device you are making simulates a touch-screen the user can
+ * click in the 3d cockpit, or if your pop-up's bezel has buttons that the
+ * user can click. Return true to consume the event, or false to let X-Plane
+ * process it (for stock avionics devices).
+ * 
+ * - x, y: the coordinate at which the mouse was clicked.
+ * - inMouse: the type of mouse event - down-click, drag, or up-click.
+ *
+ */
+typedef int (* XPLMAvionicsMouse_f)(
+                         int                  x,
+                         int                  y,
+                         XPLMMouseStatus      inMouse,
+                         void*                inRefcon);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMAvionicsMouseWheel_f
+ * 
+ * Mouse wheel callback for scroll actions into your screen or (2D-popup)
+ * bezel, useful if your bezel has knobs that can be turned using the mouse
+ * wheel, or if you want to simulate pinch-to-zoom on a touchscreen. Return
+ * true to consume the event, or false to let X-Plane process it (for stock
+ * avionics devices). The number of "clicks" indicates how far the wheel was
+ * turned since the last callback. The wheel is 0 for the vertical axis or 1
+ * for the horizontal axis (for OS/mouse combinations that support this).
+ * 
+ * - x, y: the coordinate at which the wheel was scrolled.
+ *
+ */
+typedef int (* XPLMAvionicsMouseWheel_f)(
+                         int                  x,
+                         int                  y,
+                         int                  wheel,
+                         int                  clicks,
+                         void*                inRefcon);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMAvionicsCursor_f
+ * 
+ * Cursor callback that decides which cursor to show when the mouse is over
+ * your screen or (2D-popup) bezel. Return xplm_CursorDefault to let X-Plane
+ * use which cursor to show, or other values to force the cursor to a
+ * particular one (see XPLMCursorStatus).
+ * 
+ * - x, y: the coordinate at which the mouse is hovering.
+ *
+ */
+typedef XPLMCursorStatus (* XPLMAvionicsCursor_f)(
+                         int                  x,
+                         int                  y,
+                         void*                inRefcon);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMAvionicsKeyboard_f
+ * 
+ * Key callback called when your device is popped up and you've requested to
+ * capture the keyboard.  Return true to consume the event, or false to let
+ * X-Plane process it (for stock avionics devices).
+ *
+ */
+typedef int (* XPLMAvionicsKeyboard_f)(
+                         char                 inKey,
+                         XPLMKeyFlags         inFlags,
+                         char                 inVirtualKey,
+                         void*                inRefcon,
+                         int                  losingFocus);
+#endif /* XPLM410 */
+
+/*
+ * XPLMAvionicsID
+ * 
+ * This is an opaque identifier for an avionics display that you enhance or
+ * replace.  When you register your callbacks (via
+ * XPLMRegisterAvionicsCallbacksEx()) or create a new device (via
+ * XPLMCreateAvionicsDevice()), you will specify drawing and mouse callbacks,
+ * and get back such a handle.
+ *
+ */
+typedef void * XPLMAvionicsID;
+
+/*
+ * XPLMCustomizeAvionics_t
+ * 
+ * The XPLMCustomizeAvionics_t structure defines all of the parameters used to
+ * replace or  enhance built-in simulator avionics devices using
+ * XPLMRegisterAvionicsCallbacksEx(). The structure will be expanded in future
+ * SDK APIs to include more features. Always set the structSize member to the
+ * size of your struct in bytes!
+ *
+ */
+typedef struct {
+
+    /* Used to inform XPLMRegisterAvionicsCallbacksEx() of the SDK version you    *
+     * compiled against; should always be set to sizeof(XPLMCustomizeAvionics_t)  */
+     int                       structSize;
+
+    /* The built-in avionics device to which you want your drawing applied.       */
+     XPLMDeviceID              deviceId;
+
+    /* The draw callback to be called before X-Plane draws.                       */
+     XPLMAvionicsCallback_f    drawCallbackBefore;
+
+    /* The draw callback to be called after X-Plane has drawn.                    */
+     XPLMAvionicsCallback_f    drawCallbackAfter;
+
+#if defined(XPLM410)
+    /* The mouse click callback that is called when the user clicks onto the      *
+     * device's bezel.                                                            */
+     XPLMAvionicsMouse_f       bezelClickCallback;
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+    /* The mouse click callback that is called when the user clicks onto the      *
+     * device's bezel.                                                            */
+     XPLMAvionicsMouse_f       bezelRightClickCallback;
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+    /* The callback that is called when the users uses the scroll wheel over the  *
+     * device's bezel.                                                            */
+     XPLMAvionicsMouseWheel_f  bezelScrollCallback;
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+    /* The callback that lets you determine what cursor should be shown when the  *
+     * mouse is over the device's bezel.                                          */
+     XPLMAvionicsCursor_f      bezelCursorCallback;
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+    /* The mouse click callback that is called when the user clicks onto the      *
+     * device's screen.                                                           */
+     XPLMAvionicsMouse_f       screenTouchCallback;
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+    /* The right mouse click callback that is called when the user clicks onto the*
+     * device's screen.                                                           */
+     XPLMAvionicsMouse_f       screenRightTouchCallback;
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+    /* The callback that is called when the users uses the scroll wheel over the  *
+     * device's screen.                                                           */
+     XPLMAvionicsMouseWheel_f  screenScrollCallback;
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+    /* The callback that lets you determine what cursor should be shown when the  *
+     * mouse is over the device's screen.                                         */
+     XPLMAvionicsCursor_f      screenCursorCallback;
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+    /* The key callback that is called when the user types in the device's popup. */
+     XPLMAvionicsKeyboard_f    keyboardCallback;
+#endif /* XPLM410 */
+
+    /* A reference which will be passed into each of your draw callbacks. Use this*
+     * to pass information to yourself as needed.                                 */
+     void*                     refcon;
+
+#if defined(XPLM440)
+    /* How this device's screen is drawn: xplm_WindowContentTypeOpenGL (the legacy*
+     * OpenGL bridge) or xplm_WindowContentTypePanelGraphics (native              *
+     * panel-graphics rendering). xplm_WindowContentTypeBrowser is not valid for  *
+     * avionics.                                                                  */
+     XPLMWindowContentType     contentType;
+#endif /* XPLM440 */
+} XPLMCustomizeAvionics_t;
+
+/*
+ * XPLMRegisterAvionicsCallbacksEx
+ * 
+ * This routine registers your callbacks for a built-in device. This returns a
+ * handle. If the returned handle is NULL, there was a problem interpreting
+ * your input, most likely the struct size was wrong for your SDK version. If
+ * the returned handle is not NULL, your callbacks will be called according to
+ * schedule as long as your plugin is not deactivated, or unloaded, or you
+ * call XPLMUnregisterAvionicsCallbacks().
+ * 
+ * Note that you cannot register new callbacks for a device that is not a
+ * built-in one (for example a device that you have created, or a device
+ * another plugin has created).
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API XPLMAvionicsID XPLMRegisterAvionicsCallbacksEx(
+                         XPLMCustomizeAvionics_t * inParams);
+
+/*
+ * XPLMGetAvionicsHandle
+ * 
+ * This routine registers no callbacks for a built-in cockpit device, but
+ * returns a handle which allows you to interact with it using the Avionics
+ * Device API. Use this if you do not wish to intercept drawing, clicks and
+ * touchscreen calls to a device, but want to interact with its popup
+ * programmatically. This is equivalent to calling
+ * XPLMRegisterAvionicsCallbackEx() with NULL for all callbacks.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API XPLMAvionicsID XPLMGetAvionicsHandle(
+                         XPLMDeviceID         inDeviceID);
+
+/*
+ * XPLMUnregisterAvionicsCallbacks
+ * 
+ * This routine unregisters your callbacks for a built-in device. You should
+ * only call this for handles you acquired from
+ * XPLMRegisterAvionicsCallbacksEx(). They will no longer be called.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMUnregisterAvionicsCallbacks(
+                         XPLMAvionicsID       inAvionicsId);
+
+#if defined(XPLM410)
+/*
+ * XPLMAvionicsScreenCallback_f
+ * 
+ * This is the prototype for drawing callbacks for custom devices' screens.
+ * Refcon is a unique value that you specify when creating the device,
+ * allowing you to slip a pointer to your own data to the callback.
+ * 
+ * Upon entry the OpenGL context will be correctly set up for you and OpenGL
+ * will be in panel coordinates for 2d drawing.  The OpenGL state (texturing,
+ * etc.) will be unknown. X-Plane does not clear your screen for you between
+ * calls - this means you can re-use portions to save drawing, but otherwise
+ * you must call glClear() to erase the screen's contents.
+ *
+ */
+typedef void (* XPLMAvionicsScreenCallback_f)(
+                         void*                inRefcon);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMAvionicsBezelCallback_f
+ * 
+ * This is the prototype for drawing callbacks for custom devices' bezel. You
+ * are passed in the red, green, and blue values you can optinally use for
+ * tinting your bezel accoring to ambiant light.
+ * 
+ * Refcon is a unique value that you specify when creating the device,
+ * allowing you to slip a pointer to your own data to the callback.
+ * 
+ * Upon entry the OpenGL context will be correctly set up for you and OpenGL
+ * will be in panel coordinates for 2d drawing.  The OpenGL state (texturing,
+ * etc.) will be unknown.
+ *
+ */
+typedef void (* XPLMAvionicsBezelCallback_f)(
+                         float                inAmbiantR,
+                         float                inAmbiantG,
+                         float                inAmbiantB,
+                         void*                inRefcon);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMAvionicsBrightness_f
+ * 
+ * This is the prototype for screen brightness callbacks for custom devices.
+ * If you provide a callback, you can return the ratio of the screen's maximum
+ * brightness that the simulator should use when displaying the screen in the
+ * 3D cockpit.
+ * 
+ * inRheoValue is the current ratio value (between 0 and 1) of the instrument
+ * brightness rheostat to which the device is bound.
+ * 
+ * inAmbientBrightness is the value (between 0 and 1) that the callback should
+ * return for the screen to be at a usable brightness based on ambient light
+ * (if your device has a photo cell and automatically adjusts its brightness,
+ * you can return this and your screen will be at the optimal brightness to be
+ * readable, but not blind the pilot).
+ * 
+ * inBusVoltsRatio is the ratio of the nominal voltage currently present on
+ * the electrical bus powering the device. This is the same value
+ * XPLMGetAvionicsBusVoltsRatio() returns, including its handling of devices
+ * wired to several buses: 1.0 if the author assigned the device to no bus at
+ * all, and -1 if the device is not bound to the current aircraft.
+ * 
+ * Refcon is a unique value that you specify when creating the device,
+ * allowing you to slip a pointer to your own data to the callback.
+ *
+ */
+typedef float (* XPLMAvionicsBrightness_f)(
+                         float                inRheoValue,
+                         float                inAmbiantBrightness,
+                         float                inBusVoltsRatio,
+                         void*                inRefcon);
+#endif /* XPLM410 */
+
+#if defined(XPLM440)
+/*
+ * XPLMAvionicsBrowserLoadFinished_f
+ * 
+ * Called for a browser-content-type avionics device when its main frame
+ * finishes loading a page. This is NOT a guarantee that the load succeeded: a
+ * page that renders an HTTP error response (e.g. a server's 404 page) also
+ * "finishes" here. A navigation that fails before the page renders fires
+ * XPLMAvionicsBrowserLoadError_f instead. If your page needs to know its own
+ * HTTP status, have it report that from JavaScript via a browser function.
+ * Set this via browserLoadFinishedFunc in XPLMCreateAvionics_t.
+ *
+ */
+typedef void (* XPLMAvionicsBrowserLoadFinished_f)(
+                         XPLMAvionicsID       inAvionics,
+                         const char *         inURL,
+                         void*                inRefcon);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMAvionicsBrowserLoadError_f
+ * 
+ * Called for a browser-content-type avionics device when a navigation fails
+ * at the network level (bad URL, host unreachable, TLS failure, file not
+ * found). inError describes the failure. This may be followed by
+ * XPLMAvionicsBrowserLoadFinished_f for a substitute error page, so treat a
+ * load error as the authoritative signal that the navigation to inURL failed.
+ * Set this via browserLoadErrorFunc in XPLMCreateAvionics_t.
+ *
+ */
+typedef void (* XPLMAvionicsBrowserLoadError_f)(
+                         XPLMAvionicsID       inAvionics,
+                         const char *         inURL,
+                         const char *         inError,                /* Can be NULL */
+                         void*                inRefcon);
+#endif /* XPLM440 */
+
+#if defined(XPLM410)
+/*
+ * XPLMCreateAvionics_t
+ * 
+ * The XPLMCreateAvionics_t structure defines all of the parameters used to
+ * generate your own glass cockpit device by using XPLMCreateAvionicsEx(). The
+ * structure will be expanded in future SDK APIs to include more features.
+ * Always set the structSize member to the size of your struct in bytes!
+ *
+ */
+typedef struct {
+
+    /* Used to inform XPLMCreateAvionicsEx() of the SDK version you compiled      *
+     * against; should always be set to sizeof(XPLMCreateAvionics_t)              */
+     int                       structSize;
+
+    /* Width of the device's screen in pixels.                                    */
+     int                       screenWidth;
+
+    /* Height of the device's screen in pixels.                                   */
+     int                       screenHeight;
+
+    /* Width of the bezel around your device's screen for 2D pop-ups.             */
+     int                       bezelWidth;
+
+    /* Height of the bezel around your device's screen for 2D pop-ups.            */
+     int                       bezelHeight;
+
+    /* The screen's lateral offset into the bezel for 2D pop-ups.                 */
+     int                       screenOffsetX;
+
+    /* The screen's vertical offset into the bezel for 2D pop-ups.                */
+     int                       screenOffsetY;
+
+    /* If set to true (1), X-Plane won't call your plugin to re-render the        *
+     * device's screen every frame. Instead, you should tell X-Plane you want to  *
+     * refresh your screen with XPLMAvionicsNeedsDrawing(), and X-Plane will call *
+     * you before rendering the next simulator frame.                             */
+     int                       drawOnDemand;
+
+    /* The draw callback you will use to draw the 2D-popup bezel. This is called  *
+     * only when the popup window is visible, and X-Plane is about to draw the    *
+     * bezel in it.                                                               */
+     XPLMAvionicsBezelCallback_f bezelDrawCallback;
+
+    /* The draw callback you will be using to draw into the device's screen       *
+     * framebuffer.                                                               */
+     XPLMAvionicsScreenCallback_f drawCallback;
+
+    /* The mouse click callback that is called when the user clicks onto your     *
+     * bezel.                                                                     */
+     XPLMAvionicsMouse_f       bezelClickCallback;
+
+    /* The mouse click callback that is called when the user clicks onto your     *
+     * bezel.                                                                     */
+     XPLMAvionicsMouse_f       bezelRightClickCallback;
+
+    /* The callback that is called when the users uses the scroll wheel over your *
+     * avionics' bezel.                                                           */
+     XPLMAvionicsMouseWheel_f  bezelScrollCallback;
+
+    /* The callback that lets you determine what cursor should be shown when the  *
+     * mouse is over your device's bezel.                                         */
+     XPLMAvionicsCursor_f      bezelCursorCallback;
+
+    /* The mouse click callback that is called when the user clicks onto your     *
+     * screen.                                                                    */
+     XPLMAvionicsMouse_f       screenTouchCallback;
+
+    /* The right mouse click callback that is called when the user clicks onto    *
+     * your screen.                                                               */
+     XPLMAvionicsMouse_f       screenRightTouchCallback;
+
+    /* The callback that is called when the users uses the scroll wheel over your *
+     * avionics' screen.                                                          */
+     XPLMAvionicsMouseWheel_f  screenScrollCallback;
+
+    /* The callback that lets you determine what cursor should be shown when the  *
+     * mouse is over your device's screen.                                        */
+     XPLMAvionicsCursor_f      screenCursorCallback;
+
+    /* The key callback that is called when the user types in your popup.         */
+     XPLMAvionicsKeyboard_f    keyboardCallback;
+
+    /* The callback that is called to determine the absolute brightness of the    *
+     * device's screen. Set to NULL to use X-Plane's default behaviour.           */
+     XPLMAvionicsBrightness_f  brightnessCallback;
+
+    /* A null-terminated string of maximum 64 characters to uniquely identify your*
+     * cockpit device. This must be unique (you cannot re-use an ID that X-Plane  *
+     * or another plugin provides), and it must not contain spaces. This is the   *
+     * string the OBJ file must reference when marking polygons with              *
+     * ATTR_cockpit_device. The string is copied when you call                    *
+     * XPLMCreateAvionicsEx, so you don't need to hold this string in memory after*
+     * the call.                                                                  */
+     char const*               deviceID;
+
+    /* A null-terminated string to give a user-readable name to your device, which*
+     * can be presented in UI dialogs.                                            */
+     char const*               deviceName;
+
+    /* A reference which will be passed into your draw and mouse callbacks. Use   *
+     * this to pass information to yourself as needed.                            */
+     void*                     refcon;
+
+#if defined(XPLM440)
+    /* How this device's screen is drawn: xplm_WindowContentTypeOpenGL (the legacy*
+     * OpenGL bridge), xplm_WindowContentTypePanelGraphics (native panel-graphics *
+     * rendering), or xplm_WindowContentTypeBrowser (a CEF web view). For a       *
+     * browser device the single web page covers the whole bezel including the    *
+     * screen; X-Plane copies the screen sub-rectangle into the device's          *
+     * framebuffer, so your drawCallback/bezelDrawCallback are not used. Drive the*
+     * page with XPLMAvionicsSetURL() and friends. Browser content is only valid  *
+     * for devices you create here, not when customising a built-in device.       */
+     XPLMWindowContentType     contentType;
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+    /* If set to true (1), X-Plane will draw the chrome with the close and pop-out*
+     * buttons outside of your bezel, rather than having the buttons steal pixels *
+     * from your bezel.                                                           */
+     int                       windowWithChrome;
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+    /* For browser content (xplm_WindowContentTypeBrowser): called when a page's  *
+     * main frame finishes loading. Not a success guarantee --a rendered HTTP     *
+     * error page finishes too. Set to NULL if you don't need it.                 */
+     XPLMAvionicsBrowserLoadFinished_f browserLoadFinishedFunc;
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+    /* For browser content (xplm_WindowContentTypeBrowser): called when a         *
+     * navigation fails at the network level, with a description of the failure.  *
+     * Set to NULL if you don't need it.                                          */
+     XPLMAvionicsBrowserLoadError_f browserLoadErrorFunc;
+#endif /* XPLM440 */
+} XPLMCreateAvionics_t;
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMCreateAvionicsEx
+ * 
+ * Creates a new cockpit device to be used in the 3D cockpit. You can call
+ * this at any time: if an aircraft referencing your device is loaded before
+ * your plugin, the simulator will make sure to retroactively map your display
+ * into it.
+ * 
+ *             When you are done with the device, and at least before your
+ *             plugin is unloaded, you should destroy the device using
+ *             XPLMDestroyAvionics().
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API XPLMAvionicsID XPLMCreateAvionicsEx(
+                         XPLMCreateAvionics_t * inParams);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMDestroyAvionics
+ * 
+ * Destroys the cockpit device and deallocates its screen's memory. You should
+ * only ever call this for devices that you created using
+ * XPLMCreateAvionicsEx(), not X-Plane' built-ine devices you have customised.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMDestroyAvionics(
+                         XPLMAvionicsID       inHandle);
+#endif /* XPLM410 */
+
+#if defined(XPLM440)
+/*
+ * XPLMAvionicsSetURL
+ * 
+ * Loads a URL into a browser-content-type avionics device (one created via
+ * XPLMCreateAvionicsEx() with contentType xplm_WindowContentTypeBrowser).
+ * Safe to call before the underlying webview has finished initialising; the
+ * load is queued and applied as soon as the browser is ready, so you may call
+ * this immediately after XPLMCreateAvionicsEx(). Subsequent calls replace the
+ * pending or current page. Has no effect on non-browser devices.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMAvionicsSetURL(
+                         XPLMAvionicsID       inAvionicsID,
+                         const char *         inURL);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMAvionicsRefresh
+ * 
+ * Reloads the current URL in a browser-content-type avionics device. Pass
+ * true for inIgnoreCache to bypass the HTTP cache (the equivalent of a
+ * shift-reload). Has no effect on non-browser devices.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMAvionicsRefresh(
+                         XPLMAvionicsID       inAvionicsID,
+                         int                  inIgnoreCache);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMAvionicsInjectScript
+ * 
+ * Executes a JavaScript snippet in the main frame of a browser-content-type
+ * avionics device. The script has access to the same xplane.* namespace
+ * exposed to the page. If injected before the page has finished loading, it
+ * may run against an empty document. Has no effect on non-browser devices.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMAvionicsInjectScript(
+                         XPLMAvionicsID       inAvionicsID,
+                         const char *         inScript);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMAvionicsBrowserCallback_f
+ * 
+ * Handler invoked when the page in a browser-content-type avionics device
+ * calls xplane.<name>(arg). You receive the device, the argument serialised
+ * as a JSON string, and your refcon; return a JSON string (or NULL) that the
+ * JS Promise resolves to.
+ *
+ */
+typedef const char * (* XPLMAvionicsBrowserCallback_f)(
+                         XPLMAvionicsID       inAvionicsID,
+                         const char *         inJSON,
+                         void*                inRefcon);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMAvionicsAddBrowserFunction
+ * 
+ * Registers a callback that the page running in a browser-content-type
+ * avionics device can invoke as xplane.<inName>(arg). The JS call returns a
+ * Promise that resolves to the value your XPLMAvionicsBrowserCallback_f
+ * returns (parsed as JSON). Registering the same name again replaces the
+ * previous callback. Each device has its own independent xplane.* namespace.
+ * Has no effect on non-browser devices.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMAvionicsAddBrowserFunction(
+                         XPLMAvionicsID       inAvionicsID,
+                         const char *         inName,
+                         XPLMAvionicsBrowserCallback_f inFunction,
+                         void*                inRefcon);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMSetObjectAvionics
+ * 
+ * Glues a cockpit device you created with XPLMCreateAvionicsEx() onto a 3D
+ * object you loaded with XPLMLoadObject(), so that the device's screen is
+ * drawn on that object - typically one you draw in the world using the
+ * instancing API (XPLMCreateInstance()).
+ * 
+ * The device is matched to the object's screen by ID: the object must declare
+ * an `ATTR_cockpit_device` with the same device ID string you passed to
+ * XPLMCreateAvionicsEx(). The binding is a property of the object itself, so
+ * every instance you draw from that object shows the same device. You may
+ * only bind devices you created yourself, not X-Plane's built-in devices.
+ * 
+ * Brightness on the object follows your device's own brightness callback,
+ * independent of any aircraft electrical system.
+ * 
+ * Returns 1 if the object had a matching device screen and the binding
+ * succeeded, or 0 otherwise.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMSetObjectAvionics(
+                         XPLMObjectRef        inObject,
+                         XPLMAvionicsID       inAvionics);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMClearObjectAvionics
+ * 
+ * Removes a binding previously made with XPLMSetObjectAvionics(), restoring
+ * the object's device screen to black and detaching its click handler.
+ * Bindings are also cleared automatically when you destroy the device with
+ * XPLMDestroyAvionics().
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMClearObjectAvionics(
+                         XPLMObjectRef        inObject,
+                         XPLMAvionicsID       inAvionics);
+#endif /* XPLM440 */
+
+#if defined(XPLM410)
+/*
+ * XPLMIsAvionicsBound
+ * 
+ * Returns true (1) if the cockpit device with the given handle is used by the
+ * current aircraft.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMIsAvionicsBound(
+                         XPLMAvionicsID       inHandle);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMSetAvionicsBrightnessRheo
+ * 
+ * Sets the brightness setting's value, between 0 and 1, for the screen of the
+ * cockpit device with the given handle.
+ * 
+ * If the device is bound to the current aircraft, this is a shortcut to
+ * setting the brightness rheostat value using the
+ * `sim/cockpit2/switches/instrument_brightness_ratio[]` dataref; this sets
+ * the slot in the `instrument_brightness_ratio` array to which the device is
+ * bound.
+ * 
+ * If the device is not currently bound, the device keeps track of its own
+ * screen brightness rheostat, allowing you to control the brightness even
+ * though it isn't connected to the `instrument_brightness_ratio` dataref.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetAvionicsBrightnessRheo(
+                         XPLMAvionicsID       inHandle,
+                         float                brightness);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMGetAvionicsBrightnessRheo
+ * 
+ * Returns the brightness setting value, between 0 and 1, for the screen of
+ * the cockpit device with the given handle.
+ * 
+ *         If the device is bound to the current aircraft, this is a shortcut
+ *         to getting the brightness rheostat value from the
+ *         `sim/cockpit2/switches/instrument_brightness_ratio[]` dataref; this
+ *         gets the slot in the `instrument_brightness_ratio` array to which
+ *         the device is bound.
+ * 
+ *         If the device is not currently bound, this returns the device's own
+ *         brightness rheostat value.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API float      XPLMGetAvionicsBrightnessRheo(
+                         XPLMAvionicsID       inHandle);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMGetAvionicsBusVoltsRatio
+ * 
+ * Returns the ratio of the nominal voltage (1.0 means full nominal voltage)
+ * of the electrical bus powering the cockpit device with the given handle.
+ * 
+ * An aircraft author can wire a device to any combination of the six
+ * electrical buses. When more than one is selected, this returns the ratio
+ * for the highest-numbered selected bus that both exists on the current
+ * aircraft and is above the aircraft's low-voltage red line. If no selected
+ * bus meets that test, this returns 0 - so 0 means the device has no usable
+ * power, not that a bus measured zero volts.
+ * 
+ * If the device is bound but the author assigned it to no bus at all, this
+ * returns 1.0; X-Plane treats such a device as always powered. If the device
+ * is not bound to the current aircraft, this returns -1.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API float      XPLMGetAvionicsBusVoltsRatio(
+                         XPLMAvionicsID       inHandle);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMIsCursorOverAvionics
+ * 
+ * Returns true (1) if the mouse is currently over the screen of cockpit
+ * device with the given handle. If they are not NULL, the optional x and y
+ * arguments are filled with the co-ordinates of the mouse cursor in device
+ * co-ordinates.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMIsCursorOverAvionics(
+                         XPLMAvionicsID       inHandle,
+                         int *                outX,                   /* Can be NULL */
+                         int *                outY);                  /* Can be NULL */
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMAvionicsNeedsDrawing
+ * 
+ * Tells X-Plane that your device's screen needs to be re-drawn. If your
+ * device is marked for on-demand drawing, X-Plane will call your screen
+ * drawing callback before drawing the next simulator frame. If your device is
+ * already drawn every frame, this has no effect.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMAvionicsNeedsDrawing(
+                         XPLMAvionicsID       inHandle);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMSetAvionicsPopupVisible
+ * 
+ * Shows or hides the popup window for a cockpit device.
+ * 
+ * Visibility is independent of where the popup is drawn (in the X-Plane
+ * window, popped out as an OS window, or mapped to a VR floating window): the
+ * popup always remains in whichever target mode you most recently selected,
+ * and toggling visibility just shows or hides it there.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetAvionicsPopupVisible(
+                         XPLMAvionicsID       inHandle,
+                         int                  inVisible);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMIsAvionicsPopupVisible
+ * 
+ * Returns true (1) if the popup window for a cockpit device is visible.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMIsAvionicsPopupVisible(
+                         XPLMAvionicsID       inHandle);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMPopOutAvionics
+ * 
+ * Pops out the window for a cockpit device, making it a first-class window in
+ * the operating system, separate from the X-Plane window.
+ * 
+ * Popping out and being mapped to VR are mutually exclusive: if the device is
+ * currently mapped to VR (XPLMIsAvionicsMappedToVR() is true), calling this
+ * routine clears its VR mapping before popping out.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMPopOutAvionics(
+                         XPLMAvionicsID       inHandle);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMIsAvionicsPoppedOut
+ * 
+ * Returns true (1) if the popup window for a cockpit device is popped out as
+ * a first-class OS window.
+ * 
+ * This is true if and only if you have most recently asked the popup to be
+ * popped out (via XPLMPopOutAvionics()) and it has not since been mapped to
+ * VR (via XPLMSetAvionicsMappedToVR()).
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMIsAvionicsPoppedOut(
+                         XPLMAvionicsID       inHandle);
+#endif /* XPLM410 */
+
+#if defined(XPLM440)
+/*
+ * XPLMSetAvionicsMappedToVR
+ * 
+ * Maps a custom cockpit device's popup window to a VR floating window in the
+ * headset, or returns it from VR back to the X-Plane window. Pass 1 to map to
+ * VR, 0 to unmap.
+ * 
+ * The VR window shows the device's bezel and screen at their intrinsic size,
+ * as supplied via XPLMCreateAvionicsEx(). Avionics in VR are not
+ * user-resizable.
+ * 
+ * Mapping to VR and being popped out as an OS window are mutually exclusive:
+ * calling this with inMapped=1 on a popped-out device clears its pop-out
+ * state, and calling XPLMPopOutAvionics() on a VR-mapped device clears its VR
+ * mapping. This mirrors the relationship between xplm_WindowPopOut and
+ * xplm_WindowVR for XPLMWindow.
+ * 
+ * VR mapping is independent of popup visibility
+ * (XPLMSetAvionicsPopupVisible). Mapping a hidden popup to VR leaves it
+ * hidden until you make it visible.
+ * 
+ * Has no effect (and logs a warning) if VR is not currently running on the
+ * headset, or if the device was not created via XPLMCreateAvionicsEx()
+ * (built-in avionics cannot be VR-mapped).
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetAvionicsMappedToVR(
+                         XPLMAvionicsID       inHandle,
+                         int                  inMapped);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMIsAvionicsMappedToVR
+ * 
+ * Returns true (1) if the popup window for a cockpit device is currently
+ * mapped to a VR floating window.
+ * 
+ * This is true if and only if you have most recently asked the device to be
+ * mapped to VR (via XPLMSetAvionicsMappedToVR()) and it has not since been
+ * unmapped, popped out, or had VR shut down beneath it.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMIsAvionicsMappedToVR(
+                         XPLMAvionicsID       inHandle);
+#endif /* XPLM440 */
+
+#if defined(XPLM410)
+/*
+ * XPLMTakeAvionicsKeyboardFocus
+ * 
+ * This routine gives keyboard focus to the popup window of a custom cockpit
+ * device, if it is visible.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMTakeAvionicsKeyboardFocus(
+                         XPLMAvionicsID       inHandle);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMHasAvionicsKeyboardFocus
+ * 
+ * Returns true (1) if the popup window for a cockpit device has keyboard
+ * focus.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMHasAvionicsKeyboardFocus(
+                         XPLMAvionicsID       inHandle);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMGetAvionicsGeometry
+ * 
+ * Returns the bounds of a cockpit device's popup window in the X-Plane
+ * coordinate system.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMGetAvionicsGeometry(
+                         XPLMAvionicsID       inHandle,
+                         int *                outLeft,                /* Can be NULL */
+                         int *                outTop,                 /* Can be NULL */
+                         int *                outRight,               /* Can be NULL */
+                         int *                outBottom);             /* Can be NULL */
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMSetAvionicsGeometry
+ * 
+ * Sets the size and position of a cockpit device's popup window in the
+ * X-Plane coordinate system.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetAvionicsGeometry(
+                         XPLMAvionicsID       inHandle,
+                         int                  inLeft,
+                         int                  inTop,
+                         int                  inRight,
+                         int                  inBottom);
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMGetAvionicsGeometryOS
+ * 
+ * Returns the bounds of a cockpit device's popped-out window.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMGetAvionicsGeometryOS(
+                         XPLMAvionicsID       inHandle,
+                         int *                outLeft,                /* Can be NULL */
+                         int *                outTop,                 /* Can be NULL */
+                         int *                outRight,               /* Can be NULL */
+                         int *                outBottom);             /* Can be NULL */
+#endif /* XPLM410 */
+
+#if defined(XPLM410)
+/*
+ * XPLMSetAvionicsGeometryOS
+ * 
+ * Sets the size and position of a cockpit device's popped-out window.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetAvionicsGeometryOS(
+                         XPLMAvionicsID       inHandle,
+                         int                  inLeft,
+                         int                  inTop,
+                         int                  inRight,
+                         int                  inBottom);
+#endif /* XPLM410 */
+#endif /* XPLM400 */
 
 /***************************************************************************
  * WINDOW API
  ***************************************************************************/
 /*
- * Window API, for higher level drawing with UI interaction. 
+ * The window API provides a high-level abstraction for drawing with UI
+ * interaction.
  * 
- * Note: all 2-d (and thus all window drawing) is done in 'cockpit pixels'.  
- * Even when the OpenGL window contains more than 1024x768 pixels, the cockpit 
- * drawing is magnified so that only 1024x768 pixels are available.            
+ * Windows may operate in one of two modes: legacy (for plugins compiled
+ * against old versions of the XPLM, as well as windows created via the
+ * deprecated XPLMCreateWindow() function, rather than XPLMCreateWindowEx()),
+ * or modern (for windows compiled against the XPLM300 or newer API, and
+ * created via XPLMCreateWindowEx()).
+ * 
+ * Modern windows have access to new X-Plane 11 windowing features, like
+ * support for new positioning modes (including being "popped out" into their
+ * own first-class window in the operating system). They can also optionally
+ * be decorated in the style of X-Plane 11 windows (like the map).
+ * 
+ * Modern windows operate in "boxel" units. A boxel ("box of pixels") is a
+ * unit of virtual pixels which, depending on X-Plane's scaling, may
+ * correspond to an arbitrary NxN "box" of real pixels on screen. Because
+ * X-Plane handles this scaling automatically, you can effectively treat the
+ * units as though you were simply drawing in pixels, and know that when
+ * X-Plane is running with 150% or 200% scaling, your drawing will be
+ * automatically scaled (and likewise all mouse coordinates, screen bounds,
+ * etc. will also be auto-scaled).
+ * 
+ * In contrast, legacy windows draw in true screen pixels, and thus tend to
+ * look quite small when X-Plane is operating in a scaled mode.
+ * 
+ * Legacy windows have their origin in the lower left of the main X-Plane
+ * window. In contrast, since modern windows are not constrained to the main
+ * window, they have their origin in the lower left of the entire global
+ * desktop space, and the lower left of the main X-Plane window is not
+ * guaranteed to be (0, 0). In both cases, x increases as you move left, and y
+ * increases as you move up.
  *
  */
 
-
-
-/*
- * XPLMMouseStatus
- * 
- * When the mouse is clicked, your mouse click routine is called repeatedly.  
- * It is first called with the mouse down message.  It is then called zero or 
- * more times with the mouse-drag message, and finally it is called once with 
- * the mouse up message.  All of these messages will be directed to the same 
- * window.                                                                     
- *
- */
-enum {
-     xplm_MouseDown                           = 1
-
-    ,xplm_MouseDrag                           = 2
-
-    ,xplm_MouseUp                             = 3
-
-
-};
-typedef int XPLMMouseStatus;
-
-#if defined(XPLM200)
-/*
- * XPLMCursorStatus
- * 
- * XPLMCursorStatus describes how you would like X-Plane to manage the cursor. 
- * See XPLMHandleCursor_f for more info.                                       
- *
- */
-enum {
-     /* X-Plane manages the cursor normally, plugin does not affect the cusrsor.    */
-     xplm_CursorDefault                       = 0
-
-     /* X-Plane hides the cursor.                                                   */
-    ,xplm_CursorHidden                        = 1
-
-     /* X-Plane shows the cursor as the default arrow.                              */
-    ,xplm_CursorArrow                         = 2
-
-     /* X-Plane shows the cursor but lets you select an OS cursor.                  */
-    ,xplm_CursorCustom                        = 3
-
-
-};
-typedef int XPLMCursorStatus;
-#endif /* XPLM200 */
 
 /*
  * XPLMWindowID
  * 
- * This is an opaque identifier for a window.  You use it to control your 
- * window. When you create a window, you will specify callbacks to handle 
- * drawing and mouse interaction, etc.                                         
+ * This is an opaque identifier for a window.  You use it to control your
+ * window. When you create a window (via either XPLMCreateWindow() or
+ * XPLMCreateWindowEx()), you will specify callbacks to handle drawing, mouse
+ * interaction, etc.
  *
  */
 typedef void * XPLMWindowID;
@@ -348,337 +1506,1314 @@ typedef void * XPLMWindowID;
 /*
  * XPLMDrawWindow_f
  * 
- * This function handles drawing.  You are passed in your window and its 
- * refcon. Draw the window.  You can use XPLM functions to find the current 
- * dimensions of your window, etc.  When this callback is called, the OpenGL 
- * context will be set properly for cockpit drawing. NOTE: Because you are 
- * drawing your window over a background, you can make a translucent window 
- * easily by simply not filling in your entire window's bounds.                
+ * A callback to handle 2-D drawing of your window.  You are passed in your
+ * window and its refcon. Draw the window.  You can use other XPLM functions
+ * from this header to find the current dimensions of your window, etc.  When
+ * this callback is called, the OpenGL context will be set properly for 2-D
+ * window drawing.
+ * 
+ * **Note**: Because you are drawing your window over a background, you can
+ *   make a translucent window easily by simply not filling in your entire
+ *   window's bounds.
  *
  */
 typedef void (* XPLMDrawWindow_f)(
-                                   XPLMWindowID         inWindowID,    
-                                   void *               inRefcon);    
+                         XPLMWindowID         inWindowID,
+                         void*                inRefcon);
 
 /*
  * XPLMHandleKey_f
  * 
- * This function is called when a key is pressed or keyboard focus is taken 
- * away from your window.  If losingFocus is 1, you are losign the keyboard 
- * focus, otherwise a key was pressed and inKey contains its character.  You 
- * are also passewd your window and a  refcon. Warning: this API declares 
- * virtual keys as a signed character; however the VKEY #define macros in 
- * XPLMDefs.h define the vkeys using unsigned values (that is 0x80 instead of 
- * -0x80).  So you may need to cast the incoming vkey to an unsigned char to 
- * get correct comparisons in C.                                               
+ * This function is called when a key is pressed or keyboard focus is taken
+ * away from your window.  If losingFocus is 1, you are losing the keyboard
+ * focus, otherwise a key was pressed and inKey contains its character.
+ * 
+ * The window ID passed in will be your window for key presses, or the other
+ * window taking focus  when losing focus. Note that in the modern plugin
+ * system, often focus is taken by the window manager itself; for this resaon,
+ * the window ID may be zero when losing focus, and you should not write code
+ * that depends onit.
+ * 
+ * The refcon passed in will be the one from registration, for both key
+ * presses and losing focus.  
+ * 
+ * Warning: this API declares virtual keys as a signed character; however the
+ * VKEY #define macros in XPLMDefs.h define the vkeys using unsigned values
+ * (that is 0x80 instead of -0x80).  So you may need to cast the incoming vkey
+ * to an unsigned char to get correct comparisons in C.
  *
  */
 typedef void (* XPLMHandleKey_f)(
-                                   XPLMWindowID         inWindowID,    
-                                   char                 inKey,    
-                                   XPLMKeyFlags         inFlags,    
-                                   char                 inVirtualKey,    
-                                   void *               inRefcon,    
-                                   int                  losingFocus);    
+                         XPLMWindowID         inWindowID,
+                         char                 inKey,
+                         XPLMKeyFlags         inFlags,
+                         char                 inVirtualKey,
+                         void*                inRefcon,
+                         int                  losingFocus);
 
 /*
  * XPLMHandleMouseClick_f
  * 
- * You receive this call when the mouse button is pressed down or released.  
- * Between then these two calls is a drag.  You receive the x and y of the 
- * click, your window,  and a refcon.  Return 1 to consume the click, or 0 to 
- * pass it through. 
+ * You receive this call for one of three events:
  * 
- * WARNING: passing clicks through windows (as of this writing) causes mouse 
- * tracking problems in X-Plane; do not use this feature!                      
+ * - when the user clicks the mouse button down
+ * - (optionally) when the user drags the mouse after a down-click, but before
+ *   the up-click
+ * - when the user releases the down-clicked mouse button.
+ * 
+ * You receive the x and y of the click, your window, and a refcon.  Return 1
+ * to consume the click, or 0 to pass it through.
+ * 
+ * - inMouse: the type of mouse event - down-click, drag, or up-click.
+ * 
+ * WARNING: passing clicks through windows (as of this writing) causes mouse
+ * tracking problems in X-Plane; do not use this feature!
+ * 
+ * The units for x and y values match the units used in your window. Thus, for
+ * "modern" windows (those created via XPLMCreateWindowEx() and compiled
+ * against the XPLM300 library), the units are boxels, while legacy windows
+ * will get pixels. Legacy windows have their origin in the lower left of the
+ * main X-Plane window, while modern windows have their origin in the lower
+ * left of the global desktop space. In both cases, x increases as you move
+ * right, and y increases as you move up.
  *
  */
 typedef int (* XPLMHandleMouseClick_f)(
-                                   XPLMWindowID         inWindowID,    
-                                   int                  x,    
-                                   int                  y,    
-                                   XPLMMouseStatus      inMouse,    
-                                   void *               inRefcon);    
+                         XPLMWindowID         inWindowID,
+                         int                  x,
+                         int                  y,
+                         XPLMMouseStatus      inMouse,
+                         void*                inRefcon);
 
 #if defined(XPLM200)
 /*
  * XPLMHandleCursor_f
  * 
- * The SDK calls your cursor status callback when the mouse is over your 
- * plugin window.  Return a cursor status code to indicate how you would like 
- * X-Plane to manage the cursor.  If you return xplm_CursorDefault, the SDK 
- * will try lower-Z-order plugin windows, then let the sim manage the cursor. 
+ * The SDK calls your cursor status callback when the mouse is over your
+ * plugin window.  Return a cursor status code to indicate how you would like
+ * X-Plane to manage the cursor.  If you return xplm_CursorDefault, the SDK
+ * will try lower-Z-order plugin windows, then let the sim manage the cursor.
  * 
- * Note: you should never show or hide the cursor yourself - these APIs are 
- * typically reference-counted and thus  cannot safely and predictably be used 
- * by the SDK.  Instead return one of xplm_CursorHidden to hide the cursor or 
- * xplm_CursorArrow/xplm_CursorCustom to show the cursor. 
+ * Note: you should never show or hide the cursor yourself---these APIs are
+ * typically reference-counted and thus cannot safely and predictably be used
+ * by the SDK.  Instead return one of xplm_CursorHidden to hide the cursor or
+ * xplm_CursorArrow/xplm_CursorCustom to show the cursor.
  * 
- * If you want to implement a custom cursor by drawing a cursor in OpenGL, use 
- * xplm_CursorHidden to hide the OS cursor and draw the cursor using a 2-d 
- * drawing callback (after xplm_Phase_Window is probably a good choice).  If 
- * you want to use a custom OS-based cursor, use xplm_CursorCustom to ask 
- * X-Plane to show the cursor but not affect its image.  You can then use an 
- * OS specific call like SetThemeCursor (Mac) or SetCursor/LoadCursor 
- * (Windows).                                                                  
+ * If you want to implement a custom cursor by drawing a cursor in OpenGL, use
+ * xplm_CursorHidden to hide the OS cursor and draw the cursor using a 2-d
+ * drawing callback (after xplm_Phase_Window is probably a good choice, but
+ * see deprecation warnings on the drawing APIs!).  If you want to use a
+ * custom OS-based cursor, use xplm_CursorCustom to ask X-Plane to show the
+ * cursor but not affect its image.  You can then use an OS specific call like
+ * SetThemeCursor (Mac) or SetCursor/LoadCursor (Windows).
+ * 
+ * The units for x and y values match the units used in your window. Thus, for
+ * "modern" windows (those created via XPLMCreateWindowEx() and compiled
+ * against the XPLM300 library), the units are boxels, while legacy windows
+ * will get pixels. Legacy windows have their origin in the lower left of the
+ * main X-Plane window, while modern windows have their origin in the lower
+ * left of the global desktop space. In both cases, x increases as you move
+ * right, and y increases as you move up.
  *
  */
 typedef XPLMCursorStatus (* XPLMHandleCursor_f)(
-                                   XPLMWindowID         inWindowID,    
-                                   int                  x,    
-                                   int                  y,    
-                                   void *               inRefcon);    
+                         XPLMWindowID         inWindowID,
+                         int                  x,
+                         int                  y,
+                         void*                inRefcon);
 #endif /* XPLM200 */
 
 #if defined(XPLM200)
 /*
  * XPLMHandleMouseWheel_f
  * 
- * The SDK calls your mouse wheel callback when one of the mouse wheels is 
- * turned within your window.  Return 1 to consume the  mouse wheel clicks or 
- * 0 to pass them on to a lower window.  (You should consume mouse wheel 
- * clicks even if they do nothing if your window appears opaque to the user.)  
- * The number of clicks indicates how far the wheel was turned since the last 
- * callback. The wheel is 0 for the vertical axis or 1 for the horizontal axis 
- * (for OS/mouse combinations that support this).                              
+ * The SDK calls your mouse wheel callback when one of the mouse wheels is
+ * scrolled within your window.  Return true to consume the mouse wheel
+ * movement or false to pass them on to a lower window.  (If your window
+ * appears opaque to the user, you should consume mouse wheel scrolling even
+ * if it does nothing.)  The number of "clicks" indicates how far the wheel
+ * was turned since the last callback. The wheel is 0 for the vertical axis or
+ * 1 for the horizontal axis (for OS/mouse combinations that support this).
+ * 
+ * The units for x and y values match the units used in your window. Thus, for
+ * "modern" windows (those created via XPLMCreateWindowEx() and compiled
+ * against the XPLM300 library), the units are boxels, while legacy windows
+ * will get pixels. Legacy windows have their origin in the lower left of the
+ * main X-Plane window, while modern windows have their origin in the lower
+ * left of the global desktop space. In both cases, x increases as you move
+ * right, and y increases as you move up.
  *
  */
 typedef int (* XPLMHandleMouseWheel_f)(
-                                   XPLMWindowID         inWindowID,    
-                                   int                  x,    
-                                   int                  y,    
-                                   int                  wheel,    
-                                   int                  clicks,    
-                                   void *               inRefcon);    
+                         XPLMWindowID         inWindowID,
+                         int                  x,
+                         int                  y,
+                         int                  wheel,
+                         int                  clicks,
+                         void*                inRefcon);
 #endif /* XPLM200 */
+
+#if defined(XPLM440)
+/*
+ * XPLMBrowserLoadFinished_f
+ * 
+ * Called for a browser-content-type window when its main frame finishes
+ * loading a page. NOT a success guarantee --a rendered HTTP error page (e.g.
+ * a 404) also finishes here. A navigation that fails before the page renders
+ * fires XPLMBrowserLoadError_f instead. Set this via browserLoadFinishedFunc
+ * in XPLMCreateWindow_t.
+ *
+ */
+typedef void (* XPLMBrowserLoadFinished_f)(
+                         XPLMWindowID         inWindow,
+                         const char *         inURL,
+                         void*                inRefcon);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMBrowserLoadError_f
+ * 
+ * Called for a browser-content-type window when a navigation fails at the
+ * network level (bad URL, host unreachable, TLS failure, file not found).
+ * inError describes the failure. May be followed by XPLMBrowserLoadFinished_f
+ * for a substitute error page, so treat this as the authoritative signal that
+ * the navigation to inURL failed. Set this via browserLoadErrorFunc in
+ * XPLMCreateWindow_t.
+ *
+ */
+typedef void (* XPLMBrowserLoadError_f)(
+                         XPLMWindowID         inWindow,
+                         const char *         inURL,
+                         const char *         inError,                /* Can be NULL */
+                         void*                inRefcon);
+#endif /* XPLM440 */
+
+#if defined(XPLM300)
+/*
+ * XPLMWindowLayer
+ * 
+ * XPLMWindowLayer describes where in the ordering of windows X-Plane should
+ * place a particular window. Windows in higher layers cover windows in lower
+ * layers. So, a given window might be at the top of its particular layer, but
+ * it might still be obscured by a window in a higher layer. (This happens
+ * frequently when floating windows, like X-Plane's map, are covered by a
+ * modal alert.)
+ * 
+ * Your window's layer can only be specified when you create the window (in
+ * the XPLMCreateWindow_t you pass to XPLMCreateWindowEx()). For this reason,
+ * layering only applies to windows created with new X-Plane 11 GUI features.
+ * (Windows created using the older XPLMCreateWindow(), or windows compiled
+ * against a pre-XPLM300 version of the SDK will simply be placed in the
+ * flight overlay window layer.)
+ *
+ */
+enum {
+
+    /* The lowest layer, used for HUD-like displays while flying.                 */
+    xplm_WindowLayerFlightOverlay            = 0,
+
+
+    /* Windows that "float" over the sim, like the X-Plane 11 map does. If you are*
+     * not sure which layer to create your window in, choose floating.            */
+    xplm_WindowLayerFloatingWindows          = 1,
+
+
+    /* An interruptive modal that covers the sim with a transparent black overlay *
+     * to draw the user's focus to the alert                                      */
+    xplm_WindowLayerModal                    = 2,
+
+
+    /* "Growl"-style notifications that are visible in a corner of the screen,    *
+     * even over modals                                                           */
+    xplm_WindowLayerGrowlNotifications       = 3,
+
+
+};
+typedef int XPLMWindowLayer;
+#endif /* XPLM300 */
+
+#if defined(XPLM301)
+/*
+ * XPLMWindowDecoration
+ * 
+ * XPLMWindowDecoration describes how "modern" windows will be displayed. This
+ * impacts both how X-Plane draws your window as well as certain mouse
+ * handlers.
+ * 
+ * Your window's decoration can only be specified when you create the window
+ * (in the XPLMCreateWindow_t you pass to XPLMCreateWindowEx()).
+ *
+ */
+enum {
+
+    /* X-Plane will draw no decoration for your window, and apply no automatic    *
+     * click handlers. The window will not stop click from passing through its    *
+     * bounds. This is suitable for "windows" which request, say, the full screen *
+     * bounds, then only draw in a small portion of the available area.           */
+    xplm_WindowDecorationNone                = 0,
+
+
+    /* The default decoration for "native" windows, like the map. Provides a solid*
+     * background, as well as click handlers for resizing and dragging the window.*/
+    xplm_WindowDecorationRoundRectangle      = 1,
+
+
+    /* X-Plane will draw no decoration for your window, nor will it provide resize*
+     * handlers for your window edges, but it will stop clicks from passing       *
+     * through your windows bounds.                                               */
+    xplm_WindowDecorationSelfDecorated       = 2,
+
+
+    /* Like self-decorated, but with resizing; X-Plane will draw no decoration for*
+     * your window, but it will stop clicks from passing through your windows     *
+     * bounds, and provide automatic mouse handlers for resizing.                 */
+    xplm_WindowDecorationSelfDecoratedResizable = 3,
+
+
+};
+typedef int XPLMWindowDecoration;
+#endif /* XPLM301 */
 
 #if defined(XPLM200)
 /*
  * XPLMCreateWindow_t
  * 
- * The XPMCreateWindow_t structure defines all of the parameters used to 
- * create a window using XPLMCreateWindowEx.  The structure will be expanded 
- * in future SDK APIs to include more features.  Always set the structSize 
- * member to the size of your struct in bytes!                                 
+ * XPLMCreateWindow_t defines all of the parameters used to create a modern
+ * window using XPLMCreateWindowEx(). The structure has been expanded in later
+ * SDK versions and will be expanded again; the fields present in your build
+ * are the ones your SDK version defines, and structSize is how X-Plane knows
+ * which of them you filled in.  Always set the structSize member to the size
+ * of your struct in bytes!
+ * 
+ * Of the callbacks, only drawWindowFunc is required, and only for a window
+ * that draws through your plugin; see XPLMCreateWindowEx() for the rules.
+ * 
+ * All windows created by this function in the XPLM300 version of the API are
+ * created with the new X-Plane 11 GUI features. This means your plugin will
+ * get to "know" about the existence of X-Plane windows other than the main
+ * window. All drawing and mouse callbacks for your window will occur in
+ * "boxels," giving your windows automatic support for high-DPI scaling in
+ * X-Plane. In addition, your windows can opt-in to decoration with the
+ * X-Plane 11 window styling, and you can use the
+ * XPLMSetWindowPositioningMode() API to make your window "popped out" into a
+ * first-class operating system window.
+ * 
+ * Note that this requires dealing with your window's bounds in "global
+ * desktop" positioning units, rather than the traditional panel coordinate
+ * system. In global desktop coordinates, the main X-Plane window may not have
+ * its origin at coordinate (0, 0), and your own window may have negative
+ * coordinates. Assuming you don't implicitly assume (0, 0) as your origin,
+ * the only API change you should need is to start using
+ * XPLMGetMouseLocationGlobal() rather than XPLMGetMouseLocation(), and
+ * XPLMGetScreenBoundsGlobal() instead of XPLMGetScreenSize().
+ * 
+ * If you ask to be decorated as a floating window, you'll get the blue window
+ * control bar and blue backing that you see in X-Plane 11's normal "floating"
+ * windows (like the map).
  *
  */
 typedef struct {
+
+    /* Used to inform XPLMCreateWindowEx() of the SDK version you compiled        *
+     * against; should always be set to sizeof(XPLMCreateWindow_t)                */
      int                       structSize;
+
+    /* Left bound, in global desktop boxels                                       */
      int                       left;
+
+    /* Top bound, in global desktop boxels                                        */
      int                       top;
+
+    /* Right bound, in global desktop boxels                                      */
      int                       right;
+
+    /* Bottom bound, in global desktop boxels                                     */
      int                       bottom;
+
      int                       visible;
+
+    /* A callback to draw your window's contents. Required for OpenGL and         *
+     * panel-graphics content; may be NULL only for browser content, which draws  *
+     * itself.                                                                    */
      XPLMDrawWindow_f          drawWindowFunc;
+
+    /* A callback to handle the user left-clicking within your window (or NULL to *
+     * ignore left clicks)                                                        */
      XPLMHandleMouseClick_f    handleMouseClickFunc;
+
+    /* A callback to handle keyboard input (or NULL to ignore keyboard input)     */
      XPLMHandleKey_f           handleKeyFunc;
+
+    /* A callback to determine the cursor shape over your window (or NULL for the *
+     * default cursor)                                                            */
      XPLMHandleCursor_f        handleCursorFunc;
+
+    /* A callback to handle scroll-wheel events (or NULL to ignore them)          */
      XPLMHandleMouseWheel_f    handleMouseWheelFunc;
-     void *                    refcon;
+
+    /* A reference which will be passed into each of your window callbacks. Use   *
+     * this to pass information to yourself as needed.                            */
+     void*                     refcon;
+
+#if defined(XPLM301)
+    /* Specifies the type of X-Plane 11-style "wrapper" you want around your      *
+     * window, if any                                                             */
+     XPLMWindowDecoration      decorateAsFloatingWindow;
+#endif /* XPLM301 */
+
+#if defined(XPLM300)
+     XPLMWindowLayer           layer;
+#endif /* XPLM300 */
+
+#if defined(XPLM300)
+    /* A callback to handle the user right-clicking within your window (or NULL to*
+     * ignore right clicks)                                                       */
+     XPLMHandleMouseClick_f    handleRightClickFunc;
+#endif /* XPLM300 */
+
+#if defined(XPLM440)
+    /* How this window is drawn: xplm_WindowContentTypeOpenGL (the legacy OpenGL  *
+     * bridge), xplm_WindowContentTypePanelGraphics (native panel-graphics        *
+     * rendering), or xplm_WindowContentTypeBrowser (a CEF web view). A browser   *
+     * window draws itself, so drawWindowFunc is not used; drive the page with    *
+     * XPLMWindowSetURL() and friends.                                            */
+     XPLMWindowContentType     contentType;
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+    /* For browser content: called when the main frame finishes loading (not a    *
+     * success guarantee --error pages finish too). NULL if unused.               */
+     XPLMBrowserLoadFinished_f browserLoadFinishedFunc;
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+    /* For browser content: called when a navigation fails at the network level.  *
+     * NULL if unused.                                                            */
+     XPLMBrowserLoadError_f    browserLoadErrorFunc;
+#endif /* XPLM440 */
 } XPLMCreateWindow_t;
 #endif /* XPLM200 */
-
-/*
- * XPLMGetScreenSize
- * 
- * This routine returns the size of the size of the X-Plane OpenGL window in 
- * pixels.  Please note that this is not the size of the screen when  doing 
- * 2-d drawing (the 2-d screen is currently always 1024x768, and  graphics are 
- * scaled up by OpenGL when doing 2-d drawing for higher-res monitors).  This 
- * number can be used to get a rough idea of the amount of detail the user 
- * will be able to see when drawing in 3-d.                                    
- *
- */
-XPLM_API void                 XPLMGetScreenSize(
-                                   int *                outWidth,    /* Can be NULL */
-                                   int *                outHeight);    /* Can be NULL */
-
-/*
- * XPLMGetMouseLocation
- * 
- * This routine returns the current mouse location in cockpit pixels.  The 
- * bottom left corner of the display is 0,0.  Pass NULL to not receive info 
- * about either parameter.                                                     
- *
- */
-XPLM_API void                 XPLMGetMouseLocation(
-                                   int *                outX,    /* Can be NULL */
-                                   int *                outY);    /* Can be NULL */
-
-/*
- * XPLMCreateWindow
- * 
- * This routine creates a new window.  Pass in the dimensions and offsets to 
- * the window's bottom left corner from the bottom left of the screen.  You 
- * can specify whether the window is initially visible or not.  Also, you pass 
- * in three callbacks to run the window and a refcon.  This function returns a 
- * window ID you can use to refer to the new window. 
- * 
- * NOTE: windows do not have "frames"; you are responsible for drawing the 
- * background and frame of the window.  Higher level libraries have routines 
- * which make this easy.                                                       
- *
- */
-XPLM_API XPLMWindowID         XPLMCreateWindow(
-                                   int                  inLeft,    
-                                   int                  inTop,    
-                                   int                  inRight,    
-                                   int                  inBottom,    
-                                   int                  inIsVisible,    
-                                   XPLMDrawWindow_f     inDrawCallback,    
-                                   XPLMHandleKey_f      inKeyCallback,    
-                                   XPLMHandleMouseClick_f inMouseCallback,    
-                                   void *               inRefcon);    
 
 #if defined(XPLM200)
 /*
  * XPLMCreateWindowEx
  * 
- * This routine creates a new window - you pass in an XPLMCreateWindow_t 
- * structure with all of the fields set in.  You must set the structSize of 
- * the structure to the size of the  actual structure you used.  Also, you 
- * must provide funtions for every callback - you may not leave them null!  
- * (If you do not support the cursor or mouse wheel, use functions that return 
- * the default values.)  The numeric values of the XPMCreateWindow_t structure 
- * correspond to the parameters of XPLMCreateWindow.                           
+ * This routine creates a new "modern" window.  You pass in an
+ * XPLMCreateWindow_t structure with all of the fields set in, including its
+ * structSize, which must be the size of the actual structure you used.
+ * 
+ * Returns the ID of the new window, or NULL if it could not be created
+ * --either because structSize matched no known SDK version, or because the
+ * window needed a drawing callback and none was provided.
+ * 
+ * Only drawWindowFunc is required, and only for a window whose contentType
+ * makes your plugin responsible for its pixels: xplm_WindowContentTypeOpenGL
+ * and xplm_WindowContentTypePanelGraphics.  A browser window renders its own
+ * content and ignores drawWindowFunc.
+ * 
+ * Every other callback is optional; leave it NULL and your window does not
+ * receive that event.  A window with no handleMouseClickFunc or
+ * handleRightClickFunc does not consume clicks, a window with no
+ * handleMouseWheelFunc does not consume scroll wheel events, and a window
+ * with no handleCursorFunc gets the default cursor.  (Whether a click reaches
+ * a window underneath yours also depends on your window's decoration: any
+ * decoration other than xplm_WindowDecorationNone stops clicks at your
+ * window's bounds.) The browserLoadFinishedFunc and browserLoadErrorFunc
+ * callbacks are only called for browser windows.
+ * 
+ * NOTE: For an imgui-drawn window, Lua scripts should use
+ * XLuaCreateImguiWindow() instead; it opens and closes the imgui frame for
+ * you and wires the input handlers.
  *
  */
-XPLM_API XPLMWindowID         XPLMCreateWindowEx(
-                                   XPLMCreateWindow_t * inParams);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API XPLMWindowID XPLMCreateWindowEx(
+                         XPLMCreateWindow_t * inParams);
 #endif /* XPLM200 */
+
+/*
+ * XPLMCreateWindow
+ * 
+ * Deprecated as of XPLM300.
+ * 
+ * This routine creates a new legacy window. Unlike modern windows (created
+ * via XPLMCreateWindowEx()), legacy windows do not have access to X-Plane 11
+ * features like automatic scaling for high-DPI screens, native window styles,
+ * or support for being "popped out" into first-class operating system
+ * windows.
+ * 
+ * Pass in the dimensions and offsets to the window's bottom left corner from
+ * the bottom left of the screen.  You can specify whether the window is
+ * initially visible or not.  Also, you pass in three callbacks to run the
+ * window and a refcon.  This function returns a window ID you can use to
+ * refer to the new window.
+ * 
+ * NOTE: Legacy windows do not have "frames"; you are responsible for drawing
+ * the background and frame of the window.  Higher level libraries have
+ * routines which make this easy.
+ * 
+ * - inRefcon: a reference which will be passed into each of your window
+ *   callbacks. Use this to pass information to yourself as needed.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API XPLMWindowID XPLMCreateWindow(
+                         int                  inLeft,
+                         int                  inTop,
+                         int                  inRight,
+                         int                  inBottom,
+                         int                  inIsVisible,
+                         XPLMDrawWindow_f     inDrawCallback,
+                         XPLMHandleKey_f      inKeyCallback,
+                         XPLMHandleMouseClick_f inMouseCallback,
+                         void*                inRefcon);
 
 /*
  * XPLMDestroyWindow
  * 
- * This routine destroys a window.  The callbacks are not called after this 
- * call. Keyboard focus is removed from the window before destroying it.       
+ * This routine destroys a window.  The window's callbacks are not called
+ * after this call. Keyboard focus is removed from the window before
+ * destroying it.
+ * 
+ * NOTE: A window created with XLuaCreateImguiWindow() must be destroyed with
+ * XLuaDestroyImguiWindow(), not this function, so its captured Lua callbacks
+ * are released.
  *
  */
-XPLM_API void                 XPLMDestroyWindow(
-                                   XPLMWindowID         inWindowID);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMDestroyWindow(
+                         XPLMWindowID         inWindowID);
+
+#if defined(XPLM440)
+/*
+ * XPLMWindowSetURL
+ * 
+ * Loads a URL into a browser-content-type window. Safe to call before the
+ * underlying webview has finished initialising; the load is queued and
+ * applied as soon as the browser is ready, so plugins may call this
+ * immediately after `XPLMCreateWindowEx`. Subsequent calls replace the
+ * pending or current page.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMWindowSetURL(
+                         XPLMWindowID         inWindowID,
+                         const char *         inURL);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMWindowRefresh
+ * 
+ * Reloads the current URL in a browser-content-type window. Pass true for
+ * `inIgnoreCache` to bypass the HTTP cache (the equivalent of a
+ *  shift-reload).
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMWindowRefresh(
+                         XPLMWindowID         inWindowID,
+                         int                  inIgnoreCache);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMWindowInjectScript
+ * 
+ * Executes a JavaScript snippet in the browser window's main frame. The
+ * script is run once; it has access to the same `xplane.*` namespace exposed
+ * to the page itself (so it can call functions registered via
+ * `XPLMWindowAddBrowserFunction`). If injected before the page has finished
+ *  loading, the script may run against an empty document.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMWindowInjectScript(
+                         XPLMWindowID         inWindowID,
+                         const char *         inScript);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMBrowserCallback_f
+ * 
+ * Handler invoked when the page in a browser-content-type window calls
+ * xplane.<name>(arg). You receive the window, the argument serialised as a
+ * JSON string, and your refcon; return a JSON string (or NULL) that the JS
+ * Promise resolves to.
+ *
+ */
+typedef const char * (* XPLMBrowserCallback_f)(
+                         XPLMWindowID         inWindowID,
+                         const char *         inJSON,
+                         void*                inRefcon);
+#endif /* XPLM440 */
+
+#if defined(XPLM440)
+/*
+ * XPLMWindowAddBrowserFunction
+ * 
+ * Registers a callback that the page running in this browser window can
+ * invoke as `xplane.<inName>(arg)`. The JS call returns a Promise that
+ * resolves to the value your `XPLMBrowserCallback_f` returns (parsed as JSON
+ * -- see that callback's desc for the contract).
+ * 
+ * Multiple registrations against the same name on the same window overwrite
+ * each other. Each window has its own independent `xplane.*` namespace;
+ * functions registered on window A are not callable from window B.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMWindowAddBrowserFunction(
+                         XPLMWindowID         inWindowID,
+                         const char *         inName,
+                         XPLMBrowserCallback_f inFunction,
+                         void*                inRefcon);
+#endif /* XPLM440 */
+
+/*
+ * XPLMGetScreenSize
+ * 
+ * This routine returns the size of the main X-Plane OpenGL window in pixels.
+ * This number can be used to get a rough idea of the amount of detail the
+ * user will be able to see when drawing in 3-d.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMGetScreenSize(
+                         int *                outWidth,               /* Can be NULL */
+                         int *                outHeight);             /* Can be NULL */
+
+#if defined(XPLM300)
+/*
+ * XPLMGetScreenBoundsGlobal
+ * 
+ * This routine returns the bounds of the "global" X-Plane desktop, in boxels.
+ * Unlike the non-global version XPLMGetScreenSize(), this is multi-monitor
+ * aware. There are three primary consequences of multimonitor awareness.
+ * 
+ * First, if the user is running X-Plane in full-screen on two or more
+ * monitors (typically configured using one full-screen window per monitor),
+ * the global desktop will be sized to include all X-Plane windows.
+ * 
+ * Second, the origin of the screen coordinates is not guaranteed to be (0,
+ * 0). Suppose the user has two displays side-by-side, both running at 1080p.
+ * Suppose further that they've configured their OS to make the left display
+ * their "primary" monitor, and that X-Plane is running in full-screen on
+ * their right monitor only. In this case, the global desktop bounds would be
+ * the rectangle from (1920, 0) to (3840, 1080). If the user later asked
+ * X-Plane to draw on their primary monitor as well, the bounds would change
+ * to (0, 0) to (3840, 1080).
+ * 
+ * Finally, if the usable area of the virtual desktop is not a perfect
+ * rectangle (for instance, because the monitors have different resolutions or
+ * because one monitor is configured in the operating system to be above and
+ * to the right of the other), the global desktop will include any wasted
+ * space. Thus, if you have two 1080p monitors, and monitor 2 is configured to
+ * have its bottom left touch monitor 1's upper right, your global desktop
+ * area would be the rectangle from (0, 0) to (3840, 2160).
+ * 
+ * Note that popped-out windows (windows drawn in their own operating system
+ * windows, rather than "floating" within X-Plane) are not included in these
+ * bounds.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMGetScreenBoundsGlobal(
+                         int *                outLeft,                /* Can be NULL */
+                         int *                outTop,                 /* Can be NULL */
+                         int *                outRight,               /* Can be NULL */
+                         int *                outBottom);             /* Can be NULL */
+#endif /* XPLM300 */
+
+#if defined(XPLM300)
+/*
+ * XPLMReceiveMonitorBoundsGlobal_f
+ * 
+ * This function is informed of the global bounds (in boxels) of a particular
+ * monitor within the X-Plane global desktop space. Note that X-Plane must be
+ * running in full screen on a monitor in order for that monitor to be passed
+ * to you in this callback.
+ *
+ */
+typedef void (* XPLMReceiveMonitorBoundsGlobal_f)(
+                         int                  inMonitorIndex,
+                         int                  inLeftBx,
+                         int                  inTopBx,
+                         int                  inRightBx,
+                         int                  inBottomBx,
+                         void*                inRefcon);
+#endif /* XPLM300 */
+
+#if defined(XPLM300)
+/*
+ * XPLMGetAllMonitorBoundsGlobal
+ * 
+ * This routine immediately and synchronously calls you back with the bounds
+ * (in boxels) of each full-screen X-Plane window within the X-Plane global
+ * desktop space, one callback per window. Note that if a monitor is *not*
+ * covered by an X-Plane window, you cannot get its bounds this way. Likewise,
+ * monitors with only an X-Plane window (not in full-screen mode) will not be
+ * included.
+ * 
+ * If X-Plane is running in full-screen and your monitors are of the same size
+ * and configured contiguously in the OS, then the combined global bounds of
+ * all full-screen monitors will match the total global desktop bounds, as
+ * returned by XPLMGetScreenBoundsGlobal(). (Of course, if X-Plane is running
+ * in windowed mode, this will not be the case. Likewise, if you have
+ * differently sized monitors, the global desktop space will include wasted
+ * space.)
+ * 
+ * Note that this function's monitor indices match those provided by
+ * XPLMGetAllMonitorBoundsOS(), but the coordinates are different (since the
+ * X-Plane global desktop may not match the operating system's global desktop,
+ * and one X-Plane boxel may be larger than one pixel due to 150% or 200%
+ * scaling).
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMGetAllMonitorBoundsGlobal(
+                         XPLMReceiveMonitorBoundsGlobal_f inMonitorBoundsCallback,
+                         void*                inRefcon);
+#endif /* XPLM300 */
+
+#if defined(XPLM300)
+/*
+ * XPLMReceiveMonitorBoundsOS_f
+ * 
+ * This function is informed of the global bounds (in pixels) of a particular
+ * monitor within the operating system's global desktop space. Note that a
+ * monitor index being passed to you here does not indicate that X-Plane is
+ * running in full screen on this monitor, or even that any X-Plane windows
+ * exist on this monitor.
+ *
+ */
+typedef void (* XPLMReceiveMonitorBoundsOS_f)(
+                         int                  inMonitorIndex,
+                         int                  inLeftPx,
+                         int                  inTopPx,
+                         int                  inRightPx,
+                         int                  inBottomPx,
+                         void*                inRefcon);
+#endif /* XPLM300 */
+
+#if defined(XPLM300)
+/*
+ * XPLMGetAllMonitorBoundsOS
+ * 
+ * This routine immediately and synchronously calls you back with the bounds
+ * (in pixels) of each monitor within the operating system's global desktop
+ * space, one callback per monitor. Note that unlike
+ * XPLMGetAllMonitorBoundsGlobal(), this may include monitors that have no
+ * X-Plane window on them.
+ * 
+ * Note that this function's monitor indices match those provided by
+ * XPLMGetAllMonitorBoundsGlobal(), but the coordinates are different (since
+ * the X-Plane global desktop may not match the operating system's global
+ * desktop, and one X-Plane boxel may be larger than one pixel).
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMGetAllMonitorBoundsOS(
+                         XPLMReceiveMonitorBoundsOS_f inMonitorBoundsCallback,
+                         void*                inRefcon);
+#endif /* XPLM300 */
+
+/*
+ * XPLMGetMouseLocation
+ * 
+ * Deprecated in XPLM300. Modern windows should use
+ * XPLMGetMouseLocationGlobal() instead.
+ * 
+ * This routine returns the current mouse location in pixels relative to the
+ * main X-Plane window. The bottom left corner of the main window is (0, 0). 
+ * Pass NULL to not receive info about either parameter.
+ * 
+ * Because this function gives the mouse position relative to the main X-Plane
+ * window (rather than in global bounds), this function should only be used by
+ * legacy windows. Modern windows should instead get the mouse position in
+ * global desktop coordinates using XPLMGetMouseLocationGlobal().
+ * 
+ * Note that unlike XPLMGetMouseLocationGlobal(), if the mouse goes outside
+ * the user's main monitor (for instance, to a pop out window or a secondary
+ * monitor), this function will not reflect it.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMGetMouseLocation(
+                         int *                outX,                   /* Can be NULL */
+                         int *                outY);                  /* Can be NULL */
+
+#if defined(XPLM300)
+/*
+ * XPLMGetMouseLocationGlobal
+ * 
+ * Returns the current mouse location in global desktop boxels. Unlike
+ * XPLMGetMouseLocation(), the bottom left of the main X-Plane window is not
+ * guaranteed to be (0, 0)---instead, the origin is the lower left of the
+ * entire global desktop space. In addition, this routine gives the real mouse
+ * location when the mouse goes to X-Plane windows other than the primary
+ * display. Thus, it can be used with both pop-out windows and secondary
+ * monitors.
+ * 
+ * This is the mouse location function to use with modern windows (i.e., those
+ * created by XPLMCreateWindowEx()).
+ * 
+ * Pass NULL to not receive info about either parameter.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMGetMouseLocationGlobal(
+                         int *                outX,                   /* Can be NULL */
+                         int *                outY);                  /* Can be NULL */
+#endif /* XPLM300 */
+
+#if defined(XPLM440)
+/*
+ * XPLMGetModifierKeys
+ * 
+ * Returns the modifier keys that are being held down *right now*, as a
+ * bitfield of XPLMKeyFlags. Unlike the modifier flags delivered with a key
+ * event, this reflects the live keyboard state at the moment of the call, so
+ * it can be used to make mouse clicks modifier-sensitive (e.g. shift-click)
+ * or to react to a modifier changing during drawing (e.g. show alignment
+ * guides while shift is held).
+ * 
+ * Only the modifier bits are ever set: xplm_ShiftFlag, xplm_OptionAltFlag,
+ * xplm_ControlFlag and xplm_CapsLockFlag.  The xplm_DownFlag and xplm_UpFlag
+ * bits (which describe a key event's phase) are never returned. As elsewhere
+ * in the SDK, the Command key on macOS is folded into xplm_ControlFlag 
+ * rather than reported separately.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API XPLMKeyFlags XPLMGetModifierKeys(void);
+#endif /* XPLM440 */
 
 /*
  * XPLMGetWindowGeometry
  * 
- * This routine returns the position and size of a window in cockpit pixels.  
- * Pass NULL to not receive any paramter.                                      
+ * This routine returns the position and size of a window. The units and
+ * coordinate system vary depending on the type of window you have.
+ * 
+ * If this is a legacy window (one compiled against a pre-XPLM300 version of
+ * the SDK, or an XPLM300 window that was not created using
+ * XPLMCreateWindowEx()), the units are pixels relative to the main X-Plane
+ * display.
+ * 
+ * If, on the other hand, this is a new X-Plane 11-style window (compiled
+ * against the XPLM300 SDK and created using XPLMCreateWindowEx()), the units
+ * are global desktop boxels.
+ * 
+ * Pass NULL to not receive any paramter.
  *
  */
-XPLM_API void                 XPLMGetWindowGeometry(
-                                   XPLMWindowID         inWindowID,    
-                                   int *                outLeft,    /* Can be NULL */
-                                   int *                outTop,    /* Can be NULL */
-                                   int *                outRight,    /* Can be NULL */
-                                   int *                outBottom);    /* Can be NULL */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMGetWindowGeometry(
+                         XPLMWindowID         inWindowID,
+                         int *                outLeft,                /* Can be NULL */
+                         int *                outTop,                 /* Can be NULL */
+                         int *                outRight,               /* Can be NULL */
+                         int *                outBottom);             /* Can be NULL */
 
 /*
  * XPLMSetWindowGeometry
  * 
- * This routine allows you to set the position or height aspects of a window.  
+ * This routine allows you to set the position and size of a window.
+ * 
+ * The units and coordinate system match those of XPLMGetWindowGeometry().
+ * That is, modern windows use global desktop boxel coordinates, while legacy
+ * windows use pixels relative to the main X-Plane display.
+ * 
+ * Note that this only applies to "floating" windows (that is, windows that
+ * are drawn within the X-Plane simulation windows, rather than being "popped
+ * out" into their own first-class operating system windows). To set the
+ * position of windows whose positioning mode is xplm_WindowPopOut, you'll
+ * need to instead use XPLMSetWindowGeometryOS().
  *
  */
-XPLM_API void                 XPLMSetWindowGeometry(
-                                   XPLMWindowID         inWindowID,    
-                                   int                  inLeft,    
-                                   int                  inTop,    
-                                   int                  inRight,    
-                                   int                  inBottom);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetWindowGeometry(
+                         XPLMWindowID         inWindowID,
+                         int                  inLeft,
+                         int                  inTop,
+                         int                  inRight,
+                         int                  inBottom);
+
+#if defined(XPLM300)
+/*
+ * XPLMGetWindowGeometryOS
+ * 
+ * This routine returns the position and size of a "popped out" window (i.e.,
+ * a window whose positioning mode is xplm_WindowPopOut), in operating system
+ * pixels.  Pass NULL to not receive any parameter.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMGetWindowGeometryOS(
+                         XPLMWindowID         inWindowID,
+                         int *                outLeft,                /* Can be NULL */
+                         int *                outTop,                 /* Can be NULL */
+                         int *                outRight,               /* Can be NULL */
+                         int *                outBottom);             /* Can be NULL */
+#endif /* XPLM300 */
+
+#if defined(XPLM300)
+/*
+ * XPLMSetWindowGeometryOS
+ * 
+ * This routine allows you to set the position and size, in operating system
+ * pixel coordinates, of a popped out window (that is, a window whose
+ * positioning mode is xplm_WindowPopOut, which exists outside the X-Plane
+ * simulation window, in its own first-class operating system window).
+ * 
+ * Note that you are responsible for ensuring both that your window is popped
+ * out (using XPLMWindowIsPoppedOut()) and that a monitor really exists at the
+ * OS coordinates you provide (using XPLMGetAllMonitorBoundsOS()).
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetWindowGeometryOS(
+                         XPLMWindowID         inWindowID,
+                         int                  inLeft,
+                         int                  inTop,
+                         int                  inRight,
+                         int                  inBottom);
+#endif /* XPLM300 */
+
+#if defined(XPLM301)
+/*
+ * XPLMGetWindowGeometryVR
+ * 
+ * Returns the width and height, in boxels, of a window in VR. Note that you
+ * are responsible for ensuring your window is in VR (using
+ * XPLMWindowIsInVR()).
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMGetWindowGeometryVR(
+                         XPLMWindowID         inWindowID,
+                         int *                outWidthBoxels,         /* Can be NULL */
+                         int *                outHeightBoxels);       /* Can be NULL */
+#endif /* XPLM301 */
+
+#if defined(XPLM301)
+/*
+ * XPLMSetWindowGeometryVR
+ * 
+ * This routine allows you to set the size, in boxels, of a window in VR (that
+ * is, a window whose positioning mode is xplm_WindowVR).
+ * 
+ * Note that you are responsible for ensuring your window is in VR (using
+ * XPLMWindowIsInVR()).
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetWindowGeometryVR(
+                         XPLMWindowID         inWindowID,
+                         int                  widthBoxels,
+                         int                  heightBoxels);
+#endif /* XPLM301 */
 
 /*
  * XPLMGetWindowIsVisible
  * 
- * This routine returns whether a window is visible.                           
+ * Returns true (1) if the specified window is visible.
  *
  */
-XPLM_API int                  XPLMGetWindowIsVisible(
-                                   XPLMWindowID         inWindowID);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMGetWindowIsVisible(
+                         XPLMWindowID         inWindowID);
 
 /*
  * XPLMSetWindowIsVisible
  * 
- * This routine shows or hides a window.                                       
+ * This routine shows or hides a window.
  *
  */
-XPLM_API void                 XPLMSetWindowIsVisible(
-                                   XPLMWindowID         inWindowID,    
-                                   int                  inIsVisible);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetWindowIsVisible(
+                         XPLMWindowID         inWindowID,
+                         int                  inIsVisible);
+
+#if defined(XPLM300)
+/*
+ * XPLMWindowIsPoppedOut
+ * 
+ * True if this window has been popped out (making it a first-class window in
+ * the operating system), which in turn is true if and only if you have set
+ * the window's positioning mode to xplm_WindowPopOut.
+ * 
+ * Only applies to modern windows. (Windows created using the deprecated
+ * XPLMCreateWindow(), or windows compiled against a pre-XPLM300 version of
+ * the SDK cannot be popped out.)
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMWindowIsPoppedOut(
+                         XPLMWindowID         inWindowID);
+#endif /* XPLM300 */
+
+#if defined(XPLM301)
+/*
+ * XPLMWindowIsInVR
+ * 
+ * True if this window has been moved to the virtual reality (VR) headset,
+ * which in turn is true if and only if you have set the window's positioning
+ * mode to xplm_WindowVR.
+ * 
+ * Only applies to modern windows. (Windows created using the deprecated
+ * XPLMCreateWindow(), or windows compiled against a pre-XPLM301 version of
+ * the SDK cannot be moved to VR.)
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMWindowIsInVR(
+                         XPLMWindowID         inWindowID);
+#endif /* XPLM301 */
+
+#if defined(XPLM300)
+/*
+ * XPLMSetWindowGravity
+ * 
+ * A window's "gravity" controls how the window shifts as the whole X-Plane
+ * window resizes. A gravity of 1 means the window maintains its positioning
+ * relative to the right or top edges, 0 the left/bottom, and 0.5 keeps it
+ * centered.
+ * 
+ * Default gravity is (0, 1, 0, 1), meaning your window will maintain its
+ * position relative to the top left and will not change size as its
+ * containing window grows.
+ * 
+ * If you wanted, say, a window that sticks to the top of the screen (with a
+ * constant height), but which grows to take the full width of the window, you
+ * would pass (0, 1, 1, 1). Because your left and right edges would maintain
+ * their positioning relative to their respective edges of the screen, the
+ * whole width of your window would change with the X-Plane window.
+ * 
+ * Only applies to modern windows. (Windows created using the deprecated
+ * XPLMCreateWindow(), or windows compiled against a pre-XPLM300 version of
+ * the SDK will simply get the default gravity.)
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetWindowGravity(
+                         XPLMWindowID         inWindowID,
+                         float                inLeftGravity,
+                         float                inTopGravity,
+                         float                inRightGravity,
+                         float                inBottomGravity);
+#endif /* XPLM300 */
+
+#if defined(XPLM300)
+/*
+ * XPLMSetWindowResizingLimits
+ * 
+ * Sets the minimum and maximum size of the client rectangle of the given
+ * window. (That is, it does not include any window styling that you might
+ * have asked X-Plane to apply on your behalf.) All resizing operations are
+ * constrained to these sizes.
+ * 
+ * Only applies to modern windows. (Windows created using the deprecated
+ * XPLMCreateWindow(), or windows compiled against a pre-XPLM300 version of
+ * the SDK will have no minimum or maximum size.)
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetWindowResizingLimits(
+                         XPLMWindowID         inWindowID,
+                         int                  inMinWidthBoxels,
+                         int                  inMinHeightBoxels,
+                         int                  inMaxWidthBoxels,
+                         int                  inMaxHeightBoxels);
+#endif /* XPLM300 */
+
+#if defined(XPLM300)
+/*
+ * XPLMWindowPositioningMode
+ * 
+ * XPLMWindowPositionMode describes how X-Plane will position your window on
+ * the user's screen. X-Plane will maintain this positioning mode even as the
+ * user resizes their window or adds/removes full-screen monitors.
+ * 
+ * Positioning mode can only be set for "modern" windows (that is, windows
+ * created using XPLMCreateWindowEx() and compiled against the XPLM300 SDK).
+ * Windows created using the deprecated XPLMCreateWindow(), or windows
+ * compiled against a pre-XPLM300 version of the SDK will simply get the
+ * "free" positioning mode.
+ *
+ */
+enum {
+
+    /* The default positioning mode. Set the window geometry and its future       *
+     * position will be determined by its window gravity, resizing limits, and    *
+     * user interactions.                                                         */
+    xplm_WindowPositionFree                  = 0,
+
+
+    /* Keep the window centered on the monitor you specify                        */
+    xplm_WindowCenterOnMonitor               = 1,
+
+
+    /* Keep the window full screen on the monitor you specify                     */
+    xplm_WindowFullScreenOnMonitor           = 2,
+
+
+    /* Like gui_window_full_screen_on_monitor, but stretches over *all* monitors  *
+     * and popout windows. This is an obscure one... unless you have a very good  *
+     * reason to need it, you probably don't!                                     */
+    xplm_WindowFullScreenOnAllMonitors       = 3,
+
+
+    /* A first-class window in the operating system, completely separate from the *
+     * X-Plane window(s)                                                          */
+    xplm_WindowPopOut                        = 4,
+
+
+#if defined(XPLM301)
+    /* A floating window visible on the VR headset                                */
+    xplm_WindowVR                            = 5,
+
+#endif /* XPLM301 */
+
+};
+typedef int XPLMWindowPositioningMode;
+#endif /* XPLM300 */
+
+#if defined(XPLM300)
+/*
+ * XPLMSetWindowPositioningMode
+ * 
+ * Sets the policy for how X-Plane will position your window.
+ * 
+ * Some positioning modes apply to a particular monitor. For those modes, you
+ * can pass a negative monitor index to position the window on the main
+ * X-Plane monitor (the screen with the X-Plane menu bar at the top). Or, if
+ * you have a specific monitor you want to position your window on, you can
+ * pass a real monitor index as received from, e.g.,
+ * XPLMGetAllMonitorBoundsOS().
+ * 
+ * Only applies to modern windows. (Windows created using the deprecated
+ * XPLMCreateWindow(), or windows compiled against a pre-XPLM300 version of
+ * the SDK will always use xplm_WindowPositionFree.)
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetWindowPositioningMode(
+                         XPLMWindowID         inWindowID,
+                         XPLMWindowPositioningMode inPositioningMode,
+                         int                  inMonitorIndex);
+#endif /* XPLM300 */
+
+#if defined(XPLM300)
+/*
+ * XPLMSetWindowTitle
+ * 
+ * Sets the name for a window. This only applies to windows that opted-in to
+ * styling as an X-Plane 11 floating window (i.e., with styling mode
+ * xplm_WindowDecorationRoundRectangle) when they were created using
+ * XPLMCreateWindowEx().
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetWindowTitle(
+                         XPLMWindowID         inWindowID,
+                         const char *         inWindowTitle);
+#endif /* XPLM300 */
 
 /*
  * XPLMGetWindowRefCon
  * 
- * This routine returns a windows refcon, the unique value you can use for 
- * your own purposes.                                                          
+ * Returns a window's reference constant, the unique value you can use for
+ * your own purposes.
  *
  */
-XPLM_API void *               XPLMGetWindowRefCon(
-                                   XPLMWindowID         inWindowID);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void*      XPLMGetWindowRefCon(
+                         XPLMWindowID         inWindowID);
 
 /*
  * XPLMSetWindowRefCon
  * 
- * This routine sets a window's reference constant.  Use this to pass data to 
- * yourself in the callbacks.                                                  
+ * Sets a window's reference constant.  Use this to pass data to yourself in
+ * the callbacks.
  *
  */
-XPLM_API void                 XPLMSetWindowRefCon(
-                                   XPLMWindowID         inWindowID,    
-                                   void *               inRefcon);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetWindowRefCon(
+                         XPLMWindowID         inWindowID,
+                         void*                inRefcon);
 
 /*
  * XPLMTakeKeyboardFocus
  * 
- * This routine gives a specific window keyboard focus.  Keystrokes will be 
- * sent to  that window.  Pass a window ID of 0 to pass keyboard strokes 
- * directly to X-Plane.                                                        
+ * This routine gives a specific window keyboard focus.  Keystrokes will be
+ * sent to that window.  Pass a window ID of 0 to remove keyboard focus from
+ * any plugin-created windows and instead pass keyboard strokes directly to
+ * X-Plane.
  *
  */
-XPLM_API void                 XPLMTakeKeyboardFocus(
-                                   XPLMWindowID         inWindow);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMTakeKeyboardFocus(
+                         XPLMWindowID         inWindow);
+
+/*
+ * XPLMHasKeyboardFocus
+ * 
+ * Returns true (1) if the indicated window has keyboard focus. Pass a window
+ * ID of 0 to see if no plugin window has focus, and all keystrokes will go
+ * directly to X-Plane.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMHasKeyboardFocus(
+                         XPLMWindowID         inWindow);
 
 /*
  * XPLMBringWindowToFront
  * 
- * This routine brings the window to the front of the Z-order.  Windows are 
- * brought to the front when they are created...beyond that you should make 
- * sure you are front before handling mouse clicks.                            
+ * This routine brings the window to the front of the Z-order for its layer. 
+ * Windows are brought to the front automatically when they are created.
+ * Beyond that, you should make sure you are front before handling mouse
+ * clicks.
+ * 
+ * Note that this only brings your window to the front of its layer
+ * (XPLMWindowLayer). Thus, if you have a window in the floating window layer
+ * (xplm_WindowLayerFloatingWindows), but there is a modal window (in layer
+ * xplm_WindowLayerModal) above you, you would still not be the true frontmost
+ * window after calling this. (After all, the window layers are strictly
+ * ordered, and no window in a lower layer can ever be above any window in a
+ * higher one.)
  *
  */
-XPLM_API void                 XPLMBringWindowToFront(
-                                   XPLMWindowID         inWindow);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMBringWindowToFront(
+                         XPLMWindowID         inWindow);
 
 /*
  * XPLMIsWindowInFront
  * 
- * This routine returns true if you pass inthe ID of the frontmost visible 
- * window.                                                                     
+ * This routine returns true if the window you passed in is the frontmost
+ * visible window in its layer (XPLMWindowLayer).
+ * 
+ * Thus, if you have a window at the front of the floating window layer
+ * (xplm_WindowLayerFloatingWindows), this will return true even if there is a
+ * modal window (in layer xplm_WindowLayerModal) above you. (Not to worry,
+ * though: in such a case, X-Plane will not pass clicks or keyboard input down
+ * to your layer until the window above stops "eating" the input.)
+ * 
+ * Note that legacy windows are always placed in layer
+ * xplm_WindowLayerFlightOverlay, while modern-style windows default to
+ * xplm_WindowLayerFloatingWindows. This means it's perfectly consistent to
+ * have two different plugin-created windows (one legacy, one modern) *both*
+ * be in the front (of their different layers!) at the same time.
  *
  */
-XPLM_API int                  XPLMIsWindowInFront(
-                                   XPLMWindowID         inWindow);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMIsWindowInFront(
+                         XPLMWindowID         inWindow);
+
+/***************************************************************************
+ * KEY SNIFFERS
+ ***************************************************************************/
+/*
+ * Low-level keyboard handlers. Allows for intercepting keystrokes outside the
+ * normal rules of the user interface.
+ *
+ */
+
+
+/*
+ * XPLMKeySniffer_f
+ * 
+ * This is the prototype for a low level key-sniffing function.  Window-based
+ * UI _should not use this_!  The windowing system provides high-level
+ * mediated keyboard access, via the callbacks you attach to your
+ * XPLMCreateWindow_t. By comparison, the key sniffer provides low level
+ * keyboard access.
+ * 
+ * Key sniffers are provided to allow libraries to provide non-windowed user
+ * interaction.  For example, the MUI library uses a key sniffer to do pop-up
+ * text entry.
+ * 
+ * Return true to pass the key on to the next sniffer, the window manager,
+ * X-Plane, or whomever is down stream.  Return false to consume the key.
+ * 
+ * Warning: this API declares virtual keys as a signed character; however the
+ * VKEY #define macros in XPLMDefs.h define the vkeys using unsigned values
+ * (that is 0x80 instead of -0x80).  So you may need to cast the incoming vkey
+ * to an unsigned char to get correct comparisons in C.
+ * 
+ * - inRefcon: a value you supply during registration, used for passing
+ *   arbitrary data to yourself.
+ *
+ */
+typedef int (* XPLMKeySniffer_f)(
+                         char                 inChar,
+                         XPLMKeyFlags         inFlags,
+                         char                 inVirtualKey,
+                         void*                inRefcon);
+
+/*
+ * XPLMRegisterKeySniffer
+ * 
+ * This routine registers a key sniffing callback.  You specify whether you
+ * want to sniff before the window system, or only sniff keys the window
+ * system does not consume.  You should ALMOST ALWAYS sniff non-control keys
+ * after the window system.  When the window system consumes a key, it is
+ * because the user has "focused" a window.  Consuming the key or taking
+ * action based on the key will produce very weird results.  Returns true if
+ * successful.
+ * 
+ * - inRefcon: a value that will be passed to your callback, used for passing
+ *   arbitrary data to yourself later.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMRegisterKeySniffer(
+                         XPLMKeySniffer_f     inCallback,
+                         int                  inBeforeWindows,
+                         void*                inRefcon);
+
+/*
+ * XPLMUnregisterKeySniffer
+ * 
+ * This routine unregisters a key sniffer.  You must unregister a key sniffer
+ * for every time you register one with the exact same signature.  Returns
+ * true if successful.
+ *
+ */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMUnregisterKeySniffer(
+                         XPLMKeySniffer_f     inCallback,
+                         int                  inBeforeWindows,
+                         void*                inRefcon);
 
 /***************************************************************************
  * HOT KEYS
  ***************************************************************************/
 /*
- * Hot Keys - keystrokes that can be managed by others.                        
+ * Keystrokes that can be managed by others. These are lower-level than window
+ * keyboard handlers (i.e., callbacks you attach to your XPLMCreateWindow_t),
+ * but higher level than key sniffers.
  *
  */
-
 
 
 /*
  * XPLMHotKey_f
  * 
- * Your hot key callback simply takes a pointer of your choosing.              
+ * Your hot key callback simply takes a pointer of your choosing.
  *
  */
 typedef void (* XPLMHotKey_f)(
-                                   void *               inRefcon);    
+                         void*                inRefcon);
 
 /*
  * XPLMHotKeyID
  * 
- * Hot keys are identified by opaque IDs.                                      
+ * An opaque ID used to identify a hot key.
  *
  */
 typedef void * XPLMHotKeyID;
@@ -686,73 +2821,80 @@ typedef void * XPLMHotKeyID;
 /*
  * XPLMRegisterHotKey
  * 
- * This routine registers a hot key.  You specify your preferred key stroke 
- * virtual key/flag combination, a description of what your callback does (so 
- * other plug-ins can describe the plug-in to the user for remapping) and a 
- * callback function and opaque pointer to pass in).  A new hot key ID is 
- * returned.  During execution, the actual key associated with your hot key 
- * may change, but you are insulated from this.                                
+ * This routine registers a hot key.  You specify your preferred key stroke
+ * virtual key/flag combination, a description of what your callback does (so
+ * other plug-ins can describe the plug-in to the user for remapping) and a
+ * callback function and opaque pointer to pass in).  A new hot key ID is
+ * returned.  During execution, the actual key associated with your hot key
+ * may change, but you are insulated from this.
+ * 
+ * - inRefcon: a value that will be passed to your callback, used for passing
+ *   arbitrary data to yourself later.
  *
  */
-XPLM_API XPLMHotKeyID         XPLMRegisterHotKey(
-                                   char                 inVirtualKey,    
-                                   XPLMKeyFlags         inFlags,    
-                                   const char *         inDescription,    
-                                   XPLMHotKey_f         inCallback,    
-                                   void *               inRefcon);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API XPLMHotKeyID XPLMRegisterHotKey(
+                         char                 inVirtualKey,
+                         XPLMKeyFlags         inFlags,
+                         const char *         inDescription,
+                         XPLMHotKey_f         inCallback,
+                         void*                inRefcon);
 
 /*
  * XPLMUnregisterHotKey
  * 
- * This API unregisters a hot key.  You can only register your own hot keys.   
+ * Unregisters a hot key.  You can only unregister your own hot keys.
  *
  */
-XPLM_API void                 XPLMUnregisterHotKey(
-                                   XPLMHotKeyID         inHotKey);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMUnregisterHotKey(
+                         XPLMHotKeyID         inHotKey);
 
 /*
  * XPLMCountHotKeys
  * 
- * Returns the number of current hot keys.                                     
+ * Returns the number of current hot keys.
  *
  */
-XPLM_API int                  XPLMCountHotKeys(void);
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API int        XPLMCountHotKeys(void);
 
 /*
  * XPLMGetNthHotKey
  * 
- * Returns a hot key by index, for iteration on all hot keys.                  
+ * Returns a hot key by index, for iteration on all hot keys.
  *
  */
-XPLM_API XPLMHotKeyID         XPLMGetNthHotKey(
-                                   int                  inIndex);    
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API XPLMHotKeyID XPLMGetNthHotKey(
+                         int                  inIndex);
 
 /*
  * XPLMGetHotKeyInfo
  * 
- * Returns information about the hot key.  Return NULL for any  parameter you 
- * don't want info about.  The description should be at least 512 chars long.  
+ * Returns information about the hot key.  Return NULL for any parameter you
+ * don't want info about.  The description should be at least 512 chars long.
  *
  */
-XPLM_API void                 XPLMGetHotKeyInfo(
-                                   XPLMHotKeyID         inHotKey,    
-                                   char *               outVirtualKey,    /* Can be NULL */
-                                   XPLMKeyFlags *       outFlags,    /* Can be NULL */
-                                   char *               outDescription,    /* Can be NULL */
-                                   XPLMPluginID *       outPlugin);    /* Can be NULL */
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMGetHotKeyInfo(
+                         XPLMHotKeyID         inHotKey,
+                         char                 outVirtualKey[1],       /* Can be NULL */
+                         XPLMKeyFlags *       outFlags,               /* Can be NULL */
+                         char                 outDescription[512],    /* Can be NULL */
+                         XPLMPluginID *       outPlugin);             /* Can be NULL */
 
 /*
  * XPLMSetHotKeyCombination
  * 
- * XPLMSetHotKeyCombination remaps a hot keys keystrokes.  You may remap 
- * another plugin's keystrokes.                                                
+ * Remaps a hot key's keystrokes.  You may remap another plugin's keystrokes.
  *
  */
-XPLM_API void                 XPLMSetHotKeyCombination(
-                                   XPLMHotKeyID         inHotKey,    
-                                   char                 inVirtualKey,    
-                                   XPLMKeyFlags         inFlags);    
-
+/* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
+XPLM_API void       XPLMSetHotKeyCombination(
+                         XPLMHotKeyID         inHotKey,
+                         char                 inVirtualKey,
+                         XPLMKeyFlags         inFlags);
 #ifdef __cplusplus
 }
 #endif

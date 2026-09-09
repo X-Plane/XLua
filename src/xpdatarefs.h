@@ -12,11 +12,15 @@
 #define xpdatarefs_h
 
 #include <string>
+#include <vector>
+#include <memory>
+
 #include "lua.h"
 
 using std::string;
 
 struct	xlua_dref;
+class notify_cb_t;
 
 enum xlua_dref_type {
 	xlua_none,
@@ -25,7 +29,7 @@ enum xlua_dref_type {
 	xlua_string
 };
 
-typedef void (* xlua_dref_notify_f)(xlua_dref * who, void * ref);
+typedef void (* xlua_dref_notify_f)(xlua_dref * who, std::shared_ptr<notify_cb_t> ref);
 
 xlua_dref *		xlua_find_dref(const char * name);
 xlua_dref *		xlua_create_dref(lua_State* L,
@@ -34,7 +38,7 @@ xlua_dref *		xlua_create_dref(lua_State* L,
 						int						dim, 
 						int						writable, 
 						xlua_dref_notify_f		func, 
-						void *					ref);
+						std::shared_ptr<notify_cb_t> cb);
 
 xlua_dref_type	xlua_dref_get_type(xlua_dref * who);
 int				xlua_dref_get_dim(xlua_dref * who);
@@ -43,6 +47,7 @@ double			xlua_dref_get_number(xlua_dref * who);
 void			xlua_dref_set_number(xlua_dref * who, double value);
 double			xlua_dref_get_array(xlua_dref * who, int n);
 void			xlua_dref_set_array(xlua_dref * who, int n, double value);
+void			xlua_dref_set_array(xlua_dref* who, std::vector<double> const& values);
 string			xlua_dref_get_string(xlua_dref * who);
 void			xlua_dref_set_string(xlua_dref * who, const string& value);
 
