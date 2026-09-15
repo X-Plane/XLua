@@ -24,6 +24,9 @@ local g_color   = { 0.4, 0.7, 1.0, 1.0 }
 local g_tab     = 1
 local g_text    = ""
 local g_text_ml = "first line\nsecond line"
+local g_kb_text  = ""
+local g_kb_enter_commits = 0
+local g_kb_want_focus = true  -- grab the box once on load
 
 local function draw_window(win_id, w, h, refcon)
     -- Fill the entire window with one ImGui::Begin window so widget positions
@@ -101,8 +104,63 @@ local function draw_window(win_id, w, h, refcon)
                 imgui.EndTabItem()
             end
 
+
             imgui.EndTabBar()
         end
+
+        -- ------------------------------------------------------------------
+        -- Keyboard regression test (always visible, so a CLI script can drive
+        -- it without switching tabs).
+        --
+        -- Printable keys reach ImGui as a character stream, so typing works even
+        -- when key events are broken. Everything else - enter, page up/down,
+        -- backspace, the arrows - only arrives if the host translates the
+        -- X-Plane virtual key into an ImGuiKey. The trap: XPLM_VK_ENTER (0xBB)
+        -- is never sent by any platform; the return key comes in as
+        -- XPLM_VK_RETURN, so a table keyed on the constant that is *named*
+        -- ENTER silently never fires.
+        --
+        -- EnterReturnsTrue makes imgui.InputText return true ONLY on enter, so
+        -- the counter below is a direct enter detector.
+        -- ------------------------------------------------------------------
+        imgui.Separator()
+        imgui.TextUnformatted("Keyboard test - type, then press ENTER:")
+
+        if imgui.Button("Focus the box") then
+            g_kb_want_focus = true
+        end
+        if g_kb_want_focus then
+            imgui.SetKeyboardFocusHere()
+            g_kb_want_focus = false
+        end
+
+        local committed, tv = imgui.InputText(
+            "enter commits", g_kb_text, 256,
+            imgui.constant.InputTextFlags.EnterReturnsTrue)
+        if tv ~= g_kb_text then
+            XPLMDebugString("IMGUI-KEYTEST: text changed to '" .. tv .. "'\n")
+        end
+        g_kb_text = tv
+        if committed then
+            g_kb_enter_commits = g_kb_enter_commits + 1
+            XPLMDebugString("IMGUI-KEYTEST: PASS - enter reached ImGui, commit #"
+                  .. g_kb_enter_commits .. " text='" .. tv .. "'\n")
+            -- Enter deactivates the widget, which drops keyboard focus. Re-arm
+            -- so the test can be repeated without the mouse.
+            g_kb_want_focus = true
+        end
+
+        imgui.TextUnformatted(string.format("enter commits seen: %d", g_kb_enter_commits))
+        if g_kb_enter_commits > 0 then
+            imgui.PushStyleColor(imgui.constant.Col.Text,
+                imgui.GetColorU32_1(0.2, 1.0, 0.2, 1.0))
+            imgui.TextUnformatted("PASS - enter reached ImGui")
+        else
+            imgui.PushStyleColor(imgui.constant.Col.Text,
+                imgui.GetColorU32_1(1.0, 0.6, 0.0, 1.0))
+            imgui.TextUnformatted("no enter seen yet")
+        end
+        imgui.PopStyleColor()
     end
     imgui.End()
 end
