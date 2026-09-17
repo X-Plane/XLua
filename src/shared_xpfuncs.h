@@ -66,6 +66,14 @@ inline lua_Number   xlua_checknumber (lua_State* L, int narg)   { return luaL_ch
 inline char const*  xlua_checkstring (lua_State* L, int narg)   { return luaL_checkstring(L, narg); }
 inline uint8_t      xlua_checkbyte   (lua_State* L, int narg)   { return static_cast<uint8_t>(std::clamp(luaL_checkinteger(L, narg), static_cast<lua_Integer>(0), static_cast<lua_Integer>(255))); }
 
+// Lenient counterparts for copying a lua table back into a C array inside a callback body.
+// That copy-back runs after the pcall has returned, so a luaL_check* raising on a slot the
+// script legitimately left nil would longjmp with no handler straight into LuaJIT's panic.
+// These coerce and yield 0 for anything non-coercible, so the C slot always has valid bytes.
+inline int          xlua_tointeger   (lua_State* L, int narg)   { return static_cast<int>(lua_tointeger(L, narg)); }
+inline lua_Number   xlua_tonumber    (lua_State* L, int narg)   { return lua_tonumber(L, narg); }
+inline uint8_t      xlua_tobyte      (lua_State* L, int narg)   { return static_cast<uint8_t>(std::clamp(lua_tointeger(L, narg), static_cast<lua_Integer>(0), static_cast<lua_Integer>(255))); }
+
 inline void         xlua_pushinteger (lua_State* L, lua_Integer v)  { lua_pushinteger(L, v); }
 inline void         xlua_pushnumber  (lua_State* L, lua_Number v)   { lua_pushnumber(L, v); }
 inline void         xlua_pushbyte    (lua_State* L, lua_Integer v)  { lua_pushinteger(L, std::clamp(v, static_cast<lua_Integer>(0), static_cast<lua_Integer>(255))); }

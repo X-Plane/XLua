@@ -71,6 +71,33 @@ sim version is localized to a certain language.
 
 ---
 
+<div class="sym-block sym-enum" data-name="XPLMProLicenseStatus" data-type="enum" markdown="1">
+
+<div class="sym-title-row" markdown="1">
+
+## XPLMProLicenseStatus { .symbol-title }
+
+<span class="sym-badge badge-enum">enum</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
+
+Whether this copy of X-Plane is running under a Professional-use license (a HASP Pro USB key or a
+valid Pro digital-download product key). Demo and Home installs both report xplm_ProLicense_NotLicensed.
+
+<div class="enum-table" markdown="1">
+
+| Name | Value | Description |
+|:--|:--|:--|
+| xplm_ProLicense_Unknown | 0 | X-Plane has not finished its license check yet. Wait for XPLM_MSG_PRO_LICENSE_CHANGED. |
+| xplm_ProLicense_NotLicensed | 1 | No Pro license is active. |
+| xplm_ProLicense_Licensed | 2 | A Pro license is active. |
+
+</div>
+
+</div>
+
+---
+
 <div class="sym-block sym-function" data-name="XPLMGetVersions" data-type="function" markdown="1">
 
 <div class="sym-title-row" markdown="1">
@@ -119,6 +146,38 @@ This routine returns the langauge the sim is running in.
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">-- returns XPLMLanguageCode -> assign to local/var
 local my_languageCode = XPLMGetLanguage(
+)</code></pre>
+</div>
+
+</div>
+
+---
+
+<div class="sym-block sym-function" data-name="XPLMGetProLicenseStatus" data-type="function" markdown="1">
+
+<div class="sym-title-row" markdown="1">
+
+## XPLMGetProLicenseStatus { .symbol-title }
+
+<span class="sym-badge badge-fn">function</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
+
+Returns whether X-Plane is currently running under a Professional-use license.
+
+X-Plane finishes its license check after global plugins have received XPluginStart and XPluginEnable,
+so from those callbacks a global plugin sees xplm_ProLicense_Unknown. Listen for
+XPLM_MSG_PRO_LICENSE_CHANGED: it is broadcast once the check completes and again whenever the status
+changes during the session (for example, the user enters a product key or a key expires). Aircraft
+plugins load after the check completes and see a settled value immediately. If you see a settled value
+in XPluginStart, do not wait for the message; the initial transition was broadcast before your plugin
+loaded.
+
+Call this only from the main thread.
+
+<div class="lua-code" markdown="1">
+<pre><code class="language-lua">-- returns XPLMProLicenseStatus -> assign to local/var
+local my_proLicenseStatus = XPLMGetProLicenseStatus(
 )</code></pre>
 </div>
 
