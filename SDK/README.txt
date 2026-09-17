@@ -32,18 +32,34 @@ SDK website explains this process in more detail.
 
 This section contains per-release notes for the history of the X-Plane SDK.
 
-X-Plane SDK Release 4.4.0 5/18/2026
+X-Plane SDK Release 4.4.0-b1 9/10/2026
 
-The 4.4.0 SDK includes new API functionality:
+The 4.4.0 SDK includes tons of new API functionality - this is probably our
+biggest single update, ever.
 
- - Plugin-created custom avionics devices can now be mapped to a VR floating
-   window via the new XPLMSetAvionicsMappedToVR and XPLMIsAvionicsMappedToVR
-   APIs in XPLMDisplay.
+ - New panel graphics API - native drawing for avionics and windows. Also
+   supports native rendering of IMGUI.
+
+ - CEF support - browser-based contents for avionics and windows.
+
+ - Binding avionics displays to 3-d objects for EFBs and other live displays.
+
+ - Extending instancing support: aircraft/camera attachment and precision 
+   fixes.
    
  - The new XPLMReloadThisPlugin API in XPLMPlugin reloads only the calling
    plugin.
 
-This version of the SDK requires X-Plane 12.4.3 or newer.
+ - Modifier key access
+
+ - Snow levels in weather.
+
+ - The new XPLMGetProLicenseStatus API in XPLMUtilities reports whether X-Plane
+   is running under a Professional-use license; XPLM_MSG_PRO_LICENSE_CHANGED is
+   broadcast when the status settles at startup and whenever it changes.
+
+This version of the SDK requires X-Plane 12.4.4 or newer. Starting with 4.4.0
+we also have automated direct mapping from C to Lua.
 
 X-Plane SDK Release 4.3.0 2/21/2026
 

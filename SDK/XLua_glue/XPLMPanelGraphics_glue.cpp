@@ -243,7 +243,8 @@ int XLuaLines(lua_State* L)
 
 	int vertices_len = lua_objlen(L, 2);
 	vertices_len = std::min(vertices_len, static_cast<int>(count));
-	XPLMVertex_t* vertices = new XPLMVertex_t[vertices_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = vertices_len;
+	XPLMVertex_t* vertices = new XPLMVertex_t[vertices_len]{};
 
 	for (int i = 0; i < vertices_len; ++i)
 	{
@@ -272,7 +273,8 @@ int XLuaLinesWithWidth(lua_State* L)
 
 	int vertices_len = lua_objlen(L, 3);
 	vertices_len = std::min(vertices_len, static_cast<int>(count));
-	XPLMVertex_t* vertices = new XPLMVertex_t[vertices_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = vertices_len;
+	XPLMVertex_t* vertices = new XPLMVertex_t[vertices_len]{};
 
 	for (int i = 0; i < vertices_len; ++i)
 	{
@@ -299,7 +301,8 @@ int XLuaLinesc(lua_State* L)
 
 	int vertices_len = lua_objlen(L, 1);
 	vertices_len = std::min(vertices_len, static_cast<int>(count));
-	XPLMVertexColor_t* vertices = new XPLMVertexColor_t[vertices_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = vertices_len;
+	XPLMVertexColor_t* vertices = new XPLMVertexColor_t[vertices_len]{};
 
 	for (int i = 0; i < vertices_len; ++i)
 	{
@@ -327,7 +330,8 @@ int XLuaLinescWithWidth(lua_State* L)
 
 	int vertices_len = lua_objlen(L, 2);
 	vertices_len = std::min(vertices_len, static_cast<int>(count));
-	XPLMVertexColor_t* vertices = new XPLMVertexColor_t[vertices_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = vertices_len;
+	XPLMVertexColor_t* vertices = new XPLMVertexColor_t[vertices_len]{};
 
 	for (int i = 0; i < vertices_len; ++i)
 	{
@@ -357,7 +361,8 @@ int XLuaLinesStipple(lua_State* L)
 
 	int pts_len = lua_objlen(L, 2);
 	pts_len = std::min(pts_len, static_cast<int>(count));
-	XPLMVertex_t* pts = new XPLMVertex_t[pts_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = pts_len;
+	XPLMVertex_t* pts = new XPLMVertex_t[pts_len]{};
 
 	for (int i = 0; i < pts_len; ++i)
 	{
@@ -385,7 +390,8 @@ int XLuaLineStrip(lua_State* L)
 
 	int pts_len = lua_objlen(L, 2);
 	pts_len = std::min(pts_len, static_cast<int>(count));
-	XPLMVertex_t* pts = new XPLMVertex_t[pts_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = pts_len;
+	XPLMVertex_t* pts = new XPLMVertex_t[pts_len]{};
 
 	for (int i = 0; i < pts_len; ++i)
 	{
@@ -414,7 +420,8 @@ int XLuaLineStripWithWidth(lua_State* L)
 
 	int pts_len = lua_objlen(L, 3);
 	pts_len = std::min(pts_len, static_cast<int>(count));
-	XPLMVertex_t* pts = new XPLMVertex_t[pts_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = pts_len;
+	XPLMVertex_t* pts = new XPLMVertex_t[pts_len]{};
 
 	for (int i = 0; i < pts_len; ++i)
 	{
@@ -441,7 +448,8 @@ int XLuaLineStripc(lua_State* L)
 
 	int pts_len = lua_objlen(L, 1);
 	pts_len = std::min(pts_len, static_cast<int>(count));
-	XPLMVertexColor_t* pts = new XPLMVertexColor_t[pts_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = pts_len;
+	XPLMVertexColor_t* pts = new XPLMVertexColor_t[pts_len]{};
 
 	for (int i = 0; i < pts_len; ++i)
 	{
@@ -469,7 +477,8 @@ int XLuaLineStripcWithWidth(lua_State* L)
 
 	int pts_len = lua_objlen(L, 2);
 	pts_len = std::min(pts_len, static_cast<int>(count));
-	XPLMVertexColor_t* pts = new XPLMVertexColor_t[pts_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = pts_len;
+	XPLMVertexColor_t* pts = new XPLMVertexColor_t[pts_len]{};
 
 	for (int i = 0; i < pts_len; ++i)
 	{
@@ -499,7 +508,8 @@ int XLuaLineStripStipple(lua_State* L)
 
 	int pts_len = lua_objlen(L, 2);
 	pts_len = std::min(pts_len, static_cast<int>(count));
-	XPLMVertex_t* pts = new XPLMVertex_t[pts_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = pts_len;
+	XPLMVertex_t* pts = new XPLMVertex_t[pts_len]{};
 
 	for (int i = 0; i < pts_len; ++i)
 	{
@@ -527,7 +537,8 @@ int XLuaLineLoop(lua_State* L)
 
 	int pts_len = lua_objlen(L, 2);
 	pts_len = std::min(pts_len, static_cast<int>(count));
-	XPLMVertex_t* pts = new XPLMVertex_t[pts_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = pts_len;
+	XPLMVertex_t* pts = new XPLMVertex_t[pts_len]{};
 
 	for (int i = 0; i < pts_len; ++i)
 	{
@@ -556,7 +567,8 @@ int XLuaLineLoopWithWidth(lua_State* L)
 
 	int pts_len = lua_objlen(L, 3);
 	pts_len = std::min(pts_len, static_cast<int>(count));
-	XPLMVertex_t* pts = new XPLMVertex_t[pts_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = pts_len;
+	XPLMVertex_t* pts = new XPLMVertex_t[pts_len]{};
 
 	for (int i = 0; i < pts_len; ++i)
 	{
@@ -583,7 +595,8 @@ int XLuaLineLoopc(lua_State* L)
 
 	int pts_len = lua_objlen(L, 1);
 	pts_len = std::min(pts_len, static_cast<int>(count));
-	XPLMVertexColor_t* pts = new XPLMVertexColor_t[pts_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = pts_len;
+	XPLMVertexColor_t* pts = new XPLMVertexColor_t[pts_len]{};
 
 	for (int i = 0; i < pts_len; ++i)
 	{
@@ -611,7 +624,8 @@ int XLuaLineLoopcWithWidth(lua_State* L)
 
 	int pts_len = lua_objlen(L, 2);
 	pts_len = std::min(pts_len, static_cast<int>(count));
-	XPLMVertexColor_t* pts = new XPLMVertexColor_t[pts_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = pts_len;
+	XPLMVertexColor_t* pts = new XPLMVertexColor_t[pts_len]{};
 
 	for (int i = 0; i < pts_len; ++i)
 	{
@@ -641,7 +655,8 @@ int XLuaLineLoopStipple(lua_State* L)
 
 	int pts_len = lua_objlen(L, 2);
 	pts_len = std::min(pts_len, static_cast<int>(count));
-	XPLMVertex_t* pts = new XPLMVertex_t[pts_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = pts_len;
+	XPLMVertex_t* pts = new XPLMVertex_t[pts_len]{};
 
 	for (int i = 0; i < pts_len; ++i)
 	{
@@ -669,7 +684,8 @@ int XLuaPolygon(lua_State* L)
 
 	int vertices_len = lua_objlen(L, 2);
 	vertices_len = std::min(vertices_len, static_cast<int>(count));
-	XPLMVertex_t* vertices = new XPLMVertex_t[vertices_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = vertices_len;
+	XPLMVertex_t* vertices = new XPLMVertex_t[vertices_len]{};
 
 	for (int i = 0; i < vertices_len; ++i)
 	{
@@ -696,7 +712,8 @@ int XLuaPolygonc(lua_State* L)
 
 	int vertices_len = lua_objlen(L, 1);
 	vertices_len = std::min(vertices_len, static_cast<int>(count));
-	XPLMVertexColor_t* vertices = new XPLMVertexColor_t[vertices_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = vertices_len;
+	XPLMVertexColor_t* vertices = new XPLMVertexColor_t[vertices_len]{};
 
 	for (int i = 0; i < vertices_len; ++i)
 	{
@@ -724,7 +741,8 @@ int XLuaQuadstrip(lua_State* L)
 
 	int vertices_len = lua_objlen(L, 2);
 	vertices_len = std::min(vertices_len, static_cast<int>(count));
-	XPLMVertex_t* vertices = new XPLMVertex_t[vertices_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = vertices_len;
+	XPLMVertex_t* vertices = new XPLMVertex_t[vertices_len]{};
 
 	for (int i = 0; i < vertices_len; ++i)
 	{
@@ -751,7 +769,8 @@ int XLuaQuadstripc(lua_State* L)
 
 	int vertices_len = lua_objlen(L, 1);
 	vertices_len = std::min(vertices_len, static_cast<int>(count));
-	XPLMVertexColor_t* vertices = new XPLMVertexColor_t[vertices_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = vertices_len;
+	XPLMVertexColor_t* vertices = new XPLMVertexColor_t[vertices_len]{};
 
 	for (int i = 0; i < vertices_len; ++i)
 	{
@@ -1455,7 +1474,8 @@ int XLuaTextureAtlasDrawMesh(lua_State* L)
 
 	int vertices_len = lua_objlen(L, 4);
 	vertices_len = std::min(vertices_len, static_cast<int>(count));
-	XPLMTextureVertex_t* vertices = new XPLMTextureVertex_t[vertices_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = vertices_len;
+	XPLMTextureVertex_t* vertices = new XPLMTextureVertex_t[vertices_len]{};
 
 	for (int i = 0; i < vertices_len; ++i)
 	{
@@ -1508,7 +1528,8 @@ int XLuaTextureSourceDrawMesh(lua_State* L)
 
 	int mesh_len = lua_objlen(L, 3);
 	mesh_len = std::min(mesh_len, static_cast<int>(count));
-	XPLMTextureVertex_t* mesh = new XPLMTextureVertex_t[mesh_len + 1]{};		// Some APIs expect null-terminated arrays.
+	count = mesh_len;
+	XPLMTextureVertex_t* mesh = new XPLMTextureVertex_t[mesh_len]{};
 
 	for (int i = 0; i < mesh_len; ++i)
 	{
