@@ -392,13 +392,19 @@ module::module(
 	int load_result = luaL_loadstring(m_interp, "jit.opt.start(\"maxmcode=8192\", \"maxtrace=4096\", \"maxirconst=1500\", \"maxside=500\")");
 	if (fail_ctor(load_result, "set jit defaults"))
 		return;
-	int script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
+	if (lua_pcall(m_interp, 0, 0, m_debug_proc) != 0)
+	{
+		// Not fatal - the script still runs, just without our tuning.
+		char const* jit_error = lua_tostring(m_interp, -1);
+		log_message(m_interp, "Unable to apply LuaJIT tuning: %s\n", jit_error ? jit_error : "unknown error");
+		lua_pop(m_interp, 1);
+	}
 
 	load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), in_init_script.generic_string().c_str());
 	if (fail_ctor(load_result, "load init script"))
 		return;
 
-	script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
+	int script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
 	if (fail_ctor(script_result, "run init script"))
 		return;
 
