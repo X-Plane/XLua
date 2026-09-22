@@ -202,51 +202,62 @@ void InitScripts(void)
 
 	scripts_dir_path += "scripts";
 
+	vector<string> module_names;
+	constexpr int kBatchSize = 16;
 	int offset = 0;
-	int mf, fcount;
-	while (1)
+	int mf = 0;
+	int fcount = 0;
+	do
 	{
-		char fname_buf[2048];
-		char* fptr;
+		char fname_buf[32768];
+		char* name_ptrs[kBatchSize] = {};
 		XPLMGetDirectoryContents(
 			scripts_dir_path.c_str(),
 			offset,
 			fname_buf,
 			sizeof(fname_buf),
-			&fptr,
-			1,
+			name_ptrs,
+			kBatchSize,
 			&mf,
 			&fcount);
 		if (fcount == 0)
 			break;
 
-		if (strcmp(fptr, ".DS_Store") != 0)
+		for (int i = 0; i < fcount; ++i)
 		{
-			std::filesystem::path mod_path(scripts_dir_path);
-			mod_path /= fptr;
-
-			std::filesystem::path script_path(mod_path / fptr);
-			script_path += ".lua";
-
-			if (std::filesystem::exists(script_path) && !std::filesystem::is_directory(script_path))
+			if (name_ptrs[i] != nullptr && strcmp(name_ptrs[i], ".DS_Store") != 0)
 			{
-				g_modules.push_back(new module(
-					mod_path.generic_string().c_str(),
-					init_script_path.c_str(),
-					script_path.generic_string().c_str(),
-					lj_alloc_f,
-					NULL));
-
-				if (!g_modules.back()->is_started())
-				{
-					g_modules.pop_back();
-				}
+				module_names.emplace_back(name_ptrs[i]);
 			}
 		}
 
-		++offset;
-		if (offset == mf)
-			break;
+		offset += fcount;
+	} while (offset < mf);
+
+	std::sort(module_names.begin(), module_names.end());
+
+	for (const string& module_name : module_names)
+	{
+		std::filesystem::path mod_path(scripts_dir_path);
+		mod_path /= module_name;
+
+		std::filesystem::path script_path(mod_path / module_name);
+		script_path += ".lua";
+
+		if (std::filesystem::exists(script_path) && !std::filesystem::is_directory(script_path))
+		{
+			g_modules.push_back(new module(
+				mod_path.generic_string().c_str(),
+				init_script_path.c_str(),
+				script_path.generic_string().c_str(),
+				lj_alloc_f,
+				NULL));
+
+			if (!g_modules.back()->is_started())
+			{
+				g_modules.pop_back();
+			}
+		}
 	}
 }
 
