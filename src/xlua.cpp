@@ -142,10 +142,14 @@ static float xlua_pre_timer_master_cb(
 {
 	xlua_do_timers_for_time(xlua_get_simulated_time());
 	
-	if(XPLMGetDatai(g_replay_active) == 0)
-	if(XPLMGetDataf(g_sim_period) > 0.0f)	
-	for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)	
-		(*m)->pre_physics();
+	if (XPLMGetDatai(g_replay_active) == 0 && XPLMGetDataf(g_sim_period) > 0.0f)
+	{
+		for (vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+		{
+			if ((*m)->has_pre_physics())
+				(*m)->pre_physics();
+		}
+	}
 	return -1;
 }
 
@@ -161,11 +165,13 @@ static float xlua_post_timer_master_cb(
 	{
 		if (isInReplay)
 		{
-			m->post_replay();
+			if (m->has_post_replay())
+				m->post_replay();
 		}
 		else if (framePeriod > 0.f)
 		{
-			m->post_physics();
+			if (m->has_post_physics())
+				m->post_physics();
 		}
 	}
 
