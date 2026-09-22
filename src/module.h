@@ -46,6 +46,14 @@ public:
 };
 
 class module {
+private:
+	enum PerFrameCalloutId {
+		kCalloutBeforePhysics = 0,
+		kCalloutAfterPhysics,
+		kCalloutAfterReplay,
+		kPerFrameCalloutCount
+	};
+
 public:
 
 						 module(
@@ -86,6 +94,9 @@ public:
 			// Internal housekeeping, possibly required even for XLua 2+ .
 			void		pre_physics();
 			void		post_physics();
+			bool		has_pre_physics() const { return m_per_frame_callout_refs[kCalloutBeforePhysics] != LUA_NOREF; }
+			bool		has_post_physics() const { return m_per_frame_callout_refs[kCalloutAfterPhysics] != LUA_NOREF; }
+			bool		has_post_replay() const { return m_per_frame_callout_refs[kCalloutAfterReplay] != LUA_NOREF; }
 
 			void		start_profile(void);
 			void		stop_profile(void);
@@ -106,6 +117,11 @@ public:
 private:
 
 		void			do_callout(const char * call_name);
+		void			capture_per_frame_callouts();
+		int				capture_callout_ref(const char * call_name);
+		void			register_callout_with_stp(int func_index, const char * call_name);
+		void			invoke_per_frame_callout(PerFrameCalloutId which);
+		void			release_per_frame_callouts();
 		void			shutdown_lua(void);
 
 	lua_State *				m_interp;
@@ -115,6 +131,7 @@ private:
 	int						m_debug_proc;
 	bool					m_enabled;
 	version_triplet			m_xlua_compat;
+	std::array<int, kPerFrameCalloutCount> m_per_frame_callout_refs = { LUA_NOREF, LUA_NOREF, LUA_NOREF };
 
 	module();
 	module(const module& rhs);

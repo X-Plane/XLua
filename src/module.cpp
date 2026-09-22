@@ -385,6 +385,7 @@ module::module(
 		lua_insert(m_interp, -2);
 		module_run_result = lua_pcall(m_interp, 1, 0, m_debug_proc);
 		CTOR_FAIL(module_run_result, "run module V1");
+		capture_per_frame_callouts();
 	}
 	else
 	{
@@ -396,6 +397,7 @@ module::module(
 		{
 			shutdown_lua();
 		}
+		capture_per_frame_callouts();
 	}
 }
 
@@ -473,7 +475,7 @@ void		module::pre_physics()
 {
 	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
 	{
-		do_callout("before_physics");
+		invoke_per_frame_callout(kCalloutBeforePhysics);
 	}
 }
 
@@ -481,7 +483,7 @@ void		module::post_physics()
 {
 	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
 	{
-		do_callout("after_physics");
+		invoke_per_frame_callout(kCalloutAfterPhysics);
 	}
 }
 
@@ -489,7 +491,112 @@ void		module::post_replay()
 {
 	if (m_interp != nullptr && m_enabled || m_xlua_compat[0] == 1)
 	{
-		do_callout("after_replay");
+		invoke_per_frame_callout(kCalloutAfterReplay);
+	}
+}
+
+void module::capture_per_frame_callouts()
+{
+	if (m_interp == nullptr)
+		return;
+
+	m_per_frame_callout_refs[kCalloutBeforePhysics] = capture_callout_ref("before_physics");
+	m_per_frame_callout_refs[kCalloutAfterPhysics] = capture_callout_ref("after_physics");
+	m_per_frame_callout_refs[kCalloutAfterReplay] = capture_callout_ref("after_replay");
+}
+
+int module::capture_callout_ref(const char* call_name)
+{
+	if (m_interp == nullptr)
+		return LUA_NOREF;
+
+	bool pop_namespace = false;
+	if (m_xlua_compat[0] == 1)
+	{
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, "n");
+		if (!lua_istable(m_interp, -1))
+		{
+			lua_pop(m_interp, 1);
+			return LUA_NOREF;
+		}
+		pop_namespace = true;
+		lua_getfield(m_interp, -1, call_name);
+	}
+	else
+	{
+		lua_getfield(m_interp, LUA_GLOBALSINDEX, call_name);
+	}
+
+	int ref = LUA_NOREF;
+	if (lua_isfunction(m_interp, -1))
+	{
+		const int func_index = lua_gettop(m_interp);
+		register_callout_with_stp(func_index, call_name);
+		ref = luaL_ref(m_interp, LUA_REGISTRYINDEX);
+	}
+	else
+	{
+		lua_pop(m_interp, 1);
+	}
+
+	if (pop_namespace)
+	{
+		lua_pop(m_interp, 1);
+	}
+
+	return ref;
+}
+
+void module::register_callout_with_stp(int func_index, const char* call_name)
+{
+	lua_getfield(m_interp, LUA_GLOBALSINDEX, "STP");
+	if (!lua_istable(m_interp, -1))
+	{
+		lua_pop(m_interp, 1);
+		return;
+	}
+
+	lua_getfield(m_interp, -1, "add_known_function");
+	if (!lua_isfunction(m_interp, -1))
+	{
+		lua_pop(m_interp, 2);
+		return;
+	}
+
+	lua_pushvalue(m_interp, func_index);
+	lua_pushstring(m_interp, call_name);
+	if (lua_pcall(m_interp, 2, 0, m_debug_proc) != 0)
+	{
+		lua_pop(m_interp, 1);
+	}
+	lua_pop(m_interp, 1);
+}
+
+void module::invoke_per_frame_callout(PerFrameCalloutId which)
+{
+	if (m_interp == nullptr || !m_enabled)
+		return;
+
+	const int ref = m_per_frame_callout_refs[which];
+	if (ref == LUA_NOREF)
+		return;
+
+	lua_rawgeti(m_interp, LUA_REGISTRYINDEX, ref);
+	fmt_pcall_stdvars(m_interp, m_debug_proc, false, "");
+}
+
+void module::release_per_frame_callouts()
+{
+	if (m_interp == nullptr)
+		return;
+
+	for (int& ref : m_per_frame_callout_refs)
+	{
+		if (ref != LUA_NOREF)
+		{
+			luaL_unref(m_interp, LUA_REGISTRYINDEX, ref);
+			ref = LUA_NOREF;
+		}
 	}
 }
 
@@ -588,6 +695,7 @@ void module::shutdown_lua(void)
 		// Ditch all the callbacks now, during shutdown and _after_ any disable/stop hooks in case the user decides
 		// to do anything funny like register callbacks.
 		xlua_callback_cleanup(m_interp);
+		release_per_frame_callouts();
 
 		luaJIT_profile_stop(m_interp);
 		lua_close(m_interp);
