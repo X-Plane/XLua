@@ -18,6 +18,7 @@
 #include <string>
 #include <memory>
 #include <list>
+#include <unordered_map>
 
 #include "log.h"
 
@@ -39,6 +40,7 @@ xlua_cmd::~xlua_cmd()
 }
 
 static std::list<xlua_cmd> s_cmds;
+static std::unordered_map<std::string, xlua_cmd*> s_cmd_lookup;
 
 static int xlua_std_pre_filter(XPLMCommandRef c, XPLMCommandPhase phase, void* ref)
 {
@@ -145,20 +147,43 @@ static int xlua_std_post_handler(XPLMCommandRef c, XPLMCommandPhase phase, void*
 
 xlua_cmd* xlua_find_cmd(const char* name)
 {
+	auto cached = s_cmd_lookup.find(name);
+	if (cached != s_cmd_lookup.end())
+		return cached->second;
+
 	for (auto& i : s_cmds)
 	{
 		if (i.m_name == name)
+		{
+			s_cmd_lookup[i.m_name] = &i;
 			return &i;
+		}
 	}
 
 	XPLMCommandRef c = XPLMFindCommand(name);
 	if (c == NULL) return NULL;
 
-	return &s_cmds.emplace_back(name, c);
+	xlua_cmd* cmd = &s_cmds.emplace_back(name, c);
+	s_cmd_lookup[cmd->m_name] = cmd;
+	return cmd;
 }
 
 xlua_cmd* xlua_create_cmd(lua_State* L, const char * name, const char * desc)
 {
+	auto cached = s_cmd_lookup.find(name);
+	if (cached != s_cmd_lookup.end())
+	{
+		xlua_cmd* cmd = cached->second;
+		if (cmd->m_ours)
+		{
+			log_message(L, "ERROR: command already exists: %s\n", name);
+			return nullptr;
+		}
+
+		cmd->m_ours = true;
+		return cmd;
+	}
+
 	for (auto& i : s_cmds)
 	{
 		if (i.m_name == name)
@@ -170,6 +195,7 @@ xlua_cmd* xlua_create_cmd(lua_State* L, const char * name, const char * desc)
 			}
 
 			i.m_ours = true;
+			s_cmd_lookup[i.m_name] = &i;
 			return &i;
 		}
 	}
@@ -187,6 +213,7 @@ xlua_cmd* xlua_create_cmd(lua_State* L, const char * name, const char * desc)
 
 	xlua_cmd* nc = &s_cmds.emplace_back(name, XPLMCreateCommand(name, desc));
 	nc->m_ours = true;
+	s_cmd_lookup[nc->m_name] = nc;
 
 	return nc;
 }
@@ -276,6 +303,7 @@ void xlua_cmd_once(xlua_cmd * cmd)
 
 void xlua_cmd_cleanup()
 {
+	s_cmd_lookup.clear();
 	s_cmds.clear();
 }
 

@@ -51,6 +51,7 @@ XPLMCommandRef			reset_cmd = nullptr;
 #if !MOBILE
 XPLMMenuID				PluginMenu = 0;					// Our sub-menu
 int						PluginMenuItem = 0;				// Our sub-menu's item number on the Plugins menu
+static bool				g_jit_menu_enabled = false;
 #endif
 bool					g_bIsAircraftPlugin = true;
 int						JITMenuItem = 0;
@@ -142,10 +143,14 @@ static float xlua_pre_timer_master_cb(
 {
 	xlua_do_timers_for_time(xlua_get_simulated_time());
 	
-	if(XPLMGetDatai(g_replay_active) == 0)
-	if(XPLMGetDataf(g_sim_period) > 0.0f)	
-	for(vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)	
-		(*m)->pre_physics();
+	if (XPLMGetDatai(g_replay_active) == 0 && XPLMGetDataf(g_sim_period) > 0.0f)
+	{
+		for (vector<module *>::iterator m = g_modules.begin(); m != g_modules.end(); ++m)
+		{
+			if ((*m)->has_pre_physics())
+				(*m)->pre_physics();
+		}
+	}
 	return -1;
 }
 
@@ -161,11 +166,13 @@ static float xlua_post_timer_master_cb(
 	{
 		if (isInReplay)
 		{
-			m->post_replay();
+			if (m->has_post_replay())
+				m->post_replay();
 		}
 		else if (framePeriod > 0.f)
 		{
-			m->post_physics();
+			if (m->has_post_physics())
+				m->post_physics();
 		}
 	}
 
@@ -176,11 +183,6 @@ static float xlua_post_timer_master_cb(
 	{
 		profilerWnd.reset();          // XPLMDestroyWindow — no further callbacks
 		profilerImguiCtx.reset();
-	}
-	if (!g_modules.empty())
-	{
-		bool is_enabled = g_modules.front()->get_jit_mode();
-		XPLMCheckMenuItem(PluginMenu, JITMenuItem, is_enabled ? xplm_Menu_Checked : xplm_Menu_Unchecked);
 	}
 #endif
 	return -1;
@@ -196,51 +198,62 @@ void InitScripts(void)
 
 	scripts_dir_path += "scripts";
 
+	vector<string> module_names;
+	constexpr int kBatchSize = 16;
 	int offset = 0;
-	int mf, fcount;
-	while (1)
+	int mf = 0;
+	int fcount = 0;
+	do
 	{
-		char fname_buf[2048];
-		char* fptr;
+		char fname_buf[32768];
+		char* name_ptrs[kBatchSize] = {};
 		XPLMGetDirectoryContents(
 			scripts_dir_path.c_str(),
 			offset,
 			fname_buf,
 			sizeof(fname_buf),
-			&fptr,
-			1,
+			name_ptrs,
+			kBatchSize,
 			&mf,
 			&fcount);
 		if (fcount == 0)
 			break;
 
-		if (strcmp(fptr, ".DS_Store") != 0)
+		for (int i = 0; i < fcount; ++i)
 		{
-			std::filesystem::path mod_path(scripts_dir_path);
-			mod_path /= fptr;
-
-			std::filesystem::path script_path(mod_path / fptr);
-			script_path += ".lua";
-
-			if (std::filesystem::exists(script_path) && !std::filesystem::is_directory(script_path))
+			if (name_ptrs[i] != nullptr && strcmp(name_ptrs[i], ".DS_Store") != 0)
 			{
-				g_modules.push_back(new module(
-					mod_path.generic_string().c_str(),
-					init_script_path.c_str(),
-					script_path.generic_string().c_str(),
-					lj_alloc_f,
-					NULL));
-
-				if (!g_modules.back()->is_started())
-				{
-					g_modules.pop_back();
-				}
+				module_names.emplace_back(name_ptrs[i]);
 			}
 		}
 
-		++offset;
-		if (offset == mf)
-			break;
+		offset += fcount;
+	} while (offset < mf);
+
+	std::sort(module_names.begin(), module_names.end());
+
+	for (const string& module_name : module_names)
+	{
+		std::filesystem::path mod_path(scripts_dir_path);
+		mod_path /= module_name;
+
+		std::filesystem::path script_path(mod_path / module_name);
+		script_path += ".lua";
+
+		if (std::filesystem::exists(script_path) && !std::filesystem::is_directory(script_path))
+		{
+			g_modules.push_back(new module(
+				mod_path.generic_string().c_str(),
+				init_script_path.c_str(),
+				script_path.generic_string().c_str(),
+				lj_alloc_f,
+				NULL));
+
+			if (!g_modules.back()->is_started())
+			{
+				g_modules.pop_back();
+			}
+		}
 	}
 }
 
@@ -524,6 +537,21 @@ void ShowProfiler()
 	XPLMSetWindowTitle(profilerWnd.get(), "XLua Profiler");
 }
 
+static void UpdateJITMenuItem(bool enabled)
+{
+	g_jit_menu_enabled = enabled;
+	if (PluginMenu != nullptr)
+	{
+		XPLMSetMenuItemName(PluginMenu, JITMenuItem, enabled ? "JIT: On" : "JIT: Off", 0);
+		XPLMCheckMenuItem(PluginMenu, JITMenuItem, enabled ? xplm_Menu_Checked : xplm_Menu_Unchecked);
+	}
+}
+
+static void RefreshJITMenuItem()
+{
+	UpdateJITMenuItem(!g_modules.empty() && g_modules.front()->get_jit_mode());
+}
+
 static void MenuHandler(void* menuRef, void* itemRef)
 {
 	switch ((eMenuItems)(size_t)itemRef)
@@ -537,16 +565,12 @@ static void MenuHandler(void* menuRef, void* itemRef)
 
 		case MI_ToggleJIT:
 		{
-			if (!g_modules.empty())
+			const bool enable = !g_jit_menu_enabled;
+			for (auto const& m : g_modules)
 			{
-				XPLMMenuCheck curState;
-				XPLMCheckMenuItemState(PluginMenu, JITMenuItem, &curState);
-
-				for (auto const& m : g_modules)
-				{
-					m->set_jit_mode(curState != xplm_Menu_Checked);
-				}
+				m->set_jit_mode(enable);
 			}
+			UpdateJITMenuItem(enable);
 			break;
 		}
 	}
@@ -617,6 +641,8 @@ PLUGIN_API void XPluginDisable(void)
 		XPLMRemoveMenuItem(XPLMFindPluginsMenu(), PluginMenuItem);
 		XPLMDestroyMenu(PluginMenu);
 		PluginMenu = nullptr;
+		JITMenuItem = 0;
+		g_jit_menu_enabled = false;
 	}
 #endif
 	CleanupScripts();
@@ -716,11 +742,14 @@ PLUGIN_API int XPluginEnable(void)
 		PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), PluginMenuItem, MenuHandler, nullptr);
 		XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, 0);
 		XPLMAppendMenuItem(PluginMenu, "Show Profiler", (void*)MI_ShowProfiler, 1);
-		JITMenuItem = XPLMAppendMenuItem(PluginMenu, "Toggle JIT", (void*)MI_ToggleJIT, 2);
+		JITMenuItem = XPLMAppendMenuItem(PluginMenu, "JIT: Off", (void*)MI_ToggleJIT, 2);
 	}
 #endif
 
 	InitScripts();
+#if !MOBILE
+	RefreshJITMenuItem();
+#endif
 
 	if (XPLMGetCycleNumber() > 0)
 	{
