@@ -106,6 +106,9 @@ public:
 private:
 
 		void			do_callout(const char * call_name);
+		// Logs errcode plus the interpreter's error string, tears the interpreter
+		// down, and returns true when the caller must abandon construction.
+		bool			fail_ctor(int errcode, char const* what);
 		void			shutdown_lua(void);
 
 	lua_State *				m_interp;
