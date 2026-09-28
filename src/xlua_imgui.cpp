@@ -72,9 +72,8 @@ XplmImguiContext* GetOrCreateImguiState(lua_State* L) {
 
 // Returns the per-lua_State context if one has been created on it; nullptr
 // otherwise. Used by the frame primitives and the input dispatchers — neither
-// may lazily create a context, the former because creating one calls
-// XPLMCreateTexture (illegal mid-draw), the latter because input can arrive
-// before the window that owns the context exists.
+// lazily creates a context: XLuaCreateImguiWindow already made it, and input
+// can arrive before the window that owns the context exists.
 XplmImguiContext* GetExistingImguiState(lua_State* L) {
     lua_pushstring(L, kImguiStateKey);
     lua_gettable(L, LUA_REGISTRYINDEX);

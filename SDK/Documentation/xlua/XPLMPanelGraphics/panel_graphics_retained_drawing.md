@@ -5,10 +5,20 @@ and replay them efficiently on subsequent frames. This is useful for static
 or infrequently changing parts of a display: record once, then replay each
 frame without reissuing individual draw calls.
 
-WARNING: A retained drawing captures references to the texture atlases and
-fonts used during recording. If you destroy a texture atlas or font that was
-used in a retained drawing, you must also destroy that retained drawing -
-replaying it will reference invalid resources.
+You can record anywhere - inside a draw callback, or outside one entirely
+(when your plugin is enabled, from a flight loop, and so on) - and replay in
+any draw callback. A retained drawing captures the drawing itself, not the
+state around it: it lands wherever the transform, scissors and stencil in
+force at replay put it.
+
+WARNING: A retained drawing captures references to the texture atlases,
+fonts, textures (from XPLMCreateTexture) and other retained drawings used
+during recording. If you destroy any of those, you must destroy every retained
+drawing that uses it first - replaying a retained drawing that references a
+destroyed resource is undefined behavior, and may crash X-Plane.
+
+Drawing with a resource and then destroying it in the same callback is fine:
+X-Plane keeps whatever it still needs to finish that frame's drawing.
 
 ---
 
@@ -54,6 +64,10 @@ This function begins recording drawing commands. All panel graphics calls
 made after this function and before XPLMEndRetainedDrawing are captured into
 a retained drawing instead of being rendered immediately.
 
+You may call this inside or outside a draw callback. Either way, end the
+recording with XPLMEndRetainedDrawing before that same callback returns; a
+recording left open is reported and discarded.
+
 NOTE: Do not nest retained drawing sessions.
 
 <div class="lua-code" markdown="1">
@@ -76,7 +90,8 @@ NOTE: Do not nest retained drawing sessions.
 </div>
 
 This function ends recording and returns a handle to the captured drawing
-commands. Subsequent panel graphics calls are once again rendered immediately.
+commands. Inside a draw callback, subsequent panel graphics calls are once
+again rendered immediately.
 
 Returns an opaque handle to the retained drawing.
 
@@ -136,7 +151,9 @@ a rotation is in effect is an error. Translate and scale are always fine.
 
 </div>
 
-This function destroys a retained drawing and frees its resources.
+This function destroys a retained drawing and frees its resources. You may
+call this anywhere, including in the draw callback that just drew it.
+Destroy any retained drawing that has this one drawn into it first.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">XPLMDestroyRetainedDrawing(

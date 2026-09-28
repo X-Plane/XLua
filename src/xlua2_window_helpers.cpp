@@ -81,11 +81,10 @@ void cb_draw(XPLMWindowID win, void* refcon) {
     // calls — no NewFrame/Render boilerplate. EndFrame fires unconditionally
     // (even on Lua error) to leave imgui in a clean state for the next tick.
     //
-    // No context means no frame: we can't build one here (that would call
-    // XPLMCreateTexture inside a panel graphics draw callback), and running the
-    // script's imgui.* calls without one would poke at whatever ImGuiContext
-    // happens to be current. XLuaCreateImguiWindow makes the context before the
-    // window exists, so this is a guard, not a path we expect to take.
+    // No context means no frame: running the script's imgui.* calls without
+    // one would poke at whatever ImGuiContext happens to be current.
+    // XLuaCreateImguiWindow makes the context before the window exists, so
+    // this is a guard, not a path we expect to take.
     if (!xplm_imgui_begin_frame(ctx->L, w, h, win)) return;
     if (ctx->draw_cb) {
         lua_rawgeti(ctx->L, LUA_REGISTRYINDEX, ctx->draw_cb->callbacks.at("drawWindowFunc"));
@@ -214,10 +213,9 @@ extern "C" int XLuaCreateImguiWindow(lua_State* L) {
         return 1;
     }
 
-    // Build the imgui context here, not on first draw: it creates the font atlas
-    // via XPLMCreateTexture, and panel graphics forbids creating a draw-call
-    // texture from inside a draw callback. Same rule as fonts and atlases, and
-    // the same thing XLua's own profiler window does from its menu handler.
+    // Build the imgui context here, not on first draw, so it exists before any
+    // input or draw for this window arrives - the same thing XLua's own
+    // profiler window does from its menu handler.
     // After the null check so a failed create leaves nothing behind.
     xplm_imgui_ensure_context(L);
 

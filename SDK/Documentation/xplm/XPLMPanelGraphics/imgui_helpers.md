@@ -1,14 +1,25 @@
 <h1>Imgui Helpers</h1>
 
-These routines let panel-graphics-content-type windows render textured
-indexed triangle meshes that exactly match the layout produced by Dear
-ImGui's `ImDrawData`, so a plugin can plug an ImGui frame straight into
-X-Plane panel graphics.
+These routines let panel graphics render textured indexed triangle meshes
+that exactly match the layout produced by Dear ImGui's `ImDrawData`, so a
+plugin can plug an ImGui frame straight into X-Plane panel graphics.
 
-Coordinate system: positions are in window-LOCAL pixels with TOP-LEFT
-origin (matches Dear ImGui). Scissors are in the same coordinate space.
-The host translates these against the current panel-graphics origin and
-flips Y for you.
+Coordinate system: positions and scissors are in panel coordinates under
+the current transform, exactly like every other panel-graphics primitive.
+Nothing is translated or flipped for you. Dear ImGui works in window-local
+pixels with a TOP-LEFT origin and Y increasing downward, so set up that
+space with the transform stack before drawing - the same conversion your
+mouse handler does in reverse:
+
+    XPLMTransformPush();
+    XPLMTransformTranslate(left, top);   // from XPLMGetWindowGeometry; (0, height) on an avionics screen
+    XPLMTransformScale(1.0f, -1.0f);     // Y down, as ImGui expects
+    XPLMDrawCalls(...);                  // once per ImDrawList
+    XPLMTransformPop();
+
+Because the transform is yours, a retained drawing of an ImGui frame
+captures the frame itself, not where the window was: replay it under the
+translate for the window's current position and it follows the window.
 
 Vertex layout (matches `ImDrawVert` exactly): each vertex is 5 floats =
 20 bytes, in this order: pos.x, pos.y, uv.x, uv.y, RGBA8 packed as a
@@ -23,13 +34,17 @@ matches ImGui's own defaults.
 Sampler: bilinear filter, clamp-to-edge in both dimensions, no mipmaps.
 UV coordinates outside [0,1] sample the edge texels (no wrap).
 
-Scissor: the per-`XPLMDrawCall_t` scissor rect is in {left, top, right,
-bottom} order (top-left origin). Zero-width or zero-height rects produce
-no output. The scissor state is automatically saved on entry to
+Scissor: the per-`XPLMDrawCall_t` scissor rect is two opposite corners,
+{x1, y1, x2, y2}, in the same space as the vertices - ImGui's `ClipRect`
+as-is. It is intersected with the scissor already in force (for example one
+set with XPLMScissorSet), so a draw call can narrow the clip but never
+escape it. Zero-width or zero-height rects produce no output. The scissor state is automatically saved on entry to
 `XPLMDrawCalls` and restored on exit, so subsequent panel-graphics calls
 in the same frame are unaffected.
 
-Plugin-callable from inside a panel-graphics window's draw callback only.
+XPLMDrawCalls may only be called while drawing: from a panel-graphics draw
+callback, or while recording a retained drawing. XPLMCreateTexture and
+XPLMDestroyTexture may be called anywhere.
 
 ---
 
@@ -69,7 +84,7 @@ typedef struct {
 | Field | Type | Description |
 |:--|:--|:--|
 | tex_ref | void * | Texture handle from XPLMCreateTexture. That is the ONLY valid source - this is not a general texture handle, and passing anything else (an XPLMTextureAtlasRef, say) is undefined behavior, not a no-op. |
-| scissors[4] | float | Clip rect: {left, top, right, bottom} in window-local top-left coords. |
+| scissors[4] | float | Clip rect: two opposite corners {x1, y1, x2, y2}, in the same space as the vertices (ImGui's ClipRect as-is). |
 | idx_offset | int | First index into XPLMMesh_t::indices to use. |
 | element_count | int | Number of indices to consume (must be a multiple of 3 for triangles). Zero is allowed and produces no output. |
 | vtx_offset | int | Added to each fetched index before vertex lookup. |
@@ -143,6 +158,9 @@ The returned handle is opaque; pass it to `XPLMDrawCall_t::tex_ref` and
 free it with `XPLMDestroyTexture` when done. The sampler used at draw
 time is bilinear, clamp-to-edge, no mipmaps.
 
+You may call this anywhere, including inside a panel-graphics draw callback;
+the texture can be used by draw calls later in the same callback.
+
 <div class="xplm-code" markdown="1">
 
 ```cpp
@@ -171,6 +189,11 @@ XPLM_API void * XPLMCreateTexture(
 
 Frees a texture obtained from `XPLMCreateTexture`. Do not use the handle
 after calling this. It is safe to create and destroy textures every frame.
+
+You may call this anywhere, including inside a panel-graphics draw callback,
+even right after drawing with the texture: X-Plane keeps it alive until that
+drawing has been rendered. Do not destroy a texture that a retained drawing
+still uses - destroy the retained drawing first.
 
 <div class="xplm-code" markdown="1">
 
