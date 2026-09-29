@@ -233,16 +233,16 @@ void InitScripts(void)
 #endif
 			if (have_script)
 			{
-				g_modules.push_back(new module(
+				auto mod = std::make_unique<module>(
 					mod_path.generic_string().c_str(),
 					init_script_path.c_str(),
 					script_path.generic_string().c_str(),
 					lj_alloc_f,
-					NULL));
+					nullptr);
 
-				if (!g_modules.back()->is_started())
+				if (mod->is_started())
 				{
-					g_modules.pop_back();
+					g_modules.push_back(mod.release());
 				}
 			}
 		}

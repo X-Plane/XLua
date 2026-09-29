@@ -266,6 +266,8 @@ void RegDefines_XPLMPlugin(lua_State* L)
 	lua_setglobal(L, "XPLM_MSG_PLANE_LOADED");
 	lua_pushinteger(L, 106);
 	lua_setglobal(L, "XPLM_MSG_PLANE_UNLOADED");
+	lua_pushinteger(L, 116);
+	lua_setglobal(L, "XPLM_MSG_PRO_LICENSE_CHANGED");
 	lua_pushinteger(L, 111);
 	lua_setglobal(L, "XPLM_MSG_RELEASE_PLANES");
 	lua_pushinteger(L, 104);

@@ -185,6 +185,7 @@ extern "C"
 	int XLuaGetNthPlugin(lua_State* L);
 	int XLuaGetPluginInfo(lua_State* L);
 	int XLuaGetPrefsPath(lua_State* L);
+	int XLuaGetProLicenseStatus(lua_State* L);
 	int XLuaGetScreenBoundsGlobal(lua_State* L);
 	int XLuaGetScreenSize(lua_State* L);
 	int XLuaGetSystemPath(lua_State* L);
@@ -423,6 +424,7 @@ extern "C"
 	void RegEnum_XPLMMouseStatus(lua_State* L);
 	void RegEnum_XPLMNavFlightPlan(lua_State* L);
 	void RegEnum_XPLMNavType(lua_State* L);
+	void RegEnum_XPLMProLicenseStatus(lua_State* L);
 	void RegEnum_XPLMProbeResult(lua_State* L);
 	void RegEnum_XPLMProbeType(lua_State* L);
 	void RegEnum_XPLMSVTFeatures(lua_State* L);
@@ -605,6 +607,7 @@ void add_xplm_to_interp(lua_State* L)
 	lua_register(L, "XPLMGetNthPlugin", XLuaGetNthPlugin);
 	lua_register(L, "XPLMGetPluginInfo", XLuaGetPluginInfo);
 	lua_register(L, "XPLMGetPrefsPath", XLuaGetPrefsPath);
+	lua_register(L, "XPLMGetProLicenseStatus", XLuaGetProLicenseStatus);
 	lua_register(L, "XPLMGetScreenBoundsGlobal", XLuaGetScreenBoundsGlobal);
 	lua_register(L, "XPLMGetScreenSize", XLuaGetScreenSize);
 	lua_register(L, "XPLMGetSystemPath", XLuaGetSystemPath);
@@ -827,6 +830,7 @@ void add_xplm_to_interp(lua_State* L)
 	RegEnum_XPLMMouseStatus(L);
 	RegEnum_XPLMNavFlightPlan(L);
 	RegEnum_XPLMNavType(L);
+	RegEnum_XPLMProLicenseStatus(L);
 	RegEnum_XPLMProbeResult(L);
 	RegEnum_XPLMProbeType(L);
 	RegEnum_XPLMSVTFeatures(L);
@@ -852,4 +856,5 @@ void add_xplm_to_interp(lua_State* L)
 	xlua_register_event(XPLM_MSG_LIVERY_LOADED, "i");
 	xlua_register_event(XPLM_MSG_PLANE_LOADED, "i");
 	xlua_register_event(XPLM_MSG_PLANE_UNLOADED, "i");
+	xlua_register_event(XPLM_MSG_PRO_LICENSE_CHANGED, "i");
 }

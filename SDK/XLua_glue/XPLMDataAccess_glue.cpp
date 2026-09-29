@@ -452,7 +452,8 @@ int XLuaSetDatavi(lua_State* L)
 
 	int inValues_len = lua_objlen(L, 2);
 	inValues_len = std::min(inValues_len, static_cast<int>(inCount));
-	int* inValues = new int[inValues_len + 1]{};		// Some APIs expect null-terminated arrays.
+	inCount = inValues_len;
+	int* inValues = new int[inValues_len]{};
 
 	for (int i = 0; i < inValues_len; ++i)
 	{
@@ -530,7 +531,8 @@ int XLuaSetDatavf(lua_State* L)
 
 	int inValues_len = lua_objlen(L, 2);
 	inValues_len = std::min(inValues_len, static_cast<int>(inCount));
-	float* inValues = new float[inValues_len + 1]{};		// Some APIs expect null-terminated arrays.
+	inCount = inValues_len;
+	float* inValues = new float[inValues_len]{};
 
 	for (int i = 0; i < inValues_len; ++i)
 	{
@@ -608,7 +610,8 @@ int XLuaSetDatab(lua_State* L)
 
 	int inValue_len = lua_objlen(L, 2);
 	inValue_len = std::min(inValue_len, static_cast<int>(inLength));
-	uint8_t* inValue = new uint8_t[inValue_len + 1]{};		// Some APIs expect null-terminated arrays.
+	inLength = inValue_len;
+	uint8_t* inValue = new uint8_t[inValue_len]{};
 
 	for (int i = 0; i < inValue_len; ++i)
 	{
@@ -770,11 +773,18 @@ static int cb_XPLMGetDatavi_f(void* inRefcon, int outValues[], int inOffset, int
 
 		if (outValues != nullptr)
 		{
+			lua_rawgeti(L, LUA_REGISTRYINDEX, outValues_ref);
 			for (int i = 0; i < inMax; ++i)
 			{
-				lua_rawgeti(L, outValues_ref, i + 1);
-				outValues[i] = xlua_checkinteger(L, -1);
+				lua_rawgeti(L, -1, i + 1);
+				outValues[i] = xlua_tointeger(L, -1);
 				lua_pop(L, 1);
+			}
+			lua_pop(L, 1);
+			if (res < 0 || res > inMax)
+			{
+				log_message(L, "warn: lua callback XPLMGetDatavi_f reported %d values of a maximum %d; clamping\n", res, inMax);
+				res = (res < 0 ? 0 : inMax);
 			}
 		}
 
@@ -855,11 +865,18 @@ static int cb_XPLMGetDatavf_f(void* inRefcon, float outValues[], int inOffset, i
 
 		if (outValues != nullptr)
 		{
+			lua_rawgeti(L, LUA_REGISTRYINDEX, outValues_ref);
 			for (int i = 0; i < inMax; ++i)
 			{
-				lua_rawgeti(L, outValues_ref, i + 1);
-				outValues[i] = xlua_checknumber(L, -1);
+				lua_rawgeti(L, -1, i + 1);
+				outValues[i] = xlua_tonumber(L, -1);
 				lua_pop(L, 1);
+			}
+			lua_pop(L, 1);
+			if (res < 0 || res > inMax)
+			{
+				log_message(L, "warn: lua callback XPLMGetDatavf_f reported %d values of a maximum %d; clamping\n", res, inMax);
+				res = (res < 0 ? 0 : inMax);
 			}
 		}
 
@@ -940,11 +957,18 @@ static int cb_XPLMGetDatab_f(void* inRefcon, void* outValue, int inOffset, int i
 
 		if (outValue != nullptr)
 		{
+			lua_rawgeti(L, LUA_REGISTRYINDEX, outValue_ref);
 			for (int i = 0; i < inMaxLength; ++i)
 			{
-				lua_rawgeti(L, outValue_ref, i + 1);
-				static_cast<uint8_t*>(outValue)[i] = xlua_checkbyte(L, -1);
+				lua_rawgeti(L, -1, i + 1);
+				static_cast<uint8_t*>(outValue)[i] = xlua_tobyte(L, -1);
 				lua_pop(L, 1);
+			}
+			lua_pop(L, 1);
+			if (res < 0 || res > inMaxLength)
+			{
+				log_message(L, "warn: lua callback XPLMGetDatab_f reported %d values of a maximum %d; clamping\n", res, inMaxLength);
+				res = (res < 0 ? 0 : inMaxLength);
 			}
 		}
 

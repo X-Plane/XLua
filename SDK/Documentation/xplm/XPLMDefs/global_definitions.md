@@ -223,6 +223,8 @@ The current XPLM revision is 4.6.0 (460).
 
 </div>
 
+</div>
+
 ---
 
 <div class="sym-block sym-struct" data-name="XPLMFixedString150_t" data-type="struct" markdown="1">

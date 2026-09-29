@@ -190,7 +190,7 @@ int XLuaAcquirePlanes(lua_State* L)
 	wrap_next_lua_func(cb_capture_0, 2, true, "XPLMPlanesAvailable_f");
 
 	int inAircraft_len = lua_objlen(L, 1);
-	char const** inAircraft = new char const*[inAircraft_len + 1]{};		// Some APIs expect null-terminated arrays.
+	char const** inAircraft = new char const*[inAircraft_len + 1]{};		// Null-terminated: no count param, pointer elements.
 
 	for (int i = 0; i < inAircraft_len; ++i)
 	{

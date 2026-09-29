@@ -345,6 +345,27 @@ A new weather moment has been delivered for display. The parameter is 0 for a no
 
 ---
 
+<div class="sym-block sym-event" data-name="XPLM_MSG_PRO_LICENSE_CHANGED" data-type="event" markdown="1">
+
+<div class="sym-title-row" markdown="1">
+
+## XPLM_MSG_PRO_LICENSE_CHANGED { .symbol-title }
+
+<span class="sym-badge badge-event">event</span> <span class="sym-badge badge-version">XPLM440</span>
+
+</div>
+
+Sent to all plugins when the value XPLMGetProLicenseStatus returns changes, including the first
+transition away from xplm_ProLicense_Unknown when X-Plane's license check completes. The parameter
+is the new XPLMProLicenseStatus, bit-cast to a pointer.
+
+<div class="lua-code" markdown="1">
+</div>
+
+</div>
+
+---
+
 <div class="sym-block sym-function" data-name="XPLMSendMessageToPlugin" data-type="function" markdown="1">
 
 <div class="sym-title-row" markdown="1">

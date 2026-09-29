@@ -38,13 +38,24 @@ ImGuiKey XPLM_VK_to_ImGuiKey(int vkey) {
         case XPLM_VK_RIGHT:     return ImGuiKey_RightArrow;
         case XPLM_VK_UP:        return ImGuiKey_UpArrow;
         case XPLM_VK_DOWN:      return ImGuiKey_DownArrow;
+        case XPLM_VK_PRIOR:     return ImGuiKey_PageUp;
+        case XPLM_VK_NEXT:      return ImGuiKey_PageDown;
         case XPLM_VK_HOME:      return ImGuiKey_Home;
         case XPLM_VK_END:       return ImGuiKey_End;
         case XPLM_VK_INSERT:    return ImGuiKey_Insert;
         case XPLM_VK_DELETE:    return ImGuiKey_Delete;
         case XPLM_VK_BACK:      return ImGuiKey_Backspace;
         case XPLM_VK_SPACE:     return ImGuiKey_Space;
+
+        // Careful: XPLM_VK_ENTER (0xBB) is NOT what the enter/return key sends -
+        // no platform back-end ever emits it (see gfx_window_cocoa.mm / _win32.cpp
+        // / _x11.cpp). The main keyboard's return key arrives as XPLM_VK_RETURN and
+        // the numeric keypad's as XPLM_VK_NUMPAD_ENT. Mapping only the
+        // obvious-looking XPLM_VK_ENTER is why enter appeared dead in ImGui.
+        case XPLM_VK_RETURN:
         case XPLM_VK_ENTER:     return ImGuiKey_Enter;
+        case XPLM_VK_NUMPAD_ENT:return ImGuiKey_KeypadEnter;
+
         case XPLM_VK_ESCAPE:    return ImGuiKey_Escape;
         case XPLM_VK_0:         return ImGuiKey_0;
         case XPLM_VK_1:         return ImGuiKey_1;
@@ -91,6 +102,27 @@ ImGuiKey XPLM_VK_to_ImGuiKey(int vkey) {
         case XPLM_VK_LBRACE:    return ImGuiKey_LeftBracket;
         case XPLM_VK_RBRACE:    return ImGuiKey_RightBracket;
         case XPLM_VK_BACKSLASH: return ImGuiKey_Backslash;
+        case XPLM_VK_BACKQUOTE: return ImGuiKey_GraveAccent;
+        case XPLM_VK_SNAPSHOT:  return ImGuiKey_PrintScreen;
+        case XPLM_VK_NUMPAD0:   return ImGuiKey_Keypad0;
+        case XPLM_VK_NUMPAD1:   return ImGuiKey_Keypad1;
+        case XPLM_VK_NUMPAD2:   return ImGuiKey_Keypad2;
+        case XPLM_VK_NUMPAD3:   return ImGuiKey_Keypad3;
+        case XPLM_VK_NUMPAD4:   return ImGuiKey_Keypad4;
+        case XPLM_VK_NUMPAD5:   return ImGuiKey_Keypad5;
+        case XPLM_VK_NUMPAD6:   return ImGuiKey_Keypad6;
+        case XPLM_VK_NUMPAD7:   return ImGuiKey_Keypad7;
+        case XPLM_VK_NUMPAD8:   return ImGuiKey_Keypad8;
+        case XPLM_VK_NUMPAD9:   return ImGuiKey_Keypad9;
+        case XPLM_VK_DECIMAL:   return ImGuiKey_KeypadDecimal;
+        case XPLM_VK_DIVIDE:    return ImGuiKey_KeypadDivide;
+        case XPLM_VK_MULTIPLY:  return ImGuiKey_KeypadMultiply;
+        case XPLM_VK_SUBTRACT:  return ImGuiKey_KeypadSubtract;
+        case XPLM_VK_ADD:       return ImGuiKey_KeypadAdd;
+        case XPLM_VK_NUMPAD_EQ: return ImGuiKey_KeypadEqual;
+
+        // XPLM_VK_CLEAR / SELECT / PRINT / EXECUTE / HELP / SEPARATOR have no
+        // Dear ImGui equivalent and deliberately fall through to None.
     }
     return ImGuiKey_None;
 }
@@ -298,11 +330,15 @@ void XplmImguiContext::OnKey(char key, XPLMKeyFlags flags, char vkey, int losing
 
     const ImGuiKey ik = XPLM_VK_to_ImGuiKey(static_cast<unsigned char>(vkey));
     if (ik != ImGuiKey_None) {
-        if (is_down)        io.AddKeyEvent(ik, true);
-        else if (is_up)     io.AddKeyEvent(ik, false);
-        // Repeat: leave the key state alone. The initial Down already told
-        // ImGui the key is held; its own KeyRepeatDelay/Rate timers drive
-        // non-text repeat (Backspace, arrows, Delete in InputText).
+        // Repeat counts as "still down". ImGui filters a duplicate down event, so
+        // DownDuration keeps accumulating and its KeyRepeatDelay/Rate timers are
+        // untouched - but this re-asserts the key if something released it behind
+        // our back. Losing keyboard focus calls io.ClearInputKeys(), which marks
+        // every key up; a widget that deactivates on enter (EnterReturnsTrue) makes
+        // WantTextInput drop mid-keypress, so without this a key the user is still
+        // holding stays dead until they release and press it again.
+        if (is_down || is_repeat) io.AddKeyEvent(ik, true);
+        else if (is_up)           io.AddKeyEvent(ik, false);
     }
     // Forward typed characters on Down AND Repeat so InputText sees the
     // OS-auto-repeated 'aaaaa…' stream when a printable key is held.

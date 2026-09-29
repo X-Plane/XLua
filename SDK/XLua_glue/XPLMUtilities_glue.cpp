@@ -148,6 +148,18 @@ void RegEnum_XPLMLanguageCode(lua_State* L)
 	lua_setglobal(L, "XPLMLanguageCode");
 }
 
+void RegEnum_XPLMProLicenseStatus(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_ProLicense_Unknown");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_ProLicense_NotLicensed");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_ProLicense_Licensed");
+	lua_setglobal(L, "XPLMProLicenseStatus");
+}
+
 int XLuaGetVersions(lua_State* L)
 {
 	int outXPlaneVersion = {};
@@ -175,6 +187,14 @@ int XLuaGetVersions(lua_State* L)
 int XLuaGetLanguage(lua_State* L)
 {
 	XPLMLanguageCode res = XPLMGetLanguage();
+	lua_pushinteger(L, res);
+
+	return 1;
+}
+
+int XLuaGetProLicenseStatus(lua_State* L)
+{
+	XPLMProLicenseStatus res = XPLMGetProLicenseStatus();
 	lua_pushinteger(L, res);
 
 	return 1;

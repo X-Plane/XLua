@@ -348,6 +348,15 @@ CONST
    XPLM_MSG_WEATHER_DELIVERED = 115;
 {$ENDIF XPLM430}
 
+{$IFDEF XPLM440}
+CONST
+    { Sent to all plugins when the value XPLMGetProLicenseStatus returns changes,}
+    { including the first transition away from xplm_ProLicense_Unknown when      }
+    { X-Plane's license check completes. The parameter is the new                }
+    { XPLMProLicenseStatus, bit-cast to a pointer.                               }
+   XPLM_MSG_PRO_LICENSE_CHANGED = 116;
+{$ENDIF XPLM440}
+
    {
     XPLMSendMessageToPlugin
     
