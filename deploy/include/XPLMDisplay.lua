@@ -95,6 +95,38 @@ require("XPLMDefs")
 require("XPLMUtilities")
 require("XPLMScenery")
 
+
+-----------------------------------------------------------------------------
+-- AVIONICS API
+-----------------------------------------------------------------------------
+
+--[[
+   The Avionics API allows you to customize the drawing and behaviour of the
+   built-in cockpit devices (GNS, G1000, etc.), and create your own cockpit
+   devices. For built-in devices, you can draw before and/or after X-Plane
+   does, and optionally prevent X-Plane from drawing the screen at all.
+   Customized built-in devices and custom devices are available in the 3D
+   cockpit as well as in the form of pop-up/pop-out windows.
+   
+   The API also allows you to receive mouse interaction events for your device
+   (click down, drag, and up, mouse wheel scroll, cursor) for both screen and
+   bezel. While these always work when the device is popped-up in its window,
+   you must add a `ATTR_manip_device` manipulator on top of your screen in
+   order to receive mouse events from the 3D cockpit.
+   
+   You can also use the avionics API to control the state and location of
+   cockpit devices' pop-up windows.
+   
+   When working with avionics devices, all co-ordinates you receive when
+   drawing or dealing with click events are in texels. The x-axis grows right,
+   the y-axis grows up. In bezel callbacks, the origin is at the bottom left
+   corner of the bezel. In screen callbacks, the origin is at the bottom-left
+   of the screen. X-Plane takes care of scaling your screen and bezel if the
+   user pops out the device's window: you should always draw your screen and
+   bezel as if they were at the size you specified when registering callbacks
+   or creating a device.
+]]--
+
 --[[
 XPLMWindowContentType describes how the content for a window (or an avionics device's screen) is provided.
 ]]--
@@ -165,13 +197,13 @@ local XPLMDeviceID = {
 --- This is the prototype for drawing callbacks for customized built-in device. You are passed in the device you are enhancing/replacing, and (if this is used for a built-in device that you are customizing) whether it is before or after X-Plane drawing. If you are before X-Plane, return true to let X-Plane draw or false to suppress X-Plane drawing. If you are called after X-Plane, the return value is ignored. Refcon is a unique value that you specify when registering the callback, allowing you to slip a pointer to your own data to the callback. Upon entry the OpenGL context will be correctly set up for you and OpenGL will be in panel coordinates for 2d drawing. The OpenGL state (texturing, etc.) will be unknown.
 ---@alias XPLMAvionicsCallback_f fun(inDeviceID: XPLMDeviceID, inIsBefore: boolean, inRefcon: any): boolean
 
---- Mouse click callback for clicks into your screen or (2D-popup) bezel, useful if the device you are making simulates a touch-screen the user can click in the 3d cockpit, or if your pop-up's bezel has buttons that the user can click. Return true to consume the event, or false to let X-Plane process it (for stock avionics devices).
+--- Mouse click callback for clicks into your screen or (2D-popup) bezel, useful if the device you are making simulates a touch-screen the user can click in the 3d cockpit, or if your pop-up's bezel has buttons that the user can click. Return true to consume the event, or false to let X-Plane process it (for stock avionics devices). - x, y: the coordinate at which the mouse was clicked. - inMouse: the type of mouse event - down-click, drag, or up-click.
 ---@alias XPLMAvionicsMouse_f fun(x: integer, y: integer, inMouse: XPLMMouseStatus, inRefcon: any): boolean
 
---- Mouse wheel callback for scroll actions into your screen or (2D-popup) bezel, useful if your bezel has knobs that can be turned using the mouse wheel, or if you want to simulate pinch-to-zoom on a touchscreen. Return true to consume the event, or false to let X-Plane process it (for stock avionics devices). The number of "clicks" indicates how far the wheel was turned since the last callback. The wheel is 0 for the vertical axis or 1 for the horizontal axis (for OS/mouse combinations that support this).
+--- Mouse wheel callback for scroll actions into your screen or (2D-popup) bezel, useful if your bezel has knobs that can be turned using the mouse wheel, or if you want to simulate pinch-to-zoom on a touchscreen. Return true to consume the event, or false to let X-Plane process it (for stock avionics devices). The number of "clicks" indicates how far the wheel was turned since the last callback. The wheel is 0 for the vertical axis or 1 for the horizontal axis (for OS/mouse combinations that support this). - x, y: the coordinate at which the wheel was scrolled.
 ---@alias XPLMAvionicsMouseWheel_f fun(x: integer, y: integer, wheel: integer, clicks: integer, inRefcon: any): boolean
 
---- Cursor callback that decides which cursor to show when the mouse is over your screen or (2D-popup) bezel. Return xplm_CursorDefault to let X-Plane use which cursor to show, or other values to force the cursor to a particular one (see XPLMCursorStatus).
+--- Cursor callback that decides which cursor to show when the mouse is over your screen or (2D-popup) bezel. Return xplm_CursorDefault to let X-Plane use which cursor to show, or other values to force the cursor to a particular one (see XPLMCursorStatus). - x, y: the coordinate at which the mouse is hovering.
 ---@alias XPLMAvionicsCursor_f fun(x: integer, y: integer, inRefcon: any): XPLMCursorStatus
 
 --- Key callback called when your device is popped up and you've requested to capture the keyboard. Return true to consume the event, or false to let X-Plane process it (for stock avionics devices).
@@ -472,6 +504,46 @@ local XPLMDeviceID = {
 ---
 ---@field XPLMSetAvionicsGeometryOS fun(inHandle: XPLMAvionicsID, inLeft: integer, inTop: integer, inRight: integer, inBottom: integer)
 
+
+-----------------------------------------------------------------------------
+-- WINDOW API
+-----------------------------------------------------------------------------
+
+--[[
+   The window API provides a high-level abstraction for drawing with UI
+   interaction.
+   
+   Windows may operate in one of two modes: legacy (for plugins compiled
+   against old versions of the XPLM, as well as windows created via the
+   deprecated XPLMCreateWindow() function, rather than XPLMCreateWindowEx()),
+   or modern (for windows compiled against the XPLM300 or newer API, and
+   created via XPLMCreateWindowEx()).
+   
+   Modern windows have access to new X-Plane 11 windowing features, like
+   support for new positioning modes (including being "popped out" into their
+   own first-class window in the operating system). They can also optionally
+   be decorated in the style of X-Plane 11 windows (like the map).
+   
+   Modern windows operate in "boxel" units. A boxel ("box of pixels") is a
+   unit of virtual pixels which, depending on X-Plane's scaling, may
+   correspond to an arbitrary NxN "box" of real pixels on screen. Because
+   X-Plane handles this scaling automatically, you can effectively treat the
+   units as though you were simply drawing in pixels, and know that when
+   X-Plane is running with 150% or 200% scaling, your drawing will be
+   automatically scaled (and likewise all mouse coordinates, screen bounds,
+   etc. will also be auto-scaled).
+   
+   In contrast, legacy windows draw in true screen pixels, and thus tend to
+   look quite small when X-Plane is operating in a scaled mode.
+   
+   Legacy windows have their origin in the lower left of the main X-Plane
+   window. In contrast, since modern windows are not constrained to the main
+   window, they have their origin in the lower left of the entire global
+   desktop space, and the lower left of the main X-Plane window is not
+   guaranteed to be (0, 0). In both cases, x increases as you move left, and y
+   increases as you move up.
+]]--
+
 --- This is an opaque identifier for a window. You use it to control your window. When you create a window (via either XPLMCreateWindow() or XPLMCreateWindowEx()), you will specify callbacks to handle drawing, mouse interaction, etc.
 ---@class XPLMWindowID : userdata
 ---@field private __XPLMWindowID_marker any
@@ -482,7 +554,7 @@ local XPLMDeviceID = {
 --- This function is called when a key is pressed or keyboard focus is taken away from your window. If losingFocus is 1, you are losing the keyboard focus, otherwise a key was pressed and inKey contains its character. The window ID passed in will be your window for key presses, or the other window taking focus when losing focus. Note that in the modern plugin system, often focus is taken by the window manager itself; for this resaon, the window ID may be zero when losing focus, and you should not write code that depends onit. The refcon passed in will be the one from registration, for both key presses and losing focus. Warning: this API declares virtual keys as a signed character; however the VKEY #define macros in XPLMDefs.h define the vkeys using unsigned values (that is 0x80 instead of -0x80). So you may need to cast the incoming vkey to an unsigned char to get correct comparisons in C.
 ---@alias XPLMHandleKey_f fun(inWindowID: XPLMWindowID, inKey: string, inFlags: XPLMKeyFlags, inVirtualKey: string, inRefcon: any, losingFocus: boolean)
 
---- You receive this call for one of three events: - when the user clicks the mouse button down - (optionally) when the user drags the mouse after a down-click, but before the up-click - when the user releases the down-clicked mouse button. You receive the x and y of the click, your window, and a refcon. Return 1 to consume the click, or 0 to pass it through. WARNING: passing clicks through windows (as of this writing) causes mouse tracking problems in X-Plane; do not use this feature! The units for x and y values match the units used in your window. Thus, for "modern" windows (those created via XPLMCreateWindowEx() and compiled against the XPLM300 library), the units are boxels, while legacy windows will get pixels. Legacy windows have their origin in the lower left of the main X-Plane window, while modern windows have their origin in the lower left of the global desktop space. In both cases, x increases as you move right, and y increases as you move up.
+--- You receive this call for one of three events: - when the user clicks the mouse button down - (optionally) when the user drags the mouse after a down-click, but before the up-click - when the user releases the down-clicked mouse button. You receive the x and y of the click, your window, and a refcon. Return 1 to consume the click, or 0 to pass it through. - inMouse: the type of mouse event - down-click, drag, or up-click. WARNING: passing clicks through windows (as of this writing) causes mouse tracking problems in X-Plane; do not use this feature! The units for x and y values match the units used in your window. Thus, for "modern" windows (those created via XPLMCreateWindowEx() and compiled against the XPLM300 library), the units are boxels, while legacy windows will get pixels. Legacy windows have their origin in the lower left of the main X-Plane window, while modern windows have their origin in the lower left of the global desktop space. In both cases, x increases as you move right, and y increases as you move up.
 ---@alias XPLMHandleMouseClick_f fun(inWindowID: XPLMWindowID, x: integer, y: integer, inMouse: XPLMMouseStatus, inRefcon: any): integer
 
 --- The SDK calls your cursor status callback when the mouse is over your plugin window. Return a cursor status code to indicate how you would like X-Plane to manage the cursor. If you return xplm_CursorDefault, the SDK will try lower-Z-order plugin windows, then let the sim manage the cursor. Note: you should never show or hide the cursor yourself---these APIs are typically reference-counted and thus cannot safely and predictably be used by the SDK. Instead return one of xplm_CursorHidden to hide the cursor or xplm_CursorArrow/xplm_CursorCustom to show the cursor. If you want to implement a custom cursor by drawing a cursor in OpenGL, use xplm_CursorHidden to hide the OS cursor and draw the cursor using a 2-d drawing callback (after xplm_Phase_Window is probably a good choice, but see deprecation warnings on the drawing APIs!). If you want to use a custom OS-based cursor, use xplm_CursorCustom to ask X-Plane to show the cursor but not affect its image. You can then use an OS specific call like SetThemeCursor (Mac) or SetCursor/LoadCursor (Windows). The units for x and y values match the units used in your window. Thus, for "modern" windows (those created via XPLMCreateWindowEx() and compiled against the XPLM300 library), the units are boxels, while legacy windows will get pixels. Legacy windows have their origin in the lower left of the main X-Plane window, while modern windows have their origin in the lower left of the global desktop space. In both cases, x increases as you move right, and y increases as you move up.
@@ -976,6 +1048,19 @@ local XPLMWindowPositioningMode = {
 --- plugin-created windows (one legacy, one modern) *both* be in the front (of their different layers!) at the same time.
 ---
 ---@field XPLMIsWindowInFront fun(inWindow: XPLMWindowID): boolean
+
+
+-----------------------------------------------------------------------------
+-- IMGUI TEXT INPUT WIDGETS
+-----------------------------------------------------------------------------
+
+--[[
+   Hand-written imgui text-entry widgets (Lua only). Each returns (changed,
+   new_text): changed is true on the frame the text was edited, and new_text
+   is the current buffer contents (echoed back unchanged when no imgui frame
+   is active). Lua holds the canonical string between frames; pass it back in
+   on the next call.
+]]--
 
 ---@class imgui
 --- imgui.InputText(label, current_text, [max_len=256], [flags=0]) returns changed, new_text

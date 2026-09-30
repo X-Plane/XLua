@@ -50,6 +50,11 @@
 
 require("XPLMDefs")
 
+
+-----------------------------------------------------------------------------
+-- CAMERA CONTROL
+-----------------------------------------------------------------------------
+
 --[[
 This enumeration states how long you want to retain control of the camera.
 You can retain it indefinitely or until the user selects a new view.

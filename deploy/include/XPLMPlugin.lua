@@ -22,6 +22,18 @@
 require("XPLMDefs")
 require("XPLMSound")
 
+
+-----------------------------------------------------------------------------
+-- FINDING PLUGINS
+-----------------------------------------------------------------------------
+
+--[[
+   These APIs allow you to find another plugin or yourself, or iterate across
+   all plugins.  For example, if you wrote an FMS plugin that needed to talk
+   to an autopilot plugin, you could use these APIs to locate the autopilot
+   plugin.
+]]--
+
 ---@class _G
 --- This routine returns the plugin ID of the calling plug-in.  Call this to
 --- get your own ID.
@@ -64,6 +76,16 @@ require("XPLMSound")
 ---
 ---@field XPLMGetPluginInfo fun(inPlugin: XPLMPluginID): { outName: string[], outFilePath: string[], outSignature: string[], outDescription: string[] }
 
+
+-----------------------------------------------------------------------------
+-- ENABLING/DISABLING PLUG-INS
+-----------------------------------------------------------------------------
+
+--[[
+   These routines are used to work with plug-ins and manage them.  Most
+   plugins will not need to use these APIs.
+]]--
+
 ---@class _G
 --- Returns whether the specified plug-in is enabled for running.
 ---
@@ -97,6 +119,44 @@ require("XPLMSound")
 --- newer one manually. In other respects it works identically to XPLMReloadPlugins().
 ---
 ---@field XPLMReloadThisPlugin fun(forReplacement: boolean)
+
+
+-----------------------------------------------------------------------------
+-- INTERPLUGIN MESSAGING
+-----------------------------------------------------------------------------
+
+--[[
+   Plugin messages are defined as 32-bit integers.  Messages below 0x00FFFFFF
+   are reserved for X-Plane and the plugin SDK.
+   
+   Messages come with a pointer parameter; the meaning of this pointer depends
+   on the message itself. In some messages, the pointer parameter  contains an
+   actual typed pointer to data that can be inspected in the plugin; in these
+   cases the documentation will state that the parameter "points to"
+   information.
+   
+   in other cases, the value of the pointer is actually an integral number
+   stuffed into the pointer's storage. In these second cases, the pointer
+   parameter needs to be cast, not dereferenced. In these caess, the
+   documentation will state that the parameter "contains" a value, which will
+   always be an integral type.
+   
+   Some messages don't use the pointer parameter - in this case your plugin
+   should ignore it.
+   
+   Messages have two conceptual uses: notifications and commands.  Commands
+   are sent from one plugin to another to induce behavior; notifications are
+   sent from one plugin to all others for informational purposes.  It is
+   important that commands and notifications not have the same values because
+   this could cause a notification sent by one plugin to accidentally induce a
+   command in another.
+   
+   By convention, plugin-defined notifications should have the high bit set
+   (e.g. be greater or equal to unsigned 0x8000000) while commands should have
+   this bit be cleared.
+   
+   The following messages are sent to your plugin by X-Plane.
+]]--
 
 --[[
     This message is sent to your plugin whenever the user's plane crashes. The
@@ -219,11 +279,92 @@ XPLM_MSG_DATAREFS_ADDED = 114
 ]]--
 XPLM_MSG_WEATHER_DELIVERED = 115
 
+--[[
+    Sent to all plugins when the value XPLMGetProLicenseStatus returns changes,
+    including the first transition away from xplm_ProLicense_Unknown when
+    X-Plane's license check completes. The parameter is the new
+    XPLMProLicenseStatus, bit-cast to a pointer.
+]]--
+XPLM_MSG_PRO_LICENSE_CHANGED = 116
+
 ---@class _G
 --- This function sends a message to another plug-in or X-Plane.  Pass XPLM_NO_PLUGIN_ID to broadcast
 --- to all plug-ins.  Only enabled plug-ins with a message receive function receive the message.
 ---
 ---@field XPLMSendMessageToPlugin fun(inPlugin: XPLMPluginID, inMessage: integer, inParam: lightuserdata)
+
+
+-----------------------------------------------------------------------------
+-- Plugin Features API
+-----------------------------------------------------------------------------
+
+--[[
+   The plugin features API allows your plugin to "sign up" for additional
+   capabilities and plugin system features that are normally disabled for
+   backward compatibility or performance.  This allows advanced plugins to
+   "opt-in"  to new behavior.
+   
+   Each feature is defined by a permanent string name.  The feature string
+   names will vary with the particular installation of X-Plane, so plugins
+   should not expect a feature to be guaranteed present.
+   
+   XPLM_WANTS_REFLECTIONS
+   ----------------------
+   
+   Available in the SDK 2.0 and later for X-Plane 9, enabling this capability
+   causes your plugin to receive drawing hook callbacks when X-Plane builds
+   its off-screen reflection and shadow rendering passes. Plugins should
+   enable this and examine the dataref sim/graphics/view/plane_render_type to
+   determine whether the drawing callback is for a reflection, shadow
+   calculation, or the main screen. Rendering can be simlified or omitted for
+   reflections, and non-solid drawing should be skipped for shadow
+   calculations.
+   
+   **Note**: direct drawing via draw callbacks is not recommended; use the
+     XPLMInstance API to create object models instead.
+   
+   XPLM_USE_NATIVE_PATHS
+   ---------------------
+   
+   available in the SDK 2.1 and later for X-Plane 10, this modifies the plugin
+   system to use Unix-style paths on all operating systems. With this enabled:
+   
+   * OS X paths will match the native OS X Unix.
+   * Windows will use forward slashes but preserve C:\ or another drive letter
+     when using complete file paths.
+   * Linux uses its native file system path scheme.
+   
+   Without this enabled:
+   
+   * OS X will use CFM file paths separated by a colon.
+   * Windows will use back-slashes and conventional DOS paths.
+   * Linux uses its native file system path scheme.
+   
+   All plugins should enable this feature on OS X to access the native file
+   system.
+   
+   XPLM_USE_NATIVE_WIDGET_WINDOWS
+   ------------------------------
+   
+   Available in the SDK 3.0.2 SDK, this capability tells the widgets library
+   to use new, modern X-Plane backed XPLMDisplay windows to anchor all widget
+   trees.  Without it, widgets will always use legacy windows.
+   
+   Plugins should enable this to allow their widget hierarchies to respond to
+   the user's UI size settings and to map widget-based windwos to a VR HMD.
+   
+   Before enabling this, make sure any custom widget code in your plugin is
+   prepared to cope with the UI coordinate system not being th same as the
+   OpenGL window coordinate system.
+   
+   XPLM_WANTS_DATAREF_NOTIFICATIONS
+   --------------------------------
+   
+   Available in the SDK 4.0.0, this capability tells X-Plane to to send the
+   enabling plugin the new XPLM_MSG_DATAREFS_ADDED message any time new
+   datarefs are added. The SDK will coalesce consecutive dataref registrations
+   to minimize the number of messages sent.
+]]--
 
 --- You pass an XPLMFeatureEnumerator_f to get a list of all features supported by a given version running version of X-Plane. This routine is called once for each feature.
 ---@alias XPLMFeatureEnumerator_f fun(inFeature: string, inRef: any)

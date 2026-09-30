@@ -105,6 +105,16 @@
 
 require("XPLMDefs")
 
+
+-----------------------------------------------------------------------------
+-- READING AND WRITING DATA
+-----------------------------------------------------------------------------
+
+--[[
+   These routines allow you to access data from within X-Plane and sometimes
+   modify it.
+]]--
+
 --- A dataref is an opaque handle to data provided by the simulator or another plugin. It uniquely identifies one variable (or array of variables) over the lifetime of your plugin. You never hard code these values; you always get them from XPLMFindDataRef.
 ---@class XPLMDataRef : userdata
 ---@field private __XPLMDataRef_marker any
@@ -156,6 +166,10 @@ local XPLMDataTypeID = {
 --- Given an offset and count, this function will return an array of XPLMDataRefs in that range.
 --- The offset/count idiom is useful for things like pagination.
 ---
+--- - offset: an integer index offset.
+--- - count: an integer count of the number of datarefs to return, starting from the offset index.
+--- - outDataRefs: a pre-allocated array (sized to count) to receive the XPLMDataRefs.
+---
 ---@field XPLMGetDataRefsByIndex fun(offset: integer, count: integer): { outDataRefs: XPLMDataRef[] }
 
 ---@class _G
@@ -185,6 +199,8 @@ local XPLMDataTypeID = {
 --- is writable but you have to set a separate "override" dataref to 1 to stop X-Plane from
 --- writing it.
 ---
+--- - inDataRef: either a valid handle to a dataref, or NULL.
+---
 ---@field XPLMCanWriteDataRef fun(inDataRef: XPLMDataRef): boolean
 
 ---@class _G
@@ -196,13 +212,42 @@ local XPLMDataTypeID = {
 --- you never need to call XPLMIsDataRefGood to 'check' the safety of a dataref. (XPLMIsDataRefGood
 --- performs some slow checking of the handle validity, so it has a performance cost.)
 ---
+--- - inDataRef: either a valid handle to a dataref, or NULL.
+---
 ---@field XPLMIsDataRefGood fun(inDataRef: XPLMDataRef): boolean
 
 ---@class _G
 --- This routine returns the types of the dataref for accessor use. If a dataref
 --- is available in multiple data types, the bit-wise OR of these types will be returned.
 ---
+--- - inDataRef: either a valid handle to a dataref, or NULL.
+---
 ---@field XPLMGetDataRefTypes fun(inDataRef: XPLMDataRef): XPLMDataTypeID
+
+
+-----------------------------------------------------------------------------
+-- DATA ACCESSORS
+-----------------------------------------------------------------------------
+
+--[[
+   These routines read and write the data references. For each supported data
+   type there is a reader and a writer.
+   
+   If the dataref is orphaned, the plugin that provides it is disabled or
+   there is a type mismatch, the functions that read data will return 0 as a
+   default value or not modify the passed in memory. The plugins that write
+   data will not write under these circumstances or if the dataref is
+   read-only.
+   
+   NOTE: to keep the overhead of reading datarefs low, these routines do not
+   do full validation of a dataref; passing a junk value for a dataref can
+   result in crashing the sim. The get/set APIs do check for NULL.
+   
+   For array-style datarefs, you specify the number of items to read/write and
+   the offset into the array; the actual number of items read or written is
+   returned. This may be less the number requested to prevent an
+   array-out-of-bounds error.
+]]--
 
 ---@class _G
 --- Read an integer dataref and return its value.
@@ -324,6 +369,29 @@ local XPLMDataTypeID = {
 --- different behavior.
 ---
 ---@field XPLMSetDatab fun(inDataRef: XPLMDataRef, inValue: integer[], inOffset: integer, inLength: integer)
+
+
+-----------------------------------------------------------------------------
+-- PUBLISHING YOUR PLUGIN'S DATA
+-----------------------------------------------------------------------------
+
+--[[
+   These functions allow you to create data references that other plug-ins and
+   X-Plane can access via the above data access APIs. Data references
+   published by other plugins operate the same as ones published by X-Plane in
+   all manners except that your data reference will not be available to other
+   plugins if/when your plugin is disabled.
+   
+   You share data by registering data provider callback functions. When a
+   plug-in requests your data, these callbacks are then called. You provide
+   one callback to return the value when a plugin 'reads' it and another to
+   change the value when a plugin 'writes' it.
+   
+   Important: you must pick a prefix for your datarefs other than "sim/" -
+   this prefix is reserved for X-Plane. The X-Plane SDK website contains a
+   registry where authors can select a unique first word for dataref names, to
+   prevent dataref collisions between plugins.
+]]--
 
 --- Data provider function pointers. These define the function pointers you provide to get or set data. Note that you are passed a generic pointer for each one. This is the same pointer you pass in your register routine; you can use it to locate plugin variables, etc. The semantics of your callbacks are the same as the dataref accessors above - basically routines like XPLMGetDatai are just pass-throughs from a caller to your plugin. Be particularly mindful in implementing array dataref read-write accessors; you are responsible for avoiding overruns, supporting offset read/writes, and handling a read with a NULL buffer.
 ---@alias XPLMGetDatai_f fun(inRefcon: any): integer
