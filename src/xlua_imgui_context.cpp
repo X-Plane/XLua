@@ -30,6 +30,17 @@ bool TranslateToImguiSpace(XPLMWindowID win, int gx, int gy, float& out_x, float
     return true;
 }
 
+// The drawing half of TranslateToImguiSpace: panel graphics draws in global
+// boxels too, so set up window-local, top-left, Y-down space as a transform
+// around XPLMDrawCalls. Pair with XPLMTransformPop.
+void PushImguiSpace(XPLMWindowID win) {
+    int left = 0, top = 0, right = 0, bottom = 0;
+    if (win != nullptr) XPLMGetWindowGeometry(win, &left, &top, &right, &bottom);
+    XPLMTransformPush();
+    XPLMTransformTranslate(static_cast<float>(left), static_cast<float>(top));
+    XPLMTransformScale(1.0f, -1.0f);
+}
+
 // Mirrors source_code/core/ui/imgui_impl_xsystem.cpp:127.
 ImGuiKey XPLM_VK_to_ImGuiKey(int vkey) {
     switch (vkey) {
@@ -223,6 +234,7 @@ void XplmImguiContext::EndFrame() {
         return;
     }
 
+    PushImguiSpace(cur_win_);
     std::vector<XPLMDrawCall_t> calls;
     for (int n = 0; n < drawData->CmdListsCount; n++) {
         ImDrawList* cmd_list = drawData->CmdLists[n];
@@ -266,6 +278,7 @@ void XplmImguiContext::EndFrame() {
             XPLMDrawCalls(&mesh, static_cast<int>(calls.size()), calls.data());
         }
     }
+    XPLMTransformPop();
 }
 
 int XplmImguiContext::OnMouseButton(XPLMWindowID win, int x, int y, XPLMMouseStatus status, int button) {
@@ -284,7 +297,15 @@ int XplmImguiContext::OnMouseButton(XPLMWindowID win, int x, int y, XPLMMouseSta
         io.AddMouseButtonEvent(button, false);
     }
     // Drag updates position only — already done above.
-    return io.WantCaptureMouse ? 1 : 0;
+    //
+    // Always claim the click. The XPLM sends the drag and the release only to the window that
+    // claimed the press, and ImGui has already seen the press - so declining one (say, returning
+    // WantCaptureMouse, which is false over empty space) leaves ImGui's button held forever. A
+    // button held after going down outside every ImGui window makes ImGui disown the mouse
+    // (WantCaptureMouse stays false), so every later press would be refused too: the window
+    // wedges. Claiming everything is also just right for this window - it owns its whole rect, so
+    // a click on its empty space shouldn't fall through to the cockpit behind it.
+    return 1;
 }
 
 int XplmImguiContext::OnMouseWheel(XPLMWindowID win, int x, int y, int wheel, int clicks) {

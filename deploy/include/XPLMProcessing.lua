@@ -50,6 +50,11 @@
 
 require("XPLMDefs")
 
+
+-----------------------------------------------------------------------------
+-- FLIGHT LOOP CALLBACKS
+-----------------------------------------------------------------------------
+
 --[[
 You can register a flight loop callback to run either before or after the flight model is
 integrated by X-Plane.
@@ -115,6 +120,11 @@ local XPLMFlightLoopPhaseType = {
 --- they are relative to the last call time or the time the flight loop was registered (if never called).
 ---
 ---@field XPLMScheduleFlightLoop fun(inFlightLoopID: XPLMFlightLoopID, inInterval: number, inRelativeToNow: boolean)
+
+
+-----------------------------------------------------------------------------
+-- XLUA TIMERS
+-----------------------------------------------------------------------------
 
 --- Opaque handle to an XLua timer, returned by XLuaCreateTimer / XLuaFindTimer and passed to the other timer functions.
 ---@class xlua_timer : userdata

@@ -45,16 +45,57 @@ require("XPLMDefs")
 require("XPLMUtilities")
 require("XPLMDisplay")
 
+
+-----------------------------------------------------------------------------
+-- PANEL GRAPHICS primitives
+-----------------------------------------------------------------------------
+
+--[[
+   These routines draw 2-D vector primitives: lines, line strips, line loops,
+   filled polygons, and quad strips.
+   
+   Line-based primitives (Lines, LineStrip, LineLoop) have four variants:
+   
+   - Base variant: uniform color, default line width.
+   - WithWidth variant: uniform color, caller-specified line width.
+   - "c" variant: per-vertex color (using XPLMVertexColor_t), default line
+     width.
+   - "c" + WithWidth variant: per-vertex color and caller-specified line
+     width.
+   
+   They also have a Stipple variant that draws dashed lines with a
+   caller-specified dash length and line width.
+   
+   Filled primitives (Polygon, Quadstrip) have no line width, so they come in
+   only the base and "c" variants.
+]]--
+
 --- A 2-D vertex with an x and y position in panel coordinates.
 ---@class XPLMVertex_t
----@field x number
----@field y number
+---@field x number Horizontal position in panel coordinates, pixels.
+---@field y number Vertical position in panel coordinates, pixels.
 
 --- A 2-D vertex with an x and y position in panel coordinates and a per-vertex color. Use this struct with the "c" drawing variants to assign a different color to each vertex; colors are interpolated across the primitive.
 ---@class XPLMVertexColor_t
----@field x number
----@field y number
----@field color integer
+---@field x number Horizontal position in panel coordinates, pixels.
+---@field y number Vertical position in panel coordinates, pixels.
+---@field color integer Packed ABGR color as returned by XPLMMakeColor.
+
+--[[
+This enumeration specifies the way lines drawn with XPLMPanelGraphics end. The default value is xplm_LineCapButt
+]]--
+
+---@enum XPLMLineCap_t
+local XPLMLineCap_t = {
+    -- Lines are capped by straight edges at the start and end point.
+    xplm_LineCapButt                         = 0,
+    -- Lines are capped by half circles centered on the start and end points.
+    xplm_LineCapRound                        = 1,
+    -- Lines are capped by half squares centered on the start and end points.
+    xplm_LineCapSquare                       = 2,
+}
+---@class _G
+---@field XPLMLineCap_t XPLMLineCap_t
 
 ---@class _G
 --- This function packs four floating-point color components into a single uint32_t
@@ -63,6 +104,14 @@ require("XPLMDisplay")
 --- ABGR byte order (alpha in the high byte, red in the low byte).
 ---
 ---@field XPLMMakeColor fun(red: number, green: number, blue: number, alpha: number): integer
+
+---@class _G
+--- This function sets what caps are used when drawing subsequent lines. The default
+--- value at the start of a drawing callback is xplm_LineCapButt.
+---
+--- - lineCap: the new line cap style.
+---
+---@field XPLMSetLineCap fun(lineCap: XPLMLineCap_t)
 
 ---@class _G
 --- This function draws disconnected line segments. Every pair of vertices defines
@@ -218,6 +267,18 @@ require("XPLMDisplay")
 ---
 ---@field XPLMQuadstripc fun(vertices: XPLMVertexColor_t[], count: integer)
 
+
+-----------------------------------------------------------------------------
+-- PANEL GRAPHICS fonts
+-----------------------------------------------------------------------------
+
+--[[
+   These routines create fonts from TrueType font files and draw text onto the
+   panel. You create a font handle, add one or more TTF faces to it, then use
+   the handle to measure and draw strings. Font handles must be destroyed when
+   no longer needed.
+]]--
+
 --[[
 This enumeration specifies the character set for a font created with
 XPLMCreateFont. The character set determines which glyphs are rasterized
@@ -258,10 +319,10 @@ local XPLMJustification_t = {
 
 --- XPLMFontMetrics_t receives font measurement data from XPLMFontGetMetrics. The structure may be expanded in future SDKs - always set structSize to the size of your structure in bytes.
 ---@class XPLMFontMetrics_t
----@field structSize integer
----@field lineHeight number
----@field lineAscent number
----@field lineDescent number
+---@field structSize integer Set to sizeof(XPLMFontMetrics_t).
+---@field lineHeight number Total line height including leading, in pixels.
+---@field lineAscent number Distance from the baseline to the top of the tallest glyph, in pixels.
+---@field lineDescent number Distance from the baseline to the bottom of the lowest descender, in pixels. This value is positive.
 
 --- An opaque handle to a font created by XPLMCreateFont. Pass this handle to the font measurement and drawing routines. Destroy the handle with XPLMDestroyFont when you are done with it.
 ---@class XPLMFontHandle : userdata
@@ -389,16 +450,56 @@ local XPLMJustification_t = {
 ---
 ---@field XPLMFontDrawStringRotated fun(font: XPLMFontHandle, color: integer, fontSize: number, x: number, y: number, string: string, angle: number, justification: XPLMJustification_t)
 
+
+-----------------------------------------------------------------------------
+-- PANEL GRAPHICS Texture atlas
+-----------------------------------------------------------------------------
+
+--[[
+   These routines manage texture atlases for drawing images on the panel. A
+   texture atlas packs multiple source images into a single GPU texture for
+   efficient rendering. The typical workflow is:
+   
+   - Create an atlas with XPLMCreateTextureAtlas.
+   - Add images from files or raw pixel data. Each image (or cell of an image
+     set) receives a zero-based index. Every routine below that takes an
+     inImageIndex requires an index that one of the add routines returned to
+     you.
+   - Call XPLMTextureAtlasBake to upload the atlas to the GPU.
+   - Draw images using the DrawAt, DrawIn, DrawStretched, DrawScaled, or
+     DrawMesh routines.
+   - Destroy the atlas with XPLMDestroyTextureAtlas when it is no longer
+     needed.
+   
+   All images are stored as RGBA, 4 bytes per pixel.
+   
+   That order is a requirement, not a suggestion. An atlas is either being
+   filled or baked, and most routines here have a precondition on which of the
+   two it is: the XPLMTextureAtlasAddImage family and XPLMTextureAtlasBake
+   require an atlas that has not been baked, and every draw routine requires
+   one that has. Each routine states its own precondition below. X-Plane
+   reports a violated precondition to your error callback and to Log.txt so
+   that you can find it, but a violated precondition is a bug in your plugin,
+   so no return value is defined for one - do not write code that tests for
+   it.
+   
+   XPLMDestroyTextureAtlas, XPLMTextureAtlasGetImageWidth and
+   XPLMTextureAtlasGetImageHeight have no precondition on the bake state -
+   they are legal at any point in an atlas's life. In particular you can
+   measure your images before you bake, which is usually when you want to
+   know: laying out a panel around art you have added but not yet packed.
+]]--
+
 --- An opaque handle to a texture atlas. Create one with XPLMCreateTextureAtlas and destroy it with XPLMDestroyTextureAtlas.
 ---@class XPLMTextureAtlasRef : userdata
 ---@field private __XPLMTextureAtlasRef_marker any
 
 --- A vertex for textured mesh drawing. Combines a position in panel coordinates with normalized texture coordinates within the image. Texture coordinates are always relative to the image you are drawing, never to the atlas sheet it happens to be packed into. This is true for both XPLMTextureAtlasDrawMesh and XPLMTextureSourceDrawMesh, so the same vertex array means the same thing to either one.
 ---@class XPLMTextureVertex_t
----@field x number
----@field y number
----@field s number
----@field t number
+---@field x number Horizontal position in panel coordinates, pixels.
+---@field y number Vertical position in panel coordinates, pixels.
+---@field s number Horizontal texture coordinate, 0.0 (left) to 1.0 (right), within the image.
+---@field t number Vertical texture coordinate, 0.0 (bottom) to 1.0 (top), within the image.
 
 ---@class _G
 --- This function creates a new, empty texture atlas. After creating the atlas,
@@ -563,6 +664,20 @@ local XPLMJustification_t = {
 ---
 ---@field XPLMTextureAtlasDrawMesh fun(inTextureAtlas: XPLMTextureAtlasRef, inImageIndex: integer, inTintColor: integer, vertices: XPLMTextureVertex_t[], count: integer)
 
+
+-----------------------------------------------------------------------------
+-- PANEL GRAPHICS radar texture
+-----------------------------------------------------------------------------
+
+--[[
+   These routines draw stock simulator textures, such as weather radar
+   displays, into your avionics panel. Unlike texture atlas images which are
+   loaded from files you provide, texture sources are live textures rendered
+   by the simulator each frame. If the aircraft does not have the requested
+   hardware (e.g. no weather radar installed), the draw call is silently
+   skipped.
+]]--
+
 --[[
 An XPLMTextureSource identifies a stock simulator texture that can be drawn
 with the texture source drawing functions.
@@ -601,6 +716,51 @@ local XPLMTextureSource = {
 --- - count: the number of vertices. Must be at least 3.
 ---
 ---@field XPLMTextureSourceDrawMesh fun(tex: XPLMTextureSource, tint: integer, mesh: XPLMTextureVertex_t[], count: integer)
+
+
+-----------------------------------------------------------------------------
+-- PANEL_GRAPHICS transform/scissors/masks
+-----------------------------------------------------------------------------
+
+--[[
+   These routines modify the drawing state for subsequent panel graphics
+   calls. The transformation matrix controls the position, rotation, and scale
+   of all drawing. The scissor rectangle clips drawing to a rectangular
+   region. The stencil mask clips drawing to an arbitrary shape.
+   
+   The transform and the scissor rectangle each have a push/pop stack. Always
+   push before modifying either one and pop to restore the previous state when
+   you are done. For the transform this is required, not merely good manners:
+   XPLMTransformTranslate, XPLMTransformRotate and XPLMTransformScale must be
+   called inside a XPLMTransformPush/XPLMTransformPop pair; calling one
+   outside a pair is an error. X-Plane does not push a transform scope around
+   your drawing callback, so a transform with no enclosing push has no defined
+   end.
+   
+   Scissor rectangles ride the transform stack, exactly like the drawing they
+   clip: the rectangle you pass is in panel coordinates and is put through the
+   transform in force when you set it. Once set, it stays where you set it - a
+   later transform does not move it, and popping the scissor stack restores
+   whatever rectangle was in force before the matching push.
+   
+   Rotation is the one transform a rectangle cannot survive, because an
+   axis-aligned rectangle cannot describe a rotated one. Calling any of these
+   while a rotation is in effect is an error, reported to Log.txt and through
+   your error callback:
+   
+   - XPLMScissorSet and XPLMScissorIntersect
+   - XPLMAccumulateTouchZone
+   - XPLMDrawCalls, whose draw calls carry their own scissor rectangles
+   - XPLMSVTDisplayDrawIn and XPLMMapDisplayDrawIn, which clip themselves
+   - XPLMDrawRetained, if the retained drawing contains any of the above
+   
+   Translate and scale are fine for all of them, and are applied for you.
+   
+   The stencil has no stack. Instead the stencil buffer holds up to eight
+   independent one-bit masks, and you select which of them clips your drawing
+   by calling XPLMUseStencilMask as often as you like. X-Plane restores the
+   stencil state for you at the end of your drawing callback.
+]]--
 
 ---@class _G
 --- This function saves the current transformation matrix onto the transform
@@ -787,6 +947,40 @@ local XPLMTextureSource = {
 ---
 ---@field XPLMClearStencilMask fun()
 
+
+-----------------------------------------------------------------------------
+-- PANEL GRAPHICS Hot Zones
+-----------------------------------------------------------------------------
+
+--[[
+   These routines define interactive touch zones on a panel surface. You call
+   XPLMAccumulateTouchZone during your drawing callback to declare rectangular
+   regions that respond to mouse clicks or touches. Each zone can either fire
+   an X-Plane command automatically or deliver raw touch events to a callback
+   you register with XPLMAvionicsSetTouchEventHandler.
+   
+   A touch zone rides the transform stack, exactly like the drawing it sits on
+   top of. Declare the zone in the same coordinates you drew in and X-Plane
+   applies the transform in force for you - do not offset or scale the
+   rectangle yourself, or the transform will be applied twice. This is the
+   whole point: draw a button and put a zone on it using the same numbers,
+   under any combination of translates and scales, and the two stay together.
+   
+   The transform runs both ways, so your XPLMTouchEvent_f never has to undo it
+   either. The x and y you receive are in the coordinate system that was in
+   force when you declared the zone, and dx and dy are scaled to match - you
+   can compare them directly against the numbers you drew with.
+   
+   Two limits follow from a zone being an axis-aligned rectangle:
+   
+   - Do not declare a zone while a rotation is in effect. An axis-aligned
+     rectangle cannot describe a rotated graphic, so this is an error.
+   - A zone cannot be declared inside a XPLMBeginRetainedDrawing recording. A
+     zone is per-frame state rather than drawing, and a retained drawing holds
+     drawing only. Accumulate your zones outside the recording, once per
+     frame; they are cheap to re-declare and are meant to be re-declared.
+]]--
+
 --[[
 This enumeration specifies how a touch zone responds to user interaction.
 ]]--
@@ -806,19 +1000,19 @@ local XPLMTouchZone = {
 ---@class _G
 ---@field XPLMTouchZone XPLMTouchZone
 
---- Your touch event callback is invoked when the user interacts with a touch zone whose type is xplm_TouchZone_Identifier. You receive the zone's identifier, the mouse status, the current position, the delta from the initial click point, and the mouse button involved. The position and the deltas are in the coordinate system that was in force when you declared the zone with XPLMAccumulateTouchZone, so they are directly comparable to the numbers you drew and declared with - you do not need to undo the transform stack, and you do not need the window or device geometry to make sense of them. The coordinate system is latched when the gesture begins, so every event in one drag arrives in the same space even if you move or rescale the zone part way through.
+--- Your touch event callback is invoked when the user interacts with a touch zone whose type is xplm_TouchZone_Identifier. - identifier: the identifier from the XPLMTouchZoneSpec_t that was touched. - status: xplm_MouseDown, xplm_MouseDrag, or xplm_MouseUp. - x, y: the current mouse position. - dx, dy: the delta from the initial click point. A translation cannot affect a delta, so only the scale applies. - button: the mouse button - 0 for left, 1 for right. The position and the deltas are in the coordinate system that was in force when you declared the zone with XPLMAccumulateTouchZone, so they are directly comparable to the numbers you drew and declared with - you do not need to undo the transform stack, and you do not need the window or device geometry to make sense of them. The coordinate system is latched when the gesture begins, so every event in one drag arrives in the same space even if you move or rescale the zone part way through.
 ---@alias XPLMTouchEvent_f fun(identifier: integer, status: XPLMMouseStatus, x: integer, y: integer, dx: integer, dy: integer, button: integer, ref: any)
 
 --- XPLMTouchZoneSpec_t describes a single interactive touch zone on the panel. Pass a pointer to this struct to XPLMAccumulateTouchZone during your drawing callback. The structure may be expanded in future SDKs - always set structSize to the size of your structure in bytes.
 ---@class XPLMTouchZoneSpec_t
----@field structSize integer
----@field type XPLMTouchZone
----@field command XPLMCommandRef
----@field identifier integer
----@field left integer
----@field top integer
----@field right integer
----@field bottom integer
+---@field structSize integer Set to sizeof(XPLMTouchZoneSpec_t). This is checked; a size X-Plane does not recognise is an error and is reported.
+---@field type XPLMTouchZone How the zone responds to interaction.
+---@field command XPLMCommandRef The command to fire. Only used when type is xplm_TouchZone_Command.
+---@field identifier integer An integer you assign to identify this zone in your XPLMTouchEvent_f callback. Only used when type is xplm_TouchZone_Identifier.
+---@field left integer Left edge of the zone, in the coordinates you are drawing in. X-Plane applies the transform stack for you - do not pre-offset this.
+---@field top integer Top edge of the zone, in the coordinates you are drawing in. X-Plane applies the transform stack for you - do not pre-offset this.
+---@field right integer Right edge of the zone, in the coordinates you are drawing in. X-Plane applies the transform stack for you - do not pre-offset this.
+---@field bottom integer Bottom edge of the zone, in the coordinates you are drawing in. X-Plane applies the transform stack for you - do not pre-offset this.
 
 ---@class _G
 --- This function registers a touch zone for the current frame. Call this during
@@ -869,6 +1063,34 @@ local XPLMTouchZone = {
 ---
 ---@field XPLMWindowSetTouchEventHandler fun(window: XPLMWindowID, handler: XPLMTouchEvent_f, ref: any)
 
+
+-----------------------------------------------------------------------------
+-- PANEL GRAPHICS Retained Drawing
+-----------------------------------------------------------------------------
+
+--[[
+   These routines let you record a sequence of panel graphics drawing commands
+   and replay them efficiently on subsequent frames. This is useful for static
+   or infrequently changing parts of a display: record once, then replay each
+   frame without reissuing individual draw calls.
+   
+   You can record anywhere - inside a draw callback, or outside one entirely
+   (when your plugin is enabled, from a flight loop, and so on) - and replay
+   in any draw callback. A retained drawing captures the drawing itself, not
+   the state around it: it lands wherever the transform, scissors and stencil
+   in force at replay put it.
+   
+   WARNING: A retained drawing captures references to the texture atlases,
+   fonts, textures (from XPLMCreateTexture) and other retained drawings used
+   during recording. If you destroy any of those, you must destroy every
+   retained drawing that uses it first - replaying a retained drawing that
+   references a destroyed resource is undefined behavior, and may crash
+   X-Plane.
+   
+   Drawing with a resource and then destroying it in the same callback is
+   fine: X-Plane keeps whatever it still needs to finish that frame's drawing.
+]]--
+
 --- An opaque handle to a recorded sequence of drawing commands. Create one by bracketing draw calls between XPLMBeginRetainedDrawing and XPLMEndRetainedDrawing. Destroy it with XPLMDestroyRetainedDrawing when it is no longer needed.
 ---@class XPLMRetainedDrawing_t : userdata
 ---@field private __XPLMRetainedDrawing_t_marker any
@@ -878,13 +1100,18 @@ local XPLMTouchZone = {
 --- made after this function and before XPLMEndRetainedDrawing are captured into
 --- a retained drawing instead of being rendered immediately.
 ---
+--- You may call this inside or outside a draw callback. Either way, end the
+--- recording with XPLMEndRetainedDrawing before that same callback returns; a
+--- recording left open is reported and discarded.
+---
 --- NOTE: Do not nest retained drawing sessions.
 ---
 ---@field XPLMBeginRetainedDrawing fun()
 
 ---@class _G
 --- This function ends recording and returns a handle to the captured drawing
---- commands. Subsequent panel graphics calls are once again rendered immediately.
+--- commands. Inside a draw callback, subsequent panel graphics calls are once
+--- again rendered immediately.
 ---
 --- Returns an opaque handle to the retained drawing.
 ---
@@ -906,9 +1133,34 @@ local XPLMTouchZone = {
 ---@field XPLMDrawRetained fun(drawing: XPLMRetainedDrawing_t)
 
 ---@class _G
---- This function destroys a retained drawing and frees its resources.
+--- This function destroys a retained drawing and frees its resources. You may
+--- call this anywhere, including in the draw callback that just drew it.
+--- Destroy any retained drawing that has this one drawn into it first.
 ---
 ---@field XPLMDestroyRetainedDrawing fun(drawing: XPLMRetainedDrawing_t)
+
+
+-----------------------------------------------------------------------------
+-- PANEL GRAPHICS synthetic vision
+-----------------------------------------------------------------------------
+
+--[[
+   These routines let you draw the simulator's Synthetic Vision Technology
+   (SVT) terrain rendering into your avionics panel. SVT provides a 3-D
+   perspective view of terrain, runways, obstacles, and optional overlays such
+   as flight path hoops, traffic, and airport signs. The view is always
+   centered on the user aircraft and uses the selected AHRS source for
+   attitude.
+   
+   Create an SVT display with XPLMCreateSVTDisplay and draw it with
+   XPLMSVTDisplayDrawIn. Each display instance manages its own terrain tile
+   loading and GPU state, so you can have multiple independent SVT views (e.g.
+   pilot and copilot PFDs at different scales). Which visual layers are drawn
+   is chosen per draw call, not per display.
+   
+   SVT rendering works on any aircraft, regardless of whether the stock
+   cockpit has a G1000 or other SVT-capable avionics installed.
+]]--
 
 --[[
 Bit flags that control which visual layers an SVT display renders. Combine
@@ -941,9 +1193,9 @@ local XPLMSVTFeatures = {
 
 --- Parameters for creating an SVT display. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
 ---@class XPLMCreateSVT_t
----@field structSize integer
----@field pilotIndex integer
----@field pixelsPerDegree number
+---@field structSize integer Set to sizeof(XPLMCreateSVT_t).
+---@field pilotIndex integer 0 for pilot-side AHRS, 1 for copilot-side AHRS.
+---@field pixelsPerDegree number Vertical scale of the 3-d view, in pixels per degree at the center of the display. Must be greater than zero; the G1000 PFD uses 14.
 
 --- An opaque handle to an SVT display instance. Create one with XPLMCreateSVTDisplay and destroy it with XPLMDestroySVTDisplay.
 ---@class XPLMSVTDisplayRef : userdata
@@ -977,15 +1229,15 @@ local XPLMSVTFeatures = {
 ---@field XPLMDestroySVTDisplay fun(svt: XPLMSVTDisplayRef)
 
 ---@class XPLMSVTCustomData_t
----@field pitchDeg number
----@field rollDeg number
----@field headingMagDeg number
----@field magVarDeg number
----@field indicatedAltFt number
----@field baroSettingInHg number
----@field hsiSource integer
----@field hdefDots number
----@field vdefDots number
+---@field pitchDeg number pitch override (degrees).
+---@field rollDeg number roll/bank override (degrees).
+---@field headingMagDeg number magnetic heading override (degrees).
+---@field magVarDeg number magnetic variation override (degrees).
+---@field indicatedAltFt number indicated altitude override (feet).
+---@field baroSettingInHg number altimeter setting override ( inHg).
+---@field hsiSource integer HSI source override.
+---@field hdefDots number horizontal CDI deviation override (float).
+---@field vdefDots number vertical GS deviation override (float).
 
 ---@class _G
 --- This function renders the SVT display directly into the active panel surface
@@ -1005,6 +1257,33 @@ local XPLMSVTFeatures = {
 --- - dataOverrides. Pass nullptr for default sim state.
 ---
 ---@field XPLMSVTDisplayDrawIn fun(svt: XPLMSVTDisplayRef, features: XPLMSVTFeatures, left: integer, top: integer, right: integer, bottom: integer, dataOverrides: XPLMSVTCustomData_t)
+
+
+-----------------------------------------------------------------------------
+-- PANEL GRAPHICS map display
+-----------------------------------------------------------------------------
+
+--[[
+   These routines let you draw the base map for a navigation display (ND) or
+   multi-function display (MFD) into your avionics panel. The base map
+   provides layers for terrain, topography, bodies of water, EGPWS terrain
+   warnings, airport taxi layouts, NEXRAD and cloud tops. These are drawn with
+   a transverse Mercator projection centered near the map's datum.
+   
+   Create a map display with XPLMCreateMapDisplay and draw it with
+   XPLMMapDisplayDrawIn. Each map instance manages its own terrain tile
+   loading and GPU state, so you can have multiple independent views (e.g.
+   pilot and copilot PFDs with different layers visible).
+   
+   To draw your own symbology on top - airports, a flight plan, traffic - use
+   XPLMMapDisplayProject to turn a latitude/longitude into a pixel position,
+   and XPLMMapDisplayUnproject to turn a click back into a latitude/longitude.
+   Both take the same XPLMMapDrawInfo_t you draw with, so they describe
+   exactly the projection that draw call produces.
+   
+   The base map works on any aircraft, regardless of whether the stock cockpit
+   has an FMS or other avionics installed.
+]]--
 
 --[[
 Bit flags that control which visual layers a map display renders. Combine
@@ -1056,27 +1335,27 @@ local XPLMEGPWSStyle = {
 
 --- Per-frame description of what a map display should show: where it is centered, how it is oriented, how far it reaches, and what the terrain layers should shade against. centerX and centerY are in the same panel coordinates as the rectangle in XPLMMapDrawInfo_t, NOT relative to that rectangle. This is the point the map is centered on and the point it rotates about - the same sense as XPLMTransformRotate's center. For a map centered in its own rectangle it is ((left+right)/2, (bottom+top)/2). It is also the same space XPLMMapDisplayProject reports positions in, so you can put a symbol on the map without offsetting anything yourself. The center need not be the rectangle's midpoint, and may sit on or outside its edge: pushing it down toward the bottom edge puts more of the map ahead of the aircraft, which is how an EFIS arc mode is laid out. Two fields set the scale, and they are deliberately a matching pair: roseRadius is the distance from the center of the map out to the compass rose in pixels, and mapRange is that same distance in nautical miles. So setting mapRange to 40 puts the rose edge 40 nm from the aircraft, exactly like the range knob on a real EFIS control panel - and a centered rose therefore spans 80 nm across. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
 ---@class XPLMMapCustomData_t
----@field structSize integer
----@field datLat number
----@field datLon number
----@field centerX integer
----@field centerY integer
----@field roseRadius integer
----@field mapRange number
----@field orientation integer
----@field terrainWarn number
----@field terrainCaution number
----@field acfAlt number
----@field gearDown integer
----@field trueRotation number
----@field nearestRwyElev number
----@field egpwsBrightness number
----@field egpwsStyle XPLMEGPWSStyle
+---@field structSize integer Set to sizeof(XPLMMapCustomData_t). This is checked; a size X-Plane does not recognise is an error and is reported. X-Plane never modifies the structure you pass.
+---@field datLat number datum lat (degrees).
+---@field datLon number datum lon (degrees).
+---@field centerX integer map center x, in the same panel coordinates as XPLMMapDrawInfo_t's rectangle.
+---@field centerY integer map center y, in the same panel coordinates as XPLMMapDrawInfo_t's rectangle.
+---@field roseRadius integer center of the map out to the compass rose (pixels).
+---@field mapRange number center of the map out to the compass rose (nautical miles).
+---@field orientation integer map orientation (0=north up, 1=Track up, 2=Hdg up, 3=custom).
+---@field terrainWarn number terrain warning altitude (red, feet).
+---@field terrainCaution number terrain caution altitude (yellow, feet).
+---@field acfAlt number ownship altitude (feet).
+---@field gearDown integer ownship gear status (1=gear down).
+---@field trueRotation number if map orientation is custom, the true heading that points up (so 90 puts east at the top and true north to the left).
+---@field nearestRwyElev number altitude in feet of the nearest runway, used for EGPWS terrain display.
+---@field egpwsBrightness number brightness of the EGPWS overlay.
+---@field egpwsStyle XPLMEGPWSStyle style of the EGPWS overlay. Must be one of the XPLMEGPWSStyle constants.
 
 --- Parameters for creating a base map display. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
 ---@class XPLMCreateMap_t
----@field structSize integer
----@field pilotIndex integer
+---@field structSize integer Set to sizeof(XPLMCreateMap_t).
+---@field pilotIndex integer 0 for pilot-side GPS position, 1 for copilot-side GPS position.
 
 --- An opaque handle to a map display instance. Create one with XPLMCreateMapDisplay and destroy it with XPLMDestroyMapDisplay.
 ---@class XPLMMapDisplayRef : userdata
@@ -1084,12 +1363,12 @@ local XPLMEGPWSStyle = {
 
 --- Which layers a map shows and where on the panel it goes. Pass the same XPLMMapDrawInfo_t and the same XPLMMapCustomData_t to XPLMMapDisplayDrawIn and to the projection routines, and the projection you query is provably the projection you drew - so your symbology cannot end up a frame or a zoom step out of step with the terrain under it. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
 ---@class XPLMMapDrawInfo_t
----@field structSize integer
----@field layers XPLMMapLayers
----@field left integer
----@field top integer
----@field right integer
----@field bottom integer
+---@field structSize integer Set to sizeof(XPLMMapDrawInfo_t).
+---@field layers XPLMMapLayers Bitwise OR of XPLMMapLayers flags to show.
+---@field left integer Bounding rectangle in panel coordinates.
+---@field top integer Bounding rectangle in panel coordinates.
+---@field right integer Bounding rectangle in panel coordinates.
+---@field bottom integer Bounding rectangle in panel coordinates.
 
 ---@class _G
 --- This function creates a new map display instance. The display begins loading

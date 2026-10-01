@@ -47,6 +47,15 @@
 
 require("XPLMDefs")
 
+
+-----------------------------------------------------------------------------
+-- X-PLANE COORDINATES
+-----------------------------------------------------------------------------
+
+--[[
+               These routines allow you to use OpenGL with X-Plane.
+]]--
+
 ---@class _G
 --- 				This routine translates coordinates from latitude, longitude, and altitude to local
 --- 				scene coordinates. Latitude and longitude are in decimal degrees, and altitude is
@@ -65,6 +74,11 @@ require("XPLMDefs")
 --- 				try to avoid round tripping from local to world and back.
 ---
 ---@field XPLMLocalToWorld fun(inX: number, inY: number, inZ: number): { outLatitude: userdata, outLongitude: userdata, outAltitude: userdata }
+
+
+-----------------------------------------------------------------------------
+-- X-PLANE TEXT
+-----------------------------------------------------------------------------
 
 --[[
 X-Plane features some fixed-character fonts.  Each font may have its own metrics.

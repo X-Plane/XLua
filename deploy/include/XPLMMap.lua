@@ -65,6 +65,19 @@
 
 require("XPLMDefs")
 
+
+-----------------------------------------------------------------------------
+-- DRAWING CALLBACKS
+-----------------------------------------------------------------------------
+
+--[[
+   When you create a new map layer (using XPLMCreateMapLayer), you can provide
+   any or all of these callbacks. They allow you to insert your own OpenGL
+   drawing, text labels, and icons into the X-Plane map at the appropriate
+   places, allowing your layer to behave as similarly to X-Plane's built-in
+   layers as possible.
+]]--
+
 --- This is an opaque handle for a plugin-created map layer. Pass it to the map drawing APIs from an appropriate callback to draw in the layer you created.
 ---@class XPLMMapLayerID : userdata
 ---@field private __XPLMMapLayerID_marker any
@@ -90,20 +103,50 @@ local XPLMMapStyle = {
 ---@class _G
 ---@field XPLMMapStyle XPLMMapStyle
 
---- This is the OpenGL map drawing callback for plugin-created map layers. You can perform arbitrary OpenGL drawing from this callback, with one exception: changes to the Z-buffer are not permitted, and will result in map drawing errors. All drawing done from within this callback appears beneath all built-in X-Plane icons and labels, but above the built-in "fill" layers (layers providing major details, like terrain and water). Note, however, that the relative ordering between the drawing callbacks of different plugins is not guaranteed.
+--- This is the OpenGL map drawing callback for plugin-created map layers. You can perform arbitrary OpenGL drawing from this callback, with one exception: changes to the Z-buffer are not permitted, and will result in map drawing errors. All drawing done from within this callback appears beneath all built-in X-Plane icons and labels, but above the built-in "fill" layers (layers providing major details, like terrain and water). Note, however, that the relative ordering between the drawing callbacks of different plugins is not guaranteed. - inMapBoundsLeftTopRightBottom: a 4-element array defining the currently visible map bounds (in map units; to convert to latitude/longitude, use the map projection APIs). - zoomRatio: any ratio (negative or positive), where 0 indicates the whole map is visible. A negative zoom means the user zoomed out beyond the full map bounds. When the map is fully zoomed in, the zoom ratio may exceed 30. - mapUnitsPerUserInterfaceUnit: if your layer is drawing in the standard X-Plane map window, this is map units per boxel; if you're drawing within the sim itself, this is the map units per "virtual device pixel," whose size in real screen pixels is of course fluid since the user can move the camera relative to the in-sim map. - mapStyle: the user-selected map style being drawn currently. - projection: the map projection in use (this is guaranteed to match the projection last passed to your XPLMMapPrepareCacheCallback_f, if applicable). - inRefcon: a reference to arbitrary data from when you registered this layer.
 ---@alias XPLMMapDrawingCallback_f fun(inLayer: XPLMMapLayerID, inMapBoundsLeftTopRightBottom: number[], zoomRatio: number, mapUnitsPerUserInterfaceUnit: number, mapStyle: XPLMMapStyle, projection: XPLMMapProjectionID, inRefcon: any)
 
---- This is the icon drawing callback that enables plugin-created map layers to draw icons using X-Plane's built-in icon drawing functionality. You can request an arbitrary number of PNG icons to be drawn via XPLMDrawMapIconFromSheet() from within this callback, but you may not perform any OpenGL drawing here. Icons enqueued by this function will appear above all OpenGL drawing (performed by your optional XPLMMapDrawingCallback_f), and above all built-in X-Plane map icons of the same layer type ("fill" or "markings," as determined by the XPLMMapLayerType in your XPLMCreateMapLayer_t). Note, however, that the relative ordering between the drawing callbacks of different plugins is not guaranteed.
+--- This is the icon drawing callback that enables plugin-created map layers to draw icons using X-Plane's built-in icon drawing functionality. You can request an arbitrary number of PNG icons to be drawn via XPLMDrawMapIconFromSheet() from within this callback, but you may not perform any OpenGL drawing here. Icons enqueued by this function will appear above all OpenGL drawing (performed by your optional XPLMMapDrawingCallback_f), and above all built-in X-Plane map icons of the same layer type ("fill" or "markings," as determined by the XPLMMapLayerType in your XPLMCreateMapLayer_t). Note, however, that the relative ordering between the drawing callbacks of different plugins is not guaranteed. - inMapBoundsLeftTopRightBottom: a 4-element array defining the currently visible map bounds (in map units; to convert to latitude/longitude, use the map projection APIs). - zoomRatio: any ratio (negative or positive), where 0 indicates the whole map is visible. A negative zoom means the user zoomed out beyond the full map bounds. When the map is fully zoomed in, the zoom ratio may exceed 30. - mapUnitsPerUserInterfaceUnit: if your layer is drawing in the standard X-Plane map window, this is map units per boxel; if you're drawing within the sim itself, this is the map units per "virtual device pixel," whose size in real screen pixels is of course fluid since the user can move the camera relative to the in-sim map. - mapStyle: the user-selected map style being drawn currently. - projection: the map projection in use (this is guaranteed to match the projection last passed to your XPLMMapPrepareCacheCallback_f, if applicable). - inRefcon: a reference to arbitrary data from when you registered this layer.
 ---@alias XPLMMapIconDrawingCallback_f fun(inLayer: XPLMMapLayerID, inMapBoundsLeftTopRightBottom: number[], zoomRatio: number, mapUnitsPerUserInterfaceUnit: number, mapStyle: XPLMMapStyle, projection: XPLMMapProjectionID, inRefcon: any)
 
---- This is the label drawing callback that enables plugin-created map layers to draw text labels using X-Plane's built-in labeling functionality. You can request an arbitrary number of text labels to be drawn via XPLMDrawMapLabel() from within this callback, but you may not perform any OpenGL drawing here. Labels enqueued by this function will appear above all OpenGL drawing (performed by your optional XPLMMapDrawingCallback_f), and above all built-in map icons and labels of the same layer type ("fill" or "markings," as determined by the XPLMMapLayerType in your XPLMCreateMapLayer_t). Note, however, that the relative ordering between the drawing callbacks of different plugins is not guaranteed.
+--- This is the label drawing callback that enables plugin-created map layers to draw text labels using X-Plane's built-in labeling functionality. You can request an arbitrary number of text labels to be drawn via XPLMDrawMapLabel() from within this callback, but you may not perform any OpenGL drawing here. Labels enqueued by this function will appear above all OpenGL drawing (performed by your optional XPLMMapDrawingCallback_f), and above all built-in map icons and labels of the same layer type ("fill" or "markings," as determined by the XPLMMapLayerType in your XPLMCreateMapLayer_t). Note, however, that the relative ordering between the drawing callbacks of different plugins is not guaranteed. - inMapBoundsLeftTopRightBottom: a 4-element array defining the currently visible map bounds (in map units; to convert to latitude/longitude, use the map projection APIs). - zoomRatio: any ratio (negative or positive), where 0 indicates the whole map is visible. A negative zoom means the user zoomed out beyond the full map bounds. When the map is fully zoomed in, the zoom ratio may exceed 30. - mapUnitsPerUserInterfaceUnit: if your layer is drawing in the standard X-Plane map window, this is map units per boxel; if you're drawing within the sim itself, this is the map units per "virtual device pixel," whose size in real screen pixels is of course fluid since the user can move the camera relative to the in-sim map. - mapStyle: the user-selected map style being drawn currently. - projection: the map projection in use (this is guaranteed to match the projection last passed to your XPLMMapPrepareCacheCallback_f, if applicable). - inRefcon: a reference to arbitrary data from when you registered this layer.
 ---@alias XPLMMapLabelDrawingCallback_f fun(inLayer: XPLMMapLayerID, inMapBoundsLeftTopRightBottom: number[], zoomRatio: number, mapUnitsPerUserInterfaceUnit: number, mapStyle: XPLMMapStyle, projection: XPLMMapProjectionID, inRefcon: any)
 
---- A callback used to allow you to cache whatever information your layer needs to draw in the current map area. This is called each time the map's total bounds change. This is typically triggered by new DSFs being loaded, such that X-Plane discards old, now-distant DSFs and pulls in new ones. At that point, the available bounds of the map also change to match the new DSF area. By caching just the information you need to draw in this area, your future draw calls can be made faster, since you'll be able to simply "splat" your precomputed information each frame. We guarantee that the map projection will not change between successive prepare cache calls, nor will any draw call give you bounds outside these total map bounds. So, if you cache the projected map coordinates of all the items you might want to draw in the total map area, you can be guaranteed that no draw call will be asked to do any new work.
+
+-----------------------------------------------------------------------------
+-- LAYER MANAGEMENT CALLBACKS
+-----------------------------------------------------------------------------
+
+--[[
+   These are various "bookkeeping" callbacks that your map layer can receive
+   (if you provide the callback in your XPLMCreateMapLayer_t). They allow you
+   to manage the lifecycle of your layer, as well as cache any
+   computationally-intensive preparation you might need for drawing.
+]]--
+
+--- A callback used to allow you to cache whatever information your layer needs to draw in the current map area. This is called each time the map's total bounds change. This is typically triggered by new DSFs being loaded, such that X-Plane discards old, now-distant DSFs and pulls in new ones. At that point, the available bounds of the map also change to match the new DSF area. By caching just the information you need to draw in this area, your future draw calls can be made faster, since you'll be able to simply "splat" your precomputed information each frame. We guarantee that the map projection will not change between successive prepare cache calls, nor will any draw call give you bounds outside these total map bounds. So, if you cache the projected map coordinates of all the items you might want to draw in the total map area, you can be guaranteed that no draw call will be asked to do any new work. - inTotalMapBoundsLeftTopRightBottom: a 4-element array defining the map's new total bounds (in map units; to convert to latitude/longitude, use the map projection APIs). This is the maximal area you will ever be asked to draw (at least until you receive the next prepare cache call). - projection: the map projection in use; guaranteed to match the projection passed to all map drawing calls until the next prepare cache call. - inRefcon: a reference to arbitrary data from when you registered this layer.
 ---@alias XPLMMapPrepareCacheCallback_f fun(inLayer: XPLMMapLayerID, inTotalMapBoundsLeftTopRightBottom: number[], projection: XPLMMapProjectionID, inRefcon: any)
 
---- Called just before your map layer gets deleted. Because SDK-created map layers have the same lifetime as the X-Plane map that contains them, if the map gets unloaded from memory, your layer will too. This callback fires exactly once, just before deletion, after which none of the layer's callbacks are used.
+--- Called just before your map layer gets deleted. Because SDK-created map layers have the same lifetime as the X-Plane map that contains them, if the map gets unloaded from memory, your layer will too. This callback fires exactly once, just before deletion, after which none of the layer's callbacks are used. - inRefcon: a reference to arbitrary data from when you registered this layer.
 ---@alias XPLMMapWillBeDeletedCallback_f fun(inLayer: XPLMMapLayerID, inRefcon: any)
+
+
+-----------------------------------------------------------------------------
+-- MAP LAYER CREATION AND DESTRUCTION
+-----------------------------------------------------------------------------
+
+--[[
+   Enables the creation of new map layers. Layers are created for a particular
+   instance of the X-Plane map. For instance, if you want your layer to appear
+   in both the normal map interface and the Instructor Operator Station (IOS),
+   you would need two separate calls to XPLMCreateMapLayer(), with two
+   different values for your XPLMCreateMapLayer_t::layer_name.
+   
+   Your layer's lifetime will be determined by the lifetime of the map it is
+   created in. If the map is destroyed (on the X-Plane side), your layer will
+   be too, and you'll receive a callback to your
+   XPLMMapWillBeDeletedCallback_f.
+]]--
 
 --[[
 Indicates the type of map layer you are creating. Fill layers will always be drawn beneath markings layers.]]--
@@ -159,7 +202,7 @@ local XPLMMapLayerType = {
 --- Destroys a map layer you created (calling your XPLMMapWillBeDeletedCallback_f if applicable). Returns true if a deletion took place.
 ---@field XPLMDestroyMapLayer fun(inLayer: XPLMMapLayerID): boolean
 
---- A callback to notify your plugin that a new map has been created in X-Plane. This is the best time to add a custom map layer using XPLMCreateMapLayer(). No OpenGL drawing is permitted within this callback.
+--- A callback to notify your plugin that a new map has been created in X-Plane. This is the best time to add a custom map layer using XPLMCreateMapLayer(). No OpenGL drawing is permitted within this callback. - mapIdentifier: the globally unique string that identifies the map being created. As of XPLM300, this is limited to one of XPLM_MAP_USER_INTERFACE or XPLM_MAP_IOS.
 ---@alias XPLMMapCreatedCallback_f fun(mapIdentifier: string, inRefcon: any)
 
 ---@class _G
@@ -175,7 +218,30 @@ local XPLMMapLayerType = {
 --- Returns true if the map with the specified identifier already exists in X-Plane. In that case, you can
 --- safely call XPLMCreateMapLayer() specifying that your layer should be added to that map.
 ---
+--- - mapIdentifier: the globally unique string that identifies the map you're asking about. As of XPLM300,
+---   this is limited to one of XPLM_MAP_USER_INTERFACE or XPLM_MAP_IOS.
+---
 ---@field XPLMMapExists fun(mapIdentifier: string): boolean
+
+
+-----------------------------------------------------------------------------
+-- MAP DRAWING
+-----------------------------------------------------------------------------
+
+--[[
+   These APIs are only valid from within a map drawing callback (one of
+   XPLMIconDrawingCallback_t or XPLMMapLabelDrawingCallback_f). Your drawing
+   callbacks are registered when you create a new map layer as part of your
+   XPLMCreateMapLayer_t. The functions here hook into X-Plane's built-in map
+   drawing functionality for icons and labels, so that you get a consistent
+   style with the rest of the X-Plane map.
+   
+   Note that the X-Plane 11 map introduces a strict ordering: layers of type
+   xplm_MapLayer_Fill get drawn beneath all xplm_MapLayer_Markings layers.
+   Likewise, all OpenGL drawing (performed in your layer's
+   XPLMMapDrawingCallback_f) will appear beneath any icons and labels you
+   draw.
+]]--
 
 --[[
 Indicates whether a map element should be match its rotation to the map itself, or to the user interface.
@@ -217,6 +283,22 @@ local XPLMMapOrientation = {
 --- This function is only valid from within an XPLMIconDrawingCallback_t
 --- (but you can request an arbitrary number of icons to be drawn from within your callback).
 ---
+--- - layer: the map layer you want to add icons to.
+--- - inPngPath: an X-Plane-relative path to the PNG you would like to draw as an icon.
+--- - s: the column index of the sub-image (cell) you want to draw; 0 is the leftmost column,
+---   ds - 1 is the rightmost.
+--- - t: the row index of the sub-image (cell) you want to draw; 0 is the bottommost row,
+---   dt - 1 is the topmost.
+--- - ds, dt: the number of columns and rows in your texture sheet.
+--- - mapX, mapY: the coordinate (in map units) at which the icon should be centered.
+--- - orientation: the orientation of the icon; this affects what the rotation parameter is
+---   defined relative to.
+--- - rotationDegrees: the rotation, in degrees, of the icon relative to your orientation.
+---   Depending on the orientation, this is relative either to the map's 'up' or the UI's
+---   'up'---not north.
+--- - mapWidth: the width (in map units) of the icon. Note that the icon's height will be scaled
+---   relative to its width.
+---
 ---@field XPLMDrawMapIconFromSheet fun(layer: XPLMMapLayerID, inPngPath: string, s: integer, t: integer, ds: integer, dt: integer, mapX: number, mapY: number, orientation: XPLMMapOrientation, rotationDegrees: number, mapWidth: number)
 
 ---@class _G
@@ -224,7 +306,38 @@ local XPLMMapOrientation = {
 --- Only valid from within an XPLMMapLabelDrawingCallback_f
 --- (but you can request an arbitrary number of text labels to be drawn from within your callback).
 ---
+--- - layer: the map layer you want to add labels to.
+--- - mapX, mapY: the coordinate (in map units) at which the text should be centered.
+--- - orientation: the orientation of the text; this affects what the rotation parameter is
+---   defined relative to.
+--- - rotationDegrees: the rotation, in degrees, of the text relative to your orientation.
+---   Depending on the orientation, this is relative either to the map's 'up' or the UI's
+---   'up'---not north.
+---
 ---@field XPLMDrawMapLabel fun(layer: XPLMMapLayerID, inText: string, mapX: number, mapY: number, orientation: XPLMMapOrientation, rotationDegrees: number)
+
+
+-----------------------------------------------------------------------------
+-- MAP PROJECTIONS
+-----------------------------------------------------------------------------
+
+--[[
+   As of X-Plane 11, the map draws using true cartographic projections, and
+   different maps may use different projections. Thus, to draw at a particular
+   latitude and longitude, you must first transform your real-world
+   coordinates into map coordinates.
+   
+   The map projection is also responsible for giving you the current scale of
+   the map. That is, the projection can tell you how many map units correspond
+   to 1 meter at a given point.
+   
+   Finally, the map projection can give you the current rotation of the map.
+   Since X-Plane 11 maps can rotate to match the heading of the aircraft, the
+   map's rotation can potentially change every frame.
+   
+   The projection argument these routines take is the map projection currently
+   in use by your layer, as handed to your drawing or prepare-cache callback.
+]]--
 
 ---@class _G
 --- Projects a latitude/longitude into map coordinates.

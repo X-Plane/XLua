@@ -27,19 +27,24 @@
 
 require("XPLMDefs")
 
+
+-----------------------------------------------------------------------------
+-- WEATHER ACCESS
+-----------------------------------------------------------------------------
+
 ---@class XPLMWeatherInfoWinds_t
----@field alt_msl number
----@field speed number
----@field direction number
----@field gust_speed number
----@field shear number
----@field turbulence number
+---@field alt_msl number Altitude MSL, meters.
+---@field speed number Wind speed, meters/sec. When setting, use a negative value to signify 'undefined'.
+---@field direction number Direction (true)
+---@field gust_speed number Gust speed, meters/sec. Total speed, not increase above wind speed.
+---@field shear number Shear arc, degrees i.e. 50% of this arc in either direction from base
+---@field turbulence number Clear-air turbulence ratio
 
 ---@class XPLMWeatherInfoClouds_t
----@field cloud_type number
----@field coverage number
----@field alt_top number
----@field alt_base number
+---@field cloud_type number Cloud type, float enum
+---@field coverage number Coverage ratio
+---@field alt_top number Altitude MSL, meters
+---@field alt_base number Altitude MSL, meters
 
 ---@class _G
 --- The number of wind layers that are expected in the latest version of XPLMWeatherInfo_t .
@@ -78,32 +83,32 @@ require("XPLMDefs")
 
 --- Basic weather conditions at a specific point. To specify exactly what data you intend to send or receive, it is required to set the structSize appropriately. Version 2 data starts at "temp_layers".
 ---@class XPLMWeatherInfo_t
----@field structSize integer
----@field temperature_alt number
----@field dewpoint_alt number
----@field pressure_alt number
----@field precip_rate_alt number
----@field wind_dir_alt number
----@field wind_spd_alt number
----@field turbulence_alt number
----@field wave_height number
----@field wave_length number
----@field wave_dir integer
----@field wave_speed number
----@field visibility number
----@field precip_rate number
----@field thermal_climb number
----@field pressure_sl number
----@field wind_layers XPLMWeatherInfoWinds_t[]
----@field cloud_layers XPLMWeatherInfoClouds_t[]
----@field temp_layers number[]
----@field dewp_layers number[]
----@field troposphere_alt number
----@field troposphere_temp number
----@field age number
----@field radius_nm number
----@field max_altitude_msl_ft number
----@field snow_coverage_pct number
+---@field structSize integer The size of the struct. Required for both reading and writing.
+---@field temperature_alt number Temperature at the given altitude in Celsius
+---@field dewpoint_alt number Dewpoint at the given altitude in Celsius
+---@field pressure_alt number Pressure at the given altitude in Pascals. Pass 0 when setting to use sea-level pressure instead of QNH.
+---@field precip_rate_alt number Precipitation rate at the given altitude. Unused when setting.
+---@field wind_dir_alt number Wind direction at the given altitude. Unused when setting.
+---@field wind_spd_alt number Wind speed at the given altitude, meters/sec. Unused when setting.
+---@field turbulence_alt number Turbulence ratio at the given altitude. Unused when setting.
+---@field wave_height number Height of water waves in meters
+---@field wave_length number Length of water waves in meters. Unused when setting.
+---@field wave_dir integer Direction from which water waves are coming
+---@field wave_speed number Speed of wave advance in meters/sec. Unused when setting.
+---@field visibility number Base visibility at 0 altitude, meters
+---@field precip_rate number Base precipitation ratio at 0 altitude
+---@field thermal_climb number Climb rate due to thermals, meters/sec
+---@field pressure_sl number Pressure at sealevel in Pascals. Used when setting ONLY if pressure_alt (i.e. QNH) is not valid.
+---@field wind_layers XPLMWeatherInfoWinds_t[] Defined wind layers. Not all layers are always defined.
+---@field cloud_layers XPLMWeatherInfoClouds_t[] Defined cloud layers. Not all layers are always defined.
+---@field temp_layers number[] Temperatures at altitude, in degrees C. Layer altitudes are the same globally - see the 'sim/weather/region/atmosphere_alt_levels_m' dataref.
+---@field dewp_layers number[] Dewpoints at altitude, in degrees C. Layer altitudes are the same globally - see the 'sim/weather/region/atmosphere_alt_levels_m' dataref.
+---@field troposphere_alt number The altitude in MSL of the troposphere.
+---@field troposphere_temp number The temperature in degrees C of the troposphere.
+---@field age number Age in seconds of this weather report. Age affects how strongly the report affects the resulting weather.
+---@field radius_nm number Horizontal radius of effect of this weather report, nautical miles.
+---@field max_altitude_msl_ft number Vertical limit of effect of this weather report, feet MSL. This affects all data with an altitude component unless otherwise noted.
+---@field snow_coverage_pct number Snow coverage, percent (0-1).
 
 ---@class _G
 --- Get the last-downloaded METAR report for an airport by ICAO code. Note that the actual weather at that airport may have evolved
@@ -150,8 +155,8 @@ require("XPLMDefs")
 --- Setting future weather ensures that there is no sudden jump in weather conditions when you make a change mid-cycle. In some situations, notably
 --- for an initial setup, you may want to ensure that the weather is changed instantly. To do this, set 'updateImmediately' as true.
 ---
---- isIncremental     : If true, append or modify existing records created by your plugin. If false, clear any existing records.
---- updateImmediately : If true, immediately reset and recalculate the weather. If false, your new data will be used when the weather next recalculates.
+--- - isIncremental: If true, append or modify existing records created by your plugin. If false, clear any existing records.
+--- - updateImmediately: If true, immediately reset and recalculate the weather. If false, your new data will be used when the weather next recalculates.
 ---
 --- This call is not intended to be used per-frame. It should be called only during the pre-flight loop callback.
 ---
