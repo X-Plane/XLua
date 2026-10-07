@@ -1236,6 +1236,9 @@ static const char * cb_XPLMAvionicsBrowserCallback_f(XPLMAvionicsID inAvionicsID
 		luaL_unref(L, LUA_REGISTRYINDEX, inAvionicsID_typed_ref);
 	}
 
+	if (res == nullptr)
+		res = XPLMReturnString("null");
+
 	return res;
 }
 
@@ -2163,6 +2166,9 @@ static const char * cb_XPLMBrowserCallback_f(XPLMWindowID inWindowID, const char
 		}
 		luaL_unref(L, LUA_REGISTRYINDEX, inWindowID_typed_ref);
 	}
+
+	if (res == nullptr)
+		res = XPLMReturnString("null");
 
 	return res;
 }
