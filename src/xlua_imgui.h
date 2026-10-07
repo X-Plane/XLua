@@ -23,11 +23,10 @@ extern "C" {
 void LoadImguiBindings(lua_State* L);
 
 // Creates the per-VM imgui context (and with it the font atlas texture) on the
-// given state if it doesn't exist yet.  MUST NOT be called from inside a panel
-// graphics draw callback: the context constructor calls XPLMCreateTexture, and
-// panel graphics forbids creating or destroying a draw-call texture while
-// drawing.  XLuaCreateImguiWindow calls this at window creation time for exactly
-// that reason - do not make it lazy again.
+// given state if it doesn't exist yet.  XLuaCreateImguiWindow calls this at
+// window creation time, so the context exists before any input or draw for
+// that window can arrive.  (XPLMCreateTexture is legal inside a draw callback,
+// so nothing forbids creating it later - eager is just simpler to reason about.)
 void xplm_imgui_ensure_context(lua_State* L);
 
 // Frame primitives — wrap XplmImguiContext::BeginFrame / EndFrame, looking

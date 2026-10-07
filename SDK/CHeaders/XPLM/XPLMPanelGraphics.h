@@ -1759,10 +1759,21 @@ XPLM_API void       XPLMWindowSetTouchEventHandler(
  * or infrequently changing parts of a display: record once, then replay each
  * frame without reissuing individual draw calls.
  * 
- * WARNING: A retained drawing captures references to the texture atlases and
- * fonts used during recording. If you destroy a texture atlas or font that
- * was used in a retained drawing, you must also destroy that retained drawing
- * - replaying it will reference invalid resources.
+ * You can record anywhere - inside a draw callback, or outside one entirely
+ * (when your plugin is enabled, from a flight loop, and so on) - and replay
+ * in any draw callback. A retained drawing captures the drawing itself, not
+ * the state around it: it lands wherever the transform, scissors and stencil
+ * in force at replay put it.
+ * 
+ * WARNING: A retained drawing captures references to the texture atlases,
+ * fonts, textures (from XPLMCreateTexture) and other retained drawings used
+ * during recording. If you destroy any of those, you must destroy every
+ * retained drawing that uses it first - replaying a retained drawing that
+ * references a destroyed resource is undefined behavior, and may crash
+ * X-Plane.
+ * 
+ * Drawing with a resource and then destroying it in the same callback is
+ * fine: X-Plane keeps whatever it still needs to finish that frame's drawing.
  *
  */
 
@@ -1785,6 +1796,10 @@ typedef void * XPLMRetainedDrawing_t;
  * made after this function and before XPLMEndRetainedDrawing are captured
  * into a retained drawing instead of being rendered immediately.
  * 
+ * You may call this inside or outside a draw callback. Either way, end the
+ * recording with XPLMEndRetainedDrawing before that same callback returns; a
+ * recording left open is reported and discarded.
+ * 
  * NOTE: Do not nest retained drawing sessions.
  *
  */
@@ -1795,8 +1810,8 @@ XPLM_API void       XPLMBeginRetainedDrawing(void);
  * XPLMEndRetainedDrawing
  * 
  * This function ends recording and returns a handle to the captured drawing
- * commands. Subsequent panel graphics calls are once again rendered
- * immediately.
+ * commands. Inside a draw callback, subsequent panel graphics calls are once
+ * again rendered immediately.
  * 
  * Returns an opaque handle to the retained drawing.
  *
@@ -1828,7 +1843,9 @@ XPLM_API void       XPLMDrawRetained(
 /*
  * XPLMDestroyRetainedDrawing
  * 
- * This function destroys a retained drawing and frees its resources.
+ * This function destroys a retained drawing and frees its resources. You may
+ * call this anywhere, including in the draw callback that just drew it.
+ * Destroy any retained drawing that has this one drawn into it first.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -2499,15 +2516,26 @@ XPLM_API int        XPLMMapDisplayGetTerrainAltitudes(
  * IMGUI HELPERS
  ***************************************************************************/
 /*
- * These routines let panel-graphics-content-type windows render textured
- * indexed triangle meshes that exactly match the layout produced by Dear
- * ImGui's `ImDrawData`, so a plugin can plug an ImGui frame straight into
- * X-Plane panel graphics.
+ * These routines let panel graphics render textured indexed triangle meshes
+ * that exactly match the layout produced by Dear ImGui's `ImDrawData`, so a
+ * plugin can plug an ImGui frame straight into X-Plane panel graphics.
  * 
- * Coordinate system: positions are in window-LOCAL pixels with TOP-LEFT
- * origin (matches Dear ImGui). Scissors are in the same coordinate space. The
- * host translates these against the current panel-graphics origin and flips Y
- * for you.
+ * Coordinate system: positions and scissors are in panel coordinates under
+ * the current transform, exactly like every other panel-graphics primitive.
+ * Nothing is translated or flipped for you. Dear ImGui works in window-local
+ * pixels with a TOP-LEFT origin and Y increasing downward, so set up that
+ * space with the transform stack before drawing - the same conversion your
+ * mouse handler does in reverse:
+ * 
+ *     XPLMTransformPush(); XPLMTransformTranslate(left, top);   // from
+ *     XPLMGetWindowGeometry; (0, height) on an avionics screen
+ *     XPLMTransformScale(1.0f, -1.0f);     // Y down, as ImGui expects
+ *     XPLMDrawCalls(...);                  // once per ImDrawList
+ *     XPLMTransformPop();
+ * 
+ * Because the transform is yours, a retained drawing of an ImGui frame
+ * captures the frame itself, not where the window was: replay it under the
+ * translate for the window's current position and it follows the window.
  * 
  * Vertex layout (matches `ImDrawVert` exactly): each vertex is 5 floats =
  * 20 bytes, in this order: pos.x, pos.y, uv.x, uv.y, RGBA8 packed as a
@@ -2522,13 +2550,18 @@ XPLM_API int        XPLMMapDisplayGetTerrainAltitudes(
  * Sampler: bilinear filter, clamp-to-edge in both dimensions, no mipmaps. UV
  * coordinates outside [0,1] sample the edge texels (no wrap).
  * 
- * Scissor: the per-`XPLMDrawCall_t` scissor rect is in {left, top, right,
- * bottom} order (top-left origin). Zero-width or zero-height rects produce no
- * output. The scissor state is automatically saved on entry to
+ * Scissor: the per-`XPLMDrawCall_t` scissor rect is two opposite corners,
+ * {x1, y1, x2, y2}, in the same space as the vertices - ImGui's `ClipRect`
+ * as-is. It is intersected with the scissor already in force (for example one
+ * set with XPLMScissorSet), so a draw call can narrow the clip but never
+ * escape it. Zero-width or zero-height rects produce no output. The scissor
+ * state is automatically saved on entry to
  * `XPLMDrawCalls` and restored on exit, so subsequent panel-graphics calls in
  *  the same frame are unaffected.
  * 
- * Plugin-callable from inside a panel-graphics window's draw callback only.
+ * XPLMDrawCalls may only be called while drawing: from a panel-graphics draw
+ * callback, or while recording a retained drawing. XPLMCreateTexture and
+ * XPLMDestroyTexture may be called anywhere.
  *
  */
 
@@ -2551,7 +2584,8 @@ typedef struct {
      * XPLMTextureAtlasRef, say) is undefined behavior, not a no-op.              */
      void *                    tex_ref;
 
-    /* Clip rect: {left, top, right, bottom} in window-local top-left coords.     */
+    /* Clip rect: two opposite corners {x1, y1, x2, y2}, in the same space as the *
+     * vertices (ImGui's ClipRect as-is).                                         */
      float                     scissors[4];
 
     /* First index into XPLMMesh_t::indices to use.                               */
@@ -2598,6 +2632,9 @@ typedef struct {
  * The returned handle is opaque; pass it to `XPLMDrawCall_t::tex_ref` and
  * free it with `XPLMDestroyTexture` when done. The sampler used at draw time
  * is bilinear, clamp-to-edge, no mipmaps.
+ * 
+ * You may call this anywhere, including inside a panel-graphics draw
+ * callback; the texture can be used by draw calls later in the same callback.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -2611,6 +2648,11 @@ XPLM_API void *     XPLMCreateTexture(
  * 
  * Frees a texture obtained from `XPLMCreateTexture`. Do not use the handle
  * after calling this. It is safe to create and destroy textures every frame.
+ * 
+ * You may call this anywhere, including inside a panel-graphics draw
+ * callback, even right after drawing with the texture: X-Plane keeps it alive
+ * until that drawing has been rendered. Do not destroy a texture that a
+ * retained drawing still uses - destroy the retained drawing first.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */

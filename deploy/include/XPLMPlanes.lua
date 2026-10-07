@@ -38,6 +38,15 @@
 
 require("XPLMDefs")
 
+
+-----------------------------------------------------------------------------
+-- USER AIRCRAFT ACCESS
+-----------------------------------------------------------------------------
+
+--[[
+   These routines are used to initialize and manipulate the user's aircraft.
+]]--
+
 --[[
 Result codes from initializing or updating the user's aircraft. Initialization can fail due to
 unparsable/invalid data, or due to the contents of the initialization containing parameters the
@@ -129,6 +138,16 @@ local XPLMInitResult = {
 ---
 ---@field XPLMPlaceUserAtLocation fun(latitudeDegrees: number, longitudeDegrees: number, elevationMetersMSL: number, headingDegreesTrue: number, speedMetersPerSecond: number)
 
+
+-----------------------------------------------------------------------------
+-- GLOBAL AIRCRAFT ACCESS
+-----------------------------------------------------------------------------
+
+--[[
+   These APIs let you control the AI aircraft and take over multiplayer/aI
+   aircraft control.
+]]--
+
 ---@class _G
 --- The user's aircraft is always index 0.
 ---
@@ -150,6 +169,16 @@ local XPLMInitResult = {
 --- in length.
 ---
 ---@field XPLMGetNthAircraftModel fun(inIndex: integer): { outFileName: string[], outPath: string[] }
+
+
+-----------------------------------------------------------------------------
+-- EXCLUSIVE AIRCRAFT ACCESS
+-----------------------------------------------------------------------------
+
+--[[
+   The following routines require exclusive access to the airplane APIs. Only
+   one plugin may have this access at a time.
+]]--
 
 --- Your airplanes available callback is called when another plugin gives up access to the multiplayer planes. Use this to wait for access to multiplayer.
 ---@alias XPLMPlanesAvailable_f fun(inRefcon: any)
