@@ -34,7 +34,8 @@ INTERFACE
 
 USES
     XPLMDefs, XPLMUtilities, XPLMDisplay;
-   {$A4}
+   {$A8}
+   {$Z4}
 
 TYPE
    XPLMChar   = AnsiChar;

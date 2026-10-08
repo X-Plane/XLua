@@ -56,7 +56,8 @@ INTERFACE
 
 USES
     XPLMDefs;
-   {$A4}
+   {$A8}
+   {$Z4}
 
 TYPE
    XPLMChar   = AnsiChar;
@@ -364,11 +365,11 @@ TYPE
 CONST
     { Globally unique identifier for X-Plane's Map window, used as the           }
     { mapToCreateLayerIn parameter in XPLMCreateMapLayer_t                       }
-   XPLM_MAP_USER_INTERFACE = 'XPLM_MAP_USER_INTERFACE';
+   XPLM_MAP_USER_INTERFACE: XPLMString = 'XPLM_MAP_USER_INTERFACE';
 
     { Globally unique identifier for X-Plane's Instructor Operator Station       }
     { window, used as the mapToCreateLayerIn parameter in XPLMCreateMapLayer_t   }
-   XPLM_MAP_IOS         = 'XPLM_MAP_IOS';
+   XPLM_MAP_IOS        : XPLMString = 'XPLM_MAP_IOS';
 
    {
     XPLMCreateMapLayer_t

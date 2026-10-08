@@ -234,9 +234,13 @@ local XPLMDeviceID = {
 ---@class _G
 --- This routine registers your callbacks for a built-in device. This returns a
 --- handle. If the returned handle is NULL, there was a problem interpreting your
---- input, most likely the struct size was wrong for your SDK version.
+--- input, most likely the struct size was wrong for your SDK version, or you have
+--- already customized this device.
 --- If the returned handle is not NULL, your callbacks will be called according to schedule
 --- as long as your plugin is not deactivated, or unloaded, or you call XPLMUnregisterAvionicsCallbacks().
+---
+--- Other plugins may customize the same device; each plugin's callbacks are called. If you already
+--- have a handle for the device from XPLMGetAvionicsHandle(), you get that same handle back.
 ---
 --- Note that you cannot register new callbacks for a device that is not a built-in
 --- one (for example a device that you have created, or a device another plugin
@@ -250,11 +254,17 @@ local XPLMDeviceID = {
 --- clicks and touchscreen calls to a device, but want to interact with its popup programmatically.
 --- This is equivalent to calling XPLMRegisterAvionicsCallbackEx() with NULL for all callbacks.
 ---
+--- The handle is yours: every plugin gets its own handle for a device, and you get the same one each
+--- time you call this. It stays valid until your plugin is unloaded, whatever other plugins do with
+--- the device. Only your plugin may use it: another plugin passing it to the Avionics Device API gets an
+--- error.
+---
 ---@field XPLMGetAvionicsHandle fun(inDeviceID: XPLMDeviceID): XPLMAvionicsID
 
 ---@class _G
 --- This routine unregisters your callbacks for a built-in device. You should only call this
 --- for handles you acquired from XPLMRegisterAvionicsCallbacksEx(). They will no longer be called.
+--- The handle stays valid, as if you had got it from XPLMGetAvionicsHandle().
 ---
 ---@field XPLMUnregisterAvionicsCallbacks fun(inAvionicsId: XPLMAvionicsID)
 
@@ -306,7 +316,7 @@ local XPLMDeviceID = {
 ---@class _G
 --- Creates a new cockpit device to be used in the 3D cockpit. You can call this at any time: if an aircraft referencing your device is loaded before your plugin, the simulator will make sure to retroactively map your display into it.
 ---
----             When you are done with the device, and at least before your plugin is unloaded, you should destroy the device using XPLMDestroyAvionics().
+---             When you are done with the device, and at least before your plugin is unloaded, you should destroy the device using XPLMDestroyAvionics(). Only your plugin may use the returned handle.
 ---
 ---@field XPLMCreateAvionicsEx fun(inParams: XPLMCreateAvionics_t): XPLMAvionicsID
 
@@ -340,15 +350,16 @@ local XPLMDeviceID = {
 ---
 ---@field XPLMAvionicsInjectScript fun(inAvionicsID: XPLMAvionicsID, inScript: string)
 
---- Handler invoked when the page in a browser-content-type avionics device calls xplane.<name>(arg). You receive the device, the argument serialised as a JSON string, and your refcon; return a JSON string (or NULL) that the JS Promise resolves to.
+--- Handler invoked when the page in a browser-content-type avionics device calls xplane.<name>(arg). You receive the device, the argument serialised as a JSON string, and your refcon. Return the JSON the JS Promise resolves to, and return it through XPLMReturnString: `return XPLMReturnString(json);`. Returning NULL, or any pointer that did not come from XPLMReturnString (a string literal, a static buffer, a std::string's c_str()), is a plugin error: X-Plane reports it to your error callback (see XPLMSetErrorCallback) and Log.txt, drops the result, and the Promise resolves to null. A string that is not valid JSON is reported the same way. To resolve the Promise to null on purpose, return XPLMReturnString("null"). From Lua, return the JSON string itself; the Lua bindings pass it through XPLMReturnString for you.
 ---@alias XPLMAvionicsBrowserCallback_f fun(inAvionicsID: XPLMAvionicsID, inJSON: string, inRefcon: any): string
 
 ---@class _G
 --- Registers a callback that the page running in a browser-content-type avionics
 --- device can invoke as xplane.<inName>(arg). The JS call returns a Promise
 --- that resolves to the value your XPLMAvionicsBrowserCallback_f returns (parsed
---- as JSON). Registering the same name again replaces the previous callback. Each
---- device has its own independent xplane.* namespace. Has no effect on non-browser
+--- as JSON). A name can only be registered once per device: registering it again
+--- is reported to your error callback and ignored, and the first registration
+--- stays. Each device has its own independent xplane.* namespace. Has no effect on non-browser
 --- devices.
 ---
 ---@field XPLMAvionicsAddBrowserFunction fun(inAvionicsID: XPLMAvionicsID, inName: string, inFunction: XPLMAvionicsBrowserCallback_f, inRefcon: any)
@@ -729,7 +740,7 @@ local XPLMWindowDecoration = {
 ---
 ---@field XPLMWindowInjectScript fun(inWindowID: XPLMWindowID, inScript: string)
 
---- Handler invoked when the page in a browser-content-type window calls xplane.<name>(arg). You receive the window, the argument serialised as a JSON string, and your refcon; return a JSON string (or NULL) that the JS Promise resolves to.
+--- Handler invoked when the page in a browser-content-type window calls xplane.<name>(arg). You receive the window, the argument serialised as a JSON string, and your refcon. Return the JSON the JS Promise resolves to, and return it through XPLMReturnString: `return XPLMReturnString(json);`. Returning NULL, or any pointer that did not come from XPLMReturnString (a string literal, a static buffer, a std::string's c_str()), is a plugin error: X-Plane reports it to your error callback (see XPLMSetErrorCallback) and Log.txt, drops the result, and the Promise resolves to null. A string that is not valid JSON is reported the same way. To resolve the Promise to null on purpose, return XPLMReturnString("null"). From Lua, return the JSON string itself; the Lua bindings pass it through XPLMReturnString for you.
 ---@alias XPLMBrowserCallback_f fun(inWindowID: XPLMWindowID, inJSON: string, inRefcon: any): string
 
 ---@class _G
@@ -738,8 +749,9 @@ local XPLMWindowDecoration = {
 --- resolves to the value your `XPLMBrowserCallback_f` returns (parsed as
 --- JSON -- see that callback's desc for the contract).
 ---
---- Multiple registrations against the same name on the same window
---- overwrite each other. Each window has its own independent `xplane.*`
+--- A name can only be registered once per window: registering it again is
+--- reported to your error callback and ignored, and the first registration
+--- stays. Each window has its own independent `xplane.*`
 --- namespace; functions registered on window A are not callable from
 --- window B.
 ---
@@ -1026,6 +1038,9 @@ local XPLMWindowPositioningMode = {
 --- This routine brings the window to the front of the Z-order for its layer.  Windows are brought to the
 --- front automatically when they are created. Beyond that, you should make sure you are front before
 --- handling mouse clicks.
+---
+--- You may only bring your own windows to the front; passing another plugin's window reports an error
+--- and does nothing.
 ---
 --- Note that this only brings your window to the front of its layer (XPLMWindowLayer).
 --- Thus, if you have a window in the floating window layer (xplm_WindowLayerFloatingWindows),
