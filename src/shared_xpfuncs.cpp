@@ -323,10 +323,16 @@ void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb)
 	assert(cb);
 	s_RegisteredCallbacks.emplace(cb);
 
-	if (s_RegisteredCallbacks.size() > 500)
+	// There is no limit on the number of callbacks. We only write a log line each time the count
+	// sets a new high-water mark at a multiple of 1000, to help find a script that leaks them.
+	static size_t s_high_water = 0;
+	size_t const count = s_RegisteredCallbacks.size();
+	if (count > s_high_water)
 	{
-		luaL_error(L, "%s has persisted more than 500 callbacks. Something appears to be wrong.",
-				   get_current_script_path(L).c_str());
+		s_high_water = count;
+		if (count % 1000 == 0)
+			log_message(nullptr, "%zu callbacks are now persisted. The last one is from %s.\n",
+						count, get_current_script_path(L).generic_string().c_str());
 	}
 }
 
