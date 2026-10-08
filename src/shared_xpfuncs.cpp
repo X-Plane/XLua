@@ -164,6 +164,10 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 		return nullptr;
 	}
 
+	// A dead interpreter keeps its callbacks registered with XPLM, but runs no Lua code.
+	if (xlua_vm_is_dead(cb->L))
+		return nullptr;
+
 	if (callbackKey.empty())
 	{
 		log_message(cb->L, "ERROR: Anonymous closure specified.\n");
@@ -286,6 +290,7 @@ struct xlua_vm_state
 	lua_State*	L;
 	cb_set		callbacks;		// The persisted callback records of this interpreter.
 	size_t		high_water = 0;	// The largest size of callbacks so far.
+	bool		dead = false;	// True if no callback must run Lua code in this interpreter.
 };
 
 static std::unordered_set<notify_cb_t const*> s_live_callbacks;
@@ -345,6 +350,19 @@ static xlua_vm_state* vm_state(lua_State* L, bool create)
 void xlua_vm_state_attach(lua_State* L)
 {
 	vm_state(L, true);
+}
+
+void xlua_vm_set_dead(lua_State* L)
+{
+	vm_state(L, true)->dead = true;
+	// The timers of a dead interpreter can never run, so remove them now.
+	xlua_remove_timers_for_state(L);
+}
+
+bool xlua_vm_is_dead(lua_State* L)
+{
+	xlua_vm_state const* vm = vm_state(L, false);
+	return vm != nullptr && vm->dead;
 }
 
 bool xlua_is_callback_valid(notify_cb_t const* probe_cb)

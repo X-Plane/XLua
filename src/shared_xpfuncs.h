@@ -104,6 +104,12 @@ void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb);
 // keep any other per-interpreter data that the state must clean up.
 void xlua_vm_state_attach(lua_State* L);
 
+// Mark L as dead. Its callbacks stay registered, so the refcons that XPLM holds stay valid, but no
+// callback runs Lua code in L after this. Its timers are removed. Use this for a module that failed to
+// start: it cannot run, but its interpreter must stay open until the plugin stops.
+void xlua_vm_set_dead(lua_State* L);
+bool xlua_vm_is_dead(lua_State* L);
+
 // Release the persisted callbacks of L now. lua_close also does this.
 void xlua_callback_cleanup(lua_State* L);
 bool xlua_is_callback_valid(notify_cb_t const* probe_cb);

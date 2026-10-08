@@ -71,6 +71,8 @@ struct window_ctx final {
 void cb_draw(XPLMWindowID win, void* refcon) {
     auto* ctx = static_cast<window_ctx*>(refcon);
     if (ctx == nullptr) return;
+    // This draw calls Lua directly, not through setup_lua_callback, so it must do the dead check itself.
+    if (xlua_vm_is_dead(ctx->L)) return;
 
     int left, top, right, bottom;
     XPLMGetWindowGeometry(win, &left, &top, &right, &bottom);

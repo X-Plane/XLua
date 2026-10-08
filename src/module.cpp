@@ -244,20 +244,30 @@ bool module::fail_ctor(int errcode, char const* what)
 
 	if (m_interp != nullptr)
 	{
-		// Append before lua_close - the string is owned by the interpreter.
 		if (char const* lua_error = lua_tostring(m_interp, -1))
 		{
 			message += ": ";
 			message += lua_error;
 		}
-		lua_close(m_interp);
-		m_interp = nullptr;
 	}
 
 	message += "\n";
 	XPLMDebugString(message.c_str());
 	printf("%s", message.c_str());
+
+	if (m_interp != nullptr)
+		mute();
 	return true;
+}
+
+void module::mute(void)
+{
+	// Do not close the interpreter. The script can have registered datarefs, commands and other
+	// callbacks before it failed, and XPLM holds refcons that point into this interpreter. They must
+	// stay valid until the plugin stops. A dead interpreter runs no more Lua code.
+	xlua_vm_set_dead(m_interp);
+	log_message(nullptr, "'%s' did not start. Its datarefs and commands stay registered, but do nothing until the scripts unload.\n",
+				m_log_path.c_str());
 }
 
 module::module(
@@ -427,7 +437,13 @@ module::module(
 		// To completely duplicate the normal C API, add XPluginStart etc.
 		if (!(_XPluginStart() && _XPluginEnable()))
 		{
-			shutdown_lua();
+			// Run the disable/stop hooks now, as before. Then mute the module.
+			if (m_enabled)
+			{
+				_XPluginDisable();
+			}
+			_XPluginStop();
+			mute();
 		}
 	}
 }
@@ -528,7 +544,7 @@ void		module::post_replay()
 
 void module::do_callout(char const* f)
 {
-	if (m_interp == nullptr || !m_enabled)
+	if (m_interp == nullptr || !m_enabled || xlua_vm_is_dead(m_interp))
 		return;
 
 	if (m_xlua_compat[0] == 1)
@@ -559,7 +575,7 @@ void module::do_callout(char const* f)
 
 void module::_XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void* inParam)
 {
-	if (m_interp == nullptr || !m_enabled || m_xlua_compat[0] < 2)
+	if (m_interp == nullptr || !m_enabled || m_xlua_compat[0] < 2 || xlua_vm_is_dead(m_interp))
 		return;
 
 	if (m_xlua_compat[0] == 1)
