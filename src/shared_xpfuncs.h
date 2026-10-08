@@ -9,7 +9,7 @@ extern "C" {
 #include <cstring>
 #include <string>
 #include <algorithm>
-#include <map>
+#include <array>
 #include <memory>
 #include <optional>
 #include <filesystem>
@@ -19,6 +19,13 @@ extern "C" {
 // the stack - since this is type agnostic and takes a strong reference it (1) prevents the closure from being
 // garbage collected and (2) works with closures.
 
+// The most callbacks that share one refcon in one API. XPLMCreateAvionics_t has 14. The generated glue asserts that
+// its slots fit. Do not take this from generated code: the mobile build compiles this file without the glue.
+constexpr int kMaxCallbackSlots = 14;
+
+// The slot of the callback in a record that has only one. Each hand-written record has only one.
+constexpr int kSlotOnly = 0;
+
 class notify_cb_t
 {
 public:
@@ -27,8 +34,12 @@ public:
 	~notify_cb_t();
 
 	int get_capture(void) const { return origRefconRegIndex; }
+	// True if the record has no refcon value and no closure.
+	bool is_empty(void) const;
 	lua_State* L = nullptr;
-	std::map<std::string, int> callbacks;       // Map from function definition to registry index for the callback;
+	// The registry index of the closure in each slot, or LUA_REFNIL. The generator gives each callback a slot: its
+	// position among the callbacks that share its refcon. The thunk for a callback knows its slot.
+	std::array<int, kMaxCallbackSlots> slots;
 
 	static constexpr int kNeverPersist = 0;
 
@@ -42,11 +53,13 @@ std::filesystem::path get_current_script_path(lua_State* L);
 
 int log_message(lua_State *L, char const* format, ...);
 
-std::shared_ptr<notify_cb_t> wrap_lua_func_no_userref(lua_State* L, int idx, std::string const callbackKey);
-lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackKey);
+std::shared_ptr<notify_cb_t> wrap_lua_func_no_userref(lua_State* L, int idx, std::string const& cb_typename);
+lua_State* setup_lua_callback(notify_cb_t const* cb, int slot);
 std::shared_ptr<notify_cb_t> capture_lua_value(lua_State* L, int idx);
 
-bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb, int func_stack_idx, bool optional, std::string const& cb_typename);
+// Store the function at func_stack_idx (or nil, if optional) in the given slot. cb_typename is only for error messages.
+// Returns true if the slot now has a function.
+bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb, int func_stack_idx, bool optional, int slot, std::string const& cb_typename);
 void xlua_remove_callback(std::shared_ptr<notify_cb_t> cb);
 
 // Raw-pointer overload for callback bodies, which only hold the cast void* refcon

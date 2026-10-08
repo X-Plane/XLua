@@ -124,12 +124,15 @@ void RegEnum_XPLMDeviceID(lua_State* L)
 	lua_setglobal(L, "XPLMDeviceID");
 }
 
+extern "C++" {
+template <int kSlot>
 static int cb_XPLMAvionicsCallback_f(XPLMDeviceID inDeviceID, int inIsBefore, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsCallback_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -142,13 +145,17 @@ static int cb_XPLMAvionicsCallback_f(XPLMDeviceID inDeviceID, int inIsBefore, vo
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static int cb_XPLMAvionicsMouse_f(int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsMouse_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -161,13 +168,17 @@ static int cb_XPLMAvionicsMouse_f(int x, int y, XPLMMouseStatus inMouse, void* i
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static int cb_XPLMAvionicsMouseWheel_f(int x, int y, int wheel, int clicks, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsMouseWheel_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -180,13 +191,17 @@ static int cb_XPLMAvionicsMouseWheel_f(int x, int y, int wheel, int clicks, void
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static XPLMCursorStatus cb_XPLMAvionicsCursor_f(int x, int y, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	XPLMCursorStatus res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsCursor_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -202,13 +217,17 @@ static XPLMCursorStatus cb_XPLMAvionicsCursor_f(int x, int y, void* inRefcon)
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static int cb_XPLMAvionicsKeyboard_f(char inKey, XPLMKeyFlags inFlags, char inVirtualKey, void* inRefcon, int losingFocus)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsKeyboard_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -221,6 +240,7 @@ static int cb_XPLMAvionicsKeyboard_f(char inKey, XPLMKeyFlags inFlags, char inVi
 
 	return res;
 }
+} // extern "C++"
 
 XPLMAvionicsID* Make_XPLMAvionicsID(lua_State* L, XPLMAvionicsID const& init)
 {
@@ -298,14 +318,15 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "drawCallbackBefore");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "drawCallbackBefore"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 0, "drawCallbackBefore"))
 	{
 		out.drawCallbackBefore = [](XPLMDeviceID inDeviceID, int inIsBefore, void* inRefcon)
 		{
+			static_assert(0 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "drawCallbackBefore");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 0);
 			if (L)
 			{
 
@@ -322,14 +343,15 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "drawCallbackAfter");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "drawCallbackAfter"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 1, "drawCallbackAfter"))
 	{
 		out.drawCallbackAfter = [](XPLMDeviceID inDeviceID, int inIsBefore, void* inRefcon)
 		{
+			static_assert(1 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "drawCallbackAfter");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 1);
 			if (L)
 			{
 
@@ -346,14 +368,15 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelClickCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "bezelClickCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 2, "bezelClickCallback"))
 	{
 		out.bezelClickCallback = [](int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
+			static_assert(2 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "bezelClickCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 2);
 			if (L)
 			{
 
@@ -370,14 +393,15 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelRightClickCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "bezelRightClickCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 3, "bezelRightClickCallback"))
 	{
 		out.bezelRightClickCallback = [](int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
+			static_assert(3 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "bezelRightClickCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 3);
 			if (L)
 			{
 
@@ -394,14 +418,15 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelScrollCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "bezelScrollCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 4, "bezelScrollCallback"))
 	{
 		out.bezelScrollCallback = [](int x, int y, int wheel, int clicks, void* inRefcon)
 		{
+			static_assert(4 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "bezelScrollCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 4);
 			if (L)
 			{
 
@@ -418,14 +443,15 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelCursorCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "bezelCursorCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 5, "bezelCursorCallback"))
 	{
 		out.bezelCursorCallback = [](int x, int y, void* inRefcon)
 		{
+			static_assert(5 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			XPLMCursorStatus res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "bezelCursorCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 5);
 			if (L)
 			{
 
@@ -445,14 +471,15 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "screenTouchCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "screenTouchCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 6, "screenTouchCallback"))
 	{
 		out.screenTouchCallback = [](int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
+			static_assert(6 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "screenTouchCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 6);
 			if (L)
 			{
 
@@ -469,14 +496,15 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "screenRightTouchCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "screenRightTouchCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 7, "screenRightTouchCallback"))
 	{
 		out.screenRightTouchCallback = [](int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
+			static_assert(7 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "screenRightTouchCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 7);
 			if (L)
 			{
 
@@ -493,14 +521,15 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "screenScrollCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "screenScrollCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 8, "screenScrollCallback"))
 	{
 		out.screenScrollCallback = [](int x, int y, int wheel, int clicks, void* inRefcon)
 		{
+			static_assert(8 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "screenScrollCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 8);
 			if (L)
 			{
 
@@ -517,14 +546,15 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "screenCursorCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "screenCursorCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 9, "screenCursorCallback"))
 	{
 		out.screenCursorCallback = [](int x, int y, void* inRefcon)
 		{
+			static_assert(9 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			XPLMCursorStatus res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "screenCursorCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 9);
 			if (L)
 			{
 
@@ -544,9 +574,9 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "keyboardCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMAvionicsKeyboard_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 10, "XPLMAvionicsKeyboard_f"))
 	{
-		out.keyboardCallback = cb_XPLMAvionicsKeyboard_f;
+		out.keyboardCallback = &cb_XPLMAvionicsKeyboard_f<10>;
 	}
 	lua_pop(L, 1);
 
@@ -636,11 +666,14 @@ int XLuaUnregisterAvionicsCallbacks(lua_State* L)
 	return 0;
 }
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMAvionicsScreenCallback_f(void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsScreenCallback_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -649,12 +682,16 @@ static void cb_XPLMAvionicsScreenCallback_f(void* inRefcon)
 		}
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMAvionicsBezelCallback_f(float inAmbiantR, float inAmbiantG, float inAmbiantB, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsBezelCallback_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -663,13 +700,17 @@ static void cb_XPLMAvionicsBezelCallback_f(float inAmbiantR, float inAmbiantG, f
 		}
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static float cb_XPLMAvionicsBrightness_f(float inRheoValue, float inAmbiantBrightness, float inBusVoltsRatio, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	float res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsBrightness_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -685,12 +726,16 @@ static float cb_XPLMAvionicsBrightness_f(float inRheoValue, float inAmbiantBrigh
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMAvionicsBrowserLoadFinished_f(XPLMAvionicsID inAvionics, const char * inURL, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsBrowserLoadFinished_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMAvionicsID(L, inAvionics);
@@ -702,12 +747,16 @@ static void cb_XPLMAvionicsBrowserLoadFinished_f(XPLMAvionicsID inAvionics, cons
 		luaL_unref(L, LUA_REGISTRYINDEX, inAvionics_typed_ref);
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMAvionicsBrowserLoadError_f(XPLMAvionicsID inAvionics, const char * inURL, const char * inError, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsBrowserLoadError_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMAvionicsID(L, inAvionics);
@@ -719,6 +768,7 @@ static void cb_XPLMAvionicsBrowserLoadError_f(XPLMAvionicsID inAvionics, const c
 		luaL_unref(L, LUA_REGISTRYINDEX, inAvionics_typed_ref);
 	}
 }
+} // extern "C++"
 /*
  * XPLMCreateAvionics_t
  * 
@@ -790,28 +840,29 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelDrawCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMAvionicsBezelCallback_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 0, "XPLMAvionicsBezelCallback_f"))
 	{
-		out.bezelDrawCallback = cb_XPLMAvionicsBezelCallback_f;
+		out.bezelDrawCallback = &cb_XPLMAvionicsBezelCallback_f<0>;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "drawCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMAvionicsScreenCallback_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 1, "XPLMAvionicsScreenCallback_f"))
 	{
-		out.drawCallback = cb_XPLMAvionicsScreenCallback_f;
+		out.drawCallback = &cb_XPLMAvionicsScreenCallback_f<1>;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelClickCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "bezelClickCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 2, "bezelClickCallback"))
 	{
 		out.bezelClickCallback = [](int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
+			static_assert(2 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "bezelClickCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 2);
 			if (L)
 			{
 
@@ -828,14 +879,15 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelRightClickCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "bezelRightClickCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 3, "bezelRightClickCallback"))
 	{
 		out.bezelRightClickCallback = [](int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
+			static_assert(3 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "bezelRightClickCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 3);
 			if (L)
 			{
 
@@ -852,14 +904,15 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelScrollCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "bezelScrollCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 4, "bezelScrollCallback"))
 	{
 		out.bezelScrollCallback = [](int x, int y, int wheel, int clicks, void* inRefcon)
 		{
+			static_assert(4 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "bezelScrollCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 4);
 			if (L)
 			{
 
@@ -876,14 +929,15 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "bezelCursorCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "bezelCursorCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 5, "bezelCursorCallback"))
 	{
 		out.bezelCursorCallback = [](int x, int y, void* inRefcon)
 		{
+			static_assert(5 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			XPLMCursorStatus res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "bezelCursorCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 5);
 			if (L)
 			{
 
@@ -903,14 +957,15 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "screenTouchCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "screenTouchCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 6, "screenTouchCallback"))
 	{
 		out.screenTouchCallback = [](int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
+			static_assert(6 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "screenTouchCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 6);
 			if (L)
 			{
 
@@ -927,14 +982,15 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "screenRightTouchCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "screenRightTouchCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 7, "screenRightTouchCallback"))
 	{
 		out.screenRightTouchCallback = [](int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
+			static_assert(7 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "screenRightTouchCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 7);
 			if (L)
 			{
 
@@ -951,14 +1007,15 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "screenScrollCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "screenScrollCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 8, "screenScrollCallback"))
 	{
 		out.screenScrollCallback = [](int x, int y, int wheel, int clicks, void* inRefcon)
 		{
+			static_assert(8 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "screenScrollCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 8);
 			if (L)
 			{
 
@@ -975,14 +1032,15 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "screenCursorCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "screenCursorCallback"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 9, "screenCursorCallback"))
 	{
 		out.screenCursorCallback = [](int x, int y, void* inRefcon)
 		{
+			static_assert(9 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			XPLMCursorStatus res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "screenCursorCallback");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 9);
 			if (L)
 			{
 
@@ -1002,16 +1060,16 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "keyboardCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMAvionicsKeyboard_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 10, "XPLMAvionicsKeyboard_f"))
 	{
-		out.keyboardCallback = cb_XPLMAvionicsKeyboard_f;
+		out.keyboardCallback = &cb_XPLMAvionicsKeyboard_f<10>;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "brightnessCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMAvionicsBrightness_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 11, "XPLMAvionicsBrightness_f"))
 	{
-		out.brightnessCallback = cb_XPLMAvionicsBrightness_f;
+		out.brightnessCallback = &cb_XPLMAvionicsBrightness_f<11>;
 	}
 	lua_pop(L, 1);
 
@@ -1044,16 +1102,16 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "browserLoadFinishedFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMAvionicsBrowserLoadFinished_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 12, "XPLMAvionicsBrowserLoadFinished_f"))
 	{
-		out.browserLoadFinishedFunc = cb_XPLMAvionicsBrowserLoadFinished_f;
+		out.browserLoadFinishedFunc = &cb_XPLMAvionicsBrowserLoadFinished_f<12>;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "browserLoadErrorFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMAvionicsBrowserLoadError_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 13, "XPLMAvionicsBrowserLoadError_f"))
 	{
-		out.browserLoadErrorFunc = cb_XPLMAvionicsBrowserLoadError_f;
+		out.browserLoadErrorFunc = &cb_XPLMAvionicsBrowserLoadError_f<13>;
 	}
 	lua_pop(L, 1);
 
@@ -1213,12 +1271,15 @@ int XLuaAvionicsInjectScript(lua_State* L)
 	return 0;
 }
 
+extern "C++" {
+template <int kSlot>
 static const char * cb_XPLMAvionicsBrowserCallback_f(XPLMAvionicsID inAvionicsID, const char * inJSON, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	const char * res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMAvionicsBrowserCallback_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMAvionicsID(L, inAvionicsID);
@@ -1236,8 +1297,12 @@ static const char * cb_XPLMAvionicsBrowserCallback_f(XPLMAvionicsID inAvionicsID
 		luaL_unref(L, LUA_REGISTRYINDEX, inAvionicsID_typed_ref);
 	}
 
+	if (res == nullptr)
+		res = XPLMReturnString("null");
+
 	return res;
 }
+} // extern "C++"
 
 int XLuaAvionicsAddBrowserFunction(lua_State* L)
 {
@@ -1249,10 +1314,13 @@ int XLuaAvionicsAddBrowserFunction(lua_State* L)
 	const char * inName = xlua_checkstring(L, 2);
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 4);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 3, false, "XPLMAvionicsBrowserCallback_f");
+	wrap_next_lua_func(cb_capture_0, 3, false, 0, "XPLMAvionicsBrowserCallback_f");
+	if (cb_capture_0->is_empty())
+		cb_capture_0.reset();
+	else
+		xlua_persist_userref(L, cb_capture_0);
 
-	XPLMAvionicsAddBrowserFunction(inAvionicsID, inName, cb_XPLMAvionicsBrowserCallback_f, cb_capture_0.get());
+	XPLMAvionicsAddBrowserFunction(inAvionicsID, inName, &cb_XPLMAvionicsBrowserCallback_f<0>, cb_capture_0.get());
 
 	return 0;
 }
@@ -1651,11 +1719,14 @@ void RegType_XPLMWindowID(lua_State* L)
 	lua_pop(L, 1);
 }
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMDrawWindow_f(XPLMWindowID inWindowID, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMDrawWindow_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMWindowID(L, inWindowID);
@@ -1667,12 +1738,16 @@ static void cb_XPLMDrawWindow_f(XPLMWindowID inWindowID, void* inRefcon)
 		luaL_unref(L, LUA_REGISTRYINDEX, inWindowID_typed_ref);
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMHandleKey_f(XPLMWindowID inWindowID, char inKey, XPLMKeyFlags inFlags, char inVirtualKey, void* inRefcon, int losingFocus)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMHandleKey_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMWindowID(L, inWindowID);
@@ -1684,13 +1759,17 @@ static void cb_XPLMHandleKey_f(XPLMWindowID inWindowID, char inKey, XPLMKeyFlags
 		luaL_unref(L, LUA_REGISTRYINDEX, inWindowID_typed_ref);
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static int cb_XPLMHandleMouseClick_f(XPLMWindowID inWindowID, int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMHandleMouseClick_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMWindowID(L, inWindowID);
@@ -1709,13 +1788,17 @@ static int cb_XPLMHandleMouseClick_f(XPLMWindowID inWindowID, int x, int y, XPLM
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static XPLMCursorStatus cb_XPLMHandleCursor_f(XPLMWindowID inWindowID, int x, int y, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	XPLMCursorStatus res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMHandleCursor_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMWindowID(L, inWindowID);
@@ -1734,13 +1817,17 @@ static XPLMCursorStatus cb_XPLMHandleCursor_f(XPLMWindowID inWindowID, int x, in
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static int cb_XPLMHandleMouseWheel_f(XPLMWindowID inWindowID, int x, int y, int wheel, int clicks, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMHandleMouseWheel_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMWindowID(L, inWindowID);
@@ -1756,12 +1843,16 @@ static int cb_XPLMHandleMouseWheel_f(XPLMWindowID inWindowID, int x, int y, int 
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMBrowserLoadFinished_f(XPLMWindowID inWindow, const char * inURL, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMBrowserLoadFinished_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMWindowID(L, inWindow);
@@ -1773,12 +1864,16 @@ static void cb_XPLMBrowserLoadFinished_f(XPLMWindowID inWindow, const char * inU
 		luaL_unref(L, LUA_REGISTRYINDEX, inWindow_typed_ref);
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMBrowserLoadError_f(XPLMWindowID inWindow, const char * inURL, const char * inError, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMBrowserLoadError_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMWindowID(L, inWindow);
@@ -1790,6 +1885,7 @@ static void cb_XPLMBrowserLoadError_f(XPLMWindowID inWindow, const char * inURL,
 		luaL_unref(L, LUA_REGISTRYINDEX, inWindow_typed_ref);
 	}
 }
+} // extern "C++"
 
 void RegEnum_XPLMWindowLayer(lua_State* L)
 {
@@ -1875,21 +1971,22 @@ XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "drawWindowFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMDrawWindow_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 0, "XPLMDrawWindow_f"))
 	{
-		out.drawWindowFunc = cb_XPLMDrawWindow_f;
+		out.drawWindowFunc = &cb_XPLMDrawWindow_f<0>;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "handleMouseClickFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "handleMouseClickFunc"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 1, "handleMouseClickFunc"))
 	{
 		out.handleMouseClickFunc = [](XPLMWindowID inWindowID, int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
+			static_assert(1 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "handleMouseClickFunc");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 1);
 			if (L)
 			{
 				Make_XPLMWindowID(L, inWindowID);
@@ -1912,23 +2009,23 @@ XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "handleKeyFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMHandleKey_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 2, "XPLMHandleKey_f"))
 	{
-		out.handleKeyFunc = cb_XPLMHandleKey_f;
+		out.handleKeyFunc = &cb_XPLMHandleKey_f<2>;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "handleCursorFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMHandleCursor_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 3, "XPLMHandleCursor_f"))
 	{
-		out.handleCursorFunc = cb_XPLMHandleCursor_f;
+		out.handleCursorFunc = &cb_XPLMHandleCursor_f<3>;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "handleMouseWheelFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMHandleMouseWheel_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 4, "XPLMHandleMouseWheel_f"))
 	{
-		out.handleMouseWheelFunc = cb_XPLMHandleMouseWheel_f;
+		out.handleMouseWheelFunc = &cb_XPLMHandleMouseWheel_f<4>;
 	}
 	lua_pop(L, 1);
 
@@ -1947,14 +2044,15 @@ XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "handleRightClickFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "handleRightClickFunc"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 5, "handleRightClickFunc"))
 	{
 		out.handleRightClickFunc = [](XPLMWindowID inWindowID, int x, int y, XPLMMouseStatus inMouse, void* inRefcon)
 		{
+			static_assert(5 < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 			int res = {};
 			notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-			lua_State* L = setup_lua_callback(inRefcon_cb, "handleRightClickFunc");
+			lua_State* L = setup_lua_callback(inRefcon_cb, 5);
 			if (L)
 			{
 				Make_XPLMWindowID(L, inWindowID);
@@ -1984,16 +2082,16 @@ XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "browserLoadFinishedFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMBrowserLoadFinished_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 6, "XPLMBrowserLoadFinished_f"))
 	{
-		out.browserLoadFinishedFunc = cb_XPLMBrowserLoadFinished_f;
+		out.browserLoadFinishedFunc = &cb_XPLMBrowserLoadFinished_f<6>;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "browserLoadErrorFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMBrowserLoadError_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 7, "XPLMBrowserLoadError_f"))
 	{
-		out.browserLoadErrorFunc = cb_XPLMBrowserLoadError_f;
+		out.browserLoadErrorFunc = &cb_XPLMBrowserLoadError_f<7>;
 	}
 	lua_pop(L, 1);
 
@@ -2141,12 +2239,15 @@ int XLuaWindowInjectScript(lua_State* L)
 	return 0;
 }
 
+extern "C++" {
+template <int kSlot>
 static const char * cb_XPLMBrowserCallback_f(XPLMWindowID inWindowID, const char * inJSON, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	const char * res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMBrowserCallback_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMWindowID(L, inWindowID);
@@ -2164,8 +2265,12 @@ static const char * cb_XPLMBrowserCallback_f(XPLMWindowID inWindowID, const char
 		luaL_unref(L, LUA_REGISTRYINDEX, inWindowID_typed_ref);
 	}
 
+	if (res == nullptr)
+		res = XPLMReturnString("null");
+
 	return res;
 }
+} // extern "C++"
 
 int XLuaWindowAddBrowserFunction(lua_State* L)
 {
@@ -2177,10 +2282,13 @@ int XLuaWindowAddBrowserFunction(lua_State* L)
 	const char * inName = xlua_checkstring(L, 2);
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 4);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 3, false, "XPLMBrowserCallback_f");
+	wrap_next_lua_func(cb_capture_0, 3, false, 0, "XPLMBrowserCallback_f");
+	if (cb_capture_0->is_empty())
+		cb_capture_0.reset();
+	else
+		xlua_persist_userref(L, cb_capture_0);
 
-	XPLMWindowAddBrowserFunction(inWindowID, inName, cb_XPLMBrowserCallback_f, cb_capture_0.get());
+	XPLMWindowAddBrowserFunction(inWindowID, inName, &cb_XPLMBrowserCallback_f<0>, cb_capture_0.get());
 
 	return 0;
 }
@@ -2233,11 +2341,14 @@ int XLuaGetScreenBoundsGlobal(lua_State* L)
 	return 1;
 }
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMReceiveMonitorBoundsGlobal_f(int inMonitorIndex, int inLeftBx, int inTopBx, int inRightBx, int inBottomBx, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMReceiveMonitorBoundsGlobal_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -2246,25 +2357,33 @@ static void cb_XPLMReceiveMonitorBoundsGlobal_f(int inMonitorIndex, int inLeftBx
 		}
 	}
 }
+} // extern "C++"
 
 int XLuaGetAllMonitorBoundsGlobal(lua_State* L)
 {
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 2);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 1, false, "XPLMReceiveMonitorBoundsGlobal_f");
+	wrap_next_lua_func(cb_capture_0, 1, false, 0, "XPLMReceiveMonitorBoundsGlobal_f");
+	if (cb_capture_0->is_empty())
+		cb_capture_0.reset();
+	else
+		xlua_persist_userref(L, cb_capture_0);
 
-	XPLMGetAllMonitorBoundsGlobal(cb_XPLMReceiveMonitorBoundsGlobal_f, cb_capture_0.get());
-	xlua_remove_callback(cb_capture_0);
+	XPLMGetAllMonitorBoundsGlobal(&cb_XPLMReceiveMonitorBoundsGlobal_f<0>, cb_capture_0.get());
+	if (cb_capture_0)
+		xlua_remove_callback(cb_capture_0);
 
 	return 0;
 }
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMReceiveMonitorBoundsOS_f(int inMonitorIndex, int inLeftPx, int inTopPx, int inRightPx, int inBottomPx, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMReceiveMonitorBoundsOS_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -2273,16 +2392,21 @@ static void cb_XPLMReceiveMonitorBoundsOS_f(int inMonitorIndex, int inLeftPx, in
 		}
 	}
 }
+} // extern "C++"
 
 int XLuaGetAllMonitorBoundsOS(lua_State* L)
 {
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 2);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 1, false, "XPLMReceiveMonitorBoundsOS_f");
+	wrap_next_lua_func(cb_capture_0, 1, false, 0, "XPLMReceiveMonitorBoundsOS_f");
+	if (cb_capture_0->is_empty())
+		cb_capture_0.reset();
+	else
+		xlua_persist_userref(L, cb_capture_0);
 
-	XPLMGetAllMonitorBoundsOS(cb_XPLMReceiveMonitorBoundsOS_f, cb_capture_0.get());
-	xlua_remove_callback(cb_capture_0);
+	XPLMGetAllMonitorBoundsOS(&cb_XPLMReceiveMonitorBoundsOS_f<0>, cb_capture_0.get());
+	if (cb_capture_0)
+		xlua_remove_callback(cb_capture_0);
 
 	return 0;
 }

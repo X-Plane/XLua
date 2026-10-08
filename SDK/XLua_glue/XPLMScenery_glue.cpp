@@ -592,11 +592,14 @@ int MakeXPLMDrawInfoDouble_t(lua_State* L)
  *
  */
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMObjectLoaded_f(XPLMObjectRef inObject, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMObjectLoaded_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMObjectRef(L, inObject);
@@ -609,6 +612,7 @@ static void cb_XPLMObjectLoaded_f(XPLMObjectRef inObject, void* inRefcon)
 	}
 	xlua_remove_callback(inRefcon_cb);
 }
+} // extern "C++"
 
 int XLuaLoadObject(lua_State* L)
 {
@@ -632,10 +636,13 @@ int XLuaLoadObjectAsync(lua_State* L)
 	const char * inPath = xlua_checkstring(L, 1);
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 3);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 2, false, "XPLMObjectLoaded_f");
+	wrap_next_lua_func(cb_capture_0, 2, false, 0, "XPLMObjectLoaded_f");
+	if (cb_capture_0->is_empty())
+		cb_capture_0.reset();
+	else
+		xlua_persist_userref(L, cb_capture_0);
 
-	XPLMLoadObjectAsync(inPath, cb_XPLMObjectLoaded_f, cb_capture_0.get());
+	XPLMLoadObjectAsync(inPath, &cb_XPLMObjectLoaded_f<0>, cb_capture_0.get());
 
 	return 0;
 }
@@ -653,11 +660,14 @@ int XLuaUnloadObject(lua_State* L)
 	return 0;
 }
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMLibraryEnumerator_f(const char * inFilePath, void* inRef)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRef_cb = static_cast<notify_cb_t*>(inRef);
 
-	lua_State* L = setup_lua_callback(inRef_cb, "XPLMLibraryEnumerator_f");
+	lua_State* L = setup_lua_callback(inRef_cb, kSlot);
 	if (L)
 	{
 
@@ -666,6 +676,7 @@ static void cb_XPLMLibraryEnumerator_f(const char * inFilePath, void* inRef)
 		}
 	}
 }
+} // extern "C++"
 
 int XLuaLookupObjects(lua_State* L)
 {
@@ -674,12 +685,16 @@ int XLuaLookupObjects(lua_State* L)
 	float inLongitude = xlua_checknumber(L, 3);
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 5);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 4, false, "XPLMLibraryEnumerator_f");
+	wrap_next_lua_func(cb_capture_0, 4, false, 0, "XPLMLibraryEnumerator_f");
+	if (cb_capture_0->is_empty())
+		cb_capture_0.reset();
+	else
+		xlua_persist_userref(L, cb_capture_0);
 
-	int res = XPLMLookupObjects(inPath, inLatitude, inLongitude, cb_XPLMLibraryEnumerator_f, cb_capture_0.get());
+	int res = XPLMLookupObjects(inPath, inLatitude, inLongitude, &cb_XPLMLibraryEnumerator_f<0>, cb_capture_0.get());
 	lua_pushinteger(L, res);
-	xlua_remove_callback(cb_capture_0);
+	if (cb_capture_0)
+		xlua_remove_callback(cb_capture_0);
 
 	return 1;
 }

@@ -71,12 +71,12 @@ xlua_timer* xlua_find_timer(lua_State* L, xlua_timer_f func, std::shared_ptr<not
 	for (auto& t : s_timers)
 	{
 		if (t.m_func == func &&
-			    ref->callbacks.contains(kTimerCallbackSig) &&
-			t.m_ref->callbacks.contains(kTimerCallbackSig)
+			    ref->slots[kSlotOnly] != LUA_REFNIL &&
+			t.m_ref->slots[kSlotOnly] != LUA_REFNIL
 			)
 		{
-			lua_rawgeti(L, LUA_REGISTRYINDEX, ref->callbacks.at(kTimerCallbackSig));
-			lua_rawgeti(L, LUA_REGISTRYINDEX, t.m_ref->callbacks.at(kTimerCallbackSig));
+			lua_rawgeti(L, LUA_REGISTRYINDEX, ref->slots[kSlotOnly]);
+			lua_rawgeti(L, LUA_REGISTRYINDEX, t.m_ref->slots[kSlotOnly]);
 			bool match = lua_equal(L, -1, -2);
 			lua_pop(L, 2);
 
@@ -256,7 +256,7 @@ int find_debug_proc(lua_State* L)
 
 void timer_callback(std::shared_ptr<notify_cb_t> ref)
 {
-	lua_State* L = setup_lua_callback(ref.get(), kTimerCallbackSig);
+	lua_State* L = setup_lua_callback(ref.get(), kSlotOnly);
 	if (L)
 	{
 		fmt_pcall_stdvars(L, find_debug_proc(L), false, "");
@@ -269,7 +269,7 @@ void timer_callback(std::shared_ptr<notify_cb_t> ref)
 extern "C" int XLuaCreateTimer(lua_State* L)
 {
 	std::shared_ptr<notify_cb_t> timer_cb = std::make_shared<notify_cb_t>(L, 0);
-	if (!wrap_next_lua_func(timer_cb, -1, false, kTimerCallbackSig))
+	if (!wrap_next_lua_func(timer_cb, -1, false, kSlotOnly, kTimerCallbackSig))
 	{
 		return 0;
 	}
@@ -284,7 +284,7 @@ extern "C" int XLuaCreateTimer(lua_State* L)
 extern "C" int XLuaFindTimer(lua_State* L)
 {
 	std::shared_ptr<notify_cb_t> timer_cb = std::make_shared<notify_cb_t>(L, 0);
-	wrap_next_lua_func(timer_cb, -1, false, kTimerCallbackSig);
+	wrap_next_lua_func(timer_cb, -1, false, kSlotOnly, kTimerCallbackSig);
 
 	xlua_timer* timer = xlua_find_timer(L, timer_callback, timer_cb);
 	if (timer == nullptr)

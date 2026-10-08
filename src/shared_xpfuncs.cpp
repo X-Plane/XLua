@@ -21,6 +21,7 @@ static std::unordered_set<notify_cb_t const*>& s_live_callbacks = *new std::unor
 notify_cb_t::notify_cb_t(lua_State* inL, int s) : L(inL), origRefconRegIndex(s)
 {
 	s_live_callbacks.insert(this);
+	slots.fill(LUA_REFNIL);
 
 	// This will normally be a return from a luaL_ref call, always 0 or higher. However, if the refcon is nil then
 	// luaL_ref returns LUA_REFNIL. We can't have all these mapping onto each other.
@@ -49,7 +50,7 @@ notify_cb_t::~notify_cb_t()
 		}
 
 		// Un-pin all functions.
-		for (auto const& [name, regidx] : callbacks)
+		for (int regidx : slots)
 		{
 			if (regidx > 0)
 			{
@@ -57,6 +58,14 @@ notify_cb_t::~notify_cb_t()
 			}
 		}
 	}
+}
+
+bool notify_cb_t::is_empty(void) const
+{
+	// A nil refcon is a negative sentinel, and kNeverPersist is 0. Neither holds a value.
+	if (origRefconRegIndex > 0)
+		return false;
+	return std::all_of(slots.begin(), slots.end(), [](int regidx) { return regidx == LUA_REFNIL; });
 }
 
 // Similar idea to above, but capture a value and just return the index into the registry.
@@ -125,8 +134,10 @@ int log_message(lua_State *L, char const* const format, ...)
 	return result;
 }
 
-bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb_record, int func_stack_idx, bool optional, std::string const& cb_typename)
+bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb_record, int func_stack_idx, bool optional, int slot, std::string const& cb_typename)
 {
+	assert(slot >= 0 && slot < kMaxCallbackSlots);
+
 	if (!lua_isfunction(cb_record->L, func_stack_idx) && !lua_isnil(cb_record->L, func_stack_idx))
 	{
 		std::string extra_msg = cb_typename + " callback must be a function or nil";
@@ -142,17 +153,18 @@ bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb_record, int func_stack_i
 	}
 
 	// Now store the registry reference index into the callback array, in the given position.
+	assert(cb_record->slots[slot] == LUA_REFNIL);
 	lua_pushvalue(cb_record->L, func_stack_idx);
-	cb_record->callbacks[cb_typename] = luaL_ref(cb_record->L, LUA_REGISTRYINDEX);
+	cb_record->slots[slot] = luaL_ref(cb_record->L, LUA_REGISTRYINDEX);
 
-	return (cb_record->callbacks[cb_typename] != LUA_REFNIL);
+	return (cb_record->slots[slot] != LUA_REFNIL);
 }
 
 // Given a void * that is really a CB struct, this routine either
 // pushes the lua function onto the stack (so that we can then push
 // args and pcall) or returns 0 if we should not call because the CB is
 // nil or borked.
-lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackKey)
+lua_State* setup_lua_callback(notify_cb_t const* cb, int slot)
 {
 	if (!cb)
 		return nullptr;
@@ -161,8 +173,8 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 	// Do not read *cb before it.
 	if (!xlua_is_callback_valid(cb))
 	{
-		log_message(nullptr, "ERROR: A closure '%s' was called which was invalid. This is a plugin bug, not a script bug. Please report it.\n",
-					callbackKey.c_str());
+		log_message(nullptr, "ERROR: A closure in slot %d was called which was invalid. This is a plugin bug, not a script bug. Please report it.\n",
+					slot);
 		return nullptr;
 	}
 
@@ -170,34 +182,22 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 	if (xlua_vm_is_dead(cb->L))
 		return nullptr;
 
-	if (callbackKey.empty())
+	assert(slot >= 0 && slot < kMaxCallbackSlots);
+	int const regidx = cb->slots[slot];
+	if (regidx == LUA_REFNIL)
 	{
-		log_message(cb->L, "ERROR: Anonymous closure specified.\n");
+		// The stored function was a nil - an optional function. Return nullptr but don't raise an error.
 		return nullptr;
 	}
 
-	auto storedKey = cb->callbacks.find(callbackKey);
-	if (storedKey != cb->callbacks.end())
+	lua_rawgeti(cb->L, LUA_REGISTRYINDEX, regidx);
+	if (lua_isfunction(cb->L, -1))
 	{
-		if (storedKey->second == LUA_REFNIL)
-		{
-			// The stored function was a nil - an optional function. Return nullptr but don't raise an error.
-			return nullptr;
-		}
-
-		lua_rawgeti(cb->L, LUA_REGISTRYINDEX, storedKey->second);
-		if (lua_isfunction(cb->L, -1))
-		{
-			return cb->L;
-		}
-
-		log_message(cb->L, "ERROR: we did not persist a closure?!?\n");
-		lua_pop(cb->L, 1);
+		return cb->L;
 	}
-	else
-	{
-		log_message(cb->L, "ERROR: Callback %s is not recognised!\n", callbackKey.c_str());
-	}
+
+	log_message(cb->L, "ERROR: we did not persist a closure?!?\n");
+	lua_pop(cb->L, 1);
 
 	return nullptr;
 }
@@ -435,7 +435,7 @@ void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb)
 	}
 }
 
-std::shared_ptr<notify_cb_t> wrap_lua_func_no_userref(lua_State * L, int idx, std::string const callbackKey)
+std::shared_ptr<notify_cb_t> wrap_lua_func_no_userref(lua_State * L, int idx, std::string const& cb_typename)
 {
 	// This captures a function in a notify_cb_t which should NEVER be persisted in the callback sets.
 	if (lua_isnil(L,idx))
@@ -444,7 +444,7 @@ std::shared_ptr<notify_cb_t> wrap_lua_func_no_userref(lua_State * L, int idx, st
 	}
 
 	auto cb = std::make_shared<notify_cb_t>(L, notify_cb_t::kNeverPersist);
-	wrap_next_lua_func(cb, idx, false, callbackKey);
+	wrap_next_lua_func(cb, idx, false, kSlotOnly, cb_typename);
 	return cb;
 }
 

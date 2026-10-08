@@ -34,8 +34,7 @@ extern "C" XPLMCommandRef* Make_XPLMCommandRef(lua_State* L, XPLMCommandRef cons
 
 namespace {
 
-// Must match the name the codegen uses for this callback type: it is the key under
-// which the closure is stored in notify_cb_t::callbacks.
+// The name of this callback type, for error messages. The closure is in slot kSlotOnly.
 char const* const kCommandCallbackSig = "XPLMCommandCallback_f";
 
 // One handler registration, as XPLM sees it. `cb` is the record whose address was
@@ -83,7 +82,7 @@ int xlua_command_handler(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, voi
 	int res = 1;
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, kCommandCallbackSig);
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlotOnly);
 	if (L)
 	{
 		Make_XPLMCommandRef(L, inCommand);
@@ -126,11 +125,7 @@ bool ref_matches_arg(lua_State* L, int stored_ref, int arg_idx)
 // Does this binding correspond to the (handler, refcon) pair on the stack?
 bool binding_matches_args(lua_State* L, cmd_binding const& b, int handler_idx, int refcon_idx)
 {
-	auto const stored = b.cb->callbacks.find(kCommandCallbackSig);
-	if (stored == b.cb->callbacks.end())
-		return false;
-
-	return ref_matches_arg(L, stored->second, handler_idx)
+	return ref_matches_arg(L, b.cb->slots[kSlotOnly], handler_idx)
 		&& ref_matches_arg(L, b.cb->get_capture(), refcon_idx);
 }
 
@@ -151,7 +146,7 @@ extern "C" int XLuaRegisterCommandHandler(lua_State* L)
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 4);
 	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 2, false, kCommandCallbackSig);
+	wrap_next_lua_func(cb_capture_0, 2, false, kSlotOnly, kCommandCallbackSig);
 
 	// Record before registering: XPLM can dispatch the moment the handler is in, and
 	// a handler that runs before its association exists would be un-unregisterable.
