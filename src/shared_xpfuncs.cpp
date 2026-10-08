@@ -13,8 +13,15 @@
 
 int notify_cb_t::nilRefCount = -100;
 
+// The address of every notify_cb_t that exists. This set does not own the records. A refcon from XPLM is a bare
+// void*, and this set lets us check it without a read of the record. It is never destroyed, because a record
+// can be destroyed after the static destructors run.
+static std::unordered_set<notify_cb_t const*>& s_live_callbacks = *new std::unordered_set<notify_cb_t const*>;
+
 notify_cb_t::notify_cb_t(lua_State* inL, int s) : L(inL), origRefconRegIndex(s)
 {
+	s_live_callbacks.insert(this);
+
 	// This will normally be a return from a luaL_ref call, always 0 or higher. However, if the refcon is nil then
 	// luaL_ref returns LUA_REFNIL. We can't have all these mapping onto each other.
 	if (origRefconRegIndex == LUA_REFNIL)
@@ -32,6 +39,8 @@ notify_cb_t::notify_cb_t(lua_State* inL, int s) : L(inL), origRefconRegIndex(s)
 
 notify_cb_t::~notify_cb_t()
 {
+	s_live_callbacks.erase(this);
+
 	if (L != nullptr)
 	{
 		if (origRefconRegIndex > 0)
@@ -148,16 +157,9 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 	if (!cb)
 		return nullptr;
 
-	// The registry-membership check is the liveness proof only for persisted
-	// userref callbacks (capture != kNeverPersist) — the ones handed to XPLM as a
-	// raw void* refcon and later recovered as a bare notify_cb_t*. kNeverPersist
-	// callbacks (timers, custom datarefs/commands, windows) are always reached
-	// through a live shared_ptr held by their owner, are never in the registry,
-	// and so must skip this check.
-	// Registry membership FIRST: it hashes the pointer without touching the pointee,
-	// so it is safe on a stale refcon. get_capture() dereferences, so testing it
-	// first would read freed memory before the check meant to reject it could run.
-	if (!xlua_is_callback_valid(cb) && cb->get_capture() != notify_cb_t::kNeverPersist)
+	// The liveness check hashes the pointer without a read of the pointee, so it is safe on a stale refcon.
+	// Do not read *cb before it.
+	if (!xlua_is_callback_valid(cb))
 	{
 		log_message(nullptr, "ERROR: A closure '%s' was called which was invalid. This is a plugin bug, not a script bug. Please report it.\n",
 					callbackKey.c_str());
@@ -228,8 +230,8 @@ struct cb_ref_eq
 * identity - for hashing and equality - is the address of the pointee, which is exactly the opaque void* refcon XPLM holds.
 * There is therefore no separate key that could be emplaced mismatched, or reseated out of sync with the value it points
 * at, and set elements are const so the owning shared_ptr can never be repointed from under the registry.
-* s_live_callbacks holds the same addresses for all interpreters. It does not own the records. It lets a bare refcon
-* from XPLM be checked without a read of the record.
+* s_live_callbacks holds the address of every record that exists, for all interpreters. It does not own the records. It
+* lets a bare refcon from XPLM be checked without a read of the record.
 * The one and only way to create a persistable entry here is using the same pattern that's used throughout:
 * 
 *  1) Capture a value from Lua's stack, pinning it to Lua's registry;
@@ -282,9 +284,12 @@ struct cb_ref_eq
 */
 using cb_set = std::unordered_set<std::shared_ptr<notify_cb_t>, cb_ref_hash, cb_ref_eq>;
 
+// The number of xlua_vm_state objects that exist.
+static int s_vm_state_count = 0;
+
 struct xlua_vm_state
 {
-	explicit xlua_vm_state(lua_State* inL) : L(inL) {}
+	explicit xlua_vm_state(lua_State* inL) : L(inL) { ++s_vm_state_count; }
 	~xlua_vm_state();
 
 	lua_State*	L;
@@ -293,20 +298,17 @@ struct xlua_vm_state
 	bool		dead = false;	// True if no callback must run Lua code in this interpreter.
 };
 
-static std::unordered_set<notify_cb_t const*> s_live_callbacks;
-
 // The address of this variable is the registry key of the xlua_vm_state userdata.
 static char s_vm_state_key;
 
 static void forget_all_callbacks(xlua_vm_state& vm)
 {
-	for (auto const& cb : vm.callbacks)
-		s_live_callbacks.erase(cb.get());
 	vm.callbacks.clear();		// Each ~notify_cb_t unrefs into vm.L.
 }
 
 xlua_vm_state::~xlua_vm_state()
 {
+	--s_vm_state_count;
 	// Remove the command handlers first. Each one holds a refcon that points at one of our records.
 #if !MOBILE
 	xlua_command_bindings_cleanup(L);
@@ -372,8 +374,9 @@ bool xlua_is_callback_valid(notify_cb_t const* probe_cb)
 
 void xlua_callback_shutdown(void)
 {
-	// lua_close releases the records of each interpreter. When no interpreter is left, no record is left.
-	assert(s_live_callbacks.empty());
+	// lua_close destroys the state of each interpreter, and with it the persisted records. Call this when no
+	// interpreter is left.
+	assert(s_vm_state_count == 0);
 }
 
 void xlua_callback_cleanup(lua_State* L)
@@ -395,7 +398,7 @@ void xlua_remove_callback(notify_cb_t const* cb)
 	// Tolerant no-op if it's already gone: a correctly-tagged one-shot callback fires exactly once, so this
 	// normally hits, but a double-fire (mis-tag) must not be fatal. The live set does not read *cb, so it is
 	// safe on a stale pointer.
-	if (s_live_callbacks.erase(cb) == 0)
+	if (!s_live_callbacks.contains(cb))
 		return;
 
 	if (xlua_vm_state* vm = vm_state(cb->L, false))
@@ -419,7 +422,6 @@ void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb)
 	if (vm == nullptr)
 		return;
 	vm->callbacks.emplace(cb);
-	s_live_callbacks.insert(cb.get());
 
 	// There is no limit on the number of callbacks. We only write a log line each time the count
 	// sets a new high-water mark at a multiple of 1000, to help find a script that leaks them.
