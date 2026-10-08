@@ -47,7 +47,8 @@ void xlua_timer_cleanup();
 // Remove every timer whose callback is bound to interpreter `L`. The XPLM direct
 // loader can unload one .lua plugin while others keep running, so it drops just
 // that interpreter's timers before lua_close. (xlua.xpl tears all modules down
-// together and uses xlua_timer_cleanup instead.)
+// together and uses xlua_timer_cleanup instead.) lua_close also calls this
+// through the XLua state of `L` (shared_xpfuncs.cpp).
 void xlua_remove_timers_for_state(lua_State* L);
 
 double xlua_get_simulated_time();

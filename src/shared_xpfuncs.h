@@ -98,6 +98,13 @@ void xlua_pushuserdata(lua_State * state, T data)
 }
 
 void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb);
+
+// Make sure that L has its XLua state. lua_close destroys the state, and with it the persisted callbacks,
+// command handlers and timers of L. xlua_persist_userref attaches the state itself. Call this before you
+// keep any other per-interpreter data that the state must clean up.
+void xlua_vm_state_attach(lua_State* L);
+
+// Release the persisted callbacks of L now. lua_close also does this.
 void xlua_callback_cleanup(lua_State* L);
 bool xlua_is_callback_valid(notify_cb_t const* probe_cb);
 void xlua_callback_shutdown(void);

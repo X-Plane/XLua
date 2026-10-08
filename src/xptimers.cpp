@@ -98,6 +98,8 @@ xlua_timer* xlua_create_timer(lua_State *L, xlua_timer_f func, std::shared_ptr<n
 		return nullptr;
 	}
 
+	// lua_close removes the timers of L through its XLua state.
+	xlua_vm_state_attach(L);
 	xlua_timer& nt = s_timers.emplace_back(func, ref);
 
 	if (s_timers.size() > 1000)

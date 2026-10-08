@@ -12,9 +12,6 @@
 #include "xpfuncs.h"
 #include "shared_xpfuncs.h"
 #include "lua_helpers.h"
-#if !MOBILE
-	#include "xlua_command_bindings.h"
-#endif
 
 #include <XPLMUtilities.h>
 
@@ -615,16 +612,8 @@ void module::shutdown_lua(void)
 		}
 		_XPluginStop();
 
-#if !MOBILE
-		// Drop this interpreter's command handlers while it is still open. Must precede
-		// xlua_callback_cleanup, which frees the notify_cb_t records XPLM holds as their refcons.
-		xlua_command_bindings_cleanup(m_interp);
-#endif
-
-		// Ditch all the callbacks now, during shutdown and _after_ any disable/stop hooks in case the user decides
-		// to do anything funny like register callbacks.
-		xlua_callback_cleanup(m_interp);
-
+		// lua_close releases the command handlers and callbacks of this interpreter, after any
+		// disable/stop hooks in case the user decides to do anything funny like register callbacks.
 		luaJIT_profile_stop(m_interp);
 		lua_close(m_interp);
 		m_interp = nullptr;
