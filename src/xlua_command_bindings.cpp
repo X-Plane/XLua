@@ -78,7 +78,9 @@ int find_debug_proc(lua_State* L)
 // callback type, except for find_debug_proc (see above).
 int xlua_command_handler(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
 {
-	int res = {};
+	// 1 lets the command go on to the next handler. If no Lua handler ran, or it failed,
+	// we must not eat the command for every other handler.
+	int res = 1;
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
 	lua_State* L = setup_lua_callback(inRefcon_cb, kCommandCallbackSig);
