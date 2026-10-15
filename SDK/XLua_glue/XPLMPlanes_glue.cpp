@@ -163,11 +163,14 @@ int XLuaGetNthAircraftModel(lua_State* L)
 	return 1;
 }
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMPlanesAvailable_f(void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMPlanesAvailable_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -176,6 +179,7 @@ static void cb_XPLMPlanesAvailable_f(void* inRefcon)
 		}
 	}
 }
+} // extern "C++"
 
 int XLuaAcquirePlanes(lua_State* L)
 {
@@ -186,8 +190,11 @@ int XLuaAcquirePlanes(lua_State* L)
 
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 3);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 2, true, "XPLMPlanesAvailable_f");
+	bool const cb_capture_0_has_0 = wrap_next_lua_func(cb_capture_0, 2, true, 0, "XPLMPlanesAvailable_f");
+	if (cb_capture_0->is_empty())
+		cb_capture_0.reset();
+	else
+		xlua_persist_userref(L, cb_capture_0);
 
 	int inAircraft_len = lua_objlen(L, 1);
 	char const** inAircraft = new char const*[inAircraft_len + 1]{};		// Null-terminated: no count param, pointer elements.
@@ -199,7 +206,7 @@ int XLuaAcquirePlanes(lua_State* L)
 		lua_pop(L, 1);
 	}
 	
-	int res = XPLMAcquirePlanes((inAircraft ? &*inAircraft : nullptr), (cb_capture_0 ? cb_XPLMPlanesAvailable_f : nullptr), cb_capture_0.get());
+	int res = XPLMAcquirePlanes((inAircraft ? &*inAircraft : nullptr), (cb_capture_0_has_0 ? &cb_XPLMPlanesAvailable_f<0> : nullptr), cb_capture_0.get());
 	lua_pushboolean(L, res);
 
 	if (inAircraft != nullptr)

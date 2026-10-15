@@ -301,12 +301,15 @@ void RegType_XPLMCommandRef(lua_State* L)
 	lua_pop(L, 1);
 }
 
+extern "C++" {
+template <int kSlot>
 static int cb_XPLMCommandCallback_f(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMCommandCallback_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMCommandRef(L, inCommand);
@@ -322,6 +325,7 @@ static int cb_XPLMCommandCallback_f(XPLMCommandRef inCommand, XPLMCommandPhase i
 
 	return res;
 }
+} // extern "C++"
 
 int XLuaFindCommand(lua_State* L)
 {

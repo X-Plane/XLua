@@ -17,7 +17,8 @@ INTERFACE
    -D command line option or a preprocessor header.
 }
 
-   {$A4}
+   {$A8}
+   {$Z4}
 
 TYPE
    XPLMChar   = AnsiChar;

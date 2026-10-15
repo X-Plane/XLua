@@ -91,7 +91,7 @@ namespace XLua1
 
 	static void xlua_dataref_notify_helper(xlua_dref* who, std::shared_ptr<notify_cb_t> ref)
 	{
-		lua_State* L = setup_lua_callback(ref.get(), kDatarefCallbackSig);
+		lua_State* L = setup_lua_callback(ref.get(), kSlotOnly);
 		if (L)
 		{
 			fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "");
@@ -307,7 +307,7 @@ namespace XLua1
 	{
 		int res = 1;
 
-		lua_State* L = setup_lua_callback(ref.get(), kFilterCallbackSig);
+		lua_State* L = setup_lua_callback(ref.get(), kSlotOnly);
 		if (L)
 		{
 			int e = lua_pcall(L, 0, 1, module::debug_proc_from_interp(L));
@@ -328,7 +328,7 @@ namespace XLua1
 
 	static int cmd_cb_helper(xlua_cmd* cmd, int phase, float elapsed, std::shared_ptr<notify_cb_t> ref)
 	{
-		lua_State* L = setup_lua_callback(ref.get(), kCommandCallbackSig);
+		lua_State* L = setup_lua_callback(ref.get(), kSlotOnly);
 		if (L)
 		{
 			fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), false, "if", phase, elapsed);
@@ -343,7 +343,7 @@ namespace XLua1
 		xlua_cmd* cmd = xlua_checkuserdata<xlua_cmd*>(L, 1, "expected command");
 
 		std::shared_ptr<notify_cb_t> cb_filter = std::make_shared<notify_cb_t>(L, 0);
-		if (wrap_next_lua_func(cb_filter, 2, false, kFilterCallbackSig))
+		if (wrap_next_lua_func(cb_filter, 2, false, kSlotOnly, kFilterCallbackSig))
 		{
 			xlua_cmd_install_filter(L, cmd, cmd_filter_cb_helper, cb_filter);
 		}
@@ -357,7 +357,7 @@ namespace XLua1
 		xlua_cmd* d = xlua_checkuserdata<xlua_cmd*>(L, 1, "expected command");
 
 		std::shared_ptr<notify_cb_t> cb_command = std::make_shared<notify_cb_t>(L, 0);
-		if (wrap_next_lua_func(cb_command, 2, false, kCommandCallbackSig))
+		if (wrap_next_lua_func(cb_command, 2, false, kSlotOnly, kCommandCallbackSig))
 		{
 			xlua_cmd_install_handler(L, d, cmd_cb_helper, cb_command);
 		}
@@ -371,18 +371,18 @@ namespace XLua1
 		xlua_cmd* d = xlua_checkuserdata<xlua_cmd*>(L, 1, "expected command");
 
 		std::shared_ptr<notify_cb_t> cb_pre = std::make_shared<notify_cb_t>(L, 0);
-		if (wrap_next_lua_func(cb_pre, 2, false, kCommandCallbackSig))
+		if (wrap_next_lua_func(cb_pre, 2, false, kSlotOnly, kCommandCallbackSig))
 		{
 			xlua_cmd_install_pre_wrapper(L, d, cmd_cb_helper, cb_pre);
 		}
 
 		std::shared_ptr<notify_cb_t> cb_post = std::make_shared<notify_cb_t>(L, 0);
-		if (wrap_next_lua_func(cb_post, 3, false, kCommandCallbackSig))
+		if (wrap_next_lua_func(cb_post, 3, false, kSlotOnly, kCommandCallbackSig))
 		{
 			xlua_cmd_install_post_wrapper(L, d, cmd_cb_helper, cb_post);
 		}
 
-		if (cb_pre->callbacks.empty() && cb_post->callbacks.empty())
+		if (cb_pre->is_empty() && cb_post->is_empty())
 		{
 			luaL_error(L, "XLuaWrapCommand on %s had neither pre nor post functions specified.",
 					   d->m_name.c_str());

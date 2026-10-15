@@ -240,12 +240,15 @@ XPLM_API int        XPLMSaveDataFile(
  * host's use of the callback's result. This is the only sanctioned way for an
  * XPLM callback whose return type is `const char *` to hand a string back to
  * X-Plane: returning a stack buffer, a string literal, or any other pointer
- * is a contract violation and may corrupt the result.
+ * is a plugin error: X-Plane reports it and drops the result.
  * 
  * The host pushes a return slot before invoking each `const char *` callback
  * and pops it afterwards, so callbacks must call
  * `XPLMReturnString` at most once per invocation and must not retain the
- *  returned pointer past the callback's return.
+ *  returned pointer past the callback's return. Passing NULL is an error:
+ * `XPLMReturnString` reports it and returns NULL, so the callback's result is
+ *  dropped. Calling `XPLMReturnString` outside a callback that returns a
+ *  string is a fatal plugin error: X-Plane reports it and terminates.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */

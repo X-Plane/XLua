@@ -71,6 +71,8 @@ struct window_ctx final {
 void cb_draw(XPLMWindowID win, void* refcon) {
     auto* ctx = static_cast<window_ctx*>(refcon);
     if (ctx == nullptr) return;
+    // This draw calls Lua directly, not through setup_lua_callback, so it must do the dead check itself.
+    if (xlua_vm_is_dead(ctx->L)) return;
 
     int left, top, right, bottom;
     XPLMGetWindowGeometry(win, &left, &top, &right, &bottom);
@@ -87,7 +89,7 @@ void cb_draw(XPLMWindowID win, void* refcon) {
     // this is a guard, not a path we expect to take.
     if (!xplm_imgui_begin_frame(ctx->L, w, h, win)) return;
     if (ctx->draw_cb) {
-        lua_rawgeti(ctx->L, LUA_REGISTRYINDEX, ctx->draw_cb->callbacks.at("drawWindowFunc"));
+        lua_rawgeti(ctx->L, LUA_REGISTRYINDEX, ctx->draw_cb->slots[kSlotOnly]);
         if (lua_isfunction(ctx->L, -1))
         {
             fmt_pcall_stdvars(ctx->L, find_debug_proc(ctx->L), false, "uiir",

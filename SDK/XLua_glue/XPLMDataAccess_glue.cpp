@@ -630,12 +630,15 @@ int XLuaSetDatab(lua_State* L)
 	return 0;
 }
 
+extern "C++" {
+template <int kSlot>
 static int cb_XPLMGetDatai_f(void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMGetDatai_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -651,12 +654,16 @@ static int cb_XPLMGetDatai_f(void* inRefcon)
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMSetDatai_f(void* inRefcon, int inValue)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMSetDatai_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -665,13 +672,17 @@ static void cb_XPLMSetDatai_f(void* inRefcon, int inValue)
 		}
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static float cb_XPLMGetDataf_f(void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	float res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMGetDataf_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -687,12 +698,16 @@ static float cb_XPLMGetDataf_f(void* inRefcon)
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMSetDataf_f(void* inRefcon, float inValue)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMSetDataf_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -701,13 +716,17 @@ static void cb_XPLMSetDataf_f(void* inRefcon, float inValue)
 		}
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static double cb_XPLMGetDatad_f(void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	double res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMGetDatad_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -723,12 +742,16 @@ static double cb_XPLMGetDatad_f(void* inRefcon)
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMSetDatad_f(void* inRefcon, double inValue)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMSetDatad_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -737,13 +760,17 @@ static void cb_XPLMSetDatad_f(void* inRefcon, double inValue)
 		}
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static int cb_XPLMGetDatavi_f(void* inRefcon, int outValues[], int inOffset, int inMax)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMGetDatavi_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		if (inOffset < 0)
@@ -793,12 +820,16 @@ static int cb_XPLMGetDatavi_f(void* inRefcon, int outValues[], int inOffset, int
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMSetDatavi_f(void* inRefcon, int inValues[], int inOffset, int inCount)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMSetDatavi_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		if (inOffset < 0)
@@ -829,13 +860,17 @@ static void cb_XPLMSetDatavi_f(void* inRefcon, int inValues[], int inOffset, int
 		luaL_unref(L, LUA_REGISTRYINDEX, inValues_ref);
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static int cb_XPLMGetDatavf_f(void* inRefcon, float outValues[], int inOffset, int inMax)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMGetDatavf_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		if (inOffset < 0)
@@ -885,12 +920,16 @@ static int cb_XPLMGetDatavf_f(void* inRefcon, float outValues[], int inOffset, i
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMSetDatavf_f(void* inRefcon, float inValues[], int inOffset, int inCount)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMSetDatavf_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		if (inOffset < 0)
@@ -921,13 +960,17 @@ static void cb_XPLMSetDatavf_f(void* inRefcon, float inValues[], int inOffset, i
 		luaL_unref(L, LUA_REGISTRYINDEX, inValues_ref);
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static int cb_XPLMGetDatab_f(void* inRefcon, void* outValue, int inOffset, int inMaxLength)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMGetDatab_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		if (inOffset < 0)
@@ -977,12 +1020,16 @@ static int cb_XPLMGetDatab_f(void* inRefcon, void* outValue, int inOffset, int i
 
 	return res;
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMSetDatab_f(void* inRefcon, void* inValue, int inOffset, int inLength)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMSetDatab_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		if (inOffset < 0)
@@ -1013,6 +1060,7 @@ static void cb_XPLMSetDatab_f(void* inRefcon, void* inValue, int inOffset, int i
 		luaL_unref(L, LUA_REGISTRYINDEX, inValue_ref);
 	}
 }
+} // extern "C++"
 
 int XLuaRegisterDataAccessor(lua_State* L)
 {
@@ -1021,24 +1069,30 @@ int XLuaRegisterDataAccessor(lua_State* L)
 	bool inIsWritable = xlua_checkboolean(L, 3);
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 16);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 4, true, "XPLMGetDatai_f");
+	bool const cb_capture_0_has_0 = wrap_next_lua_func(cb_capture_0, 4, true, 0, "XPLMGetDatai_f");
 
 	std::shared_ptr<notify_cb_t> cb_capture_1 = capture_lua_value(L, 17);
-	xlua_persist_userref(L, cb_capture_1);
-	wrap_next_lua_func(cb_capture_1, 5, true, "XPLMSetDatai_f");
-	wrap_next_lua_func(cb_capture_0, 6, true, "XPLMGetDataf_f");
-	wrap_next_lua_func(cb_capture_1, 7, true, "XPLMSetDataf_f");
-	wrap_next_lua_func(cb_capture_0, 8, true, "XPLMGetDatad_f");
-	wrap_next_lua_func(cb_capture_1, 9, true, "XPLMSetDatad_f");
-	wrap_next_lua_func(cb_capture_0, 10, true, "XPLMGetDatavi_f");
-	wrap_next_lua_func(cb_capture_1, 11, true, "XPLMSetDatavi_f");
-	wrap_next_lua_func(cb_capture_0, 12, true, "XPLMGetDatavf_f");
-	wrap_next_lua_func(cb_capture_1, 13, true, "XPLMSetDatavf_f");
-	wrap_next_lua_func(cb_capture_0, 14, true, "XPLMGetDatab_f");
-	wrap_next_lua_func(cb_capture_1, 15, true, "XPLMSetDatab_f");
+	bool const cb_capture_1_has_0 = wrap_next_lua_func(cb_capture_1, 5, true, 0, "XPLMSetDatai_f");
+	bool const cb_capture_0_has_1 = wrap_next_lua_func(cb_capture_0, 6, true, 1, "XPLMGetDataf_f");
+	bool const cb_capture_1_has_1 = wrap_next_lua_func(cb_capture_1, 7, true, 1, "XPLMSetDataf_f");
+	bool const cb_capture_0_has_2 = wrap_next_lua_func(cb_capture_0, 8, true, 2, "XPLMGetDatad_f");
+	bool const cb_capture_1_has_2 = wrap_next_lua_func(cb_capture_1, 9, true, 2, "XPLMSetDatad_f");
+	bool const cb_capture_0_has_3 = wrap_next_lua_func(cb_capture_0, 10, true, 3, "XPLMGetDatavi_f");
+	bool const cb_capture_1_has_3 = wrap_next_lua_func(cb_capture_1, 11, true, 3, "XPLMSetDatavi_f");
+	bool const cb_capture_0_has_4 = wrap_next_lua_func(cb_capture_0, 12, true, 4, "XPLMGetDatavf_f");
+	bool const cb_capture_1_has_4 = wrap_next_lua_func(cb_capture_1, 13, true, 4, "XPLMSetDatavf_f");
+	bool const cb_capture_0_has_5 = wrap_next_lua_func(cb_capture_0, 14, true, 5, "XPLMGetDatab_f");
+	bool const cb_capture_1_has_5 = wrap_next_lua_func(cb_capture_1, 15, true, 5, "XPLMSetDatab_f");
+	if (cb_capture_0->is_empty())
+		cb_capture_0.reset();
+	else
+		xlua_persist_userref(L, cb_capture_0);
+	if (cb_capture_1->is_empty())
+		cb_capture_1.reset();
+	else
+		xlua_persist_userref(L, cb_capture_1);
 
-	XPLMDataRef res = XPLMRegisterDataAccessor(inDataName, inDataType, inIsWritable, (cb_capture_0 ? cb_XPLMGetDatai_f : nullptr), (cb_capture_1 ? cb_XPLMSetDatai_f : nullptr), (cb_capture_0 ? cb_XPLMGetDataf_f : nullptr), (cb_capture_1 ? cb_XPLMSetDataf_f : nullptr), (cb_capture_0 ? cb_XPLMGetDatad_f : nullptr), (cb_capture_1 ? cb_XPLMSetDatad_f : nullptr), (cb_capture_0 ? cb_XPLMGetDatavi_f : nullptr), (cb_capture_1 ? cb_XPLMSetDatavi_f : nullptr), (cb_capture_0 ? cb_XPLMGetDatavf_f : nullptr), (cb_capture_1 ? cb_XPLMSetDatavf_f : nullptr), (cb_capture_0 ? cb_XPLMGetDatab_f : nullptr), (cb_capture_1 ? cb_XPLMSetDatab_f : nullptr), cb_capture_0.get(), cb_capture_1.get());
+	XPLMDataRef res = XPLMRegisterDataAccessor(inDataName, inDataType, inIsWritable, (cb_capture_0_has_0 ? &cb_XPLMGetDatai_f<0> : nullptr), (cb_capture_1_has_0 ? &cb_XPLMSetDatai_f<0> : nullptr), (cb_capture_0_has_1 ? &cb_XPLMGetDataf_f<1> : nullptr), (cb_capture_1_has_1 ? &cb_XPLMSetDataf_f<1> : nullptr), (cb_capture_0_has_2 ? &cb_XPLMGetDatad_f<2> : nullptr), (cb_capture_1_has_2 ? &cb_XPLMSetDatad_f<2> : nullptr), (cb_capture_0_has_3 ? &cb_XPLMGetDatavi_f<3> : nullptr), (cb_capture_1_has_3 ? &cb_XPLMSetDatavi_f<3> : nullptr), (cb_capture_0_has_4 ? &cb_XPLMGetDatavf_f<4> : nullptr), (cb_capture_1_has_4 ? &cb_XPLMSetDatavf_f<4> : nullptr), (cb_capture_0_has_5 ? &cb_XPLMGetDatab_f<5> : nullptr), (cb_capture_1_has_5 ? &cb_XPLMSetDatab_f<5> : nullptr), cb_capture_0.get(), cb_capture_1.get());
 	if (res == nullptr)
 	{
 		lua_pushnil(L);

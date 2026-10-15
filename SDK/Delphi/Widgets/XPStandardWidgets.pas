@@ -24,7 +24,8 @@ INTERFACE
 
 USES
     XPWidgetDefs;
-   {$A4}
+   {$A8}
+   {$Z4}
 
 TYPE
    XPLMChar   = AnsiChar;
