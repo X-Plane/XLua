@@ -479,7 +479,6 @@ If you ask to be decorated as a floating window, you'll get the blue window cont
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_CreateWindow_t = {
-    structSize                = 0,       -- int
     left                      = 0,       -- int
     top                       = 0,       -- int
     right                     = 0,       -- int
@@ -504,7 +503,6 @@ If you ask to be decorated as a floating window, you'll get the blue window cont
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Used to inform XPLMCreateWindowEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateWindow_t) |
 | left | int | Left bound, in global desktop boxels |
 | top | int | Top bound, in global desktop boxels |
 | right | int | Right bound, in global desktop boxels |
@@ -1670,6 +1668,9 @@ Sets a window's reference constant.  Use this to pass data to yourself in the ca
 This routine gives a specific window keyboard focus.  Keystrokes will be sent to
 that window.  Pass a window ID of 0 to remove keyboard focus from any plugin-created windows
 and instead pass keyboard strokes directly to X-Plane.
+
+This routine does not change the keyboard focus of a cockpit device's popup. To release that
+focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">XPLMTakeKeyboardFocus(

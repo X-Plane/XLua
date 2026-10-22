@@ -34,6 +34,13 @@ INTERFACE
    X-Plane's physics model may not match your own, and (to make things
    weirder) the user can potentially customize the physics of the current
    planet.
+   
+   The routines in this header that draw or set drawing state use OpenGL. Call
+   them only from an OpenGL drawing callback, for example the callback of a
+   window or avionics device whose content type is
+   xplm_WindowContentTypeOpenGL. They do not work in a panel graphics callback
+   (xplm_WindowContentTypePanelGraphics). For panel graphics, use the
+   XPLMPanelGraphics APIs.
 }
 
 USES
@@ -200,6 +207,9 @@ TYPE
      do not assume that lighting and fog state is a good approximation for 3-d
      drawing.  Prefer to use XPLMInstancing to draw objects.  All calls to
      XPLMSetGraphicsState should have no fog or lighting.
+    
+    Call this routine only from an OpenGL drawing callback. In a panel graphics
+    callback, X-Plane logs an error and does not change the state.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMSetGraphicsState(
@@ -266,6 +276,9 @@ TYPE
     This routine draws a translucent dark box, partially obscuring parts of the
     screen but making text easy to read.  This is the same graphics primitive
     used by X-Plane to show text files.
+    
+    Call this routine only from an OpenGL drawing callback. In a panel graphics
+    callback, X-Plane logs an error and draws nothing.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDrawTranslucentDarkBox(
@@ -400,6 +413,10 @@ TYPE
     all drawn characters. The color to draw in is specified as a pointer to an
     array of three floating point colors, representing RGB intensities from 0.0
     to 1.0.
+    
+    Call this routine only from an OpenGL drawing callback. In a panel graphics
+    callback, X-Plane logs an error and draws nothing; use XPLMFontDrawString
+    instead.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDrawString(
@@ -420,6 +437,10 @@ TYPE
     integer and how many decimal digits to show and whether to show a sign, as
     well as a character set. This routine returns the xOffset plus width of the
     string drawn.
+    
+    Call this routine only from an OpenGL drawing callback. In a panel graphics
+    callback, X-Plane logs an error and draws nothing; use XPLMFontDrawString
+    instead.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDrawNumber(

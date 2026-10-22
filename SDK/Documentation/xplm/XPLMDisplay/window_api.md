@@ -1840,6 +1840,9 @@ This routine gives a specific window keyboard focus.  Keystrokes will be sent to
 that window.  Pass a window ID of 0 to remove keyboard focus from any plugin-created windows
 and instead pass keyboard strokes directly to X-Plane.
 
+This routine does not change the keyboard focus of a cockpit device's popup. To release that
+focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
+
 <div class="xplm-code" markdown="1">
 
 ```cpp

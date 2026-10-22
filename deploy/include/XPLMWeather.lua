@@ -83,7 +83,6 @@ require("XPLMDefs")
 
 --- Basic weather conditions at a specific point. To specify exactly what data you intend to send or receive, it is required to set the structSize appropriately. Version 2 data starts at "temp_layers".
 ---@class XPLMWeatherInfo_t
----@field structSize integer The size of the struct. Required for both reading and writing.
 ---@field temperature_alt number Temperature at the given altitude in Celsius
 ---@field dewpoint_alt number Dewpoint at the given altitude in Celsius
 ---@field pressure_alt number Pressure at the given altitude in Pascals. Pass 0 when setting to use sea-level pressure instead of QNH.

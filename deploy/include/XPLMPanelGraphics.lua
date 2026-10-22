@@ -319,7 +319,6 @@ local XPLMJustification_t = {
 
 --- XPLMFontMetrics_t receives font measurement data from XPLMFontGetMetrics. The structure may be expanded in future SDKs - always set structSize to the size of your structure in bytes.
 ---@class XPLMFontMetrics_t
----@field structSize integer Set to sizeof(XPLMFontMetrics_t).
 ---@field lineHeight number Total line height including leading, in pixels.
 ---@field lineAscent number Distance from the baseline to the top of the tallest glyph, in pixels.
 ---@field lineDescent number Distance from the baseline to the bottom of the lowest descender, in pixels. This value is positive.
@@ -1005,7 +1004,6 @@ local XPLMTouchZone = {
 
 --- XPLMTouchZoneSpec_t describes a single interactive touch zone on the panel. Pass a pointer to this struct to XPLMAccumulateTouchZone during your drawing callback. The structure may be expanded in future SDKs - always set structSize to the size of your structure in bytes.
 ---@class XPLMTouchZoneSpec_t
----@field structSize integer Set to sizeof(XPLMTouchZoneSpec_t). This is checked; a size X-Plane does not recognise is an error and is reported.
 ---@field type XPLMTouchZone How the zone responds to interaction.
 ---@field command XPLMCommandRef The command to fire. Only used when type is xplm_TouchZone_Command.
 ---@field identifier integer An integer you assign to identify this zone in your XPLMTouchEvent_f callback. Only used when type is xplm_TouchZone_Identifier.
@@ -1193,7 +1191,6 @@ local XPLMSVTFeatures = {
 
 --- Parameters for creating an SVT display. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
 ---@class XPLMCreateSVT_t
----@field structSize integer Set to sizeof(XPLMCreateSVT_t).
 ---@field pilotIndex integer 0 for pilot-side AHRS, 1 for copilot-side AHRS.
 ---@field pixelsPerDegree number Vertical scale of the 3-d view, in pixels per degree at the center of the display. Must be greater than zero; the G1000 PFD uses 14.
 
@@ -1228,6 +1225,7 @@ local XPLMSVTFeatures = {
 ---
 ---@field XPLMDestroySVTDisplay fun(svt: XPLMSVTDisplayRef)
 
+--- Values that override the sim state for one XPLMSVTDisplayDrawIn call. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
 ---@class XPLMSVTCustomData_t
 ---@field pitchDeg number pitch override (degrees).
 ---@field rollDeg number roll/bank override (degrees).
@@ -1335,7 +1333,6 @@ local XPLMEGPWSStyle = {
 
 --- Per-frame description of what a map display should show: where it is centered, how it is oriented, how far it reaches, and what the terrain layers should shade against. centerX and centerY are in the same panel coordinates as the rectangle in XPLMMapDrawInfo_t, NOT relative to that rectangle. This is the point the map is centered on and the point it rotates about - the same sense as XPLMTransformRotate's center. For a map centered in its own rectangle it is ((left+right)/2, (bottom+top)/2). It is also the same space XPLMMapDisplayProject reports positions in, so you can put a symbol on the map without offsetting anything yourself. The center need not be the rectangle's midpoint, and may sit on or outside its edge: pushing it down toward the bottom edge puts more of the map ahead of the aircraft, which is how an EFIS arc mode is laid out. Two fields set the scale, and they are deliberately a matching pair: roseRadius is the distance from the center of the map out to the compass rose in pixels, and mapRange is that same distance in nautical miles. So setting mapRange to 40 puts the rose edge 40 nm from the aircraft, exactly like the range knob on a real EFIS control panel - and a centered rose therefore spans 80 nm across. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
 ---@class XPLMMapCustomData_t
----@field structSize integer Set to sizeof(XPLMMapCustomData_t). This is checked; a size X-Plane does not recognise is an error and is reported. X-Plane never modifies the structure you pass.
 ---@field datLat number datum lat (degrees).
 ---@field datLon number datum lon (degrees).
 ---@field centerX integer map center x, in the same panel coordinates as XPLMMapDrawInfo_t's rectangle.
@@ -1354,7 +1351,6 @@ local XPLMEGPWSStyle = {
 
 --- Parameters for creating a base map display. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
 ---@class XPLMCreateMap_t
----@field structSize integer Set to sizeof(XPLMCreateMap_t).
 ---@field pilotIndex integer 0 for pilot-side GPS position, 1 for copilot-side GPS position.
 
 --- An opaque handle to a map display instance. Create one with XPLMCreateMapDisplay and destroy it with XPLMDestroyMapDisplay.
@@ -1363,7 +1359,6 @@ local XPLMEGPWSStyle = {
 
 --- Which layers a map shows and where on the panel it goes. Pass the same XPLMMapDrawInfo_t and the same XPLMMapCustomData_t to XPLMMapDisplayDrawIn and to the projection routines, and the projection you query is provably the projection you drew - so your symbology cannot end up a frame or a zoom step out of step with the terrain under it. Set structSize to the size of your struct so that future SDK versions can add fields without breaking existing plugins.
 ---@class XPLMMapDrawInfo_t
----@field structSize integer Set to sizeof(XPLMMapDrawInfo_t).
 ---@field layers XPLMMapLayers Bitwise OR of XPLMMapLayers flags to show.
 ---@field left integer Bounding rectangle in panel coordinates.
 ---@field top integer Bounding rectangle in panel coordinates.

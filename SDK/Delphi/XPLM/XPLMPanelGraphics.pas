@@ -1936,9 +1936,18 @@ TYPE
 
    {
     XPLMSVTCustomData_t
+    
+    Values that override the sim state for one XPLMSVTDisplayDrawIn call.
+    
+    Set structSize to the size of your struct so that future SDK versions can
+    add fields without breaking existing plugins.
    }
 TYPE
    XPLMSVTCustomData_t = RECORD
+     { Set to sizeof(XPLMSVTCustomData_t). This is checked; a size X-Plane does   }
+     { not recognise is an error and is reported. X-Plane never modifies the      }
+     { structure you pass.                                                        }
+     structSize               : Integer;
      { pitch override (degrees).                                                  }
      pitchDeg                 : Single;
      { roll/bank override (degrees).                                              }

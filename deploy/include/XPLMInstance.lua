@@ -136,7 +136,6 @@ local XPLMCoordinateSpace_t = {
 
 --- XPLMCreateInstance_t defines all of the parameters used to create an instance via XPLMCreateInstanceEx(). It is a strict superset of the older XPLMCreateInstance() call: it lets you build an instance out of more than one object, choose the coordinate space, and enable auto-shift, all in a single call. The structure will be expanded in future SDK versions to include more features. Always set the structSize member to the size of your struct in bytes!
 ---@class XPLMCreateInstance_t
----@field structSize integer Used to inform XPLMCreateInstanceEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateInstance_t).
 ---@field objects XPLMInstanceObject_t[] An array of objects (each with its own offset) that make up the instance. Must point to at least objectCount entries.
 ---@field datarefs string[] A single NULL-terminated list of dataref identifiers shared by every object in the instance, exactly as in XPLMCreateInstance(). The data you later pass to XPLMInstanceSetPosition() fills one shared block for all objects. You cannot pass null for the array itself.
 ---@field coordinateSpace XPLMCoordinateSpace_t The coordinate space in which instance positions are interpreted (see XPLMCoordinateSpace_t). Use xplm_CoordSpace_World for the classic behavior.
