@@ -103,11 +103,10 @@ your struct in bytes!
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_DataRefInfo_t = {
-    structSize  = 0,       -- int
-    name        = "",      -- string
-    type        = nil,     -- XPLMDataTypeID
-    writable    = false,   -- boolean
-    owner       = nil,     -- XPLMPluginID
+    name      = "",      -- string
+    type      = nil,     -- XPLMDataTypeID
+    writable  = false,   -- boolean
+    owner     = nil,     -- XPLMPluginID
 }</code></pre>
 </div>
 
@@ -115,7 +114,6 @@ your struct in bytes!
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Used to inform XPLMGetDatarefInfo() of the SDK version you compiled against; should always be set to sizeof(XPLMDataRefInfo_t) |
 | name | string | The full name/path of the data ref |
 | type | XPLMDataTypeID |  |
 | writable | boolean | TRUE if the data ref permits writing to it. FALSE if it's read-only. |

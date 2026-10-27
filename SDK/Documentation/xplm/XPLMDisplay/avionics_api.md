@@ -1533,7 +1533,9 @@ XPLM_API int XPLMIsAvionicsMappedToVR(
 
 </div>
 
-This routine gives keyboard focus to the popup window of a custom cockpit device, if it is visible.
+This routine gives keyboard focus to the popup window of a custom cockpit device, if it is visible. If the popup is not visible, the device does not get focus.
+
+Pass NULL to take keyboard focus away from the cockpit device that has it, so that keystrokes go to X-Plane again. Use this, not XPLMTakeKeyboardFocus(0): XPLMTakeKeyboardFocus controls the focus of plugin windows only, and does not release a cockpit device.
 
 <div class="xplm-code" markdown="1">
 
@@ -1563,7 +1565,7 @@ XPLM_API void XPLMTakeAvionicsKeyboardFocus(
 
 </div>
 
-Returns true (1) if the popup window for a cockpit device has keyboard focus.
+Returns true (1) if the popup window for a cockpit device has keyboard focus. To release the focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
 
 <div class="xplm-code" markdown="1">
 

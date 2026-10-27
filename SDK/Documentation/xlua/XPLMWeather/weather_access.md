@@ -231,7 +231,6 @@ Version 2 data starts at "temp_layers".
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_WeatherInfo_t = {
-    structSize           = 0,       -- int
     temperature_alt      = 0.0,     -- float
     dewpoint_alt         = 0.0,     -- float
     pressure_alt         = 0.0,     -- float
@@ -264,7 +263,6 @@ Version 2 data starts at "temp_layers".
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | The size of the struct. Required for both reading and writing. |
 | temperature_alt | float | Temperature at the given altitude in Celsius |
 | dewpoint_alt | float | Dewpoint at the given altitude in Celsius |
 | pressure_alt | float | Pressure at the given altitude in Pascals. Pass 0 when setting to use sea-level pressure instead of QNH. |

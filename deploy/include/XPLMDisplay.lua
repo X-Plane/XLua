@@ -16,7 +16,10 @@
 
 --[[
    This API provides the basic hooks to draw in X-Plane and create user
-   interface. All X-Plane drawing is done in OpenGL. The X-Plane plug-in
+   interface. A window or avionics device has a content type
+   (XPLMWindowContentType) that tells how it is drawn: with OpenGL, with the
+   panel graphics APIs (XPLMPanelGraphics), or as a web page. Direct drawing
+   callbacks always use OpenGL. For OpenGL drawing, the X-Plane plug-in
    manager takes care of properly setting up the OpenGL context and matrices. 
    You do not decide when in your code's execution to draw; X-Plane tells you
    (via callbacks) when it is ready to have your plugin draw.
@@ -215,7 +218,6 @@ local XPLMDeviceID = {
 
 --- The XPLMCustomizeAvionics_t structure defines all of the parameters used to replace or enhance built-in simulator avionics devices using XPLMRegisterAvionicsCallbacksEx(). The structure will be expanded in future SDK APIs to include more features. Always set the structSize member to the size of your struct in bytes!
 ---@class XPLMCustomizeAvionics_t
----@field structSize integer Used to inform XPLMRegisterAvionicsCallbacksEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCustomizeAvionics_t)
 ---@field deviceId XPLMDeviceID The built-in avionics device to which you want your drawing applied.
 ---@field drawCallbackBefore XPLMAvionicsCallback_f The draw callback to be called before X-Plane draws.
 ---@field drawCallbackAfter XPLMAvionicsCallback_f The draw callback to be called after X-Plane has drawn.
@@ -285,7 +287,6 @@ local XPLMDeviceID = {
 
 --- The XPLMCreateAvionics_t structure defines all of the parameters used to generate your own glass cockpit device by using XPLMCreateAvionicsEx(). The structure will be expanded in future SDK APIs to include more features. Always set the structSize member to the size of your struct in bytes!
 ---@class XPLMCreateAvionics_t
----@field structSize integer Used to inform XPLMCreateAvionicsEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateAvionics_t)
 ---@field screenWidth integer Width of the device's screen in pixels.
 ---@field screenHeight integer Height of the device's screen in pixels.
 ---@field bezelWidth integer Width of the bezel around your device's screen for 2D pop-ups.
@@ -486,12 +487,14 @@ local XPLMDeviceID = {
 ---@field XPLMIsAvionicsMappedToVR fun(inHandle: XPLMAvionicsID): boolean
 
 ---@class _G
---- This routine gives keyboard focus to the popup window of a custom cockpit device, if it is visible.
+--- This routine gives keyboard focus to the popup window of a custom cockpit device, if it is visible. If the popup is not visible, the device does not get focus.
+---
+--- Pass NULL to take keyboard focus away from the cockpit device that has it, so that keystrokes go to X-Plane again. Use this, not XPLMTakeKeyboardFocus(0): XPLMTakeKeyboardFocus controls the focus of plugin windows only, and does not release a cockpit device.
 ---
 ---@field XPLMTakeAvionicsKeyboardFocus fun(inHandle: XPLMAvionicsID)
 
 ---@class _G
---- Returns true (1) if the popup window for a cockpit device has keyboard focus.
+--- Returns true (1) if the popup window for a cockpit device has keyboard focus. To release the focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
 ---
 ---@field XPLMHasAvionicsKeyboardFocus fun(inHandle: XPLMAvionicsID): boolean
 
@@ -639,7 +642,6 @@ local XPLMWindowDecoration = {
 
 --- XPLMCreateWindow_t defines all of the parameters used to create a modern window using XPLMCreateWindowEx(). The structure has been expanded in later SDK versions and will be expanded again; the fields present in your build are the ones your SDK version defines, and structSize is how X-Plane knows which of them you filled in. Always set the structSize member to the size of your struct in bytes! Of the callbacks, only drawWindowFunc is required, and only for a window that draws through your plugin; see XPLMCreateWindowEx() for the rules. All windows created by this function in the XPLM300 version of the API are created with the new X-Plane 11 GUI features. This means your plugin will get to "know" about the existence of X-Plane windows other than the main window. All drawing and mouse callbacks for your window will occur in "boxels," giving your windows automatic support for high-DPI scaling in X-Plane. In addition, your windows can opt-in to decoration with the X-Plane 11 window styling, and you can use the XPLMSetWindowPositioningMode() API to make your window "popped out" into a first-class operating system window. Note that this requires dealing with your window's bounds in "global desktop" positioning units, rather than the traditional panel coordinate system. In global desktop coordinates, the main X-Plane window may not have its origin at coordinate (0, 0), and your own window may have negative coordinates. Assuming you don't implicitly assume (0, 0) as your origin, the only API change you should need is to start using XPLMGetMouseLocationGlobal() rather than XPLMGetMouseLocation(), and XPLMGetScreenBoundsGlobal() instead of XPLMGetScreenSize(). If you ask to be decorated as a floating window, you'll get the blue window control bar and blue backing that you see in X-Plane 11's normal "floating" windows (like the map).
 ---@class XPLMCreateWindow_t
----@field structSize integer Used to inform XPLMCreateWindowEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateWindow_t)
 ---@field left integer Left bound, in global desktop boxels
 ---@field top integer Top bound, in global desktop boxels
 ---@field right integer Right bound, in global desktop boxels
@@ -1024,6 +1026,9 @@ local XPLMWindowPositioningMode = {
 --- This routine gives a specific window keyboard focus.  Keystrokes will be sent to
 --- that window.  Pass a window ID of 0 to remove keyboard focus from any plugin-created windows
 --- and instead pass keyboard strokes directly to X-Plane.
+---
+--- This routine does not change the keyboard focus of a cockpit device's popup. To release that
+--- focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
 ---
 ---@field XPLMTakeKeyboardFocus fun(inWindow: XPLMWindowID)
 

@@ -2,7 +2,9 @@
 ---
 
 This API provides the basic hooks to draw in X-Plane and create user interface.
-All X-Plane drawing is done in OpenGL. The X-Plane plug-in manager takes care of properly setting
+A window or avionics device has a content type (XPLMWindowContentType) that tells how it is drawn:
+with OpenGL, with the panel graphics APIs (XPLMPanelGraphics), or as a web page. Direct drawing
+callbacks always use OpenGL. For OpenGL drawing, the X-Plane plug-in manager takes care of properly setting
 up the OpenGL context and matrices.  You do not decide when in your code's
 execution to draw; X-Plane tells you (via callbacks) when it is ready to have your plugin draw.
 

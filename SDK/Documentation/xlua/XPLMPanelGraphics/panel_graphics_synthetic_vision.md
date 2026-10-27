@@ -70,7 +70,6 @@ plugins.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_CreateSVT_t = {
-    structSize       = 0,       -- int
     pilotIndex       = 0,       -- int
     pixelsPerDegree  = 0.0,     -- float
 }</code></pre>
@@ -80,7 +79,6 @@ plugins.
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Set to sizeof(XPLMCreateSVT_t). |
 | pilotIndex | int | 0 for pilot-side AHRS, 1 for copilot-side AHRS. |
 | pixelsPerDegree | float | Vertical scale of the 3-d view, in pixels per degree at the center of the display.  Must be greater than zero; the G1000 PFD uses 14. |
 
@@ -195,6 +193,11 @@ This function destroys an SVT display and frees all associated resources.
 <span class="sym-badge badge-struct">struct</span>
 
 </div>
+
+Values that override the sim state for one XPLMSVTDisplayDrawIn call.
+
+Set structSize to the size of your struct so that future SDK versions can add fields without
+breaking existing plugins.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_SVTCustomData_t = {

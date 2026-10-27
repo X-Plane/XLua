@@ -174,7 +174,6 @@ local XPLMMapLayerType = {
 
 --- This structure defines all of the parameters used to create a map layer using XPLMCreateMapLayer. The structure will be expanded in future SDK APIs to include more features. Always set the structSize member to the size of your struct in bytes! Each layer must be associated with exactly one map instance in X-Plane. That map, and that map alone, will call your callbacks. Likewise, when that map is deleted, your layer will be as well.
 ---@class XPLMCreateMapLayer_t
----@field structSize integer Used to inform XPLMCreateMapLayer() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateMapLayer_t)
 ---@field mapToCreateLayerIn string Globally unique string identifying the map you want this layer to appear in. As of XPLM300, this is limited to one of XPLM_MAP_USER_INTERFACE or XPLM_MAP_IOS
 ---@field layerType XPLMMapLayerType The type of layer you are creating, used to determine draw order (all plugin-created markings layers are drawn above all plugin-created fill layers)
 ---@field willBeDeletedCallback XPLMMapWillBeDeletedCallback_f Optional callback to inform you this layer is being deleted (due to its owning map being destroyed)

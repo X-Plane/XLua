@@ -117,7 +117,6 @@ breaking existing plugins.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_MapCustomData_t = {
-    structSize       = 0,       -- int
     datLat           = 0.0,     -- float
     datLon           = 0.0,     -- float
     centerX          = 0,       -- int
@@ -140,7 +139,6 @@ breaking existing plugins.
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Set to sizeof(XPLMMapCustomData_t). This is checked; a size X-Plane does not recognise is an error and is reported. X-Plane never modifies the structure you pass. |
 | datLat | float | datum lat (degrees). |
 | datLon | float | datum lon (degrees). |
 | centerX | int | map center x, in the same panel coordinates as XPLMMapDrawInfo_t's rectangle. |
@@ -179,7 +177,6 @@ plugins.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_CreateMap_t = {
-    structSize  = 0,       -- int
     pilotIndex  = 0,       -- int
 }</code></pre>
 </div>
@@ -188,7 +185,6 @@ plugins.
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Set to sizeof(XPLMCreateMap_t). |
 | pilotIndex | int | 0 for pilot-side GPS position, 1 for copilot-side GPS position. |
 
 </div>
@@ -249,12 +245,11 @@ breaking existing plugins.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_MapDrawInfo_t = {
-    structSize  = 0,       -- int
-    layers      = nil,     -- XPLMMapLayers
-    left        = 0,       -- int
-    top         = 0,       -- int
-    right       = 0,       -- int
-    bottom      = 0,       -- int
+    layers  = nil,     -- XPLMMapLayers
+    left    = 0,       -- int
+    top     = 0,       -- int
+    right   = 0,       -- int
+    bottom  = 0,       -- int
 }</code></pre>
 </div>
 
@@ -262,7 +257,6 @@ breaking existing plugins.
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Set to sizeof(XPLMMapDrawInfo_t). |
 | layers | XPLMMapLayers | Bitwise OR of XPLMMapLayers flags to show. |
 | left | int | Bounding rectangle in panel coordinates. |
 | top | int | Bounding rectangle in panel coordinates. |

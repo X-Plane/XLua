@@ -151,7 +151,6 @@ local XPLMDataTypeID = {
 
 --- The XPLMDataRefInfo_t structure contains all of the information about a single data ref. The structure can be expanded in future SDK APIs to include more features. Always set the structSize member to the size of your struct in bytes!
 ---@class XPLMDataRefInfo_t
----@field structSize integer Used to inform XPLMGetDatarefInfo() of the SDK version you compiled against; should always be set to sizeof(XPLMDataRefInfo_t)
 ---@field name string The full name/path of the data ref
 ---@field type XPLMDataTypeID
 ---@field writable boolean TRUE if the data ref permits writing to it. FALSE if it's read-only.

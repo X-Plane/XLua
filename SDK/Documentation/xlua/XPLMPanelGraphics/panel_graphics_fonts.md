@@ -92,7 +92,6 @@ size of your structure in bytes.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_FontMetrics_t = {
-    structSize   = 0,       -- int
     lineHeight   = 0.0,     -- float
     lineAscent   = 0.0,     -- float
     lineDescent  = 0.0,     -- float
@@ -103,7 +102,6 @@ size of your structure in bytes.
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Set to sizeof(XPLMFontMetrics_t). |
 | lineHeight | float | Total line height including leading, in pixels. |
 | lineAscent | float | Distance from the baseline to the top of the tallest glyph, in pixels. |
 | lineDescent | float | Distance from the baseline to the bottom of the lowest descender, in pixels. This value is positive. |

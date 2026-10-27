@@ -119,7 +119,6 @@ structSize to the size of your structure in bytes.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_TouchZoneSpec_t = {
-    structSize  = 0,       -- int
     type        = nil,     -- XPLMTouchZone
     command     = nil,     -- XPLMCommandRef
     identifier  = 0,       -- int
@@ -134,7 +133,6 @@ structSize to the size of your structure in bytes.
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Set to sizeof(XPLMTouchZoneSpec_t). This is checked; a size X-Plane does not recognise is an error and is reported. |
 | type | XPLMTouchZone | How the zone responds to interaction. |
 | command | XPLMCommandRef | The command to fire. Only used when type is xplm_TouchZone_Command. |
 | identifier | int | An integer you assign to identify this zone in your XPLMTouchEvent_f callback. Only used when type is xplm_TouchZone_Identifier. |

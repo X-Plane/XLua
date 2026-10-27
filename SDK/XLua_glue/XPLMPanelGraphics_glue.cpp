@@ -2119,6 +2119,7 @@ XPLMSVTCustomData_t XPLMSVTCustomData_t_from_table(lua_State* L, int stackpos)
 	XPLMSVTCustomData_t out = {};
 
 	luaL_checktype(L, stackpos, LUA_TTABLE);
+	out.structSize = sizeof(out);
 
 	lua_getfield(L, stackpos, "pitchDeg");
 	if (!lua_isnil(L, -1))
@@ -2230,6 +2231,7 @@ void XPLMSVTCustomData_t_to_table(lua_State* L, XPLMSVTCustomData_t const& src)
 int MakeXPLMSVTCustomData_t(lua_State* L)
 {
 	XPLMSVTCustomData_t out = {};
+	out.structSize = sizeof(XPLMSVTCustomData_t);
 	XPLMSVTCustomData_t_to_table(L, out);
 	return 1;
 }

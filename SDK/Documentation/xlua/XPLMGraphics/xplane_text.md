@@ -57,6 +57,8 @@ This function returns the x offset plus the width of all drawn characters.
 The color to draw in is specified as a pointer to an array of three
 floating point colors, representing RGB intensities from 0.0 to 1.0.
 
+Call this routine only from an OpenGL drawing callback. In a panel graphics callback, X-Plane logs an error and draws nothing; use XPLMFontDrawString instead.
+
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">XPLMDrawString(
     inColorRGB,         -- float
@@ -91,6 +93,8 @@ output display in X-Plane.  Pass in a color, a position, a floating point value,
 formatting info.  Specify how many integer and how many decimal digits to show and
 whether to show a sign, as well as a character set.
 This routine returns the xOffset plus width of the string drawn.
+
+Call this routine only from an OpenGL drawing callback. In a panel graphics callback, X-Plane logs an error and draws nothing; use XPLMFontDrawString instead.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">XPLMDrawNumber(
