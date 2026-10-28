@@ -341,6 +341,14 @@ XPLM_API void       XPLMReloadThisPlugin(
 #define XPLM_MSG_WEATHER_DELIVERED 115
 #endif /* XPLM430 */
 
+#if defined(XPLM440)
+/* Sent to all plugins when the value XPLMGetProLicenseStatus returns changes,*
+ * including the first transition away from xplm_ProLicense_Unknown when      *
+ * X-Plane's license check completes. The parameter is the new                *
+ * XPLMProLicenseStatus, bit-cast to a pointer.                               */
+#define XPLM_MSG_PRO_LICENSE_CHANGED 116
+#endif /* XPLM440 */
+
 /*
  * XPLMSendMessageToPlugin
  * 

@@ -34,7 +34,8 @@ INTERFACE
 
 USES
     XPLMDefs, XPLMUtilities, XPLMDisplay;
-   {$A4}
+   {$A8}
+   {$Z4}
 
 TYPE
    XPLMChar   = AnsiChar;
@@ -108,6 +109,25 @@ TYPE
    PXPLMVertexColor_t = ^XPLMVertexColor_t;
 
    {
+    XPLMLineCap_t
+    
+    This enumeration specifies the way lines drawn with XPLMPanelGraphics end.
+    The default value is xplm_LineCapButt
+   }
+   XPLMLineCap_t = (
+     { Lines are capped by straight edges at the start and end point.             }
+      xplm_LineCapButt                         = 0
+ 
+     { Lines are capped by half circles centered on the start and end points.     }
+     ,xplm_LineCapRound                        = 1
+ 
+     { Lines are capped by half squares centered on the start and end points.     }
+     ,xplm_LineCapSquare                       = 2
+ 
+   );
+   PXPLMLineCap_t = ^XPLMLineCap_t;
+
+   {
     XPLMMakeColor
     
     This function packs four floating-point color components into a single
@@ -125,14 +145,26 @@ TYPE
     cdecl; external XPLM_DLL;
 
    {
+    XPLMSetLineCap
+    
+    This function sets what caps are used when drawing subsequent lines. The
+    default value at the start of a drawing callback is xplm_LineCapButt.
+    
+    - lineCap: the new line cap style.
+   }
+    { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
+   PROCEDURE XPLMSetLineCap(
+                                        lineCap             : XPLMLineCap_t);
+    cdecl; external XPLM_DLL;
+
+   {
     XPLMLines
     
     This function draws disconnected line segments. Every pair of vertices
     defines one segment: the first segment runs from vertices[0] to
     vertices[1], the second from vertices[2] to vertices[3], and so on.
     
-    - count: the number of vertices. Should be even; an odd trailing vertex is
-      ignored.
+    - count: the number of vertices. Must be even.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMLines(
@@ -740,7 +772,9 @@ TYPE
    
    - Create an atlas with XPLMCreateTextureAtlas.
    - Add images from files or raw pixel data. Each image (or cell of an image
-     set) receives a zero-based index.
+     set) receives a zero-based index. Every routine below that takes an
+     inImageIndex requires an index that one of the add routines returned to
+     you.
    - Call XPLMTextureAtlasBake to upload the atlas to the GPU.
    - Draw images using the DrawAt, DrawIn, DrawStretched, DrawScaled, or
      DrawMesh routines.
@@ -748,6 +782,22 @@ TYPE
      needed.
    
    All images are stored as RGBA, 4 bytes per pixel.
+   
+   That order is a requirement, not a suggestion. An atlas is either being
+   filled or baked, and most routines here have a precondition on which of the
+   two it is: the XPLMTextureAtlasAddImage family and XPLMTextureAtlasBake
+   require an atlas that has not been baked, and every draw routine requires
+   one that has. Each routine states its own precondition below. X-Plane
+   reports a violated precondition to your error callback and to Log.txt so
+   that you can find it, but a violated precondition is a bug in your plugin,
+   so no return value is defined for one - do not write code that tests for
+   it.
+   
+   XPLMDestroyTextureAtlas, XPLMTextureAtlasGetImageWidth and
+   XPLMTextureAtlasGetImageHeight have no precondition on the bake state -
+   they are legal at any point in an atlas's life. In particular you can
+   measure your images before you bake, which is usually when you want to
+   know: laying out a panel around art you have added but not yet packed.
 }
 
 
@@ -813,11 +863,13 @@ TYPE
     XPLMTextureAtlasAddImageFile
     
     This function loads a PNG image file and adds it to the atlas as a single
-    image. Call this before XPLMTextureAtlasBake.
+    image. The atlas must not have been baked yet.
     
     - inImageFilePath: the file system path to a PNG file.
     
     Returns the zero-based image index assigned to this image.
+    
+    Returns -1 if the image could not be loaded.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMTextureAtlasAddImageFile(
@@ -830,8 +882,8 @@ TYPE
     
     This function loads a PNG image file and subdivides it into a grid of
     cells, adding each cell to the atlas as a separate image. This is useful
-    for sprite sheets and image strip assets. Call this before
-    XPLMTextureAtlasBake.
+    for sprite sheets and image strip assets. The atlas must not have been
+    baked yet.
     
     - inImageFilePath: the file system path to a PNG file.
     - inCellsX: the number of columns to divide the image into.
@@ -839,6 +891,8 @@ TYPE
     
     Returns the zero-based image index of the first cell (top-left). Subsequent
     cells are numbered in row-major order: index + y * inCellsX + x.
+    
+    Returns -1 if the image could not be loaded.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMTextureAtlasAddImageFileSet(
@@ -853,13 +907,15 @@ TYPE
     
     This function adds a single image from raw pixel data to the atlas. The
     pixel data must be RGBA format, 4 bytes per pixel, with rows ordered from
-    top to bottom. Call this before XPLMTextureAtlasBake.
+    top to bottom. The atlas must not have been baked yet.
     
     - inImage: pointer to the raw RGBA pixel data.
     - inWidth: the image width in pixels.
     - inHeight: the image height in pixels.
     
     Returns the zero-based image index assigned to this image.
+    
+    Returns -1 if the image could not be loaded.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMTextureAtlasAddImage(
@@ -874,8 +930,8 @@ TYPE
     
     This function adds raw pixel data to the atlas, subdividing it into a grid
     of cells. Each cell is added as a separate image. The pixel data must be
-    RGBA format, 4 bytes per pixel, with rows ordered from top to bottom. Call
-    this before XPLMTextureAtlasBake.
+    RGBA format, 4 bytes per pixel, with rows ordered from top to bottom. The
+    atlas must not have been baked yet.
     
     - inImage: pointer to the raw RGBA pixel data.
     - inWidth: the total image width in pixels.
@@ -885,6 +941,8 @@ TYPE
     
     Returns the zero-based image index of the first cell. Subsequent cells are
     numbered in row-major order: index + y * inCellsX + x.
+    
+    Returns -1 if the image could not be loaded.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMTextureAtlasAddImageSet(
@@ -899,9 +957,10 @@ TYPE
    {
     XPLMTextureAtlasBake
     
-    This function packs all previously added images into a GPU texture. You
-    must call this after adding all images and before any draw calls. Once
-    baked, you cannot add more images to the atlas.
+    This function packs all previously added images into a GPU texture. Call it
+    after adding all of your images and before any draw calls. The atlas must
+    not have been baked yet - an atlas is baked exactly once, and takes no more
+    images after that.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMTextureAtlasBake(
@@ -912,7 +971,9 @@ TYPE
     XPLMTextureAtlasGetImageWidth
     
     This function returns the width in pixels of a single image (or cell) in
-    the atlas.
+    the atlas. This works both before and after XPLMTextureAtlasBake, and
+    returns the same answer either way - packing an atlas never resizes your
+    images.
     
     Returns the image width in pixels.
    }
@@ -926,7 +987,9 @@ TYPE
     XPLMTextureAtlasGetImageHeight
     
     This function returns the height in pixels of a single image (or cell) in
-    the atlas.
+    the atlas. This works both before and after XPLMTextureAtlasBake, and
+    returns the same answer either way - packing an atlas never resizes your
+    images.
     
     Returns the image height in pixels.
    }
@@ -941,7 +1004,7 @@ TYPE
     
     This function draws an atlas image at its native resolution. The image is
     positioned with its top-left corner at (inX, inY) and extends rightward and
-    downward by its native pixel dimensions.
+    downward by its native pixel dimensions. The atlas must already be baked.
     
     - inTintColor: a color that is multiplied with the texture. Use
       XPLMMakeColor(1, 1, 1, 1) for no tinting.
@@ -961,7 +1024,8 @@ TYPE
     XPLMTextureAtlasDrawIn
     
     This function draws an atlas image scaled to fill a rectangular region. The
-    image is stretched or compressed to exactly match the specified bounds.
+    image is stretched or compressed to exactly match the specified bounds. The
+    atlas must already be baked.
     
     - inTintColor: a color that is multiplied with the texture.
     - inLeft, inTop, inRight, inBottom: the bounding rectangle in panel
@@ -986,7 +1050,8 @@ TYPE
     the original width and height). The four corner slices are drawn at their
     native size, the four edge slices are stretched along one axis, and the
     center slice is stretched in both directions. This preserves corners and
-    borders when scaling UI elements like buttons or panels.
+    borders when scaling UI elements like buttons or panels. The atlas must
+    already be baked.
     
     - inTintColor: a color that is multiplied with the texture.
     - inLeft, inTop, inRight, inBottom: the bounding rectangle in panel
@@ -1009,7 +1074,8 @@ TYPE
     This function draws an atlas image with arbitrary scaling, rotation, and
     positioning. The image is placed so that the atlas-space pivot point
     (inXAtlas, inYAtlas) aligns with the panel-space position (inXPanel,
-    inYPanel), then scaled and rotated around that point.
+    inYPanel), then scaled and rotated around that point. The atlas must
+    already be baked.
     
     - inTintColor: a color that is multiplied with the texture.
     - inXPanel, inYPanel: the destination point in panel coordinates.
@@ -1054,6 +1120,8 @@ TYPE
     - vertices: an array of XPLMTextureVertex_t vertices defining the triangle
       strip.
     - count: the number of vertices. Must be at least 3.
+    
+    The atlas must already be baked.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMTextureAtlasDrawMesh(
@@ -1153,7 +1221,31 @@ TYPE
    
    The transform and the scissor rectangle each have a push/pop stack. Always
    push before modifying either one and pop to restore the previous state when
-   you are done.
+   you are done. For the transform this is required, not merely good manners:
+   XPLMTransformTranslate, XPLMTransformRotate and XPLMTransformScale must be
+   called inside a XPLMTransformPush/XPLMTransformPop pair; calling one
+   outside a pair is an error. X-Plane does not push a transform scope around
+   your drawing callback, so a transform with no enclosing push has no defined
+   end.
+   
+   Scissor rectangles ride the transform stack, exactly like the drawing they
+   clip: the rectangle you pass is in panel coordinates and is put through the
+   transform in force when you set it. Once set, it stays where you set it - a
+   later transform does not move it, and popping the scissor stack restores
+   whatever rectangle was in force before the matching push.
+   
+   Rotation is the one transform a rectangle cannot survive, because an
+   axis-aligned rectangle cannot describe a rotated one. Calling any of these
+   while a rotation is in effect is an error, reported to Log.txt and through
+   your error callback:
+   
+   - XPLMScissorSet and XPLMScissorIntersect
+   - XPLMAccumulateTouchZone
+   - XPLMDrawCalls, whose draw calls carry their own scissor rectangles
+   - XPLMSVTDisplayDrawIn and XPLMMapDisplayDrawIn, which clip themselves
+   - XPLMDrawRetained, if the retained drawing contains any of the above
+   
+   Translate and scale are fine for all of them, and are applied for you.
    
    The stencil has no stack. Instead the stencil buffer holds up to eight
    independent one-bit masks, and you select which of them clips your drawing
@@ -1190,6 +1282,8 @@ TYPE
     amounts. The translation is applied on top of the current transformation
     matrix.
     
+    Must be called inside a XPLMTransformPush/XPLMTransformPop pair.
+    
     - dx: horizontal offset in pixels, positive to the right.
     - dy: vertical offset in pixels, positive upward.
    }
@@ -1204,6 +1298,16 @@ TYPE
     
     This function rotates all subsequent drawing around a center point. The
     rotation is applied on top of the current transformation matrix.
+    
+    Must be called inside a XPLMTransformPush/XPLMTransformPop pair.
+    
+    While a rotation is in effect, you may not use any routine that works with
+    an axis-aligned rectangle - scissors, touch zones, XPLMDrawCalls, and the
+    SVT and map draw-ins. See the section description above for the full list.
+    This is decided by whether you called this function, not by the angle you
+    passed: a rotation of zero degrees still counts. Keep rotations in as tight
+    a push/pop scope as you can, so those routines are available again after
+    the pop.
     
     - centerX, centerY: the center of rotation in panel coordinates.
     - angle: the rotation angle in degrees, positive counterclockwise.
@@ -1221,6 +1325,12 @@ TYPE
     This function scales all subsequent drawing relative to the origin of the
     current coordinate system. The scale is applied on top of the current
     transformation matrix.
+    
+    Must be called inside a XPLMTransformPush/XPLMTransformPop pair.
+    
+    Neither factor may be zero: a zero scale collapses the coordinate system
+    onto a line, so a position expressed in it can no longer be recovered.
+    Negative factors are fine and mirror your drawing.
     
     - scaleX: horizontal scale factor. 1.0 is no change, 2.0 doubles width.
     - scaleY: vertical scale factor. 1.0 is no change, 2.0 doubles height.
@@ -1271,14 +1381,12 @@ TYPE
    {
     XPLMScissorIntersect
     
-    This function sets the scissors box to the intersection of the existing
-    scissors box. The result is always a same or smaller drawable area. This is
-    useful for nested clipping.
+    This function sets the scissor rectangle to the intersection of the current
+    scissor rectangle and the rectangle you pass in. The result is always the
+    same or a smaller drawable area. This is useful for nested clipping.
     
-    - left: inset from the left edge, in pixels.
-    - top: inset from the top edge, in pixels.
-    - right: inset from the right edge, in pixels.
-    - bottom: inset from the bottom edge, in pixels.
+    - left, top, right, bottom: the scissor bounds in panel coordinates, the
+      same coordinate space used by XPLMScissorSet.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMScissorIntersect(
@@ -1296,6 +1404,25 @@ TYPE
     shapes that define your mask region, then call XPLMEndSetupStencilMask to
     finish.
     
+    Color writing is off while you record, so no color you draw with reaches
+    the screen and its red, green and blue never matter. Alpha is a different
+    story, because a fragment whose final alpha is exactly zero is thrown away
+    before it can mark the stencil:
+    
+    - Polygons and quadstrips are not alpha tested. One drawn in a fully
+      transparent color still marks the stencil exactly as an opaque one does,
+      so the geometry alone defines the mask.
+    - Texture atlas draws are alpha tested. A texel whose alpha is zero, after
+      multiplication by the tint color you pass, does not mark the stencil - so
+      the image's alpha channel cuts the shape of the mask, and this is the way
+      to record a mask that is not simply a polygon. Passing a tint color whose
+      alpha is zero records nothing at all.
+    
+    The test is against exactly zero, not a threshold: an alpha of 1 out of 255
+    marks the stencil as completely as an alpha of 255 does. Nothing in between
+    is partially masked - the stencil is one bit per channel, so a pixel is
+    either in the mask or out of it.
+    
     The stencil buffer is eight bits wide, so you can record up to eight
     independent masks and pick among them later with XPLMUseStencilMask - one
     bit per mask - without having to re-draw them.
@@ -1304,9 +1431,13 @@ TYPE
       geometry is drawn.
     - mask: a bitmask selecting which stencil bits are written.
     
-    Both parameters must be in the range 0 to 255, and every bit set in bits
-    must also be set in mask - a bit outside the mask can never be written.
-    Stencil testing must be off (see XPLMUseStencilMask) when you call this.
+    Both parameters must be in the range 0 to 255 - the buffer is only eight
+    bits wide, so a bit above that can never be stored - and every bit set in
+    bits must also be set in mask, since a bit outside the mask can never be
+    written. Breaking either rule is an error, reported to Log.txt and through
+    your error callback, and the call is ignored: out-of-range values are not
+    truncated for you. Stencil testing must be off (see XPLMUseStencilMask)
+    when you call this.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMBeginSetupStencilMask(
@@ -1340,8 +1471,12 @@ TYPE
     - bits: the reference bit pattern to test against.
     - mask: a bitmask selecting which stencil bits participate in the test.
     
-    Both parameters must be in the range 0 to 255, and every bit set in bits
-    must also be set in mask - a bit outside the mask can never match.
+    Both parameters must be in the range 0 to 255 - the buffer is only eight
+    bits wide, so a bit above that can never be set in it - and every bit set
+    in bits must also be set in mask, since a bit outside the mask can never
+    match. Breaking either rule is an error, reported to Log.txt and through
+    your error callback, and the call is ignored: out-of-range values are not
+    truncated for you.
     
     You may call this as often as you like within one drawing callback to
     switch between masks you have recorded; each call replaces the previous
@@ -1389,6 +1524,27 @@ TYPE
    regions that respond to mouse clicks or touches. Each zone can either fire
    an X-Plane command automatically or deliver raw touch events to a callback
    you register with XPLMAvionicsSetTouchEventHandler.
+   
+   A touch zone rides the transform stack, exactly like the drawing it sits on
+   top of. Declare the zone in the same coordinates you drew in and X-Plane
+   applies the transform in force for you - do not offset or scale the
+   rectangle yourself, or the transform will be applied twice. This is the
+   whole point: draw a button and put a zone on it using the same numbers,
+   under any combination of translates and scales, and the two stay together.
+   
+   The transform runs both ways, so your XPLMTouchEvent_f never has to undo it
+   either. The x and y you receive are in the coordinate system that was in
+   force when you declared the zone, and dx and dy are scaled to match - you
+   can compare them directly against the numbers you drew with.
+   
+   Two limits follow from a zone being an axis-aligned rectangle:
+   
+   - Do not declare a zone while a rotation is in effect. An axis-aligned
+     rectangle cannot describe a rotated graphic, so this is an error.
+   - A zone cannot be declared inside a XPLMBeginRetainedDrawing recording. A
+     zone is per-frame state rather than drawing, and a retained drawing holds
+     drawing only. Accumulate your zones outside the recording, once per
+     frame; they are cheap to re-declare and are meant to be re-declared.
 }
 
 
@@ -1418,9 +1574,22 @@ TYPE
     XPLMTouchEvent_f
     
     Your touch event callback is invoked when the user interacts with a touch
-    zone whose type is xplm_TouchZone_Identifier. You receive the zone's
-    identifier, the mouse status, the current position, the delta from the
-    initial click point, and the mouse button involved.
+    zone whose type is xplm_TouchZone_Identifier.
+    
+    - identifier: the identifier from the XPLMTouchZoneSpec_t that was touched.
+    - status: xplm_MouseDown, xplm_MouseDrag, or xplm_MouseUp.
+    - x, y: the current mouse position.
+    - dx, dy: the delta from the initial click point. A translation cannot
+      affect a delta, so only the scale applies.
+    - button: the mouse button - 0 for left, 1 for right.
+    
+    The position and the deltas are in the coordinate system that was in force
+    when you declared the zone with XPLMAccumulateTouchZone, so they are
+    directly comparable to the numbers you drew and declared with - you do not
+    need to undo the transform stack, and you do not need the window or device
+    geometry to make sense of them. The coordinate system is latched when the
+    gesture begins, so every event in one drag arrives in the same space even
+    if you move or rescale the zone part way through.
    }
      XPLMTouchEvent_f = PROCEDURE(
                                     identifier          : Integer;
@@ -1441,7 +1610,8 @@ TYPE
     structSize to the size of your structure in bytes.
    }
    XPLMTouchZoneSpec_t = RECORD
-     { Set to sizeof(XPLMTouchZoneSpec_t).                                        }
+     { Set to sizeof(XPLMTouchZoneSpec_t). This is checked; a size X-Plane does   }
+     { not recognise is an error and is reported.                                 }
      structSize               : Integer;
      { How the zone responds to interaction.                                      }
      &type                    : XPLMTouchZone;
@@ -1450,13 +1620,17 @@ TYPE
      { An integer you assign to identify this zone in your XPLMTouchEvent_f       }
      { callback. Only used when type is xplm_TouchZone_Identifier.                }
      identifier               : Integer;
-     { Left edge of the zone, in panel coordinates.                               }
+     { Left edge of the zone, in the coordinates you are drawing in. X-Plane      }
+     { applies the transform stack for you - do not pre-offset this.              }
      left                     : Integer;
-     { Top edge of the zone, in panel coordinates.                                }
+     { Top edge of the zone, in the coordinates you are drawing in. X-Plane       }
+     { applies the transform stack for you - do not pre-offset this.              }
      top                      : Integer;
-     { Right edge of the zone, in panel coordinates.                              }
+     { Right edge of the zone, in the coordinates you are drawing in. X-Plane     }
+     { applies the transform stack for you - do not pre-offset this.              }
      right                    : Integer;
-     { Bottom edge of the zone, in panel coordinates.                             }
+     { Bottom edge of the zone, in the coordinates you are drawing in. X-Plane    }
+     { applies the transform stack for you - do not pre-offset this.              }
      bottom                   : Integer;
    END;
    PXPLMTouchZoneSpec_t = ^XPLMTouchZoneSpec_t;
@@ -1469,9 +1643,16 @@ TYPE
     region on your panel. Zones registered later take priority over earlier
     ones when they overlap.
     
+    The rectangle is in the coordinates you are drawing in: X-Plane puts it
+    through the transform stack for you, so pass the same numbers you drew the
+    button with and do not apply the offset or scale yourself.
+    
     Returns true if the zone is currently being clicked or held by the user,
     false otherwise. You can use this to provide visual feedback (for example,
     drawing a button in its pressed state).
+    
+    Calling this while a rotation is in effect, or while recording a retained
+    drawing, is an error. See the section description above for why.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMAccumulateTouchZone(
@@ -1500,6 +1681,20 @@ TYPE
 
    {
     XPLMWindowSetTouchEventHandler
+    
+    This function registers a callback to receive touch events for zones of
+    type xplm_TouchZone_Identifier accumulated by a window's drawing callback.
+    It is the window equivalent of XPLMAvionicsSetTouchEventHandler.
+    
+    Note that only the registration is thread safe. Your XPLMTouchEvent_f
+    itself is always called on the main thread, so it is free to call anything
+    a callback may normally call - including XPLMGetWindowGeometry. In practice
+    you should not need the geometry: the coordinates you are handed are
+    already in the space you declared the zone in.
+    
+    - window: the window whose touch zones this handler serves.
+    - handler: your XPLMTouchEvent_f callback.
+    - ref: a reference pointer passed through to your callback.
    }
     { Thread-safe. This call may be used from threads.                              }
    PROCEDURE XPLMWindowSetTouchEventHandler(
@@ -1519,10 +1714,21 @@ TYPE
    or infrequently changing parts of a display: record once, then replay each
    frame without reissuing individual draw calls.
    
-   WARNING: A retained drawing captures references to the texture atlases and
-   fonts used during recording. If you destroy a texture atlas or font that
-   was used in a retained drawing, you must also destroy that retained drawing
-   - replaying it will reference invalid resources.
+   You can record anywhere - inside a draw callback, or outside one entirely
+   (when your plugin is enabled, from a flight loop, and so on) - and replay
+   in any draw callback. A retained drawing captures the drawing itself, not
+   the state around it: it lands wherever the transform, scissors and stencil
+   in force at replay put it.
+   
+   WARNING: A retained drawing captures references to the texture atlases,
+   fonts, textures (from XPLMCreateTexture) and other retained drawings used
+   during recording. If you destroy any of those, you must destroy every
+   retained drawing that uses it first - replaying a retained drawing that
+   references a destroyed resource is undefined behavior, and may crash
+   X-Plane.
+   
+   Drawing with a resource and then destroying it in the same callback is
+   fine: X-Plane keeps whatever it still needs to finish that frame's drawing.
 }
 
 
@@ -1545,6 +1751,10 @@ TYPE
     made after this function and before XPLMEndRetainedDrawing are captured
     into a retained drawing instead of being rendered immediately.
     
+    You may call this inside or outside a draw callback. Either way, end the
+    recording with XPLMEndRetainedDrawing before that same callback returns; a
+    recording left open is reported and discarded.
+    
     NOTE: Do not nest retained drawing sessions.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
@@ -1555,8 +1765,8 @@ TYPE
     XPLMEndRetainedDrawing
     
     This function ends recording and returns a handle to the captured drawing
-    commands. Subsequent panel graphics calls are once again rendered
-    immediately.
+    commands. Inside a draw callback, subsequent panel graphics calls are once
+    again rendered immediately.
     
     Returns an opaque handle to the retained drawing.
    }
@@ -1570,6 +1780,15 @@ TYPE
     This function replays a previously recorded sequence of drawing commands.
     You can call this multiple times per frame and across multiple frames to
     efficiently re-draw the same content.
+    
+    The drawing happens where you replay it, in the state in force at that
+    point, so you can freely translate, scale and rotate a retained drawing to
+    place it - this is one of the main reasons to use one.
+    
+    The exception is a drawing that contains something axis-aligned: scissors,
+    XPLMDrawCalls, an SVT display or a map display. Replaying such a drawing
+    while a rotation is in effect is an error. Translate and scale are always
+    fine.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDrawRetained(
@@ -1579,7 +1798,9 @@ TYPE
    {
     XPLMDestroyRetainedDrawing
     
-    This function destroys a retained drawing and frees its resources.
+    This function destroys a retained drawing and frees its resources. You may
+    call this anywhere, including in the draw callback that just drew it.
+    Destroy any retained drawing that has this one drawn into it first.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDestroyRetainedDrawing(
@@ -1715,9 +1936,18 @@ TYPE
 
    {
     XPLMSVTCustomData_t
+    
+    Values that override the sim state for one XPLMSVTDisplayDrawIn call.
+    
+    Set structSize to the size of your struct so that future SDK versions can
+    add fields without breaking existing plugins.
    }
 TYPE
    XPLMSVTCustomData_t = RECORD
+     { Set to sizeof(XPLMSVTCustomData_t). This is checked; a size X-Plane does   }
+     { not recognise is an error and is reported. X-Plane never modifies the      }
+     { structure you pass.                                                        }
+     structSize               : Integer;
      { pitch override (degrees).                                                  }
      pitchDeg                 : Single;
      { roll/bank override (degrees).                                              }
@@ -1885,7 +2115,9 @@ TYPE
     add fields without breaking existing plugins.
    }
    XPLMMapCustomData_t = RECORD
-     { Set to sizeof(XPLMMapCustomData_t).                                        }
+     { Set to sizeof(XPLMMapCustomData_t). This is checked; a size X-Plane does   }
+     { not recognise is an error and is reported. X-Plane never modifies the      }
+     { structure you pass.                                                        }
      structSize               : Integer;
      { datum lat (degrees).                                                       }
      datLat                   : Single;
@@ -1918,7 +2150,7 @@ TYPE
      nearestRwyElev           : Single;
      { brightness of the EGPWS overlay.                                           }
      egpwsBrightness          : Single;
-     { style of the EGPWS overlay.                                                }
+     { style of the EGPWS overlay. Must be one of the XPLMEGPWSStyle constants.   }
      egpwsStyle               : XPLMEGPWSStyle;
    END;
    PXPLMMapCustomData_t = ^XPLMMapCustomData_t;
@@ -2052,7 +2284,11 @@ TYPE
     
     Note that the returned coordinates are in the same space as info's
     rectangle, and like that rectangle they do not account for the panel
-    graphics transform stack.
+    graphics transform stack. That is deliberate, and it is what you want: you
+    take these coordinates and hand them to a drawing call -
+    XPLMTextureAtlasDrawAt to put a VOR symbol on the map, say - and that
+    drawing call applies the transform. Applying it here as well would apply it
+    twice.
     
     Passing NULL for dataOverrides projects the sim's own navigation display
     view, the same one XPLMMapDisplayDrawIn draws with NULL.
@@ -2071,14 +2307,24 @@ TYPE
    {
     XPLMMapDisplayUnproject
     
-    Turns a position in panel coordinates back into a latitude/longitude, for
-    the map that info describes. This is the inverse of XPLMMapDisplayProject.
+    Turns a position back into a latitude/longitude, for the map that info
+    describes. This is the inverse of XPLMMapDisplayProject, and like it, x and
+    y are in the same space as info's rectangle rather than in transformed
+    coordinates.
     
     Use this to turn a touch or click on your map into a place in the world -
-    for picking a waypoint, or reading out the position under the cursor.
+    for picking a waypoint, or reading out the position under the cursor. This
+    needs no adjustment on your part in either of its two uses. For a touch,
+    the coordinates your XPLMTouchEvent_f receives are already in the space you
+    declared the zone in, so as long as you put the zone down under the same
+    transform as the map, they are the space this function wants. For culling,
+    you already hold your own drawing coordinates, which are likewise
+    untransformed. In both cases, running the transform stack over the input -
+    in either direction - would be the bug.
     
     Unlike XPLMMapDisplayDrawIn, this does not have to be called from a drawing
-    callback; it is equally valid from a click handler or a flight loop.
+    callback; it is equally valid from a click handler or a flight loop, where
+    there is no transform stack at all.
     
     Returns 1 on success. Returns 0, leaving outLatitude and outLongitude
     untouched, if the map's terrain tiles have not loaded yet or if the point
@@ -2263,6 +2509,8 @@ TYPE
  
      ,xplm_PGO_drawcalls                       = 41
  
+     ,xplm_PGO_linecap                         = 42
+ 
    );
    PXPLMPGOpcode = ^XPLMPGOpcode;
 
@@ -2322,15 +2570,26 @@ TYPE
  * IMGUI HELPERS
  ___________________________________________________________________________}
 {
-   These routines let panel-graphics-content-type windows render textured
-   indexed triangle meshes that exactly match the layout produced by Dear
-   ImGui's `ImDrawData`, so a plugin can plug an ImGui frame straight into
-   X-Plane panel graphics.
+   These routines let panel graphics render textured indexed triangle meshes
+   that exactly match the layout produced by Dear ImGui's `ImDrawData`, so a
+   plugin can plug an ImGui frame straight into X-Plane panel graphics.
    
-   Coordinate system: positions are in window-LOCAL pixels with TOP-LEFT
-   origin (matches Dear ImGui). Scissors are in the same coordinate space. The
-   host translates these against the current panel-graphics origin and flips Y
-   for you.
+   Coordinate system: positions and scissors are in panel coordinates under
+   the current transform, exactly like every other panel-graphics primitive.
+   Nothing is translated or flipped for you. Dear ImGui works in window-local
+   pixels with a TOP-LEFT origin and Y increasing downward, so set up that
+   space with the transform stack before drawing - the same conversion your
+   mouse handler does in reverse:
+   
+       XPLMTransformPush(); XPLMTransformTranslate(left, top);   // from
+       XPLMGetWindowGeometry; (0, height) on an avionics screen
+       XPLMTransformScale(1.0f, -1.0f);     // Y down, as ImGui expects
+       XPLMDrawCalls(...);                  // once per ImDrawList
+       XPLMTransformPop();
+   
+   Because the transform is yours, a retained drawing of an ImGui frame
+   captures the frame itself, not where the window was: replay it under the
+   translate for the window's current position and it follows the window.
    
    Vertex layout (matches `ImDrawVert` exactly): each vertex is 5 floats =
    20 bytes, in this order: pos.x, pos.y, uv.x, uv.y, RGBA8 packed as a
@@ -2345,13 +2604,18 @@ TYPE
    Sampler: bilinear filter, clamp-to-edge in both dimensions, no mipmaps. UV
    coordinates outside [0,1] sample the edge texels (no wrap).
    
-   Scissor: the per-`XPLMDrawCall_t` scissor rect is in (left, top, right,
-   bottom) order (top-left origin). Zero-width or zero-height rects produce no
-   output. The scissor state is automatically saved on entry to
+   Scissor: the per-`XPLMDrawCall_t` scissor rect is two opposite corners,
+   (x1, y1, x2, y2), in the same space as the vertices - ImGui's `ClipRect`
+   as-is. It is intersected with the scissor already in force (for example one
+   set with XPLMScissorSet), so a draw call can narrow the clip but never
+   escape it. Zero-width or zero-height rects produce no output. The scissor
+   state is automatically saved on entry to
    `XPLMDrawCalls` and restored on exit, so subsequent panel-graphics calls in
     the same frame are unaffected.
    
-   Plugin-callable from inside a panel-graphics window's draw callback only.
+   XPLMDrawCalls may only be called while drawing: from a panel-graphics draw
+   callback, or while recording a retained drawing. XPLMCreateTexture and
+   XPLMDestroyTexture may be called anywhere.
 }
 
 
@@ -2371,7 +2635,8 @@ TYPE
      { is not a general texture handle, and passing anything else (an             }
      { XPLMTextureAtlasRef, say) is undefined behavior, not a no-op.              }
      tex_ref                  : pointer;
-     { Clip rect: (left, top, right, bottom) in window-local top-left coords.     }
+     { Clip rect: two opposite corners (x1, y1, x2, y2), in the same space as the }
+     { vertices (ImGui's ClipRect as-is).                                         }
      scissors                 : array[0..4 - 1] of Single;
      { First index into XPLMMesh_t::indices to use.                               }
      idx_offset               : Integer;
@@ -2412,6 +2677,9 @@ TYPE
     The returned handle is opaque; pass it to `XPLMDrawCall_t::tex_ref` and
     free it with `XPLMDestroyTexture` when done. The sampler used at draw time
     is bilinear, clamp-to-edge, no mipmaps.
+    
+    You may call this anywhere, including inside a panel-graphics draw
+    callback; the texture can be used by draw calls later in the same callback.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateTexture(
@@ -2425,6 +2693,11 @@ TYPE
     
     Frees a texture obtained from `XPLMCreateTexture`. Do not use the handle
     after calling this. It is safe to create and destroy textures every frame.
+    
+    You may call this anywhere, including inside a panel-graphics draw
+    callback, even right after drawing with the texture: X-Plane keeps it alive
+    until that drawing has been rendered. Do not destroy a texture that a
+    retained drawing still uses - destroy the retained drawing first.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMDestroyTexture(

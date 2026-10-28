@@ -12,11 +12,11 @@
 #include "xpfuncs.h"
 #include "shared_xpfuncs.h"
 #include "lua_helpers.h"
-#include "xlua_command_bindings.h"
 
 #include <XPLMUtilities.h>
 
 #include <algorithm>
+#include <cstdio>
 #include <regex>
 #include <cassert>
 #include <string>
@@ -167,19 +167,6 @@ static void destroy_alloc_block(module_alloc_block * head)
 	}
 }
 
-#define CTOR_FAIL(errcode,msg) \
-if(errcode != 0) { \
-	XPLMDebugString((get_log_prefix('E') + "Error during " + msg + " '" + m_log_path + "'\n").c_str()); \
-	if (m_interp) \
-	{ \
-		const char *errmsg = nullptr; \
-		lua_tostring(m_interp, -1); \
-		log_message(m_interp,"%s\n%s failed: %d\n",errmsg,msg,errcode); \
-		lua_close(m_interp); \
-		m_interp = nullptr; \
-	} \
-	return; }
-
 void profile_callback(void* data, lua_State* L, int samples, int vmstate)
 {
 	if (vmstate != 'C')
@@ -305,6 +292,42 @@ static int xmap_lua_path_searcher(lua_State* L)
 }
 #endif
 
+bool module::fail_ctor(int errcode, char const* what)
+{
+	if (errcode == 0)
+		return false;
+
+	std::string message = get_log_prefix('E') + "Error during " + what
+						+ " '" + m_log_path + "' (error " + std::to_string(errcode) + ")";
+
+	if (m_interp != nullptr)
+	{
+		if (char const* lua_error = lua_tostring(m_interp, -1))
+		{
+			message += ": ";
+			message += lua_error;
+		}
+	}
+
+	message += "\n";
+	XPLMDebugString(message.c_str());
+	printf("%s", message.c_str());
+
+	if (m_interp != nullptr)
+		mute();
+	return true;
+}
+
+void module::mute(void)
+{
+	// Do not close the interpreter. The script can have registered datarefs, commands and other
+	// callbacks before it failed, and XPLM holds refcons that point into this interpreter. They must
+	// stay valid until the plugin stops. A dead interpreter runs no more Lua code.
+	xlua_vm_set_dead(m_interp);
+	log_message(nullptr, "'%s' did not start. Its datarefs and commands stay registered, but do nothing until the scripts unload.\n",
+				m_log_path.c_str());
+}
+
 module::module(
 	std::filesystem::path const& in_module_path,
 	std::filesystem::path const& in_init_script,
@@ -324,17 +347,22 @@ module::module(
 	// we need to load the Lua script from an already allocated memory buffer.
 	xmap_class lmod(in_module_script);
 	if (!lmod.exists())
-		CTOR_FAIL(-1, "load module");
+	{
+		fail_ctor(-1, "load module");
+		return;
+	}
 
 	static const std::regex reHashbang(R"(^--\[\[\s*XLua\s+((?:\d+\.?){1,3})\s*\]\])");
 	std::smatch hb_match;
-	std::string hb_view(reinterpret_cast<char const*>(lmod.begin()), std::min<size_t>(lmod.size(), 128));
+	std::string hb_view(reinterpret_cast<char const*>(lmod.begin()),
+						std::min<size_t>(128, lmod.size()));
 	if (std::regex_search(hb_view, hb_match, reHashbang))
 	{
 		if (!m_xlua_compat.init_from_string(hb_match[1].str()))
 		{
 			log_message(nullptr, "Unable to parse version '%s' in '%s'\n", hb_match[1].str().c_str(), m_log_path.c_str());
-			CTOR_FAIL(-1, "load module");
+			fail_ctor(-1, "load module");
+			return;
 		}
 	}
 
@@ -342,7 +370,8 @@ module::module(
 	{
 		log_message(nullptr, "Script '%s' requires XLua %d.%d.%d or higher.\n", m_log_path.c_str(),
 					m_xlua_compat[0], m_xlua_compat[1], m_xlua_compat[2]);
-		CTOR_FAIL(-1, "Version too low");
+		fail_ctor(-1, "Version too low");
+		return;
 	}
 
 	m_interp = luaL_newstate();
@@ -401,10 +430,12 @@ module::module(
 				end
 				return "\n\tno XPLM doc stub on mobile (bindings are pre-registered)"
 			end))lua");
-		CTOR_FAIL(searcher_result, "load searcher setup")
+		if (fail_ctor(searcher_result, "load searcher setup"))
+			return;
 		lua_pushcfunction(m_interp, xmap_lua_path_searcher);
 		searcher_result = lua_pcall(m_interp, 1, 0, 0);
-		CTOR_FAIL(searcher_result, "install lua searchers")
+		if (fail_ctor(searcher_result, "install lua searchers"))
+			return;
 #endif
 	}
 
@@ -431,7 +462,10 @@ module::module(
 	// we need to load the Lua script from an already allocated memory buffer.
 	xmap_class linit(in_init_script);
 	if(!linit.exists())
-		CTOR_FAIL(-1, "load init script");
+	{
+		fail_ctor(-1, "load init script");
+		return;
+	}
 	
 	m_debug_proc = lua_pushtraceback(m_interp);
 	
@@ -458,17 +492,27 @@ module::module(
 	// The `jit and jit.opt` guard keeps this quiet on interpreter-only builds (iOS
 	// forbids JIT, so LuaJIT ships without the jit.opt module there).
 	int load_result = luaL_loadstring(m_interp, "if jit and jit.opt then jit.opt.start(\"maxmcode=8192\", \"maxtrace=4096\", \"maxirconst=1500\", \"maxside=500\") end");
-	CTOR_FAIL(load_result, "set jit defaults")
-	int script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
+	if (fail_ctor(load_result, "set jit defaults"))
+		return;
+	if (lua_pcall(m_interp, 0, 0, m_debug_proc) != 0)
+	{
+		// Not fatal - the script still runs, just without our tuning.
+		char const* jit_error = lua_tostring(m_interp, -1);
+		log_message(m_interp, "Unable to apply LuaJIT tuning: %s\n", jit_error ? jit_error : "unknown error");
+		lua_pop(m_interp, 1);
+	}
 
 	load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), in_init_script.generic_string().c_str());
-	CTOR_FAIL(load_result, "load init script")
+	if (fail_ctor(load_result, "load init script"))
+		return;
 
-	script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
-	CTOR_FAIL(script_result, "run init script");
+	int script_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
+	if (fail_ctor(script_result, "run init script"))
+		return;
 
 	int module_load_result = luaL_loadbuffer(m_interp, (const char*)lmod.begin(), lmod.size(), m_log_path.c_str());
-	CTOR_FAIL(module_load_result,"load module");
+	if (fail_ctor(module_load_result, "load module"))
+		return;
 	
 	int module_run_result;
 	if (m_xlua_compat[0] == 1)
@@ -476,17 +520,25 @@ module::module(
 		lua_getfield(m_interp, LUA_GLOBALSINDEX, "run_module_in_namespace");
 		lua_insert(m_interp, -2);
 		module_run_result = lua_pcall(m_interp, 1, 0, m_debug_proc);
-		CTOR_FAIL(module_run_result, "run module V1");
+		if (fail_ctor(module_run_result, "run module V1"))
+			return;
 	}
 	else
 	{
 		module_run_result = lua_pcall(m_interp, 0, 0, m_debug_proc);
-		CTOR_FAIL(module_run_result, "run module V2+");
+		if (fail_ctor(module_run_result, "run module V2+"))
+			return;
 
 		// To completely duplicate the normal C API, add XPluginStart etc.
 		if (!(_XPluginStart() && _XPluginEnable()))
 		{
-			shutdown_lua();
+			// Run the disable/stop hooks now, as before. Then mute the module.
+			if (m_enabled)
+			{
+				_XPluginDisable();
+			}
+			_XPluginStop();
+			mute();
 		}
 	}
 }
@@ -587,7 +639,7 @@ void		module::post_replay()
 
 void module::do_callout(char const* f)
 {
-	if (m_interp == nullptr || !m_enabled)
+	if (m_interp == nullptr || !m_enabled || xlua_vm_is_dead(m_interp))
 		return;
 
 	if (m_xlua_compat[0] == 1)
@@ -618,7 +670,7 @@ void module::do_callout(char const* f)
 
 void module::_XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void* inParam)
 {
-	if (m_interp == nullptr || !m_enabled || m_xlua_compat[0] < 2)
+	if (m_interp == nullptr || !m_enabled || m_xlua_compat[0] < 2 || xlua_vm_is_dead(m_interp))
 		return;
 
 	if (m_xlua_compat[0] == 1)
@@ -671,14 +723,8 @@ void module::shutdown_lua(void)
 		}
 		_XPluginStop();
 
-		// Drop this interpreter's command handlers while it is still open. Must precede
-		// xlua_callback_cleanup, which frees the notify_cb_t records XPLM holds as their refcons.
-		xlua_command_bindings_cleanup(m_interp);
-
-		// Ditch all the callbacks now, during shutdown and _after_ any disable/stop hooks in case the user decides
-		// to do anything funny like register callbacks.
-		xlua_callback_cleanup(m_interp);
-
+		// lua_close releases the command handlers and callbacks of this interpreter, after any
+		// disable/stop hooks in case the user decides to do anything funny like register callbacks.
 		luaJIT_profile_stop(m_interp);
 		lua_close(m_interp);
 		m_interp = nullptr;

@@ -7,7 +7,10 @@ UNIT XPLMDisplay;
 INTERFACE
 {
    This API provides the basic hooks to draw in X-Plane and create user
-   interface. All X-Plane drawing is done in OpenGL. The X-Plane plug-in
+   interface. A window or avionics device has a content type
+   (XPLMWindowContentType) that tells how it is drawn: with OpenGL, with the
+   panel graphics APIs (XPLMPanelGraphics), or as a web page. Direct drawing
+   callbacks always use OpenGL. For OpenGL drawing, the X-Plane plug-in
    manager takes care of properly setting up the OpenGL context and matrices. 
    You do not decide when in your code's execution to draw; X-Plane tells you
    (via callbacks) when it is ready to have your plugin draw.
@@ -84,7 +87,8 @@ INTERFACE
 
 USES
     XPLMDefs, XPLMUtilities, XPLMScenery;
-   {$A4}
+   {$A8}
+   {$Z4}
 
 TYPE
    XPLMChar   = AnsiChar;
@@ -186,12 +190,18 @@ TYPE
 {$ENDIF XPLM_DEPRECATED}
  
 {$IFDEF XPLM302}
+{$IF defined(XPLM_DEPRECATED)}
+     ,
+{$ENDIF}
      { A chance to do modern 3D drawing.                                          }
-     ,xplm_Phase_Modern3D                      = 31
+      xplm_Phase_Modern3D                      = 31
 {$ENDIF XPLM302}
  
+{$IF defined(XPLM302) or defined(XPLM_DEPRECATED)}
+     ,
+{$ENDIF}
      { This is the first phase where you can draw in 2-d.                         }
-     ,xplm_Phase_FirstCockpit                  = 35
+      xplm_Phase_FirstCockpit                  = 35
  
      { The non-moving parts of the aircraft panel.                                }
      ,xplm_Phase_Panel                         = 40
@@ -448,6 +458,9 @@ TYPE
     click in the 3d cockpit, or if your pop-up's bezel has buttons that the
     user can click. Return true to consume the event, or false to let X-Plane
     process it (for stock avionics devices).
+    
+    - x, y: the coordinate at which the mouse was clicked.
+    - inMouse: the type of mouse event - down-click, drag, or up-click.
    }
 TYPE
      XPLMAvionicsMouse_f = FUNCTION(
@@ -468,6 +481,8 @@ TYPE
     avionics devices). The number of "clicks" indicates how far the wheel was
     turned since the last callback. The wheel is 0 for the vertical axis or 1
     for the horizontal axis (for OS/mouse combinations that support this).
+    
+    - x, y: the coordinate at which the wheel was scrolled.
    }
      XPLMAvionicsMouseWheel_f = FUNCTION(
                                     x                   : Integer;
@@ -485,6 +500,8 @@ TYPE
     your screen or (2D-popup) bezel. Return xplm_CursorDefault to let X-Plane
     use which cursor to show, or other values to force the cursor to a
     particular one (see XPLMCursorStatus).
+    
+    - x, y: the coordinate at which the mouse is hovering.
    }
      XPLMAvionicsCursor_f = FUNCTION(
                                     x                   : Integer;
@@ -602,10 +619,15 @@ TYPE
     
     This routine registers your callbacks for a built-in device. This returns a
     handle. If the returned handle is NULL, there was a problem interpreting
-    your input, most likely the struct size was wrong for your SDK version. If
-    the returned handle is not NULL, your callbacks will be called according to
-    schedule as long as your plugin is not deactivated, or unloaded, or you
-    call XPLMUnregisterAvionicsCallbacks().
+    your input, most likely the struct size was wrong for your SDK version, or
+    you have already customized this device. If the returned handle is not
+    NULL, your callbacks will be called according to schedule as long as your
+    plugin is not deactivated, or unloaded, or you call
+    XPLMUnregisterAvionicsCallbacks().
+    
+    Other plugins may customize the same device; each plugin's callbacks are
+    called. If you already have a handle for the device from
+    XPLMGetAvionicsHandle(), you get that same handle back.
     
     Note that you cannot register new callbacks for a device that is not a
     built-in one (for example a device that you have created, or a device
@@ -625,6 +647,12 @@ TYPE
     touchscreen calls to a device, but want to interact with its popup
     programmatically. This is equivalent to calling
     XPLMRegisterAvionicsCallbackEx() with NULL for all callbacks.
+    
+    The handle is yours: every plugin gets its own handle for a device, and you
+    get the same one each time you call this. It stays valid until your plugin
+    is unloaded, whatever other plugins do with the device. Only your plugin
+    may use it: another plugin passing it to the Avionics Device API gets an
+    error.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetAvionicsHandle(
@@ -636,7 +664,8 @@ TYPE
     
     This routine unregisters your callbacks for a built-in device. You should
     only call this for handles you acquired from
-    XPLMRegisterAvionicsCallbacksEx(). They will no longer be called.
+    XPLMRegisterAvionicsCallbacksEx(). They will no longer be called. The
+    handle stays valid, as if you had got it from XPLMGetAvionicsHandle().
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMUnregisterAvionicsCallbacks(
@@ -703,8 +732,10 @@ TYPE
     readable, but not blind the pilot).
     
     inBusVoltsRatio is the ratio of the nominal voltage currently present on
-    the bus to which the device is bound, or -1 if the device is not bound to
-    the current aircraft.
+    the electrical bus powering the device. This is the same value
+    XPLMGetAvionicsBusVoltsRatio() returns, including its handling of devices
+    wired to several buses: 1.0 if the author assigned the device to no bus at
+    all, and -1 if the device is not bound to the current aircraft.
     
     Refcon is a unique value that you specify when creating the device,
     allowing you to slip a pointer to your own data to the callback.
@@ -878,7 +909,8 @@ TYPE
     
                 When you are done with the device, and at least before your
                 plugin is unloaded, you should destroy the device using
-                XPLMDestroyAvionics().
+                XPLMDestroyAvionics(). Only your plugin may use the returned
+                handle.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateAvionicsEx(
@@ -955,8 +987,17 @@ TYPE
     
     Handler invoked when the page in a browser-content-type avionics device
     calls xplane.<name>(arg). You receive the device, the argument serialised
-    as a JSON string, and your refcon; return a JSON string (or NULL) that the
-    JS Promise resolves to.
+    as a JSON string, and your refcon. Return the JSON the JS Promise resolves
+    to, and return it through XPLMReturnString: `return
+    XPLMReturnString(json);`.
+    
+    Returning NULL, or any pointer that did not come from XPLMReturnString (a
+    string literal, a static buffer, a std::string's c_str()), is a plugin
+    error: X-Plane reports it to your error callback (see XPLMSetErrorCallback)
+    and Log.txt, drops the result, and the Promise resolves to null. A string
+    that is not valid JSON is reported the same way. To resolve the Promise to
+    null on purpose, return XPLMReturnString("null"). From Lua, return the JSON
+    string itself; the Lua bindings pass it through XPLMReturnString for you.
    }
 TYPE
      XPLMAvionicsBrowserCallback_f = FUNCTION(
@@ -972,9 +1013,10 @@ TYPE
     Registers a callback that the page running in a browser-content-type
     avionics device can invoke as xplane.<inName>(arg). The JS call returns a
     Promise that resolves to the value your XPLMAvionicsBrowserCallback_f
-    returns (parsed as JSON). Registering the same name again replaces the
-    previous callback. Each device has its own independent xplane.* namespace.
-    Has no effect on non-browser devices.
+    returns (parsed as JSON). A name can only be registered once per device:
+    registering it again is reported to your error callback and ignored, and
+    the first registration stays. Each device has its own independent xplane.*
+    namespace. Has no effect on non-browser devices.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMAvionicsAddBrowserFunction(
@@ -1093,8 +1135,18 @@ TYPE
     XPLMGetAvionicsBusVoltsRatio
     
     Returns the ratio of the nominal voltage (1.0 means full nominal voltage)
-    of the electrical bus to which the given avionics device is bound, or -1 if
-    the device is not bound to the current aircraft.
+    of the electrical bus powering the cockpit device with the given handle.
+    
+    An aircraft author can wire a device to any combination of the six
+    electrical buses. When more than one is selected, this returns the ratio
+    for the highest-numbered selected bus that both exists on the current
+    aircraft and is above the aircraft's low-voltage red line. If no selected
+    bus meets that test, this returns 0 - so 0 means the device has no usable
+    power, not that a bus measured zero volts.
+    
+    If the device is bound but the author assigned it to no bus at all, this
+    returns 1.0; X-Plane treats such a device as always powered. If the device
+    is not bound to the current aircraft, this returns -1.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetAvionicsBusVoltsRatio(
@@ -1253,7 +1305,13 @@ TYPE
     XPLMTakeAvionicsKeyboardFocus
     
     This routine gives keyboard focus to the popup window of a custom cockpit
-    device, if it is visible.
+    device, if it is visible. If the popup is not visible, the device does not
+    get focus.
+    
+    Pass NULL to take keyboard focus away from the cockpit device that has it,
+    so that keystrokes go to X-Plane again. Use this, not
+    XPLMTakeKeyboardFocus(0): XPLMTakeKeyboardFocus controls the focus of
+    plugin windows only, and does not release a cockpit device.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMTakeAvionicsKeyboardFocus(
@@ -1266,7 +1324,7 @@ TYPE
     XPLMHasAvionicsKeyboardFocus
     
     Returns true (1) if the popup window for a cockpit device has keyboard
-    focus.
+    focus. To release the focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMHasAvionicsKeyboardFocus(
@@ -1450,6 +1508,8 @@ TYPE
     
     You receive the x and y of the click, your window, and a refcon.  Return 1
     to consume the click, or 0 to pass it through.
+    
+    - inMouse: the type of mouse event - down-click, drag, or up-click.
     
     WARNING: passing clicks through windows (as of this writing) causes mouse
     tracking problems in X-Plane; do not use this feature!
@@ -1651,10 +1711,15 @@ TYPE
    {
     XPLMCreateWindow_t
     
-    The XPMCreateWindow_t structure defines all of the parameters used to
-    create a modern window using XPLMCreateWindowEx().  The structure will be
-    expanded in future SDK APIs to include more features.  Always set the
-    structSize member to the size of your struct in bytes!
+    XPLMCreateWindow_t defines all of the parameters used to create a modern
+    window using XPLMCreateWindowEx(). The structure has been expanded in later
+    SDK versions and will be expanded again; the fields present in your build
+    are the ones your SDK version defines, and structSize is how X-Plane knows
+    which of them you filled in.  Always set the structSize member to the size
+    of your struct in bytes!
+    
+    Of the callbacks, only drawWindowFunc is required, and only for a window
+    that draws through your plugin; see XPLMCreateWindowEx() for the rules.
     
     All windows created by this function in the XPLM300 version of the API are
     created with the new X-Plane 11 GUI features. This means your plugin will
@@ -1724,8 +1789,12 @@ TYPE
      handleRightClickFunc     : XPLMHandleMouseClick_f;
 {$ENDIF XPLM300}
 {$IFDEF XPLM440}
-     { The source of content for this Window (OpenGL, Panel Graphics, CEF, etc.)  }
-     windowContentType        : XPLMWindowContentType;
+     { How this window is drawn: xplm_WindowContentTypeOpenGL (the legacy OpenGL  }
+     { bridge), xplm_WindowContentTypePanelGraphics (native panel-graphics        }
+     { rendering), or xplm_WindowContentTypeBrowser (a CEF web view). A browser   }
+     { window draws itself, so drawWindowFunc is not used; drive the page with    }
+     { XPLMWindowSetURL() and friends.                                            }
+     contentType              : XPLMWindowContentType;
 {$ENDIF XPLM440}
 {$IFDEF XPLM440}
      { For browser content: called when the main frame finishes loading (not a    }
@@ -1745,12 +1814,28 @@ TYPE
    {
     XPLMCreateWindowEx
     
-    This routine creates a new "modern" window. You pass in an
-    XPLMCreateWindow_t structure with all of the fields set in.  You must set
-    the structSize of the structure to the size of the actual structure you
-    used.  Also, you must provide functions for every callback---you may not
-    leave them null!  (If you do not support the cursor or mouse wheel, use
-    functions that return the default values.)
+    This routine creates a new "modern" window.  You pass in an
+    XPLMCreateWindow_t structure with all of the fields set in, including its
+    structSize, which must be the size of the actual structure you used.
+    
+    Returns the ID of the new window, or NULL if it could not be created
+    --either because structSize matched no known SDK version, or because the
+    window needed a drawing callback and none was provided.
+    
+    Only drawWindowFunc is required, and only for a window whose contentType
+    makes your plugin responsible for its pixels: xplm_WindowContentTypeOpenGL
+    and xplm_WindowContentTypePanelGraphics.  A browser window renders its own
+    content and ignores drawWindowFunc.
+    
+    Every other callback is optional; leave it NULL and your window does not
+    receive that event.  A window with no handleMouseClickFunc or
+    handleRightClickFunc does not consume clicks, a window with no
+    handleMouseWheelFunc does not consume scroll wheel events, and a window
+    with no handleCursorFunc gets the default cursor.  (Whether a click reaches
+    a window underneath yours also depends on your window's decoration: any
+    decoration other than xplm_WindowDecorationNone stops clicks at your
+    window's bounds.) The browserLoadFinishedFunc and browserLoadErrorFunc
+    callbacks are only called for browser windows.
     
     NOTE: For an imgui-drawn window, Lua scripts should use
     XLuaCreateImguiWindow() instead; it opens and closes the imgui frame for
@@ -1782,6 +1867,9 @@ TYPE
     NOTE: Legacy windows do not have "frames"; you are responsible for drawing
     the background and frame of the window.  Higher level libraries have
     routines which make this easy.
+    
+    - inRefcon: a reference which will be passed into each of your window
+      callbacks. Use this to pass information to yourself as needed.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMCreateWindow(
@@ -1866,6 +1954,19 @@ TYPE
 {$IFDEF XPLM440}
    {
     XPLMBrowserCallback_f
+    
+    Handler invoked when the page in a browser-content-type window calls
+    xplane.<name>(arg). You receive the window, the argument serialised as a
+    JSON string, and your refcon. Return the JSON the JS Promise resolves to,
+    and return it through XPLMReturnString: `return XPLMReturnString(json);`.
+    
+    Returning NULL, or any pointer that did not come from XPLMReturnString (a
+    string literal, a static buffer, a std::string's c_str()), is a plugin
+    error: X-Plane reports it to your error callback (see XPLMSetErrorCallback)
+    and Log.txt, drops the result, and the Promise resolves to null. A string
+    that is not valid JSON is reported the same way. To resolve the Promise to
+    null on purpose, return XPLMReturnString("null"). From Lua, return the JSON
+    string itself; the Lua bindings pass it through XPLMReturnString for you.
    }
 TYPE
      XPLMBrowserCallback_f = FUNCTION(
@@ -1883,9 +1984,10 @@ TYPE
     resolves to the value your `XPLMBrowserCallback_f` returns (parsed as JSON
     -- see that callback's desc for the contract).
     
-    Multiple registrations against the same name on the same window overwrite
-    each other. Each window has its own independent `xplane.*` namespace;
-    functions registered on window A are not callable from window B.
+    A name can only be registered once per window: registering it again is
+    reported to your error callback and ignored, and the first registration
+    stays. Each window has its own independent `xplane.*` namespace; functions
+    registered on window A are not callable from window B.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMWindowAddBrowserFunction(
@@ -2469,6 +2571,9 @@ TYPE
     sent to that window.  Pass a window ID of 0 to remove keyboard focus from
     any plugin-created windows and instead pass keyboard strokes directly to
     X-Plane.
+    
+    This routine does not change the keyboard focus of a cockpit device's
+    popup. To release that focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    PROCEDURE XPLMTakeKeyboardFocus(
@@ -2494,6 +2599,9 @@ TYPE
     Windows are brought to the front automatically when they are created.
     Beyond that, you should make sure you are front before handling mouse
     clicks.
+    
+    You may only bring your own windows to the front; passing another plugin's
+    window reports an error and does nothing.
     
     Note that this only brings your window to the front of its layer
     (XPLMWindowLayer). Thus, if you have a window in the floating window layer
@@ -2560,6 +2668,9 @@ TYPE
     VKEY #define macros in XPLMDefs.h define the vkeys using unsigned values
     (that is 0x80 instead of -0x80).  So you may need to cast the incoming vkey
     to an unsigned char to get correct comparisons in C.
+    
+    - inRefcon: a value you supply during registration, used for passing
+      arbitrary data to yourself.
    }
 TYPE
      XPLMKeySniffer_f = FUNCTION(
@@ -2578,6 +2689,9 @@ TYPE
     because the user has "focused" a window.  Consuming the key or taking
     action based on the key will produce very weird results.  Returns true if
     successful.
+    
+    - inRefcon: a value that will be passed to your callback, used for passing
+      arbitrary data to yourself later.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMRegisterKeySniffer(
@@ -2636,6 +2750,9 @@ TYPE
     callback function and opaque pointer to pass in).  A new hot key ID is
     returned.  During execution, the actual key associated with your hot key
     may change, but you are insulated from this.
+    
+    - inRefcon: a value that will be passed to your callback, used for passing
+      arbitrary data to yourself later.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMRegisterHotKey(

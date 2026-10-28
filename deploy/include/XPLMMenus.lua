@@ -46,6 +46,11 @@
 require("XPLMDefs")
 require("XPLMUtilities")
 
+
+-----------------------------------------------------------------------------
+-- XPLM MENUS
+-----------------------------------------------------------------------------
+
 --[[
 These enumerations define the various 'check' states for an X-Plane menu.  'Checking'
 in X-Plane actually appears as a light which may or may not be lit.  So there are

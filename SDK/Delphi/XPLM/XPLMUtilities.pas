@@ -8,7 +8,8 @@ INTERFACE
 
 USES
     XPLMDefs;
-   {$A4}
+   {$A8}
+   {$Z4}
 
 TYPE
    XPLMChar   = AnsiChar;
@@ -241,12 +242,15 @@ TYPE
     host's use of the callback's result. This is the only sanctioned way for an
     XPLM callback whose return type is `const char *` to hand a string back to
     X-Plane: returning a stack buffer, a string literal, or any other pointer
-    is a contract violation and may corrupt the result.
+    is a plugin error: X-Plane reports it and drops the result.
     
     The host pushes a return slot before invoking each `const char *` callback
     and pops it afterwards, so callbacks must call
     `XPLMReturnString` at most once per invocation and must not retain the
-     returned pointer past the callback's return.
+     returned pointer past the callback's return. Passing NULL is an error:
+    `XPLMReturnString` reports it and returns NULL, so the callback's result is
+     dropped. Calling `XPLMReturnString` outside a callback that returns a
+     string is a fatal plugin error: X-Plane reports it and terminates.
    }
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMReturnString(
@@ -357,6 +361,30 @@ TYPE
    );
    PXPLMLanguageCode = ^XPLMLanguageCode;
 
+{$IFDEF XPLM440}
+   {
+    XPLMProLicenseStatus
+    
+    Whether this copy of X-Plane is running under a Professional-use license (a
+    HASP Pro USB key or a valid Pro digital-download product key). Demo and
+    Home installs both report xplm_ProLicense_NotLicensed.
+   }
+TYPE
+   XPLMProLicenseStatus = (
+     { X-Plane has not finished its license check yet. Wait for                   }
+     { XPLM_MSG_PRO_LICENSE_CHANGED.                                              }
+      xplm_ProLicense_Unknown                  = 0
+ 
+     { No Pro license is active.                                                  }
+     ,xplm_ProLicense_NotLicensed              = 1
+ 
+     { A Pro license is active.                                                   }
+     ,xplm_ProLicense_Licensed                 = 2
+ 
+   );
+   PXPLMProLicenseStatus = ^XPLMProLicenseStatus;
+{$ENDIF XPLM440}
+
 {$IFDEF XPLM200}
    {
     XPLMError_f
@@ -419,6 +447,30 @@ TYPE
     { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
    FUNCTION XPLMGetLanguage: XPLMLanguageCode;
     cdecl; external XPLM_DLL;
+
+{$IFDEF XPLM440}
+   {
+    XPLMGetProLicenseStatus
+    
+    Returns whether X-Plane is currently running under a Professional-use
+    license.
+    
+    X-Plane finishes its license check after global plugins have received
+    XPluginStart and XPluginEnable, so from those callbacks a global plugin
+    sees xplm_ProLicense_Unknown. Listen for XPLM_MSG_PRO_LICENSE_CHANGED: it
+    is broadcast once the check completes and again whenever the status changes
+    during the session (for example, the user enters a product key or a key
+    expires). Aircraft plugins load after the check completes and see a settled
+    value immediately. If you see a settled value in XPluginStart, do not wait
+    for the message; the initial transition was broadcast before your plugin
+    loaded.
+    
+    Call this only from the main thread.
+   }
+    { NOT thread-safe. Use ONLY from the main thread, in callbacks.                 }
+   FUNCTION XPLMGetProLicenseStatus: XPLMProLicenseStatus;
+    cdecl; external XPLM_DLL;
+{$ENDIF XPLM440}
 
 {$IFDEF XPLM200}
    {
@@ -1044,6 +1096,7 @@ TYPE
 
 CONST
    XPLMUtilitiesHostApiVersion = 0;
+
 
 
 

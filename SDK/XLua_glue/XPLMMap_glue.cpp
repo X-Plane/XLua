@@ -159,11 +159,14 @@ void RegEnum_XPLMMapStyle(lua_State* L)
 	lua_setglobal(L, "XPLMMapStyle");
 }
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMMapDrawingCallback_f(XPLMMapLayerID inLayer, const float inMapBoundsLeftTopRightBottom[4], float zoomRatio, float mapUnitsPerUserInterfaceUnit, XPLMMapStyle mapStyle, XPLMMapProjectionID projection, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMMapDrawingCallback_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -191,12 +194,16 @@ static void cb_XPLMMapDrawingCallback_f(XPLMMapLayerID inLayer, const float inMa
 		luaL_unref(L, LUA_REGISTRYINDEX, projection_typed_ref);
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMMapIconDrawingCallback_f(XPLMMapLayerID inLayer, const float inMapBoundsLeftTopRightBottom[4], float zoomRatio, float mapUnitsPerUserInterfaceUnit, XPLMMapStyle mapStyle, XPLMMapProjectionID projection, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMMapIconDrawingCallback_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -224,12 +231,16 @@ static void cb_XPLMMapIconDrawingCallback_f(XPLMMapLayerID inLayer, const float 
 		luaL_unref(L, LUA_REGISTRYINDEX, projection_typed_ref);
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMMapLabelDrawingCallback_f(XPLMMapLayerID inLayer, const float inMapBoundsLeftTopRightBottom[4], float zoomRatio, float mapUnitsPerUserInterfaceUnit, XPLMMapStyle mapStyle, XPLMMapProjectionID projection, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMMapLabelDrawingCallback_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -257,12 +268,16 @@ static void cb_XPLMMapLabelDrawingCallback_f(XPLMMapLayerID inLayer, const float
 		luaL_unref(L, LUA_REGISTRYINDEX, projection_typed_ref);
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMMapPrepareCacheCallback_f(XPLMMapLayerID inLayer, const float inTotalMapBoundsLeftTopRightBottom[4], XPLMMapProjectionID projection, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMMapPrepareCacheCallback_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -290,12 +305,16 @@ static void cb_XPLMMapPrepareCacheCallback_f(XPLMMapLayerID inLayer, const float
 		luaL_unref(L, LUA_REGISTRYINDEX, projection_typed_ref);
 	}
 }
+} // extern "C++"
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMMapWillBeDeletedCallback_f(XPLMMapLayerID inLayer, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMMapWillBeDeletedCallback_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMMapLayerID(L, inLayer);
@@ -308,6 +327,7 @@ static void cb_XPLMMapWillBeDeletedCallback_f(XPLMMapLayerID inLayer, void* inRe
 	}
 	xlua_remove_callback(inRefcon_cb);
 }
+} // extern "C++"
 
 void RegEnum_XPLMMapLayerType(lua_State* L)
 {
@@ -354,37 +374,37 @@ XPLMCreateMapLayer_t XPLMCreateMapLayer_t_from_table(lua_State* L, int stackpos)
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "willBeDeletedCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMMapWillBeDeletedCallback_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 0, "XPLMMapWillBeDeletedCallback_f"))
 	{
-		out.willBeDeletedCallback = cb_XPLMMapWillBeDeletedCallback_f;
+		out.willBeDeletedCallback = &cb_XPLMMapWillBeDeletedCallback_f<0>;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "prepCacheCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMMapPrepareCacheCallback_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 1, "XPLMMapPrepareCacheCallback_f"))
 	{
-		out.prepCacheCallback = cb_XPLMMapPrepareCacheCallback_f;
+		out.prepCacheCallback = &cb_XPLMMapPrepareCacheCallback_f<1>;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "drawCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMMapDrawingCallback_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 2, "XPLMMapDrawingCallback_f"))
 	{
-		out.drawCallback = cb_XPLMMapDrawingCallback_f;
+		out.drawCallback = &cb_XPLMMapDrawingCallback_f<2>;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "iconCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMMapIconDrawingCallback_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 3, "XPLMMapIconDrawingCallback_f"))
 	{
-		out.iconCallback = cb_XPLMMapIconDrawingCallback_f;
+		out.iconCallback = &cb_XPLMMapIconDrawingCallback_f<3>;
 	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "labelCallback");
-	if (wrap_next_lua_func(refcon_cb, -1, true, "XPLMMapLabelDrawingCallback_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, true, 4, "XPLMMapLabelDrawingCallback_f"))
 	{
-		out.labelCallback = cb_XPLMMapLabelDrawingCallback_f;
+		out.labelCallback = &cb_XPLMMapLabelDrawingCallback_f<4>;
 	}
 	lua_pop(L, 1);
 
@@ -493,11 +513,14 @@ int XLuaDestroyMapLayer(lua_State* L)
 	return 1;
 }
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMMapCreatedCallback_f(const char * mapIdentifier, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMMapCreatedCallback_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -506,15 +529,19 @@ static void cb_XPLMMapCreatedCallback_f(const char * mapIdentifier, void* inRefc
 		}
 	}
 }
+} // extern "C++"
 
 int XLuaRegisterMapCreationHook(lua_State* L)
 {
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 2);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 1, true, "XPLMMapCreatedCallback_f");
+	bool const cb_capture_0_has_0 = wrap_next_lua_func(cb_capture_0, 1, true, 0, "XPLMMapCreatedCallback_f");
+	if (cb_capture_0->is_empty())
+		cb_capture_0.reset();
+	else
+		xlua_persist_userref(L, cb_capture_0);
 
-	XPLMRegisterMapCreationHook((cb_capture_0 ? cb_XPLMMapCreatedCallback_f : nullptr), cb_capture_0.get());
+	XPLMRegisterMapCreationHook((cb_capture_0_has_0 ? &cb_XPLMMapCreatedCallback_f<0> : nullptr), cb_capture_0.get());
 
 	return 0;
 }

@@ -16,7 +16,10 @@
 
 --[[
    This API provides the basic hooks to draw in X-Plane and create user
-   interface. All X-Plane drawing is done in OpenGL. The X-Plane plug-in
+   interface. A window or avionics device has a content type
+   (XPLMWindowContentType) that tells how it is drawn: with OpenGL, with the
+   panel graphics APIs (XPLMPanelGraphics), or as a web page. Direct drawing
+   callbacks always use OpenGL. For OpenGL drawing, the X-Plane plug-in
    manager takes care of properly setting up the OpenGL context and matrices. 
    You do not decide when in your code's execution to draw; X-Plane tells you
    (via callbacks) when it is ready to have your plugin draw.
@@ -95,6 +98,38 @@ require("XPLMDefs")
 require("XPLMUtilities")
 require("XPLMScenery")
 
+
+-----------------------------------------------------------------------------
+-- AVIONICS API
+-----------------------------------------------------------------------------
+
+--[[
+   The Avionics API allows you to customize the drawing and behaviour of the
+   built-in cockpit devices (GNS, G1000, etc.), and create your own cockpit
+   devices. For built-in devices, you can draw before and/or after X-Plane
+   does, and optionally prevent X-Plane from drawing the screen at all.
+   Customized built-in devices and custom devices are available in the 3D
+   cockpit as well as in the form of pop-up/pop-out windows.
+   
+   The API also allows you to receive mouse interaction events for your device
+   (click down, drag, and up, mouse wheel scroll, cursor) for both screen and
+   bezel. While these always work when the device is popped-up in its window,
+   you must add a `ATTR_manip_device` manipulator on top of your screen in
+   order to receive mouse events from the 3D cockpit.
+   
+   You can also use the avionics API to control the state and location of
+   cockpit devices' pop-up windows.
+   
+   When working with avionics devices, all co-ordinates you receive when
+   drawing or dealing with click events are in texels. The x-axis grows right,
+   the y-axis grows up. In bezel callbacks, the origin is at the bottom left
+   corner of the bezel. In screen callbacks, the origin is at the bottom-left
+   of the screen. X-Plane takes care of scaling your screen and bezel if the
+   user pops out the device's window: you should always draw your screen and
+   bezel as if they were at the size you specified when registering callbacks
+   or creating a device.
+]]--
+
 --[[
 XPLMWindowContentType describes how the content for a window (or an avionics device's screen) is provided.
 ]]--
@@ -165,13 +200,13 @@ local XPLMDeviceID = {
 --- This is the prototype for drawing callbacks for customized built-in device. You are passed in the device you are enhancing/replacing, and (if this is used for a built-in device that you are customizing) whether it is before or after X-Plane drawing. If you are before X-Plane, return true to let X-Plane draw or false to suppress X-Plane drawing. If you are called after X-Plane, the return value is ignored. Refcon is a unique value that you specify when registering the callback, allowing you to slip a pointer to your own data to the callback. Upon entry the OpenGL context will be correctly set up for you and OpenGL will be in panel coordinates for 2d drawing. The OpenGL state (texturing, etc.) will be unknown.
 ---@alias XPLMAvionicsCallback_f fun(inDeviceID: XPLMDeviceID, inIsBefore: boolean, inRefcon: any): boolean
 
---- Mouse click callback for clicks into your screen or (2D-popup) bezel, useful if the device you are making simulates a touch-screen the user can click in the 3d cockpit, or if your pop-up's bezel has buttons that the user can click. Return true to consume the event, or false to let X-Plane process it (for stock avionics devices).
+--- Mouse click callback for clicks into your screen or (2D-popup) bezel, useful if the device you are making simulates a touch-screen the user can click in the 3d cockpit, or if your pop-up's bezel has buttons that the user can click. Return true to consume the event, or false to let X-Plane process it (for stock avionics devices). - x, y: the coordinate at which the mouse was clicked. - inMouse: the type of mouse event - down-click, drag, or up-click.
 ---@alias XPLMAvionicsMouse_f fun(x: integer, y: integer, inMouse: XPLMMouseStatus, inRefcon: any): boolean
 
---- Mouse wheel callback for scroll actions into your screen or (2D-popup) bezel, useful if your bezel has knobs that can be turned using the mouse wheel, or if you want to simulate pinch-to-zoom on a touchscreen. Return true to consume the event, or false to let X-Plane process it (for stock avionics devices). The number of "clicks" indicates how far the wheel was turned since the last callback. The wheel is 0 for the vertical axis or 1 for the horizontal axis (for OS/mouse combinations that support this).
+--- Mouse wheel callback for scroll actions into your screen or (2D-popup) bezel, useful if your bezel has knobs that can be turned using the mouse wheel, or if you want to simulate pinch-to-zoom on a touchscreen. Return true to consume the event, or false to let X-Plane process it (for stock avionics devices). The number of "clicks" indicates how far the wheel was turned since the last callback. The wheel is 0 for the vertical axis or 1 for the horizontal axis (for OS/mouse combinations that support this). - x, y: the coordinate at which the wheel was scrolled.
 ---@alias XPLMAvionicsMouseWheel_f fun(x: integer, y: integer, wheel: integer, clicks: integer, inRefcon: any): boolean
 
---- Cursor callback that decides which cursor to show when the mouse is over your screen or (2D-popup) bezel. Return xplm_CursorDefault to let X-Plane use which cursor to show, or other values to force the cursor to a particular one (see XPLMCursorStatus).
+--- Cursor callback that decides which cursor to show when the mouse is over your screen or (2D-popup) bezel. Return xplm_CursorDefault to let X-Plane use which cursor to show, or other values to force the cursor to a particular one (see XPLMCursorStatus). - x, y: the coordinate at which the mouse is hovering.
 ---@alias XPLMAvionicsCursor_f fun(x: integer, y: integer, inRefcon: any): XPLMCursorStatus
 
 --- Key callback called when your device is popped up and you've requested to capture the keyboard. Return true to consume the event, or false to let X-Plane process it (for stock avionics devices).
@@ -183,7 +218,6 @@ local XPLMDeviceID = {
 
 --- The XPLMCustomizeAvionics_t structure defines all of the parameters used to replace or enhance built-in simulator avionics devices using XPLMRegisterAvionicsCallbacksEx(). The structure will be expanded in future SDK APIs to include more features. Always set the structSize member to the size of your struct in bytes!
 ---@class XPLMCustomizeAvionics_t
----@field structSize integer Used to inform XPLMRegisterAvionicsCallbacksEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCustomizeAvionics_t)
 ---@field deviceId XPLMDeviceID The built-in avionics device to which you want your drawing applied.
 ---@field drawCallbackBefore XPLMAvionicsCallback_f The draw callback to be called before X-Plane draws.
 ---@field drawCallbackAfter XPLMAvionicsCallback_f The draw callback to be called after X-Plane has drawn.
@@ -202,9 +236,13 @@ local XPLMDeviceID = {
 ---@class _G
 --- This routine registers your callbacks for a built-in device. This returns a
 --- handle. If the returned handle is NULL, there was a problem interpreting your
---- input, most likely the struct size was wrong for your SDK version.
+--- input, most likely the struct size was wrong for your SDK version, or you have
+--- already customized this device.
 --- If the returned handle is not NULL, your callbacks will be called according to schedule
 --- as long as your plugin is not deactivated, or unloaded, or you call XPLMUnregisterAvionicsCallbacks().
+---
+--- Other plugins may customize the same device; each plugin's callbacks are called. If you already
+--- have a handle for the device from XPLMGetAvionicsHandle(), you get that same handle back.
 ---
 --- Note that you cannot register new callbacks for a device that is not a built-in
 --- one (for example a device that you have created, or a device another plugin
@@ -218,11 +256,17 @@ local XPLMDeviceID = {
 --- clicks and touchscreen calls to a device, but want to interact with its popup programmatically.
 --- This is equivalent to calling XPLMRegisterAvionicsCallbackEx() with NULL for all callbacks.
 ---
+--- The handle is yours: every plugin gets its own handle for a device, and you get the same one each
+--- time you call this. It stays valid until your plugin is unloaded, whatever other plugins do with
+--- the device. Only your plugin may use it: another plugin passing it to the Avionics Device API gets an
+--- error.
+---
 ---@field XPLMGetAvionicsHandle fun(inDeviceID: XPLMDeviceID): XPLMAvionicsID
 
 ---@class _G
 --- This routine unregisters your callbacks for a built-in device. You should only call this
 --- for handles you acquired from XPLMRegisterAvionicsCallbacksEx(). They will no longer be called.
+--- The handle stays valid, as if you had got it from XPLMGetAvionicsHandle().
 ---
 ---@field XPLMUnregisterAvionicsCallbacks fun(inAvionicsId: XPLMAvionicsID)
 
@@ -232,7 +276,7 @@ local XPLMDeviceID = {
 --- This is the prototype for drawing callbacks for custom devices' bezel. You are passed in the red, green, and blue values you can optinally use for tinting your bezel accoring to ambiant light. Refcon is a unique value that you specify when creating the device, allowing you to slip a pointer to your own data to the callback. Upon entry the OpenGL context will be correctly set up for you and OpenGL will be in panel coordinates for 2d drawing. The OpenGL state (texturing, etc.) will be unknown.
 ---@alias XPLMAvionicsBezelCallback_f fun(inAmbiantR: number, inAmbiantG: number, inAmbiantB: number, inRefcon: any)
 
---- This is the prototype for screen brightness callbacks for custom devices. If you provide a callback, you can return the ratio of the screen's maximum brightness that the simulator should use when displaying the screen in the 3D cockpit. inRheoValue is the current ratio value (between 0 and 1) of the instrument brightness rheostat to which the device is bound. inAmbientBrightness is the value (between 0 and 1) that the callback should return for the screen to be at a usable brightness based on ambient light (if your device has a photo cell and automatically adjusts its brightness, you can return this and your screen will be at the optimal brightness to be readable, but not blind the pilot). inBusVoltsRatio is the ratio of the nominal voltage currently present on the bus to which the device is bound, or -1 if the device is not bound to the current aircraft. Refcon is a unique value that you specify when creating the device, allowing you to slip a pointer to your own data to the callback.
+--- This is the prototype for screen brightness callbacks for custom devices. If you provide a callback, you can return the ratio of the screen's maximum brightness that the simulator should use when displaying the screen in the 3D cockpit. inRheoValue is the current ratio value (between 0 and 1) of the instrument brightness rheostat to which the device is bound. inAmbientBrightness is the value (between 0 and 1) that the callback should return for the screen to be at a usable brightness based on ambient light (if your device has a photo cell and automatically adjusts its brightness, you can return this and your screen will be at the optimal brightness to be readable, but not blind the pilot). inBusVoltsRatio is the ratio of the nominal voltage currently present on the electrical bus powering the device. This is the same value XPLMGetAvionicsBusVoltsRatio() returns, including its handling of devices wired to several buses: 1.0 if the author assigned the device to no bus at all, and -1 if the device is not bound to the current aircraft. Refcon is a unique value that you specify when creating the device, allowing you to slip a pointer to your own data to the callback.
 ---@alias XPLMAvionicsBrightness_f fun(inRheoValue: number, inAmbiantBrightness: number, inBusVoltsRatio: number, inRefcon: any): number
 
 --- Called for a browser-content-type avionics device when its main frame finishes loading a page. This is NOT a guarantee that the load succeeded: a page that renders an HTTP error response (e.g. a server's 404 page) also "finishes" here. A navigation that fails before the page renders fires XPLMAvionicsBrowserLoadError_f instead. If your page needs to know its own HTTP status, have it report that from JavaScript via a browser function. Set this via browserLoadFinishedFunc in XPLMCreateAvionics_t.
@@ -243,7 +287,6 @@ local XPLMDeviceID = {
 
 --- The XPLMCreateAvionics_t structure defines all of the parameters used to generate your own glass cockpit device by using XPLMCreateAvionicsEx(). The structure will be expanded in future SDK APIs to include more features. Always set the structSize member to the size of your struct in bytes!
 ---@class XPLMCreateAvionics_t
----@field structSize integer Used to inform XPLMCreateAvionicsEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateAvionics_t)
 ---@field screenWidth integer Width of the device's screen in pixels.
 ---@field screenHeight integer Height of the device's screen in pixels.
 ---@field bezelWidth integer Width of the bezel around your device's screen for 2D pop-ups.
@@ -274,7 +317,7 @@ local XPLMDeviceID = {
 ---@class _G
 --- Creates a new cockpit device to be used in the 3D cockpit. You can call this at any time: if an aircraft referencing your device is loaded before your plugin, the simulator will make sure to retroactively map your display into it.
 ---
----             When you are done with the device, and at least before your plugin is unloaded, you should destroy the device using XPLMDestroyAvionics().
+---             When you are done with the device, and at least before your plugin is unloaded, you should destroy the device using XPLMDestroyAvionics(). Only your plugin may use the returned handle.
 ---
 ---@field XPLMCreateAvionicsEx fun(inParams: XPLMCreateAvionics_t): XPLMAvionicsID
 
@@ -308,15 +351,16 @@ local XPLMDeviceID = {
 ---
 ---@field XPLMAvionicsInjectScript fun(inAvionicsID: XPLMAvionicsID, inScript: string)
 
---- Handler invoked when the page in a browser-content-type avionics device calls xplane.<name>(arg). You receive the device, the argument serialised as a JSON string, and your refcon; return a JSON string (or NULL) that the JS Promise resolves to.
+--- Handler invoked when the page in a browser-content-type avionics device calls xplane.<name>(arg). You receive the device, the argument serialised as a JSON string, and your refcon. Return the JSON the JS Promise resolves to, and return it through XPLMReturnString: `return XPLMReturnString(json);`. Returning NULL, or any pointer that did not come from XPLMReturnString (a string literal, a static buffer, a std::string's c_str()), is a plugin error: X-Plane reports it to your error callback (see XPLMSetErrorCallback) and Log.txt, drops the result, and the Promise resolves to null. A string that is not valid JSON is reported the same way. To resolve the Promise to null on purpose, return XPLMReturnString("null"). From Lua, return the JSON string itself; the Lua bindings pass it through XPLMReturnString for you.
 ---@alias XPLMAvionicsBrowserCallback_f fun(inAvionicsID: XPLMAvionicsID, inJSON: string, inRefcon: any): string
 
 ---@class _G
 --- Registers a callback that the page running in a browser-content-type avionics
 --- device can invoke as xplane.<inName>(arg). The JS call returns a Promise
 --- that resolves to the value your XPLMAvionicsBrowserCallback_f returns (parsed
---- as JSON). Registering the same name again replaces the previous callback. Each
---- device has its own independent xplane.* namespace. Has no effect on non-browser
+--- as JSON). A name can only be registered once per device: registering it again
+--- is reported to your error callback and ignored, and the first registration
+--- stays. Each device has its own independent xplane.* namespace. Has no effect on non-browser
 --- devices.
 ---
 ---@field XPLMAvionicsAddBrowserFunction fun(inAvionicsID: XPLMAvionicsID, inName: string, inFunction: XPLMAvionicsBrowserCallback_f, inRefcon: any)
@@ -361,7 +405,11 @@ local XPLMDeviceID = {
 ---@field XPLMGetAvionicsBrightnessRheo fun(inHandle: XPLMAvionicsID): number
 
 ---@class _G
---- Returns the ratio of the nominal voltage (1.0 means full nominal voltage) of the electrical bus to which the given avionics device is bound, or -1 if the device is not bound to the current aircraft.
+--- Returns the ratio of the nominal voltage (1.0 means full nominal voltage) of the electrical bus powering the cockpit device with the given handle.
+---
+--- An aircraft author can wire a device to any combination of the six electrical buses. When more than one is selected, this returns the ratio for the highest-numbered selected bus that both exists on the current aircraft and is above the aircraft's low-voltage red line. If no selected bus meets that test, this returns 0 - so 0 means the device has no usable power, not that a bus measured zero volts.
+---
+--- If the device is bound but the author assigned it to no bus at all, this returns 1.0; X-Plane treats such a device as always powered. If the device is not bound to the current aircraft, this returns -1.
 ---
 ---@field XPLMGetAvionicsBusVoltsRatio fun(inHandle: XPLMAvionicsID): number
 
@@ -439,12 +487,14 @@ local XPLMDeviceID = {
 ---@field XPLMIsAvionicsMappedToVR fun(inHandle: XPLMAvionicsID): boolean
 
 ---@class _G
---- This routine gives keyboard focus to the popup window of a custom cockpit device, if it is visible.
+--- This routine gives keyboard focus to the popup window of a custom cockpit device, if it is visible. If the popup is not visible, the device does not get focus.
+---
+--- Pass NULL to take keyboard focus away from the cockpit device that has it, so that keystrokes go to X-Plane again. Use this, not XPLMTakeKeyboardFocus(0): XPLMTakeKeyboardFocus controls the focus of plugin windows only, and does not release a cockpit device.
 ---
 ---@field XPLMTakeAvionicsKeyboardFocus fun(inHandle: XPLMAvionicsID)
 
 ---@class _G
---- Returns true (1) if the popup window for a cockpit device has keyboard focus.
+--- Returns true (1) if the popup window for a cockpit device has keyboard focus. To release the focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
 ---
 ---@field XPLMHasAvionicsKeyboardFocus fun(inHandle: XPLMAvionicsID): boolean
 
@@ -468,6 +518,46 @@ local XPLMDeviceID = {
 ---
 ---@field XPLMSetAvionicsGeometryOS fun(inHandle: XPLMAvionicsID, inLeft: integer, inTop: integer, inRight: integer, inBottom: integer)
 
+
+-----------------------------------------------------------------------------
+-- WINDOW API
+-----------------------------------------------------------------------------
+
+--[[
+   The window API provides a high-level abstraction for drawing with UI
+   interaction.
+   
+   Windows may operate in one of two modes: legacy (for plugins compiled
+   against old versions of the XPLM, as well as windows created via the
+   deprecated XPLMCreateWindow() function, rather than XPLMCreateWindowEx()),
+   or modern (for windows compiled against the XPLM300 or newer API, and
+   created via XPLMCreateWindowEx()).
+   
+   Modern windows have access to new X-Plane 11 windowing features, like
+   support for new positioning modes (including being "popped out" into their
+   own first-class window in the operating system). They can also optionally
+   be decorated in the style of X-Plane 11 windows (like the map).
+   
+   Modern windows operate in "boxel" units. A boxel ("box of pixels") is a
+   unit of virtual pixels which, depending on X-Plane's scaling, may
+   correspond to an arbitrary NxN "box" of real pixels on screen. Because
+   X-Plane handles this scaling automatically, you can effectively treat the
+   units as though you were simply drawing in pixels, and know that when
+   X-Plane is running with 150% or 200% scaling, your drawing will be
+   automatically scaled (and likewise all mouse coordinates, screen bounds,
+   etc. will also be auto-scaled).
+   
+   In contrast, legacy windows draw in true screen pixels, and thus tend to
+   look quite small when X-Plane is operating in a scaled mode.
+   
+   Legacy windows have their origin in the lower left of the main X-Plane
+   window. In contrast, since modern windows are not constrained to the main
+   window, they have their origin in the lower left of the entire global
+   desktop space, and the lower left of the main X-Plane window is not
+   guaranteed to be (0, 0). In both cases, x increases as you move left, and y
+   increases as you move up.
+]]--
+
 --- This is an opaque identifier for a window. You use it to control your window. When you create a window (via either XPLMCreateWindow() or XPLMCreateWindowEx()), you will specify callbacks to handle drawing, mouse interaction, etc.
 ---@class XPLMWindowID : userdata
 ---@field private __XPLMWindowID_marker any
@@ -478,7 +568,7 @@ local XPLMDeviceID = {
 --- This function is called when a key is pressed or keyboard focus is taken away from your window. If losingFocus is 1, you are losing the keyboard focus, otherwise a key was pressed and inKey contains its character. The window ID passed in will be your window for key presses, or the other window taking focus when losing focus. Note that in the modern plugin system, often focus is taken by the window manager itself; for this resaon, the window ID may be zero when losing focus, and you should not write code that depends onit. The refcon passed in will be the one from registration, for both key presses and losing focus. Warning: this API declares virtual keys as a signed character; however the VKEY #define macros in XPLMDefs.h define the vkeys using unsigned values (that is 0x80 instead of -0x80). So you may need to cast the incoming vkey to an unsigned char to get correct comparisons in C.
 ---@alias XPLMHandleKey_f fun(inWindowID: XPLMWindowID, inKey: string, inFlags: XPLMKeyFlags, inVirtualKey: string, inRefcon: any, losingFocus: boolean)
 
---- You receive this call for one of three events: - when the user clicks the mouse button down - (optionally) when the user drags the mouse after a down-click, but before the up-click - when the user releases the down-clicked mouse button. You receive the x and y of the click, your window, and a refcon. Return 1 to consume the click, or 0 to pass it through. WARNING: passing clicks through windows (as of this writing) causes mouse tracking problems in X-Plane; do not use this feature! The units for x and y values match the units used in your window. Thus, for "modern" windows (those created via XPLMCreateWindowEx() and compiled against the XPLM300 library), the units are boxels, while legacy windows will get pixels. Legacy windows have their origin in the lower left of the main X-Plane window, while modern windows have their origin in the lower left of the global desktop space. In both cases, x increases as you move right, and y increases as you move up.
+--- You receive this call for one of three events: - when the user clicks the mouse button down - (optionally) when the user drags the mouse after a down-click, but before the up-click - when the user releases the down-clicked mouse button. You receive the x and y of the click, your window, and a refcon. Return 1 to consume the click, or 0 to pass it through. - inMouse: the type of mouse event - down-click, drag, or up-click. WARNING: passing clicks through windows (as of this writing) causes mouse tracking problems in X-Plane; do not use this feature! The units for x and y values match the units used in your window. Thus, for "modern" windows (those created via XPLMCreateWindowEx() and compiled against the XPLM300 library), the units are boxels, while legacy windows will get pixels. Legacy windows have their origin in the lower left of the main X-Plane window, while modern windows have their origin in the lower left of the global desktop space. In both cases, x increases as you move right, and y increases as you move up.
 ---@alias XPLMHandleMouseClick_f fun(inWindowID: XPLMWindowID, x: integer, y: integer, inMouse: XPLMMouseStatus, inRefcon: any): integer
 
 --- The SDK calls your cursor status callback when the mouse is over your plugin window. Return a cursor status code to indicate how you would like X-Plane to manage the cursor. If you return xplm_CursorDefault, the SDK will try lower-Z-order plugin windows, then let the sim manage the cursor. Note: you should never show or hide the cursor yourself---these APIs are typically reference-counted and thus cannot safely and predictably be used by the SDK. Instead return one of xplm_CursorHidden to hide the cursor or xplm_CursorArrow/xplm_CursorCustom to show the cursor. If you want to implement a custom cursor by drawing a cursor in OpenGL, use xplm_CursorHidden to hide the OS cursor and draw the cursor using a 2-d drawing callback (after xplm_Phase_Window is probably a good choice, but see deprecation warnings on the drawing APIs!). If you want to use a custom OS-based cursor, use xplm_CursorCustom to ask X-Plane to show the cursor but not affect its image. You can then use an OS specific call like SetThemeCursor (Mac) or SetCursor/LoadCursor (Windows). The units for x and y values match the units used in your window. Thus, for "modern" windows (those created via XPLMCreateWindowEx() and compiled against the XPLM300 library), the units are boxels, while legacy windows will get pixels. Legacy windows have their origin in the lower left of the main X-Plane window, while modern windows have their origin in the lower left of the global desktop space. In both cases, x increases as you move right, and y increases as you move up.
@@ -550,9 +640,8 @@ local XPLMWindowDecoration = {
 ---@class _G
 ---@field XPLMWindowDecoration XPLMWindowDecoration
 
---- The XPMCreateWindow_t structure defines all of the parameters used to create a modern window using XPLMCreateWindowEx(). The structure will be expanded in future SDK APIs to include more features. Always set the structSize member to the size of your struct in bytes! All windows created by this function in the XPLM300 version of the API are created with the new X-Plane 11 GUI features. This means your plugin will get to "know" about the existence of X-Plane windows other than the main window. All drawing and mouse callbacks for your window will occur in "boxels," giving your windows automatic support for high-DPI scaling in X-Plane. In addition, your windows can opt-in to decoration with the X-Plane 11 window styling, and you can use the XPLMSetWindowPositioningMode() API to make your window "popped out" into a first-class operating system window. Note that this requires dealing with your window's bounds in "global desktop" positioning units, rather than the traditional panel coordinate system. In global desktop coordinates, the main X-Plane window may not have its origin at coordinate (0, 0), and your own window may have negative coordinates. Assuming you don't implicitly assume (0, 0) as your origin, the only API change you should need is to start using XPLMGetMouseLocationGlobal() rather than XPLMGetMouseLocation(), and XPLMGetScreenBoundsGlobal() instead of XPLMGetScreenSize(). If you ask to be decorated as a floating window, you'll get the blue window control bar and blue backing that you see in X-Plane 11's normal "floating" windows (like the map).
+--- XPLMCreateWindow_t defines all of the parameters used to create a modern window using XPLMCreateWindowEx(). The structure has been expanded in later SDK versions and will be expanded again; the fields present in your build are the ones your SDK version defines, and structSize is how X-Plane knows which of them you filled in. Always set the structSize member to the size of your struct in bytes! Of the callbacks, only drawWindowFunc is required, and only for a window that draws through your plugin; see XPLMCreateWindowEx() for the rules. All windows created by this function in the XPLM300 version of the API are created with the new X-Plane 11 GUI features. This means your plugin will get to "know" about the existence of X-Plane windows other than the main window. All drawing and mouse callbacks for your window will occur in "boxels," giving your windows automatic support for high-DPI scaling in X-Plane. In addition, your windows can opt-in to decoration with the X-Plane 11 window styling, and you can use the XPLMSetWindowPositioningMode() API to make your window "popped out" into a first-class operating system window. Note that this requires dealing with your window's bounds in "global desktop" positioning units, rather than the traditional panel coordinate system. In global desktop coordinates, the main X-Plane window may not have its origin at coordinate (0, 0), and your own window may have negative coordinates. Assuming you don't implicitly assume (0, 0) as your origin, the only API change you should need is to start using XPLMGetMouseLocationGlobal() rather than XPLMGetMouseLocation(), and XPLMGetScreenBoundsGlobal() instead of XPLMGetScreenSize(). If you ask to be decorated as a floating window, you'll get the blue window control bar and blue backing that you see in X-Plane 11's normal "floating" windows (like the map).
 ---@class XPLMCreateWindow_t
----@field structSize integer Used to inform XPLMCreateWindowEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateWindow_t)
 ---@field left integer Left bound, in global desktop boxels
 ---@field top integer Top bound, in global desktop boxels
 ---@field right integer Right bound, in global desktop boxels
@@ -567,16 +656,27 @@ local XPLMWindowDecoration = {
 ---@field decorateAsFloatingWindow XPLMWindowDecoration Specifies the type of X-Plane 11-style "wrapper" you want around your window, if any
 ---@field layer XPLMWindowLayer
 ---@field handleRightClickFunc XPLMHandleMouseClick_f A callback to handle the user right-clicking within your window (or NULL to ignore right clicks)
----@field windowContentType XPLMWindowContentType The source of content for this Window (OpenGL, Panel Graphics, CEF, etc.)
+---@field contentType XPLMWindowContentType How this window is drawn: xplm_WindowContentTypeOpenGL (the legacy OpenGL bridge), xplm_WindowContentTypePanelGraphics (native panel-graphics rendering), or xplm_WindowContentTypeBrowser (a CEF web view). A browser window draws itself, so drawWindowFunc is not used; drive the page with XPLMWindowSetURL() and friends.
 ---@field browserLoadFinishedFunc XPLMBrowserLoadFinished_f For browser content: called when the main frame finishes loading (not a success guarantee --error pages finish too). NULL if unused.
 ---@field browserLoadErrorFunc XPLMBrowserLoadError_f For browser content: called when a navigation fails at the network level. NULL if unused.
 
 ---@class _G
---- This routine creates a new "modern" window. You pass in an XPLMCreateWindow_t structure with all
---- of the fields set in.  You must set the structSize of the structure to the size of the
---- actual structure you used.  Also, you must provide functions for every callback---you may
---- not leave them null!  (If you do not support the cursor or mouse wheel, use functions that
---- return the default values.)
+--- This routine creates a new "modern" window.  You pass in an XPLMCreateWindow_t structure with all of the
+--- fields set in, including its structSize, which must be the size of the actual structure you used.
+---
+--- Returns the ID of the new window, or NULL if it could not be created --either because structSize matched
+--- no known SDK version, or because the window needed a drawing callback and none was provided.
+---
+--- Only drawWindowFunc is required, and only for a window whose contentType makes your plugin responsible
+--- for its pixels: xplm_WindowContentTypeOpenGL and xplm_WindowContentTypePanelGraphics.  A browser window
+--- renders its own content and ignores drawWindowFunc.
+---
+--- Every other callback is optional; leave it NULL and your window does not receive that event.  A window
+--- with no handleMouseClickFunc or handleRightClickFunc does not consume clicks, a window with no
+--- handleMouseWheelFunc does not consume scroll wheel events, and a window with no handleCursorFunc gets
+--- the default cursor.  (Whether a click reaches a window underneath yours also depends on your window's
+--- decoration: any decoration other than xplm_WindowDecorationNone stops clicks at your window's bounds.)
+--- The browserLoadFinishedFunc and browserLoadErrorFunc callbacks are only called for browser windows.
 ---
 --- NOTE: For an imgui-drawn window, Lua scripts should use XLuaCreateImguiWindow()
 --- instead; it opens and closes the imgui frame for you and wires the input handlers.
@@ -642,6 +742,7 @@ local XPLMWindowDecoration = {
 ---
 ---@field XPLMWindowInjectScript fun(inWindowID: XPLMWindowID, inScript: string)
 
+--- Handler invoked when the page in a browser-content-type window calls xplane.<name>(arg). You receive the window, the argument serialised as a JSON string, and your refcon. Return the JSON the JS Promise resolves to, and return it through XPLMReturnString: `return XPLMReturnString(json);`. Returning NULL, or any pointer that did not come from XPLMReturnString (a string literal, a static buffer, a std::string's c_str()), is a plugin error: X-Plane reports it to your error callback (see XPLMSetErrorCallback) and Log.txt, drops the result, and the Promise resolves to null. A string that is not valid JSON is reported the same way. To resolve the Promise to null on purpose, return XPLMReturnString("null"). From Lua, return the JSON string itself; the Lua bindings pass it through XPLMReturnString for you.
 ---@alias XPLMBrowserCallback_f fun(inWindowID: XPLMWindowID, inJSON: string, inRefcon: any): string
 
 ---@class _G
@@ -650,8 +751,9 @@ local XPLMWindowDecoration = {
 --- resolves to the value your `XPLMBrowserCallback_f` returns (parsed as
 --- JSON -- see that callback's desc for the contract).
 ---
---- Multiple registrations against the same name on the same window
---- overwrite each other. Each window has its own independent `xplane.*`
+--- A name can only be registered once per window: registering it again is
+--- reported to your error callback and ignored, and the first registration
+--- stays. Each window has its own independent `xplane.*`
 --- namespace; functions registered on window A are not callable from
 --- window B.
 ---
@@ -925,6 +1027,9 @@ local XPLMWindowPositioningMode = {
 --- that window.  Pass a window ID of 0 to remove keyboard focus from any plugin-created windows
 --- and instead pass keyboard strokes directly to X-Plane.
 ---
+--- This routine does not change the keyboard focus of a cockpit device's popup. To release that
+--- focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
+---
 ---@field XPLMTakeKeyboardFocus fun(inWindow: XPLMWindowID)
 
 ---@class _G
@@ -938,6 +1043,9 @@ local XPLMWindowPositioningMode = {
 --- This routine brings the window to the front of the Z-order for its layer.  Windows are brought to the
 --- front automatically when they are created. Beyond that, you should make sure you are front before
 --- handling mouse clicks.
+---
+--- You may only bring your own windows to the front; passing another plugin's window reports an error
+--- and does nothing.
 ---
 --- Note that this only brings your window to the front of its layer (XPLMWindowLayer).
 --- Thus, if you have a window in the floating window layer (xplm_WindowLayerFloatingWindows),
@@ -960,6 +1068,19 @@ local XPLMWindowPositioningMode = {
 --- plugin-created windows (one legacy, one modern) *both* be in the front (of their different layers!) at the same time.
 ---
 ---@field XPLMIsWindowInFront fun(inWindow: XPLMWindowID): boolean
+
+
+-----------------------------------------------------------------------------
+-- IMGUI TEXT INPUT WIDGETS
+-----------------------------------------------------------------------------
+
+--[[
+   Hand-written imgui text-entry widgets (Lua only). Each returns (changed,
+   new_text): changed is true on the frame the text was edited, and new_text
+   is the current buffer contents (echoed back unchanged when no imgui frame
+   is active). Lua holds the canonical string between frames; pass it back in
+   on the next call.
+]]--
 
 ---@class imgui
 --- imgui.InputText(label, current_text, [max_len=256], [flags=0]) returns changed, new_text

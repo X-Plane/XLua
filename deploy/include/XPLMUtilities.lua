@@ -17,6 +17,52 @@
 
 require("XPLMDefs")
 
+
+-----------------------------------------------------------------------------
+-- FILE UTILITIES
+-----------------------------------------------------------------------------
+
+--[[
+   The XPLMUtilities file APIs provide some basic file and path functions for
+   use with X-Plane.
+   
+   Directory Separators
+   --------------------
+   
+   The XPLM has two modes it can work in:
+   
+    * X-Plane native paths: all paths are UTF8 strings, using the unix forward
+      slash (/) as the directory separating character.  In native path mode,
+      you use the same path format for all three operating systems.
+   
+    * Legacy OS paths: the directroy separator is \ for Windows, : for OS X,
+      and / for Linux; OS paths are encoded in MacRoman for OS X using legacy
+      HFS conventions, use the application code page for multi-byte encoding
+      on Unix using DOS path conventions, and use UTF-8 for Linux.
+   
+   While legacy OS paths are the default, we strongly encourage you to opt in
+   to native paths using the XPLMEnableFeature API.
+   
+    * All OS X plugins should enable native paths all of the time; if you do
+      not do this, you will have to convert all paths back from HFS to Unix
+      (and deal with MacRoman) - code written using native paths and the C
+      file APIs "just works" on OS X.
+   
+    * For Linux plugins, there is no difference between the two encodings.
+   
+    * Windows plugins will need to convert the UTF8 file paths to UTF16 for
+      use with the "wide" APIs. While it might seem tempting to stick with
+      legacy OS paths (and just use the "ANSI" Windows APIs), X-Plane is fully
+      unicode-capable, and will often be installed in paths where the user's
+      directories have no ACP encoding.
+   
+   Full and Relative Paths
+   -----------------------
+   
+   Some of these APIs use full paths, but others use paths relative to the
+   user's X-Plane installation. This is documented on a per-API basis.
+]]--
+
 --[[
 These enums define types of data files you can load or unload using the SDK.
 ]]--
@@ -70,6 +116,11 @@ local XPLMDataFileType = {
 ---
 ---@field XPLMSaveDataFile fun(inFileType: XPLMDataFileType, inFilePath: string): boolean
 
+
+-----------------------------------------------------------------------------
+-- X-PLANE MISC
+-----------------------------------------------------------------------------
+
 --[[
 While the plug-in SDK is only accessible to plugins running inside X-Plane, the
 original authors considered extending the API to other applications that shared basic infrastructure
@@ -109,6 +160,24 @@ local XPLMLanguageCode = {
 ---@class _G
 ---@field XPLMLanguageCode XPLMLanguageCode
 
+--[[
+Whether this copy of X-Plane is running under a Professional-use license (a HASP Pro USB key or a
+valid Pro digital-download product key). Demo and Home installs both report xplm_ProLicense_NotLicensed.
+]]--
+
+---@enum XPLMProLicenseStatus
+local XPLMProLicenseStatus = {
+    -- X-Plane has not finished its license check yet. Wait for
+    -- XPLM_MSG_PRO_LICENSE_CHANGED.
+    xplm_ProLicense_Unknown                  = 0,
+    -- No Pro license is active.
+    xplm_ProLicense_NotLicensed              = 1,
+    -- A Pro license is active.
+    xplm_ProLicense_Licensed                 = 2,
+}
+---@class _G
+---@field XPLMProLicenseStatus XPLMProLicenseStatus
+
 ---@class _G
 --- This routine returns the revision of both X-Plane and the XPLM DLL. All versions
 --- are at least three-digit decimal numbers (e.g. 606 for version 6.06 of X-Plane); the current
@@ -124,6 +193,21 @@ local XPLMLanguageCode = {
 --- This routine returns the langauge the sim is running in.
 ---
 ---@field XPLMGetLanguage fun(): XPLMLanguageCode
+
+---@class _G
+--- Returns whether X-Plane is currently running under a Professional-use license.
+---
+--- X-Plane finishes its license check after global plugins have received XPluginStart and XPluginEnable,
+--- so from those callbacks a global plugin sees xplm_ProLicense_Unknown. Listen for
+--- XPLM_MSG_PRO_LICENSE_CHANGED: it is broadcast once the check completes and again whenever the status
+--- changes during the session (for example, the user enters a product key or a key expires). Aircraft
+--- plugins load after the check completes and see a settled value immediately. If you see a settled value
+--- in XPluginStart, do not wait for the message; the initial transition was broadcast before your plugin
+--- loaded.
+---
+--- Call this only from the main thread.
+---
+---@field XPLMGetProLicenseStatus fun(): XPLMProLicenseStatus
 
 ---@class _G
 --- This routine outputs a C-style string to the Log.txt file. The file is immediately flushed so you will
@@ -160,6 +244,50 @@ local XPLMLanguageCode = {
 --- from the developer menu.
 ---
 ---@field XPLMReloadScenery fun()
+
+
+-----------------------------------------------------------------------------
+-- X-PLANE COMMAND MANAGEMENT
+-----------------------------------------------------------------------------
+
+--[[
+   The command management APIs let plugins interact with the command-system in
+   X-Plane, the abstraction behind keyboard presses and joystick buttons. This
+   API lets you create new commands and modify the behavior (or get
+   notification) of existing ones.
+   
+   X-Plane Command Phases
+   ----------------------
+   
+   X-Plane commands are not instantaneous; they operate over a duration.
+   (Think of a joystick button press - you can press, hold down, and then
+   release the joystick button; X-Plane commands model this entire process.)
+   
+   An X-Plane command consists of three phases: a beginning, continuous
+   repetition, and an ending. The command may be repeated zero times in its
+   duration, followed by one command ending. Command begin and end messges are
+   balanced, but a command may be bound to more than one event source (e.g. a
+   keyboard key and a joystick button), in which case you may receive a second
+   begin during before any end).
+   
+   When you issue commands in the plugin system, you *must* balance every call
+   to XPLMCommandBegin with a call to XPLMCommandEnd with the same command
+   reference.
+   
+   Command Behavior Modification
+   -----------------------------
+   
+   You can register a callback to handle a command either before or after
+   X-Plane does; if you receive the command before X-Plane you have the option
+   to either let X-Plane handle the command or hide the command from X-Plane.
+   This lets plugins both augment commands and replace them.
+   
+   If you register for an existing command, be sure that you are *consistent*
+   in letting X-Plane handle or not handle the command; you are responsible
+   for passing a *balanced* number of begin and end messages to X-Plane. (E.g.
+   it is not legal to pass all the begin messages to X-Plane but hide all the
+   end messages).
+]]--
 
 --[[
 The phases of a command.

@@ -45,6 +45,15 @@
 require("XPLMDefs")
 require("XPLMScenery")
 
+
+-----------------------------------------------------------------------------
+-- Instance Creation and Destruction
+-----------------------------------------------------------------------------
+
+--[[
+   Registers and unregisters instances.
+]]--
+
 --- An opaque handle to an instance.
 ---@class XPLMInstanceRef : userdata
 ---@field private __XPLMInstanceRef_marker any
@@ -60,6 +69,9 @@ require("XPLMScenery")
 ---
 --- * The instance dataref array must be a valid pointer to a null-terminated array.  That is, if you do not want any
 ---   datarefs, you must pass a pointer to a one-element array containing a null item.  You cannot pass null for the array itself.
+---
+--- - datarefs: a NULL-terminated list of dataref identifiers. E.g., { "sim/aircraft/view/acf_peX",
+---   "sim/aircraft/view/acf_peY", "sim/aircraft/view/acf_peZ", NULL }
 ---
 ---@field XPLMCreateInstance fun(obj: XPLMObjectRef, datarefs: string[]): XPLMInstanceRef
 
@@ -77,6 +89,16 @@ require("XPLMScenery")
 --- reference to the OBJ and the object OBJ be deallocated when the instance is destroyed.
 ---
 ---@field XPLMDestroyInstance fun(instance: XPLMInstanceRef)
+
+
+-----------------------------------------------------------------------------
+-- Multi-Object Instance Creation
+-----------------------------------------------------------------------------
+
+--[[
+   Create an instance out of one or more objects with a single extensible
+   call.
+]]--
 
 --[[
 This enum defines the coordinate space used to interpret the positions of an instance created with
@@ -114,7 +136,6 @@ local XPLMCoordinateSpace_t = {
 
 --- XPLMCreateInstance_t defines all of the parameters used to create an instance via XPLMCreateInstanceEx(). It is a strict superset of the older XPLMCreateInstance() call: it lets you build an instance out of more than one object, choose the coordinate space, and enable auto-shift, all in a single call. The structure will be expanded in future SDK versions to include more features. Always set the structSize member to the size of your struct in bytes!
 ---@class XPLMCreateInstance_t
----@field structSize integer Used to inform XPLMCreateInstanceEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateInstance_t).
 ---@field objects XPLMInstanceObject_t[] An array of objects (each with its own offset) that make up the instance. Must point to at least objectCount entries.
 ---@field datarefs string[] A single NULL-terminated list of dataref identifiers shared by every object in the instance, exactly as in XPLMCreateInstance(). The data you later pass to XPLMInstanceSetPosition() fills one shared block for all objects. You cannot pass null for the array itself.
 ---@field coordinateSpace XPLMCoordinateSpace_t The coordinate space in which instance positions are interpreted (see XPLMCoordinateSpace_t). Use xplm_CoordSpace_World for the classic behavior.
@@ -136,6 +157,11 @@ local XPLMCoordinateSpace_t = {
 --- the instance with XPLMDestroyInstance() exactly as for an instance made with XPLMCreateInstance().
 ---
 ---@field XPLMCreateInstanceEx fun(inParams: XPLMCreateInstance_t): XPLMInstanceRef
+
+
+-----------------------------------------------------------------------------
+-- Instance Manipulation
+-----------------------------------------------------------------------------
 
 ---@class _G
 --- Updates both the position of the instance and all datarefs you registered for it.  Call this from a flight loop callback or UI callback.
@@ -168,8 +194,9 @@ local XPLMCoordinateSpace_t = {
 --- space. In aircraft space, positions are relative to the specified aircraft's CG and body axes; in camera
 --- space, positions are relative to the camera/view.
 ---
---- For the two aircraft spaces, aircraft_index specifies which aircraft (0 = user's aircraft). For world and
---- camera space, aircraft_index is ignored.
+--- For the two aircraft spaces (xplm_CoordSpace_AircraftInterior and xplm_CoordSpace_AircraftExterior),
+--- aircraft_index specifies which aircraft (0 = user's aircraft). For world and camera space, aircraft_index
+--- is ignored.
 ---
 --- Changing the coordinate space does not make the instance jump: X-Plane re-expresses the instance's current
 --- world location in the new space, so the object stays exactly where it is and then begins tracking the new

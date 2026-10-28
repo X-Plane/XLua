@@ -25,8 +25,8 @@ extern "C" {
 // Drop every association owned by interpreter `L`, unregistering each handler from
 // XPLM on the way out. Call this while `L` is still open and BEFORE
 // xlua_callback_cleanup(L), which frees the notify_cb_t records XPLM still holds as
-// refcons. Both loaders must call it: module::shutdown_lua for xlua.xpl, and
-// close_lua_interp for the XPLM direct loader.
+// refcons. lua_close calls it through the XLua state of `L` (shared_xpfuncs.cpp),
+// so a loader does not have to. An earlier call is safe.
 void xlua_command_bindings_cleanup(lua_State* L);
 
 extern "C" {

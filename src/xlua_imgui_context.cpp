@@ -30,6 +30,17 @@ bool TranslateToImguiSpace(XPLMWindowID win, int gx, int gy, float& out_x, float
     return true;
 }
 
+// The drawing half of TranslateToImguiSpace: panel graphics draws in global
+// boxels too, so set up window-local, top-left, Y-down space as a transform
+// around XPLMDrawCalls. Pair with XPLMTransformPop.
+void PushImguiSpace(XPLMWindowID win) {
+    int left = 0, top = 0, right = 0, bottom = 0;
+    if (win != nullptr) XPLMGetWindowGeometry(win, &left, &top, &right, &bottom);
+    XPLMTransformPush();
+    XPLMTransformTranslate(static_cast<float>(left), static_cast<float>(top));
+    XPLMTransformScale(1.0f, -1.0f);
+}
+
 // Mirrors source_code/core/ui/imgui_impl_xsystem.cpp:127.
 ImGuiKey XPLM_VK_to_ImGuiKey(int vkey) {
     switch (vkey) {
@@ -38,13 +49,24 @@ ImGuiKey XPLM_VK_to_ImGuiKey(int vkey) {
         case XPLM_VK_RIGHT:     return ImGuiKey_RightArrow;
         case XPLM_VK_UP:        return ImGuiKey_UpArrow;
         case XPLM_VK_DOWN:      return ImGuiKey_DownArrow;
+        case XPLM_VK_PRIOR:     return ImGuiKey_PageUp;
+        case XPLM_VK_NEXT:      return ImGuiKey_PageDown;
         case XPLM_VK_HOME:      return ImGuiKey_Home;
         case XPLM_VK_END:       return ImGuiKey_End;
         case XPLM_VK_INSERT:    return ImGuiKey_Insert;
         case XPLM_VK_DELETE:    return ImGuiKey_Delete;
         case XPLM_VK_BACK:      return ImGuiKey_Backspace;
         case XPLM_VK_SPACE:     return ImGuiKey_Space;
+
+        // Careful: XPLM_VK_ENTER (0xBB) is NOT what the enter/return key sends -
+        // no platform back-end ever emits it (see gfx_window_cocoa.mm / _win32.cpp
+        // / _x11.cpp). The main keyboard's return key arrives as XPLM_VK_RETURN and
+        // the numeric keypad's as XPLM_VK_NUMPAD_ENT. Mapping only the
+        // obvious-looking XPLM_VK_ENTER is why enter appeared dead in ImGui.
+        case XPLM_VK_RETURN:
         case XPLM_VK_ENTER:     return ImGuiKey_Enter;
+        case XPLM_VK_NUMPAD_ENT:return ImGuiKey_KeypadEnter;
+
         case XPLM_VK_ESCAPE:    return ImGuiKey_Escape;
         case XPLM_VK_0:         return ImGuiKey_0;
         case XPLM_VK_1:         return ImGuiKey_1;
@@ -91,6 +113,27 @@ ImGuiKey XPLM_VK_to_ImGuiKey(int vkey) {
         case XPLM_VK_LBRACE:    return ImGuiKey_LeftBracket;
         case XPLM_VK_RBRACE:    return ImGuiKey_RightBracket;
         case XPLM_VK_BACKSLASH: return ImGuiKey_Backslash;
+        case XPLM_VK_BACKQUOTE: return ImGuiKey_GraveAccent;
+        case XPLM_VK_SNAPSHOT:  return ImGuiKey_PrintScreen;
+        case XPLM_VK_NUMPAD0:   return ImGuiKey_Keypad0;
+        case XPLM_VK_NUMPAD1:   return ImGuiKey_Keypad1;
+        case XPLM_VK_NUMPAD2:   return ImGuiKey_Keypad2;
+        case XPLM_VK_NUMPAD3:   return ImGuiKey_Keypad3;
+        case XPLM_VK_NUMPAD4:   return ImGuiKey_Keypad4;
+        case XPLM_VK_NUMPAD5:   return ImGuiKey_Keypad5;
+        case XPLM_VK_NUMPAD6:   return ImGuiKey_Keypad6;
+        case XPLM_VK_NUMPAD7:   return ImGuiKey_Keypad7;
+        case XPLM_VK_NUMPAD8:   return ImGuiKey_Keypad8;
+        case XPLM_VK_NUMPAD9:   return ImGuiKey_Keypad9;
+        case XPLM_VK_DECIMAL:   return ImGuiKey_KeypadDecimal;
+        case XPLM_VK_DIVIDE:    return ImGuiKey_KeypadDivide;
+        case XPLM_VK_MULTIPLY:  return ImGuiKey_KeypadMultiply;
+        case XPLM_VK_SUBTRACT:  return ImGuiKey_KeypadSubtract;
+        case XPLM_VK_ADD:       return ImGuiKey_KeypadAdd;
+        case XPLM_VK_NUMPAD_EQ: return ImGuiKey_KeypadEqual;
+
+        // XPLM_VK_CLEAR / SELECT / PRINT / EXECUTE / HELP / SEPARATOR have no
+        // Dear ImGui equivalent and deliberately fall through to None.
     }
     return ImGuiKey_None;
 }
@@ -191,6 +234,7 @@ void XplmImguiContext::EndFrame() {
         return;
     }
 
+    PushImguiSpace(cur_win_);
     std::vector<XPLMDrawCall_t> calls;
     for (int n = 0; n < drawData->CmdListsCount; n++) {
         ImDrawList* cmd_list = drawData->CmdLists[n];
@@ -234,6 +278,7 @@ void XplmImguiContext::EndFrame() {
             XPLMDrawCalls(&mesh, static_cast<int>(calls.size()), calls.data());
         }
     }
+    XPLMTransformPop();
 }
 
 int XplmImguiContext::OnMouseButton(XPLMWindowID win, int x, int y, XPLMMouseStatus status, int button) {
@@ -252,7 +297,15 @@ int XplmImguiContext::OnMouseButton(XPLMWindowID win, int x, int y, XPLMMouseSta
         io.AddMouseButtonEvent(button, false);
     }
     // Drag updates position only — already done above.
-    return io.WantCaptureMouse ? 1 : 0;
+    //
+    // Always claim the click. The XPLM sends the drag and the release only to the window that
+    // claimed the press, and ImGui has already seen the press - so declining one (say, returning
+    // WantCaptureMouse, which is false over empty space) leaves ImGui's button held forever. A
+    // button held after going down outside every ImGui window makes ImGui disown the mouse
+    // (WantCaptureMouse stays false), so every later press would be refused too: the window
+    // wedges. Claiming everything is also just right for this window - it owns its whole rect, so
+    // a click on its empty space shouldn't fall through to the cockpit behind it.
+    return 1;
 }
 
 int XplmImguiContext::OnMouseWheel(XPLMWindowID win, int x, int y, int wheel, int clicks) {
@@ -298,11 +351,15 @@ void XplmImguiContext::OnKey(char key, XPLMKeyFlags flags, char vkey, int losing
 
     const ImGuiKey ik = XPLM_VK_to_ImGuiKey(static_cast<unsigned char>(vkey));
     if (ik != ImGuiKey_None) {
-        if (is_down)        io.AddKeyEvent(ik, true);
-        else if (is_up)     io.AddKeyEvent(ik, false);
-        // Repeat: leave the key state alone. The initial Down already told
-        // ImGui the key is held; its own KeyRepeatDelay/Rate timers drive
-        // non-text repeat (Backspace, arrows, Delete in InputText).
+        // Repeat counts as "still down". ImGui filters a duplicate down event, so
+        // DownDuration keeps accumulating and its KeyRepeatDelay/Rate timers are
+        // untouched - but this re-asserts the key if something released it behind
+        // our back. Losing keyboard focus calls io.ClearInputKeys(), which marks
+        // every key up; a widget that deactivates on enter (EnterReturnsTrue) makes
+        // WantTextInput drop mid-keypress, so without this a key the user is still
+        // holding stays dead until they release and press it again.
+        if (is_down || is_repeat) io.AddKeyEvent(ik, true);
+        else if (is_up)           io.AddKeyEvent(ik, false);
     }
     // Forward typed characters on Down AND Repeat so InputText sees the
     // OS-auto-repeated 'aaaaa…' stream when a printable key is held.

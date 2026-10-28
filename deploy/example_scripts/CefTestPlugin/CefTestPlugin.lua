@@ -476,7 +476,7 @@ local function create_browser_window(left, bottom, right, top, title, url)
         top    = top,
         visible                  = true,
         decorateAsFloatingWindow = XPLMWindowDecoration.xplm_WindowDecorationRoundRectangle,
-        windowContentType        = XPLMWindowContentType.xplm_WindowContentTypeBrowser,
+        contentType              = XPLMWindowContentType.xplm_WindowContentTypeBrowser,
         browserLoadFinishedFunc  = browser_load_finished_cb,
         browserLoadErrorFunc     = browser_load_error_cb,
     })

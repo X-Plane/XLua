@@ -27,6 +27,11 @@
 
 require("XPLMDefs")
 
+
+-----------------------------------------------------------------------------
+-- NAVIGATION DATABASE ACCESS
+-----------------------------------------------------------------------------
+
 --- XPLMNavRef is an iterator into the navigation database. The navigation database is essentially an array, but it is not necessarily densely populated. The only assumption you can safely make is that like-typed nav-aids are grouped together. Use XPLMNavRef to refer to a nav-aid. XPLM_NAV_NOT_FOUND is returned by functions that return an XPLMNavRef when the iterator must be invalid.
 ---@alias XPLMNavRef integer
 
@@ -135,6 +140,21 @@ local XPLMNavType = {
 --- is a single byte value 1 for true or 0 for false, not a C string.
 ---
 ---@field XPLMGetNavAidInfo fun(inRef: XPLMNavRef): { outType: XPLMNavType, outLatitude: userdata, outLongitude: userdata, outHeight: userdata, outFrequency: userdata, outHeading: userdata, outID: string[], outName: string[], outReg: string[] }
+
+
+-----------------------------------------------------------------------------
+-- FLIGHT MANAGEMENT COMPUTER
+-----------------------------------------------------------------------------
+
+--[[
+   Note: the FMS works based on an array of entries.  Indices into the array
+   are zero-based.  Each entry is a navaid plus an altitude.  The FMS tracks
+   the currently displayed entry and the entry that it is flying to.
+   
+   The FMS must be programmed with contiguous entries, so clearing an entry at
+   the end shortens the effective flight plan.  There is a max of 100
+   waypoints in the flight plan.
+]]--
 
 ---@class _G
 --- This routine returns the number of entries in the FMS.
@@ -296,6 +316,15 @@ local XPLMNavFlightPlan = {
 --- Use device index 0 for the pilot-side and device index 1 for the co-pilot side unit.
 ---
 ---@field XPLMLoadFMSFlightPlan fun(inDevice: integer, inBuffer: string, inBufferLen: integer)
+
+
+-----------------------------------------------------------------------------
+-- GPS RECEIVER
+-----------------------------------------------------------------------------
+
+--[[
+   These APIs let you read data from the GPS unit.
+]]--
 
 ---@class _G
 --- This routine returns the type of the currently selected

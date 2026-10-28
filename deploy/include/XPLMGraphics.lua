@@ -43,9 +43,25 @@
    X-Plane's physics model may not match your own, and (to make things
    weirder) the user can potentially customize the physics of the current
    planet.
+   
+   The routines in this header that draw or set drawing state use OpenGL. Call
+   them only from an OpenGL drawing callback, for example the callback of a
+   window or avionics device whose content type is
+   xplm_WindowContentTypeOpenGL. They do not work in a panel graphics callback
+   (xplm_WindowContentTypePanelGraphics). For panel graphics, use the
+   XPLMPanelGraphics APIs.
 ]]--
 
 require("XPLMDefs")
+
+
+-----------------------------------------------------------------------------
+-- X-PLANE COORDINATES
+-----------------------------------------------------------------------------
+
+--[[
+               These routines allow you to use OpenGL with X-Plane.
+]]--
 
 ---@class _G
 --- 				This routine translates coordinates from latitude, longitude, and altitude to local
@@ -65,6 +81,11 @@ require("XPLMDefs")
 --- 				try to avoid round tripping from local to world and back.
 ---
 ---@field XPLMLocalToWorld fun(inX: number, inY: number, inZ: number): { outLatitude: userdata, outLongitude: userdata, outAltitude: userdata }
+
+
+-----------------------------------------------------------------------------
+-- X-PLANE TEXT
+-----------------------------------------------------------------------------
 
 --[[
 X-Plane features some fixed-character fonts.  Each font may have its own metrics.
@@ -94,6 +115,8 @@ local XPLMFontID = {
 --- The color to draw in is specified as a pointer to an array of three
 --- floating point colors, representing RGB intensities from 0.0 to 1.0.
 ---
+--- Call this routine only from an OpenGL drawing callback. In a panel graphics callback, X-Plane logs an error and draws nothing; use XPLMFontDrawString instead.
+---
 ---@field XPLMDrawString fun(inColorRGB: number[], inXOffset: integer, inYOffset: integer, inChar: string, inWordWrapWidth: userdata, inFontID: XPLMFontID)
 
 ---@class _G
@@ -102,6 +125,8 @@ local XPLMFontID = {
 --- formatting info.  Specify how many integer and how many decimal digits to show and
 --- whether to show a sign, as well as a character set.
 --- This routine returns the xOffset plus width of the string drawn.
+---
+--- Call this routine only from an OpenGL drawing callback. In a panel graphics callback, X-Plane logs an error and draws nothing; use XPLMFontDrawString instead.
 ---
 ---@field XPLMDrawNumber fun(inColorRGB: number[], inXOffset: integer, inYOffset: integer, inValue: number, inDigits: integer, inDecimals: integer, inShowSign: boolean, inFontID: XPLMFontID)
 

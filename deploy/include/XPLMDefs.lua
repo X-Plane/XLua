@@ -27,6 +27,30 @@
 ]]--
 
 
+
+-----------------------------------------------------------------------------
+-- DLL Definitions
+-----------------------------------------------------------------------------
+
+--[[
+   These definitions control the importing and exporting of functions within
+   the DLL.
+   
+   You can prefix your five required callbacks with the PLUGIN_API macro to
+   declare them as exported C functions.  The XPLM_API macro identifies
+   functions that are provided to you via the plugin SDK.  (Link against
+   XPLM.lib to use these functions.)
+]]--
+
+
+-----------------------------------------------------------------------------
+-- GLOBAL DEFINITIONS
+-----------------------------------------------------------------------------
+
+--[[
+   These definitions are used in all parts of the SDK.
+]]--
+
 --- Each plug-in is identified by a unique integer ID. This ID can be used to disable or enable a plug-in, or discover what plug-in is 'running' at the time. A plug-in ID is unique within the currently running instance of X-Plane unless plug-ins are reloaded. Plug-ins may receive a different unique ID each time they are loaded. This includes the unloading and reloading of plugins that are part of the user's aircraft. For persistent identification of plug-ins, use XPLMFindPluginBySignature in XPLMUtiltiies.h . -1 indicates no plug-in.
 ---@alias XPLMPluginID integer
 
@@ -158,7 +182,25 @@ local XPLMMouseStatus = {
 
 --- A container for a fixed-size string buffer of 150 characters.
 ---@class XPLMFixedString150_t
----@field buffer string[]
+---@field buffer string[] The size of the struct.
+
+
+-----------------------------------------------------------------------------
+-- ASCII CONTROL KEY CODES
+-----------------------------------------------------------------------------
+
+--[[
+   These definitions define how various control keys are mapped to ASCII key
+   codes. Not all key presses generate an ASCII value, so plugin code should
+   be prepared to see null characters come from the keyboard...this usually
+   represents a key stroke that has no equivalent ASCII, like a page-down
+   press.  Use virtual key codes to find these key strokes.
+   
+   ASCII key codes take into account modifier keys; shift keys will affect
+   capitals and punctuation; control key combinations may have no vaild ASCII
+   and produce NULL.  To detect control-key combinations, use virtual key
+   codes, not ASCII keys.
+]]--
 
 ---@class _G
 ---@field XPLM_KEY_RETURN integer
@@ -216,6 +258,37 @@ local XPLMMouseStatus = {
 
 ---@class _G
 ---@field XPLM_KEY_DECIMAL integer
+
+
+-----------------------------------------------------------------------------
+-- VIRTUAL KEY CODES
+-----------------------------------------------------------------------------
+
+--[[
+   These are cross-platform defines for every distinct keyboard press on the
+   computer. Every physical key on the keyboard has a virtual key code.  So
+   the "two" key on the top row of the main keyboard has a different code from
+   the "two" key on the numeric key pad.  But the 'w' and 'W' character are
+   indistinguishable by virtual key code because they are the same physical
+   key (one with and one without the shift key).
+   
+   Use virtual key codes to detect keystrokes that do not have ASCII
+   equivalents, allow the user to map the numeric keypad separately from the
+   main keyboard, and detect control key and other modifier-key combinations
+   that generate ASCII control key sequences (many of which are not available
+   directly via character keys in the SDK).
+   
+   To assign virtual key codes we started with the Microsoft set but made some
+   additions and changes.  A few differences:
+   
+   1. Modifier keys are not available as virtual key codes.  You cannot get
+      distinct modifier press and release messages.  Please do not try to use
+      modifier keys as regular keys; doing so will almost certainly interfere
+      with users' abilities to use the native X-Plane key bindings.
+   2. Some keys that do not exist on both Mac and PC keyboards are removed.
+   3. Do not assume that the values of these keystrokes are interchangeable
+      with MS v-keys.
+]]--
 
 ---@class _G
 ---@field XPLM_VK_BACK integer

@@ -148,6 +148,18 @@ void RegEnum_XPLMLanguageCode(lua_State* L)
 	lua_setglobal(L, "XPLMLanguageCode");
 }
 
+void RegEnum_XPLMProLicenseStatus(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, -2, "xplm_ProLicense_Unknown");
+	lua_pushinteger(L, 1);
+	lua_setfield(L, -2, "xplm_ProLicense_NotLicensed");
+	lua_pushinteger(L, 2);
+	lua_setfield(L, -2, "xplm_ProLicense_Licensed");
+	lua_setglobal(L, "XPLMProLicenseStatus");
+}
+
 int XLuaGetVersions(lua_State* L)
 {
 	int outXPlaneVersion = {};
@@ -175,6 +187,14 @@ int XLuaGetVersions(lua_State* L)
 int XLuaGetLanguage(lua_State* L)
 {
 	XPLMLanguageCode res = XPLMGetLanguage();
+	lua_pushinteger(L, res);
+
+	return 1;
+}
+
+int XLuaGetProLicenseStatus(lua_State* L)
+{
+	XPLMProLicenseStatus res = XPLMGetProLicenseStatus();
 	lua_pushinteger(L, res);
 
 	return 1;
@@ -281,12 +301,15 @@ void RegType_XPLMCommandRef(lua_State* L)
 	lua_pop(L, 1);
 }
 
+extern "C++" {
+template <int kSlot>
 static int cb_XPLMCommandCallback_f(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMCommandCallback_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		Make_XPLMCommandRef(L, inCommand);
@@ -302,6 +325,7 @@ static int cb_XPLMCommandCallback_f(XPLMCommandRef inCommand, XPLMCommandPhase i
 
 	return res;
 }
+} // extern "C++"
 
 int XLuaFindCommand(lua_State* L)
 {

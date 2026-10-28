@@ -121,7 +121,7 @@ int XLuaCreateInstance(lua_State* L)
 
 
 	int datarefs_len = lua_objlen(L, 2);
-	char const** datarefs = new char const*[datarefs_len + 1]{};		// Some APIs expect null-terminated arrays.
+	char const** datarefs = new char const*[datarefs_len + 1]{};		// Null-terminated: no count param, pointer elements.
 
 	for (int i = 0; i < datarefs_len; ++i)
 	{
@@ -433,7 +433,7 @@ int XLuaInstanceSetPosition(lua_State* L)
 
 
 	int data_len = lua_objlen(L, 3);
-	float* data = new float[data_len + 1]{};		// Some APIs expect null-terminated arrays.
+	float* data = new float[data_len]{};
 
 	for (int i = 0; i < data_len; ++i)
 	{
@@ -464,7 +464,7 @@ int XLuaInstanceSetPositionDouble(lua_State* L)
 
 
 	int data_len = lua_objlen(L, 3);
-	float* data = new float[data_len + 1]{};		// Some APIs expect null-terminated arrays.
+	float* data = new float[data_len]{};
 
 	for (int i = 0; i < data_len; ++i)
 	{
