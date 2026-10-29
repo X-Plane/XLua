@@ -9,45 +9,8 @@ XLua is developed internally by Laminar Research and is intended to help our int
 XLua is **not** meant to be an "official" Lua plugin for X-Plane, and it definitely does not replace any of the existing Lua plugins, all of which have significantly more features than XLua itself.
 
 ## Release Notes
-**1.5.0r1 - 08/01/2025**
-* Adds imgui features to lua
-* Small performance improvements
-* Adds "isnan" utility function
 
-**1.3.0r2 - 09/05/2024**
-* Adds `get_timer_remaining` stub to init.lua.
-
-**1.3.0r1 - 08/09/2023**
-* Improved logging of lua errors
-* Lua print() and other log lines go to both console and X-Plane log file, tagged as `?/LUA:`
-* Add ability to query a timer's time remaining `XLuaGetTimerRemaining()`. Pass in a timer reference created by `XLuaCreateTimer()`, returns a Number.
-* Adds `filter_command` support.
-
-**1.2.0r1 - 02/16/2022**
-
-* Adds script reload support:
-  * Via menu item under the aircraft menu
-  * Via command `laminar/xlua/reload_all_scripts`
-  * Via a new instruction `XLuaReloadOnFlightChange()` that flags the aircraft for reload when flight conditions change (engines running / engines off)
-
-**1.1.0r1 - 08/21/2021**
-
-Features:
- * Upgraded to LuaJIT 2.1
- * LuaJIT GC64 support is now enabled so that custom allocator is no longer necessary.
- * Mac arm64 support
-
-**1.0.0r1 - 11/6/2017**
-
-Bug fixes:
- * Support for unicode install paths on Windows.
- * Timing source is now sim time and not user interface time. Fixes scripts breaking on pause.
- * Debug logging of missing datarefs.
- * Full back-trace of uncaught Lua exceptions.
-
-**1.0.0b1 - 11/26/16**
-
-Initial Release
+See [`CHANGELOG.md`](CHANGELOG.md). The release zip includes it at the top level.
 
 ## Documentation
 

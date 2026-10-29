@@ -137,6 +137,7 @@ jobs:
           cp staging/win_x64/xlua2.xpl xlua2/win_x64/xlua2.xpl
           mv xlua2/mac_x64/mac.xpl xlua2/mac_x64/xlua2.xpl
           mv xlua2/lin_x64/lin.xpl xlua2/lin_x64/xlua2.xpl
+          cp CHANGELOG.md xlua2/CHANGELOG.md
           cp deploy/init.lua xlua2/init.lua
           cp -r deploy/include xlua2/include
           cp -r deploy/example_scripts xlua2/example_scripts
