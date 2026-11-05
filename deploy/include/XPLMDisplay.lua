@@ -16,7 +16,10 @@
 
 --[[
    This API provides the basic hooks to draw in X-Plane and create user
-   interface. All X-Plane drawing is done in OpenGL. The X-Plane plug-in
+   interface. A window or avionics device has a content type
+   (XPLMWindowContentType) that tells how it is drawn: with OpenGL, with the
+   panel graphics APIs (XPLMPanelGraphics), or as a web page. Direct drawing
+   callbacks always use OpenGL. For OpenGL drawing, the X-Plane plug-in
    manager takes care of properly setting up the OpenGL context and matrices. 
    You do not decide when in your code's execution to draw; X-Plane tells you
    (via callbacks) when it is ready to have your plugin draw.
@@ -215,7 +218,6 @@ local XPLMDeviceID = {
 
 --- The XPLMCustomizeAvionics_t structure defines all of the parameters used to replace or enhance built-in simulator avionics devices using XPLMRegisterAvionicsCallbacksEx(). The structure will be expanded in future SDK APIs to include more features. Always set the structSize member to the size of your struct in bytes!
 ---@class XPLMCustomizeAvionics_t
----@field structSize integer Used to inform XPLMRegisterAvionicsCallbacksEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCustomizeAvionics_t)
 ---@field deviceId XPLMDeviceID The built-in avionics device to which you want your drawing applied.
 ---@field drawCallbackBefore XPLMAvionicsCallback_f The draw callback to be called before X-Plane draws.
 ---@field drawCallbackAfter XPLMAvionicsCallback_f The draw callback to be called after X-Plane has drawn.
@@ -234,9 +236,13 @@ local XPLMDeviceID = {
 ---@class _G
 --- This routine registers your callbacks for a built-in device. This returns a
 --- handle. If the returned handle is NULL, there was a problem interpreting your
---- input, most likely the struct size was wrong for your SDK version.
+--- input, most likely the struct size was wrong for your SDK version, or you have
+--- already customized this device.
 --- If the returned handle is not NULL, your callbacks will be called according to schedule
 --- as long as your plugin is not deactivated, or unloaded, or you call XPLMUnregisterAvionicsCallbacks().
+---
+--- Other plugins may customize the same device; each plugin's callbacks are called. If you already
+--- have a handle for the device from XPLMGetAvionicsHandle(), you get that same handle back.
 ---
 --- Note that you cannot register new callbacks for a device that is not a built-in
 --- one (for example a device that you have created, or a device another plugin
@@ -250,11 +256,17 @@ local XPLMDeviceID = {
 --- clicks and touchscreen calls to a device, but want to interact with its popup programmatically.
 --- This is equivalent to calling XPLMRegisterAvionicsCallbackEx() with NULL for all callbacks.
 ---
+--- The handle is yours: every plugin gets its own handle for a device, and you get the same one each
+--- time you call this. It stays valid until your plugin is unloaded, whatever other plugins do with
+--- the device. Only your plugin may use it: another plugin passing it to the Avionics Device API gets an
+--- error.
+---
 ---@field XPLMGetAvionicsHandle fun(inDeviceID: XPLMDeviceID): XPLMAvionicsID
 
 ---@class _G
 --- This routine unregisters your callbacks for a built-in device. You should only call this
 --- for handles you acquired from XPLMRegisterAvionicsCallbacksEx(). They will no longer be called.
+--- The handle stays valid, as if you had got it from XPLMGetAvionicsHandle().
 ---
 ---@field XPLMUnregisterAvionicsCallbacks fun(inAvionicsId: XPLMAvionicsID)
 
@@ -275,7 +287,6 @@ local XPLMDeviceID = {
 
 --- The XPLMCreateAvionics_t structure defines all of the parameters used to generate your own glass cockpit device by using XPLMCreateAvionicsEx(). The structure will be expanded in future SDK APIs to include more features. Always set the structSize member to the size of your struct in bytes!
 ---@class XPLMCreateAvionics_t
----@field structSize integer Used to inform XPLMCreateAvionicsEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateAvionics_t)
 ---@field screenWidth integer Width of the device's screen in pixels.
 ---@field screenHeight integer Height of the device's screen in pixels.
 ---@field bezelWidth integer Width of the bezel around your device's screen for 2D pop-ups.
@@ -306,7 +317,7 @@ local XPLMDeviceID = {
 ---@class _G
 --- Creates a new cockpit device to be used in the 3D cockpit. You can call this at any time: if an aircraft referencing your device is loaded before your plugin, the simulator will make sure to retroactively map your display into it.
 ---
----             When you are done with the device, and at least before your plugin is unloaded, you should destroy the device using XPLMDestroyAvionics().
+---             When you are done with the device, and at least before your plugin is unloaded, you should destroy the device using XPLMDestroyAvionics(). Only your plugin may use the returned handle.
 ---
 ---@field XPLMCreateAvionicsEx fun(inParams: XPLMCreateAvionics_t): XPLMAvionicsID
 
@@ -340,15 +351,16 @@ local XPLMDeviceID = {
 ---
 ---@field XPLMAvionicsInjectScript fun(inAvionicsID: XPLMAvionicsID, inScript: string)
 
---- Handler invoked when the page in a browser-content-type avionics device calls xplane.<name>(arg). You receive the device, the argument serialised as a JSON string, and your refcon; return a JSON string (or NULL) that the JS Promise resolves to.
+--- Handler invoked when the page in a browser-content-type avionics device calls xplane.<name>(arg). You receive the device, the argument serialised as a JSON string, and your refcon. Return the JSON the JS Promise resolves to, and return it through XPLMReturnString: `return XPLMReturnString(json);`. Returning NULL, or any pointer that did not come from XPLMReturnString (a string literal, a static buffer, a std::string's c_str()), is a plugin error: X-Plane reports it to your error callback (see XPLMSetErrorCallback) and Log.txt, drops the result, and the Promise resolves to null. A string that is not valid JSON is reported the same way. To resolve the Promise to null on purpose, return XPLMReturnString("null"). From Lua, return the JSON string itself; the Lua bindings pass it through XPLMReturnString for you.
 ---@alias XPLMAvionicsBrowserCallback_f fun(inAvionicsID: XPLMAvionicsID, inJSON: string, inRefcon: any): string
 
 ---@class _G
 --- Registers a callback that the page running in a browser-content-type avionics
 --- device can invoke as xplane.<inName>(arg). The JS call returns a Promise
 --- that resolves to the value your XPLMAvionicsBrowserCallback_f returns (parsed
---- as JSON). Registering the same name again replaces the previous callback. Each
---- device has its own independent xplane.* namespace. Has no effect on non-browser
+--- as JSON). A name can only be registered once per device: registering it again
+--- is reported to your error callback and ignored, and the first registration
+--- stays. Each device has its own independent xplane.* namespace. Has no effect on non-browser
 --- devices.
 ---
 ---@field XPLMAvionicsAddBrowserFunction fun(inAvionicsID: XPLMAvionicsID, inName: string, inFunction: XPLMAvionicsBrowserCallback_f, inRefcon: any)
@@ -475,12 +487,14 @@ local XPLMDeviceID = {
 ---@field XPLMIsAvionicsMappedToVR fun(inHandle: XPLMAvionicsID): boolean
 
 ---@class _G
---- This routine gives keyboard focus to the popup window of a custom cockpit device, if it is visible.
+--- This routine gives keyboard focus to the popup window of a custom cockpit device, if it is visible. If the popup is not visible, the device does not get focus.
+---
+--- Pass NULL to take keyboard focus away from the cockpit device that has it, so that keystrokes go to X-Plane again. Use this, not XPLMTakeKeyboardFocus(0): XPLMTakeKeyboardFocus controls the focus of plugin windows only, and does not release a cockpit device.
 ---
 ---@field XPLMTakeAvionicsKeyboardFocus fun(inHandle: XPLMAvionicsID)
 
 ---@class _G
---- Returns true (1) if the popup window for a cockpit device has keyboard focus.
+--- Returns true (1) if the popup window for a cockpit device has keyboard focus. To release the focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
 ---
 ---@field XPLMHasAvionicsKeyboardFocus fun(inHandle: XPLMAvionicsID): boolean
 
@@ -628,7 +642,6 @@ local XPLMWindowDecoration = {
 
 --- XPLMCreateWindow_t defines all of the parameters used to create a modern window using XPLMCreateWindowEx(). The structure has been expanded in later SDK versions and will be expanded again; the fields present in your build are the ones your SDK version defines, and structSize is how X-Plane knows which of them you filled in. Always set the structSize member to the size of your struct in bytes! Of the callbacks, only drawWindowFunc is required, and only for a window that draws through your plugin; see XPLMCreateWindowEx() for the rules. All windows created by this function in the XPLM300 version of the API are created with the new X-Plane 11 GUI features. This means your plugin will get to "know" about the existence of X-Plane windows other than the main window. All drawing and mouse callbacks for your window will occur in "boxels," giving your windows automatic support for high-DPI scaling in X-Plane. In addition, your windows can opt-in to decoration with the X-Plane 11 window styling, and you can use the XPLMSetWindowPositioningMode() API to make your window "popped out" into a first-class operating system window. Note that this requires dealing with your window's bounds in "global desktop" positioning units, rather than the traditional panel coordinate system. In global desktop coordinates, the main X-Plane window may not have its origin at coordinate (0, 0), and your own window may have negative coordinates. Assuming you don't implicitly assume (0, 0) as your origin, the only API change you should need is to start using XPLMGetMouseLocationGlobal() rather than XPLMGetMouseLocation(), and XPLMGetScreenBoundsGlobal() instead of XPLMGetScreenSize(). If you ask to be decorated as a floating window, you'll get the blue window control bar and blue backing that you see in X-Plane 11's normal "floating" windows (like the map).
 ---@class XPLMCreateWindow_t
----@field structSize integer Used to inform XPLMCreateWindowEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateWindow_t)
 ---@field left integer Left bound, in global desktop boxels
 ---@field top integer Top bound, in global desktop boxels
 ---@field right integer Right bound, in global desktop boxels
@@ -729,7 +742,7 @@ local XPLMWindowDecoration = {
 ---
 ---@field XPLMWindowInjectScript fun(inWindowID: XPLMWindowID, inScript: string)
 
---- Handler invoked when the page in a browser-content-type window calls xplane.<name>(arg). You receive the window, the argument serialised as a JSON string, and your refcon; return a JSON string (or NULL) that the JS Promise resolves to.
+--- Handler invoked when the page in a browser-content-type window calls xplane.<name>(arg). You receive the window, the argument serialised as a JSON string, and your refcon. Return the JSON the JS Promise resolves to, and return it through XPLMReturnString: `return XPLMReturnString(json);`. Returning NULL, or any pointer that did not come from XPLMReturnString (a string literal, a static buffer, a std::string's c_str()), is a plugin error: X-Plane reports it to your error callback (see XPLMSetErrorCallback) and Log.txt, drops the result, and the Promise resolves to null. A string that is not valid JSON is reported the same way. To resolve the Promise to null on purpose, return XPLMReturnString("null"). From Lua, return the JSON string itself; the Lua bindings pass it through XPLMReturnString for you.
 ---@alias XPLMBrowserCallback_f fun(inWindowID: XPLMWindowID, inJSON: string, inRefcon: any): string
 
 ---@class _G
@@ -738,8 +751,9 @@ local XPLMWindowDecoration = {
 --- resolves to the value your `XPLMBrowserCallback_f` returns (parsed as
 --- JSON -- see that callback's desc for the contract).
 ---
---- Multiple registrations against the same name on the same window
---- overwrite each other. Each window has its own independent `xplane.*`
+--- A name can only be registered once per window: registering it again is
+--- reported to your error callback and ignored, and the first registration
+--- stays. Each window has its own independent `xplane.*`
 --- namespace; functions registered on window A are not callable from
 --- window B.
 ---
@@ -1013,6 +1027,9 @@ local XPLMWindowPositioningMode = {
 --- that window.  Pass a window ID of 0 to remove keyboard focus from any plugin-created windows
 --- and instead pass keyboard strokes directly to X-Plane.
 ---
+--- This routine does not change the keyboard focus of a cockpit device's popup. To release that
+--- focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
+---
 ---@field XPLMTakeKeyboardFocus fun(inWindow: XPLMWindowID)
 
 ---@class _G
@@ -1026,6 +1043,9 @@ local XPLMWindowPositioningMode = {
 --- This routine brings the window to the front of the Z-order for its layer.  Windows are brought to the
 --- front automatically when they are created. Beyond that, you should make sure you are front before
 --- handling mouse clicks.
+---
+--- You may only bring your own windows to the front; passing another plugin's window reports an error
+--- and does nothing.
 ---
 --- Note that this only brings your window to the front of its layer (XPLMWindowLayer).
 --- Thus, if you have a window in the floating window layer (xplm_WindowLayerFloatingWindows),

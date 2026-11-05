@@ -94,7 +94,6 @@ local XPLMProbeResult = {
 
 --- XPLMProbeInfo_t contains the results of a probe call. Make sure to set structSize to the size of the struct before using it.
 ---@class XPLMProbeInfo_t
----@field structSize integer Size of structure in bytes - always set this before calling the XPLM.
 ---@field locationX number Resulting X location of the terrain point we hit, in local OpenGL coordinates.
 ---@field locationY number Resulting Y location of the terrain point we hit, in local OpenGL coordinates.
 ---@field locationZ number Resulting Z location of the terrain point we hit, in local OpenGL coordinates.
@@ -175,7 +174,6 @@ local XPLMProbeResult = {
 
 --- The XPLMDrawInfo_t structure contains positioning info for one object that is to be drawn. Be sure to set structSize to the size of the structure for future expansion.
 ---@class XPLMDrawInfo_t
----@field structSize integer Set this to the size of this structure!
 ---@field x number X location of the object in local coordinates.
 ---@field y number Y location of the object in local coordinates.
 ---@field z number Z location of the object in local coordinates.
@@ -185,7 +183,6 @@ local XPLMProbeResult = {
 
 --- The XPLMDrawInfo_t structure contains positioning info for one object that is to be drawn. Be sure to set structSize to the size of the structure for future expansion.
 ---@class XPLMDrawInfoDouble_t
----@field structSize integer Set this to the size of this structure!
 ---@field x number X location of the object in local coordinates.
 ---@field y number Y location of the object in local coordinates.
 ---@field z number Z location of the object in local coordinates.

@@ -102,9 +102,7 @@ size of your struct in bytes!
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_CreateInstance_t = {
-    structSize       = 0,       -- int
     objects          = nil,     -- see XPLMInstanceObject_t
-    objectCount      = 0,       -- int
     datarefs         = nil,     -- char
     coordinateSpace  = nil,     -- see XPLMCoordinateSpace_t
     aircraftIndex    = 0,       -- int
@@ -116,9 +114,7 @@ size of your struct in bytes!
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Used to inform XPLMCreateInstanceEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateInstance_t). |
 | objects | XPLMInstanceObject_t | An array of objects (each with its own offset) that make up the instance. Must point to at least objectCount entries. |
-| objectCount | int | The number of entries in the objects array. Must be at least 1. |
 | datarefs | char | A single NULL-terminated list of dataref identifiers shared by every object in the instance, exactly as in XPLMCreateInstance(). The data you later pass to XPLMInstanceSetPosition() fills one shared block for all objects. You cannot pass null for the array itself. |
 | coordinateSpace | XPLMCoordinateSpace_t | The coordinate space in which instance positions are interpreted (see XPLMCoordinateSpace_t). Use xplm_CoordSpace_World for the classic behavior. |
 | aircraftIndex | int | Aircraft index (0 = user aircraft). Only used when coordinateSpace is xplm_CoordSpace_AircraftInterior or xplm_CoordSpace_AircraftExterior. |

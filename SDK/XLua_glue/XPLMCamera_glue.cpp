@@ -167,12 +167,15 @@ int MakeXPLMCameraPosition_t(lua_State* L)
  *
  */
 
+extern "C++" {
+template <int kSlot>
 static int cb_XPLMCameraControl_f(XPLMCameraPosition_t * outCameraPosition, int inIsLosingControl, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	int res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMCameraControl_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 		XPLMCameraPosition_t_to_table(L, outCameraPosition != nullptr ? *outCameraPosition : XPLMCameraPosition_t{});
@@ -195,16 +198,20 @@ static int cb_XPLMCameraControl_f(XPLMCameraPosition_t * outCameraPosition, int 
 
 	return res;
 }
+} // extern "C++"
 
 int XLuaControlCamera(lua_State* L)
 {
 	XPLMCameraControlDuration inHowLong = xlua_checkinteger(L, 1);
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 3);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 2, false, "XPLMCameraControl_f");
+	wrap_next_lua_func(cb_capture_0, 2, false, 0, "XPLMCameraControl_f");
+	if (cb_capture_0->is_empty())
+		cb_capture_0.reset();
+	else
+		xlua_persist_userref(L, cb_capture_0);
 
-	XPLMControlCamera(inHowLong, cb_XPLMCameraControl_f, cb_capture_0.get());
+	XPLMControlCamera(inHowLong, &cb_XPLMCameraControl_f<0>, cb_capture_0.get());
 
 	return 0;
 }

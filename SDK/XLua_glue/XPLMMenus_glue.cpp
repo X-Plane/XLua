@@ -110,12 +110,15 @@ void RegType_XPLMMenuID(lua_State* L)
 	lua_pop(L, 1);
 }
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMMenuHandler_f(void* inMenuRef, void* inItemRef)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inMenuRef_cb = static_cast<notify_cb_t*>(inMenuRef);
 	notify_cb_t const* inItemRef_cb = static_cast<notify_cb_t*>(inItemRef);
 
-	lua_State* L = setup_lua_callback(inMenuRef_cb, "XPLMMenuHandler_f");
+	lua_State* L = setup_lua_callback(inMenuRef_cb, kSlot);
 	if (L)
 	{
 
@@ -124,6 +127,7 @@ static void cb_XPLMMenuHandler_f(void* inMenuRef, void* inItemRef)
 		}
 	}
 }
+} // extern "C++"
 
 int XLuaFindPluginsMenu(lua_State* L)
 {
@@ -166,10 +170,13 @@ int XLuaCreateMenu(lua_State* L)
 	int inParentItem = xlua_checkinteger(L, 3);
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 5);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 4, true, "XPLMMenuHandler_f");
+	bool const cb_capture_0_has_0 = wrap_next_lua_func(cb_capture_0, 4, true, 0, "XPLMMenuHandler_f");
+	if (cb_capture_0->is_empty())
+		cb_capture_0.reset();
+	else
+		xlua_persist_userref(L, cb_capture_0);
 
-	XPLMMenuID res = XPLMCreateMenu(inName, inParentMenu, inParentItem, (cb_capture_0 ? cb_XPLMMenuHandler_f : nullptr), cb_capture_0.get());
+	XPLMMenuID res = XPLMCreateMenu(inName, inParentMenu, inParentItem, (cb_capture_0_has_0 ? &cb_XPLMMenuHandler_f<0> : nullptr), cb_capture_0.get());
 	if (res == nullptr)
 	{
 		lua_pushnil(L);

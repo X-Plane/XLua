@@ -120,17 +120,16 @@ struct before using it.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_ProbeInfo_t = {
-    structSize  = 0,       -- int
-    locationX   = 0.0,     -- float
-    locationY   = 0.0,     -- float
-    locationZ   = 0.0,     -- float
-    normalX     = 0.0,     -- float
-    normalY     = 0.0,     -- float
-    normalZ     = 0.0,     -- float
-    velocityX   = 0.0,     -- float
-    velocityY   = 0.0,     -- float
-    velocityZ   = 0.0,     -- float
-    is_wet      = false,   -- boolean
+    locationX  = 0.0,     -- float
+    locationY  = 0.0,     -- float
+    locationZ  = 0.0,     -- float
+    normalX    = 0.0,     -- float
+    normalY    = 0.0,     -- float
+    normalZ    = 0.0,     -- float
+    velocityX  = 0.0,     -- float
+    velocityY  = 0.0,     -- float
+    velocityZ  = 0.0,     -- float
+    is_wet     = false,   -- boolean
 }</code></pre>
 </div>
 
@@ -138,7 +137,6 @@ struct before using it.
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Size of structure in bytes - always set this before calling the XPLM. |
 | locationX | float | Resulting X location of the terrain point we hit, in local OpenGL coordinates. |
 | locationY | float | Resulting Y location of the terrain point we hit, in local OpenGL coordinates. |
 | locationZ | float | Resulting Z location of the terrain point we hit, in local OpenGL coordinates. |

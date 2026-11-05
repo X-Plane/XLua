@@ -27,6 +27,11 @@ attempt to do this conversion yourself; the precise 'roundness' of X-Plane's
 physics model may not match your own, and (to make things weirder) the user can
 potentially customize the physics of the current planet.
 
+The routines in this header that draw or set drawing state use OpenGL. Call them only
+from an OpenGL drawing callback, for example the callback of a window or avionics device
+whose content type is xplm_WindowContentTypeOpenGL. They do not work in a panel graphics
+callback (xplm_WindowContentTypePanelGraphics). For panel graphics, use the XPLMPanelGraphics APIs.
+
 
 
 <!-- whitespace for navigation purposes -->

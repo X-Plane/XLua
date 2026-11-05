@@ -185,11 +185,14 @@ int XLuaSendMessageToPlugin(lua_State* L)
 	return 0;
 }
 
+extern "C++" {
+template <int kSlot>
 static void cb_XPLMFeatureEnumerator_f(const char * inFeature, void* inRef)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	notify_cb_t const* inRef_cb = static_cast<notify_cb_t*>(inRef);
 
-	lua_State* L = setup_lua_callback(inRef_cb, "XPLMFeatureEnumerator_f");
+	lua_State* L = setup_lua_callback(inRef_cb, kSlot);
 	if (L)
 	{
 
@@ -198,6 +201,7 @@ static void cb_XPLMFeatureEnumerator_f(const char * inFeature, void* inRef)
 		}
 	}
 }
+} // extern "C++"
 
 int XLuaHasFeature(lua_State* L)
 {
@@ -233,11 +237,15 @@ int XLuaEnumerateFeatures(lua_State* L)
 {
 
 	std::shared_ptr<notify_cb_t> cb_capture_0 = capture_lua_value(L, 2);
-	xlua_persist_userref(L, cb_capture_0);
-	wrap_next_lua_func(cb_capture_0, 1, true, "XPLMFeatureEnumerator_f");
+	bool const cb_capture_0_has_0 = wrap_next_lua_func(cb_capture_0, 1, true, 0, "XPLMFeatureEnumerator_f");
+	if (cb_capture_0->is_empty())
+		cb_capture_0.reset();
+	else
+		xlua_persist_userref(L, cb_capture_0);
 
-	XPLMEnumerateFeatures((cb_capture_0 ? cb_XPLMFeatureEnumerator_f : nullptr), cb_capture_0.get());
-	xlua_remove_callback(cb_capture_0);
+	XPLMEnumerateFeatures((cb_capture_0_has_0 ? &cb_XPLMFeatureEnumerator_f<0> : nullptr), cb_capture_0.get());
+	if (cb_capture_0)
+		xlua_remove_callback(cb_capture_0);
 
 	return 0;
 }

@@ -93,6 +93,8 @@ lighting and fog state is a good approximation for 3-d drawing.  Prefer to use
 XPLMInstancing to draw objects.  All calls to XPLMSetGraphicsState should have
 no fog or lighting.
 
+Call this routine only from an OpenGL drawing callback. In a panel graphics callback, X-Plane logs an error and does not change the state.
+
 <div class="xplm-code" markdown="1">
 
 ```cpp
@@ -226,6 +228,8 @@ XPLM_API int XPLMGetTexture(
 This routine draws a translucent dark box, partially obscuring parts of the
 screen but making text easy to read.  This is the same graphics primitive used
 by X-Plane to show text files.
+
+Call this routine only from an OpenGL drawing callback. In a panel graphics callback, X-Plane logs an error and draws nothing.
 
 <div class="xplm-code" markdown="1">
 

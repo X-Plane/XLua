@@ -12,7 +12,10 @@
  ***************************************************************************/
 /*
  * This API provides the basic hooks to draw in X-Plane and create user
- * interface. All X-Plane drawing is done in OpenGL. The X-Plane plug-in
+ * interface. A window or avionics device has a content type
+ * (XPLMWindowContentType) that tells how it is drawn: with OpenGL, with the
+ * panel graphics APIs (XPLMPanelGraphics), or as a web page. Direct drawing
+ * callbacks always use OpenGL. For OpenGL drawing, the X-Plane plug-in
  * manager takes care of properly setting up the OpenGL context and matrices. 
  * You do not decide when in your code's execution to draw; X-Plane tells you
  * (via callbacks) when it is ready to have your plugin draw.
@@ -1387,7 +1390,13 @@ XPLM_API int        XPLMIsAvionicsMappedToVR(
  * XPLMTakeAvionicsKeyboardFocus
  * 
  * This routine gives keyboard focus to the popup window of a custom cockpit
- * device, if it is visible.
+ * device, if it is visible. If the popup is not visible, the device does not
+ * get focus.
+ * 
+ * Pass NULL to take keyboard focus away from the cockpit device that has it,
+ * so that keystrokes go to X-Plane again. Use this, not
+ * XPLMTakeKeyboardFocus(0): XPLMTakeKeyboardFocus controls the focus of
+ * plugin windows only, and does not release a cockpit device.
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -1400,7 +1409,7 @@ XPLM_API void       XPLMTakeAvionicsKeyboardFocus(
  * XPLMHasAvionicsKeyboardFocus
  * 
  * Returns true (1) if the popup window for a cockpit device has keyboard
- * focus.
+ * focus. To release the focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */
@@ -2684,6 +2693,9 @@ XPLM_API void       XPLMSetWindowRefCon(
  * sent to that window.  Pass a window ID of 0 to remove keyboard focus from
  * any plugin-created windows and instead pass keyboard strokes directly to
  * X-Plane.
+ * 
+ * This routine does not change the keyboard focus of a cockpit device's
+ * popup. To release that focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
  *
  */
 /* NOT thread-safe. Use ONLY from the main thread, in callbacks.                 */

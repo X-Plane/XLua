@@ -108,12 +108,15 @@ void RegType_XPLMFlightLoopID(lua_State* L)
 	lua_pop(L, 1);
 }
 
+extern "C++" {
+template <int kSlot>
 static float cb_XPLMFlightLoop_f(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void* inRefcon)
 {
+	static_assert(kSlot < kMaxCallbackSlots, "notify_cb_t has too few callback slots");
 	float res = {};
 	notify_cb_t const* inRefcon_cb = static_cast<notify_cb_t*>(inRefcon);
 
-	lua_State* L = setup_lua_callback(inRefcon_cb, "XPLMFlightLoop_f");
+	lua_State* L = setup_lua_callback(inRefcon_cb, kSlot);
 	if (L)
 	{
 
@@ -129,6 +132,7 @@ static float cb_XPLMFlightLoop_f(float inElapsedSinceLastCall, float inElapsedTi
 
 	return res;
 }
+} // extern "C++"
 /*
  * XPLMCreateFlightLoop_t
  * 
@@ -158,9 +162,9 @@ XPLMCreateFlightLoop_t XPLMCreateFlightLoop_t_from_table(lua_State* L, int stack
 	lua_pop(L, 1);
 
 	lua_getfield(L, stackpos, "callbackFunc");
-	if (wrap_next_lua_func(refcon_cb, -1, false, "XPLMFlightLoop_f"))
+	if (wrap_next_lua_func(refcon_cb, -1, false, 0, "XPLMFlightLoop_f"))
 	{
-		out.callbackFunc = cb_XPLMFlightLoop_f;
+		out.callbackFunc = &cb_XPLMFlightLoop_f<0>;
 	}
 	lua_pop(L, 1);
 

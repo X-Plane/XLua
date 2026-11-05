@@ -94,7 +94,6 @@ will call your callbacks. Likewise, when that map is deleted, your layer will be
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_CreateMapLayer_t = {
-    structSize             = 0,       -- int
     mapToCreateLayerIn     = "",      -- string
     layerType              = nil,     -- XPLMMapLayerType
     willBeDeletedCallback  = nil,     -- see XPLMMapWillBeDeletedCallback_f
@@ -112,7 +111,6 @@ will call your callbacks. Likewise, when that map is deleted, your layer will be
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Used to inform XPLMCreateMapLayer() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateMapLayer_t) |
 | mapToCreateLayerIn | string | Globally unique string identifying the map you want this layer to appear in. As of XPLM300, this is limited to one of XPLM_MAP_USER_INTERFACE or XPLM_MAP_IOS |
 | layerType | XPLMMapLayerType | The type of layer you are creating, used to determine draw order (all plugin-created markings layers are drawn above all plugin-created fill layers) |
 | willBeDeletedCallback | XPLMMapWillBeDeletedCallback_f | Optional callback to inform you this layer is being deleted (due to its owning map being destroyed) |

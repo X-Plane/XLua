@@ -122,7 +122,6 @@ may be expanded in future SDKs - always set structSize to the size of your struc
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_CreateFlightLoop_t = {
-    structSize    = 0,       -- int
     phase         = nil,     -- XPLMFlightLoopPhaseType
     callbackFunc  = nil,     -- see XPLMFlightLoop_f
     refcon        = nil,     -- any Lua var/table

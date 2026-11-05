@@ -211,10 +211,16 @@ XPLM_API void XPLMDestroySVTDisplay(
 
 </div>
 
+Values that override the sim state for one XPLMSVTDisplayDrawIn call.
+
+Set structSize to the size of your struct so that future SDK versions can add fields without
+breaking existing plugins.
+
 <div class="xplm-code" markdown="1">
 
 ```cpp
 typedef struct {
+     int                       structSize;
      float                     pitchDeg;
      float                     rollDeg;
      float                     headingMagDeg;
@@ -233,6 +239,7 @@ typedef struct {
 
 | Field | Type | Description |
 |:--|:--|:--|
+| structSize | int | Set to sizeof(XPLMSVTCustomData_t). This is checked; a size X-Plane does not recognise is an error and is reported. X-Plane never modifies the structure you pass. |
 | pitchDeg | float | pitch override (degrees). |
 | rollDeg | float | roll/bank override (degrees). |
 | headingMagDeg | float | magnetic heading override (degrees). |

@@ -325,7 +325,6 @@ Always set the structSize member to the size of your struct in bytes!
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_CustomizeAvionics_t = {
-    structSize                = 0,       -- int
     deviceId                  = nil,     -- XPLMDeviceID
     drawCallbackBefore        = nil,     -- see XPLMAvionicsCallback_f
     drawCallbackAfter         = nil,     -- see XPLMAvionicsCallback_f
@@ -347,7 +346,6 @@ Always set the structSize member to the size of your struct in bytes!
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Used to inform XPLMRegisterAvionicsCallbacksEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCustomizeAvionics_t) |
 | deviceId | XPLMDeviceID | The built-in avionics device to which you want your drawing applied. |
 | drawCallbackBefore | XPLMAvionicsCallback_f | The draw callback to be called before X-Plane draws. |
 | drawCallbackAfter | XPLMAvionicsCallback_f | The draw callback to be called after X-Plane has drawn. |
@@ -680,7 +678,6 @@ features. Always set the structSize member to the size of your struct in bytes!
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_CreateAvionics_t = {
-    structSize                = 0,       -- int
     screenWidth               = 0,       -- int
     screenHeight              = 0,       -- int
     bezelWidth                = 0,       -- int
@@ -714,7 +711,6 @@ features. Always set the structSize member to the size of your struct in bytes!
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Used to inform XPLMCreateAvionicsEx() of the SDK version you compiled against; should always be set to sizeof(XPLMCreateAvionics_t) |
 | screenWidth | int | Width of the device's screen in pixels. |
 | screenHeight | int | Height of the device's screen in pixels. |
 | bezelWidth | int | Width of the bezel around your device's screen for 2D pop-ups. |
@@ -1423,7 +1419,9 @@ local my_result = XPLMIsAvionicsMappedToVR(
 
 </div>
 
-This routine gives keyboard focus to the popup window of a custom cockpit device, if it is visible.
+This routine gives keyboard focus to the popup window of a custom cockpit device, if it is visible. If the popup is not visible, the device does not get focus.
+
+Pass NULL to take keyboard focus away from the cockpit device that has it, so that keystrokes go to X-Plane again. Use this, not XPLMTakeKeyboardFocus(0): XPLMTakeKeyboardFocus controls the focus of plugin windows only, and does not release a cockpit device.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">XPLMTakeAvionicsKeyboardFocus(
@@ -1449,7 +1447,7 @@ This routine gives keyboard focus to the popup window of a custom cockpit device
 
 </div>
 
-Returns true (1) if the popup window for a cockpit device has keyboard focus.
+Returns true (1) if the popup window for a cockpit device has keyboard focus. To release the focus, call XPLMTakeAvionicsKeyboardFocus(NULL).
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">-- returns boolean -> assign to local/var

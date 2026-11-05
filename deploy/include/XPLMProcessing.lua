@@ -79,7 +79,6 @@ local XPLMFlightLoopPhaseType = {
 
 --- XPLMCreateFlightLoop_t contains the parameters to create a new flight loop callback. The structure may be expanded in future SDKs - always set structSize to the size of your structure in bytes.
 ---@class XPLMCreateFlightLoop_t
----@field structSize integer
 ---@field phase XPLMFlightLoopPhaseType
 ---@field callbackFunc XPLMFlightLoop_f
 ---@field refcon any

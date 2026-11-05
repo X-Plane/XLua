@@ -46,13 +46,12 @@ Be sure to set structSize to the size of the structure for future expansion.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_DrawInfo_t = {
-    structSize  = 0,       -- int
-    x           = 0.0,     -- float
-    y           = 0.0,     -- float
-    z           = 0.0,     -- float
-    pitch       = 0.0,     -- float
-    heading     = 0.0,     -- float
-    roll        = 0.0,     -- float
+    x        = 0.0,     -- float
+    y        = 0.0,     -- float
+    z        = 0.0,     -- float
+    pitch    = 0.0,     -- float
+    heading  = 0.0,     -- float
+    roll     = 0.0,     -- float
 }</code></pre>
 </div>
 
@@ -60,7 +59,6 @@ Be sure to set structSize to the size of the structure for future expansion.
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Set this to the size of this structure! |
 | x | float | X location of the object in local coordinates. |
 | y | float | Y location of the object in local coordinates. |
 | z | float | Z location of the object in local coordinates. |
@@ -89,13 +87,12 @@ Be sure to set structSize to the size of the structure for future expansion.
 
 <div class="lua-code" markdown="1">
 <pre><code class="language-lua">local My_DrawInfoDouble_t = {
-    structSize  = 0,       -- int
-    x           = 0.0,     -- float
-    y           = 0.0,     -- float
-    z           = 0.0,     -- float
-    pitch       = 0.0,     -- float
-    heading     = 0.0,     -- float
-    roll        = 0.0,     -- float
+    x        = 0.0,     -- float
+    y        = 0.0,     -- float
+    z        = 0.0,     -- float
+    pitch    = 0.0,     -- float
+    heading  = 0.0,     -- float
+    roll     = 0.0,     -- float
 }</code></pre>
 </div>
 
@@ -103,7 +100,6 @@ Be sure to set structSize to the size of the structure for future expansion.
 
 | Field | Type | Description |
 |:--|:--|:--|
-| structSize | int | Set this to the size of this structure! |
 | x | float | X location of the object in local coordinates. |
 | y | float | Y location of the object in local coordinates. |
 | z | float | Z location of the object in local coordinates. |
