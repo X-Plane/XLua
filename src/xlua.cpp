@@ -684,12 +684,14 @@ PLUGIN_API int XPluginEnable(void)
 
 	InitScripts();
 
+#if !MOBILE	// Mobile only enables us mid aircraft load (no XPLMReloadThisPlugin); the real AIRPORT_LOADED follows once the aircraft is ready.
 	if (XPLMGetCycleNumber() > 0)
 	{
 		// Then we've been enabled while the sim's already running.
 		g_is_acf_inited = false;			// Belt-n-braces - ensure we don't start a reload loop.
 		XPluginReceiveMessage(XPLM_PLUGIN_XPLANE, XPLM_MSG_AIRPORT_LOADED, nullptr);
 	}
+#endif
 
 	xlua_relink_all_drefs();
 	return 1;
