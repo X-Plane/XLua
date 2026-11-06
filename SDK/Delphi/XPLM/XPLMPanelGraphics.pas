@@ -2009,8 +2009,9 @@ TYPE
    These routines let you draw the base map for a navigation display (ND) or
    multi-function display (MFD) into your avionics panel. The base map
    provides layers for terrain, topography, bodies of water, EGPWS terrain
-   warnings, airport taxi layouts, NEXRAD and cloud tops. These are drawn with
-   a transverse Mercator projection centered near the map's datum.
+   warnings, airport taxi layouts, NEXRAD, cloud tops and false-color IR
+   satellite image.  These are drawn with a transverse Mercator projection
+   centered near the map's datum.
    
    Create a map display with XPLMCreateMapDisplay and draw it with
    XPLMMapDisplayDrawIn. Each map instance manages its own terrain tile
@@ -2025,6 +2026,27 @@ TYPE
    
    The base map works on any aircraft, regardless of whether the stock cockpit
    has an FMS or other avionics installed.
+   
+   COLOR STRIPES
+   
+   Three map layers get their colors from PNG "color stripes". The user's
+   aircraft can replace each stripe with a file of the same name in its
+   cockpit/EFIS/ folder:
+   
+     xplm_Map_Topo     g1000_land.png xplm_Map_EGPWS    EGPWS.png
+     xplm_Map_Nexrad   NEXRAD.png
+   
+   If the aircraft has no file, X-Plane uses the stock file in
+   Resources/bitmaps/world/maps/. Use the stock file as a template and keep
+   its size. NEXRAD.png must have alpha: its transparent entries let the
+   layers below show through. Only these three layers use color stripes. You
+   cannot replace the colors of any other map layer, including
+   xplm_Map_color_IR.
+   
+   The stripes belong to the aircraft, not to your plugin. X-Plane finds them
+   in the user's aircraft folder when you call XPLMCreateMapDisplay, and does
+   not look again. To use the stripes of a different aircraft, destroy the map
+   display and create it again.
 }
 
 
@@ -2035,36 +2057,39 @@ TYPE
     flags with bitwise OR to enable multiple layers. NOTE: Not all layers can
     be combined. You can display terrain and water and taxiways at the same 
     time, but you cannot display weather radar and EGPWS at the same time. 
-    Only one of NEXRAD or Cloud IR can be displayed. Airport details (taxiways)
-    are only visible at close-in zoom levels.
+    Only one of NEXRAD or Cloud Tops or Color IR can be displayed. Airport
+    details (taxiways) are only visible at close-in zoom levels.
    }
 TYPE
    XPLMMapLayers = (
      { Radar composite reflectivity.                                              }
       xplm_Map_Nexrad                          = 1
  
+     { Grayscale cloud tops.                                                      }
+     ,xplm_Map_clouds                          = 2
+ 
      { Infrared false-color cloud tops.                                           }
-     ,xplm_Map_IR                              = 2
+     ,xplm_Map_color_IR                        = 4
  
      { Topography (elevation color scale, not taking aircraft altitude into       }
      { account).                                                                  }
-     ,xplm_Map_Topo                            = 4
+     ,xplm_Map_Topo                            = 8
  
      { Terrain (terrain elevation relative to aircraft altitude).                 }
-     ,xplm_Map_Terrain                         = 8
+     ,xplm_Map_Terrain                         = 16
  
      { Bodies of water.                                                           }
-     ,xplm_Map_Water                           = 16
+     ,xplm_Map_Water                           = 32
  
      { Terrain warnings (relative to aircraft altitude, trajectory and landing    }
      { gear position).                                                            }
-     ,xplm_Map_EGPWS                           = 32
+     ,xplm_Map_EGPWS                           = 64
  
      { Raw 0-255 texture of terrain elevation for plugin use.                     }
-     ,xplm_Map_raw_elev                        = 64
+     ,xplm_Map_raw_elev                        = 128
  
      { Airport runway and taxiway layouts.                                        }
-     ,xplm_Map_safe_taxi                       = 128
+     ,xplm_Map_safe_taxi                       = 256
  
    );
    PXPLMMapLayers = ^XPLMMapLayers;

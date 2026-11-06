@@ -673,7 +673,8 @@ local function screen_draw_cb(ref)
 				{ name = "Terrain",   flag = XPLMMapLayers.xplm_Map_Terrain },
 				{ name = "Safe Taxi", flag = XPLMMapLayers.xplm_Map_safe_taxi },
 				{ name = "NEXRAD",    flag = XPLMMapLayers.xplm_Map_Nexrad },
-				{ name = "Cloud IR",  flag = XPLMMapLayers.xplm_Map_IR },
+				{ name = "Clouds",    flag = XPLMMapLayers.xplm_Map_clouds },
+				{ name = "Color IR",  flag = XPLMMapLayers.xplm_Map_color_IR },
 			}
 
 			local btn_y = c_screen_height - 60.0

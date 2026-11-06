@@ -2269,18 +2269,20 @@ void RegEnum_XPLMMapLayers(lua_State* L)
 	lua_pushinteger(L, 1);
 	lua_setfield(L, -2, "xplm_Map_Nexrad");
 	lua_pushinteger(L, 2);
-	lua_setfield(L, -2, "xplm_Map_IR");
+	lua_setfield(L, -2, "xplm_Map_clouds");
 	lua_pushinteger(L, 4);
-	lua_setfield(L, -2, "xplm_Map_Topo");
+	lua_setfield(L, -2, "xplm_Map_color_IR");
 	lua_pushinteger(L, 8);
-	lua_setfield(L, -2, "xplm_Map_Terrain");
+	lua_setfield(L, -2, "xplm_Map_Topo");
 	lua_pushinteger(L, 16);
-	lua_setfield(L, -2, "xplm_Map_Water");
+	lua_setfield(L, -2, "xplm_Map_Terrain");
 	lua_pushinteger(L, 32);
-	lua_setfield(L, -2, "xplm_Map_EGPWS");
+	lua_setfield(L, -2, "xplm_Map_Water");
 	lua_pushinteger(L, 64);
-	lua_setfield(L, -2, "xplm_Map_raw_elev");
+	lua_setfield(L, -2, "xplm_Map_EGPWS");
 	lua_pushinteger(L, 128);
+	lua_setfield(L, -2, "xplm_Map_raw_elev");
+	lua_pushinteger(L, 256);
 	lua_setfield(L, -2, "xplm_Map_safe_taxi");
 	lua_setglobal(L, "XPLMMapLayers");
 }

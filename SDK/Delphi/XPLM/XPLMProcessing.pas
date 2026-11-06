@@ -32,6 +32,12 @@ INTERFACE
    create resources or initialize the sim may issue warnings, crash rhe sim,
    or have unexpected results.
    
+   Do not start or change the flight from a post-flightmodel callback. This
+   includes XPLMInitFlight, XPLMUpdateFlight, XPLMSetUsersAircraft,
+   XPLMPlaceUserAtAirport, XPLMPlaceUserAtLocation, and XPLMLoadDataFile with
+   a situation or replay file. Call them from a pre-flightmodel callback
+   instead.
+   
    WARNING: Do NOT use these callbacks to draw! You cannot draw during flight
    loop callbacks. Use the drawing callbacks (see XPLMDisplay for more info)
    for graphics or the XPLMInstance functions for aircraft or models. (One
