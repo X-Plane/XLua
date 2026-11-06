@@ -251,6 +251,9 @@ void CleanupScripts(void)
 		g_is_acf_inited = false;
 	}
 
+	// The scripts set this from their top-level code; on mobile, xlua's statics outlive the aircraft.
+	g_bReloadOnFlightChange = false;
+
 	// Get rid of drefs/cmds/timers first, they may well hold references to the Lua interpreter.
 	xlua_dref_cleanup();
 	xlua_cmd_cleanup();
@@ -269,10 +272,6 @@ int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefco
 	// command in init.lua for example...
 	if (inPhase == xplm_CommandBegin && g_is_acf_inited)
 	{
-		// Set to false to clear state on this too. Provided the XLuaReloadOnFlightChange() call is still in the scripts,
-		// it will be immediately set back to true from the XPLM_MSG_AIRPORT_LOADED code below.
-		g_bReloadOnFlightChange = false;
-
 		XPLMReloadThisPlugin(false);
 	}
 
