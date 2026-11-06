@@ -724,31 +724,34 @@ PLUGIN_API void XPluginReceiveMessage(
 			case XPLM_MSG_AIRPORT_LOADED:
 				if (g_bReloadOnFlightChange && g_is_acf_inited)
 				{
-#if !MOBILE
+#if MOBILE
+					// No XPLMReloadThisPlugin on mobile, so reset the scripts in place and fall through to re-init them.
+					CleanupScripts();
+					InitScripts();
+#else
 					// This triggers a full reload of the plugin. No point in doing any other setup.
 					ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)1);
+					break;
 #endif
 				}
-				else
+
+				if (!g_is_acf_inited)
 				{
-					if (!g_is_acf_inited)
-					{
-						for (auto& m : g_modules)
-						{
-							m->acf_load();
-						}
-
-						// Pick up any last stragglers from out-of-order load and then validate our datarefs!
-						xlua_relink_all_drefs();
-						xlua_validate_drefs();
-
-						g_is_acf_inited = true;
-					}
-
 					for (auto& m : g_modules)
 					{
-						m->flight_start();
+						m->acf_load();
 					}
+
+					// Pick up any last stragglers from out-of-order load and then validate our datarefs!
+					xlua_relink_all_drefs();
+					xlua_validate_drefs();
+
+					g_is_acf_inited = true;
+				}
+
+				for (auto& m : g_modules)
+				{
+					m->flight_start();
 				}
 
 				break;
