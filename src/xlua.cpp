@@ -256,6 +256,9 @@ void CleanupScripts(void)
 		g_is_acf_inited = false;
 	}
 
+	// The scripts set this from their top-level code; on mobile, xlua's statics outlive the aircraft.
+	g_bReloadOnFlightChange = false;
+
 	// Get rid of drefs/cmds/timers first, they may well hold references to the Lua interpreter.
 	xlua_dref_cleanup();
 	xlua_cmd_cleanup();
@@ -275,10 +278,6 @@ int ResetState(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefco
 	// command in init.lua for example...
 	if (inPhase == xplm_CommandBegin && g_is_acf_inited)
 	{
-		// Set to false to clear state on this too. Provided the XLuaReloadOnFlightChange() call is still in the scripts,
-		// it will be immediately set back to true from the XPLM_MSG_AIRPORT_LOADED code below.
-		g_bReloadOnFlightChange = false;
-
 		XPLMReloadThisPlugin(false);
 	}
 
@@ -722,12 +721,14 @@ PLUGIN_API int XPluginEnable(void)
 
 	InitScripts();
 
+#if !MOBILE	// Mobile only enables us mid aircraft load (no XPLMReloadThisPlugin); the real AIRPORT_LOADED follows once the aircraft is ready.
 	if (XPLMGetCycleNumber() > 0)
 	{
 		// Then we've been enabled while the sim's already running.
 		g_is_acf_inited = false;			// Belt-n-braces - ensure we don't start a reload loop.
 		XPluginReceiveMessage(XPLM_PLUGIN_XPLANE, XPLM_MSG_AIRPORT_LOADED, nullptr);
 	}
+#endif
 
 	xlua_relink_all_drefs();
 	return 1;
@@ -761,31 +762,34 @@ PLUGIN_API void XPluginReceiveMessage(
 			case XPLM_MSG_AIRPORT_LOADED:
 				if (g_bReloadOnFlightChange && g_is_acf_inited)
 				{
-#if !MOBILE
+#if MOBILE
+					// No XPLMReloadThisPlugin on mobile, so reset the scripts in place and fall through to re-init them.
+					CleanupScripts();
+					InitScripts();
+#else
 					// This triggers a full reload of the plugin. No point in doing any other setup.
 					ResetState(reset_cmd, xplm_CommandBegin, (void*)(intptr_t)1);
+					break;
 #endif
 				}
-				else
+
+				if (!g_is_acf_inited)
 				{
-					if (!g_is_acf_inited)
-					{
-						for (auto& m : g_modules)
-						{
-							m->acf_load();
-						}
-
-						// Pick up any last stragglers from out-of-order load and then validate our datarefs!
-						xlua_relink_all_drefs();
-						xlua_validate_drefs();
-
-						g_is_acf_inited = true;
-					}
-
 					for (auto& m : g_modules)
 					{
-						m->flight_start();
+						m->acf_load();
 					}
+
+					// Pick up any last stragglers from out-of-order load and then validate our datarefs!
+					xlua_relink_all_drefs();
+					xlua_validate_drefs();
+
+					g_is_acf_inited = true;
+				}
+
+				for (auto& m : g_modules)
+				{
+					m->flight_start();
 				}
 
 				break;
