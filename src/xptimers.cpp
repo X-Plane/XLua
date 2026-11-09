@@ -22,15 +22,22 @@
 #include "log.h"
 #include "xpfuncs.h"
 
+enum class timer_retention
+{
+	release_when_idle,
+	keep_until_cleanup
+};
+
 class notify_cb_t;
 class xlua_timer
 {
 public:
 	xlua_timer() = delete;
-	xlua_timer(xlua_timer_f fn, std::shared_ptr<notify_cb_t> cb) : m_func(fn), m_ref(cb) {}
+	xlua_timer(xlua_timer_f fn, std::shared_ptr<notify_cb_t> cb, timer_retention retention) : m_func(fn), m_ref(cb), m_retention(retention) {}
 
 	xlua_timer_f 	m_func = nullptr;
 	std::shared_ptr<notify_cb_t>	m_ref = nullptr;
+	timer_retention	m_retention = timer_retention::release_when_idle;
 	
 	double			m_next_fire_time = -1;
 	double			m_repeat_interval = -1;	// -1 to stop after 1 timeout
@@ -48,6 +55,7 @@ xlua_timer* xlua_find_timer(lua_State* L, xlua_timer_f func, std::shared_ptr<not
 	for (auto& t : s_timers)
 	{
 		if (t.m_func == func &&
+			t.m_ref->L == L &&
 			    ref->callbacks.contains(kTimerCallbackSig) &&
 			t.m_ref->callbacks.contains(kTimerCallbackSig)
 			)
@@ -75,9 +83,15 @@ xlua_timer* xlua_create_timer(lua_State *L, xlua_timer_f func, std::shared_ptr<n
 		return nullptr;
 	}
 
-	xlua_timer& nt = s_timers.emplace_back(func, ref);
+	// XLua 1.x init.lua caches the handle from XLuaCreateTimer forever (all_timers[func]) and never looks it up again,
+	// so its timers must outlive being idle. Like before 12.4, they are also exempt from the timer cap.
+	timer_retention const retention = module::module_from_interp(L)->get_required_version()[0] < 2
+		? timer_retention::keep_until_cleanup
+		: timer_retention::release_when_idle;
 
-	if (s_timers.size() > 1000)
+	xlua_timer& nt = s_timers.emplace_back(func, ref, retention);
+
+	if (retention == timer_retention::release_when_idle && s_timers.size() > 1000)
 	{
 		luaL_error(L, "%s has created more than 1000 timers. Something appears to be wrong.",
 				   module::module_from_interp(L)->get_script_path().c_str());
@@ -155,7 +169,7 @@ void xlua_do_timers_for_time(double now)
 			t.m_func(t.m_ref);
 		}
 
-		if (t.m_next_fire_time < 0)
+		if (t.m_next_fire_time < 0 && t.m_retention == timer_retention::release_when_idle)
 		{
 			// We're not being run again so unwrap the function, allowing lua to garbage collect.
 			ti = s_timers.erase(ti);
