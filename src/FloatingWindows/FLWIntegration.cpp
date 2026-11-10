@@ -60,7 +60,7 @@ std::map<lua_State const*, std::vector<GLuint>> textureIDs;
 
 void _panic(lua_State* L, char const* msg)
 {
-    log_message(L, "%s\n", msg);
+    log_message(xlua_log_level::error, L, "%s\n", msg);
 }
 
 int loadImage(lua_State const* L, const std::string& fileName) {
@@ -89,7 +89,7 @@ int loadImage(lua_State const* L, const std::string& fileName) {
 
 int LuaCreateFloatingWindow(lua_State *L) {
     if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3) || !lua_isboolean(L, 4)) {
-        log_message(L, "Error: wrong arguments given to float_wnd_create.");
+        log_message(xlua_log_level::error, L, "Error: wrong arguments given to float_wnd_create.");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -111,7 +111,7 @@ int LuaCreateFloatingWindow(lua_State *L) {
         lua_pushlightuserdata(L, wnd.get());
         return 1;
     } catch (const std::exception &e) {
-        log_message(L, "Error: Couldn't create floating window");
+        log_message(xlua_log_level::error, L, "Error: Couldn't create floating window");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -119,7 +119,7 @@ int LuaCreateFloatingWindow(lua_State *L) {
 
 int LuaDestroyFloatingWindow(lua_State *L) {
     if (!lua_islightuserdata(L, 1)) {
-        log_message(L, "Error: wrong arguments given to float_wnd_destroy.");
+        log_message(xlua_log_level::error, L, "Error: wrong arguments given to float_wnd_destroy.");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -137,7 +137,7 @@ int LuaDestroyFloatingWindow(lua_State *L) {
 
 int LuaSetFloatingWindowTitle(lua_State *L) {
     if (!lua_islightuserdata(L, 1) || !lua_isstring(L, 2)) {
-        log_message(L, "Error: Wrong parameters passed to float_wnd_set_title");
+        log_message(xlua_log_level::error, L, "Error: Wrong parameters passed to float_wnd_set_title");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -150,7 +150,7 @@ int LuaSetFloatingWindowTitle(lua_State *L) {
 
 int LuaSetFloatingWindowPosition(lua_State *L) {
     if (!lua_islightuserdata(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3)) {
-        log_message(L, "Error: Wrong parameters passed to float_wnd_set_position");
+        log_message(xlua_log_level::error, L, "Error: Wrong parameters passed to float_wnd_set_position");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -164,7 +164,7 @@ int LuaSetFloatingWindowPosition(lua_State *L) {
 
 int LuaLoadFloatingWindowImage(lua_State *L) {
     if (!lua_isstring(L, 1)) {
-        log_message(L, "Error: Wrong parameters passed to float_wnd_load_image");
+        log_message(xlua_log_level::error, L, "Error: Wrong parameters passed to float_wnd_load_image");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -176,7 +176,7 @@ int LuaLoadFloatingWindowImage(lua_State *L) {
         return 1;
     } catch (const std::exception &e) {
         std::string err = std::string("Error: Couldn't load image: ") + e.what() + " in " + name;
-        log_message(L, err.c_str());
+        log_message(xlua_log_level::error, L, err.c_str());
         lua_pushstring(L, err.c_str());
 //        flywithlua::LuaIsRunning = false;
         return 0;
@@ -221,7 +221,7 @@ void LuaSetOnDrawCallback(sol::light<FloatingWindow> wnd, CallbackProvider const
 
 int LuaGetXPLMWindowHandle(lua_State *L) {
     if (!lua_islightuserdata(L, 1)) {
-        log_message(L, "Error: Can't execute float_wnd_get_xplm_handle.");
+        log_message(xlua_log_level::error, L, "Error: Can't execute float_wnd_get_xplm_handle.");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -234,7 +234,7 @@ int LuaGetXPLMWindowHandle(lua_State *L) {
 
 int LuaGetFloatingWindowDimensions(lua_State *L) {
     if (!lua_islightuserdata(L, 1)) {
-        log_message(L, "Error: Wrong parameters passed to float_wnd_get_dimensions");
+        log_message(xlua_log_level::error, L, "Error: Wrong parameters passed to float_wnd_get_dimensions");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -253,7 +253,7 @@ int LuaGetFloatingWindowDimensions(lua_State *L) {
 
 int LuaFloatingWindowGetVisible(lua_State *L) {
     if (!lua_islightuserdata(L, 1)) {
-        log_message(L, "Error: Can't execute float_wnd_get_visible");
+        log_message(xlua_log_level::error, L, "Error: Can't execute float_wnd_get_visible");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -267,7 +267,7 @@ int LuaFloatingWindowGetVisible(lua_State *L) {
 
 int LuaFloatingWindowSetVisible(lua_State *L) {
     if (!lua_islightuserdata(L, 1) || !lua_isnumber(L, 2)) {
-        log_message(L, "Error: Wrong parameters passed to float_wnd_set_visible");
+        log_message(xlua_log_level::error, L, "Error: Wrong parameters passed to float_wnd_set_visible");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -282,7 +282,7 @@ int LuaFloatingWindowSetVisible(lua_State *L) {
 
 int LuaFloatingWindowIsPopped(lua_State *L) {
     if (!lua_islightuserdata(L, 1)) {
-        log_message(L, "Error: Can't execute float_wnd_is_popped");
+        log_message(xlua_log_level::error, L, "Error: Can't execute float_wnd_is_popped");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -296,7 +296,7 @@ int LuaFloatingWindowIsPopped(lua_State *L) {
 
 int LuaFloatingWindowIsFront(lua_State *L) {
     if (!lua_islightuserdata(L, 1)) {
-        log_message(L, "Error: Can't execute float_wnd_is_front");
+        log_message(xlua_log_level::error, L, "Error: Can't execute float_wnd_is_front");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -310,7 +310,7 @@ int LuaFloatingWindowIsFront(lua_State *L) {
 
 int LuaFloatingWindowBringToFront(lua_State *L) {
     if (!lua_islightuserdata(L, 1)) {
-        log_message(L, "Error: Can't execute float_wnd_bring_to_front");
+        log_message(xlua_log_level::error, L, "Error: Can't execute float_wnd_bring_to_front");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -324,7 +324,7 @@ int LuaFloatingWindowBringToFront(lua_State *L) {
 
 int LuaFloatingWindowIsVR(lua_State *L) {
     if (!lua_islightuserdata(L, 1)) {
-        log_message(L, "Error: Can't execute float_wnd_is_vr");
+        log_message(xlua_log_level::error, L, "Error: Can't execute float_wnd_is_vr");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -338,7 +338,7 @@ int LuaFloatingWindowIsVR(lua_State *L) {
 
 int LuaSetFloatingWindowResizingLimits(lua_State *L) {
     if (!lua_islightuserdata(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3) || !lua_isnumber(L, 4) || !lua_isnumber(L, 5)) {
-        log_message(L, "Error: Wrong parameters passed to float_wnd_set_resizing_limits");
+        log_message(xlua_log_level::error, L, "Error: Wrong parameters passed to float_wnd_set_resizing_limits");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -352,7 +352,7 @@ int LuaSetFloatingWindowResizingLimits(lua_State *L) {
 
 int LuaSetFloatingWindowPositioningMode(lua_State *L) {
     if (!lua_islightuserdata(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3)) {
-        log_message(L, "Error: Wrong parameters passed to float_wnd_set_positioning_mode");
+        log_message(xlua_log_level::error, L, "Error: Wrong parameters passed to float_wnd_set_positioning_mode");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -366,7 +366,7 @@ int LuaSetFloatingWindowPositioningMode(lua_State *L) {
 
 int LuaSetFloatingWindowGravity(lua_State *L) {
     if (!lua_islightuserdata(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3) || !lua_isnumber(L, 4) || !lua_isnumber(L, 5)) {
-        log_message(L, "Error: Wrong parameters passed to float_wnd_set_gravity");
+        log_message(xlua_log_level::error, L, "Error: Wrong parameters passed to float_wnd_set_gravity");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -380,7 +380,7 @@ int LuaSetFloatingWindowGravity(lua_State *L) {
 
 int LuaGetFloatingWindowGeometry(lua_State *L) {
     if (!lua_islightuserdata(L, 1)) {
-        log_message(L, "Error: Can't execute float_wnd_get_geometry");
+        log_message(xlua_log_level::error, L, "Error: Can't execute float_wnd_get_geometry");
 //        flywithlua::LuaIsRunning = false;
         return 0;
     }
@@ -431,7 +431,7 @@ int LuaSetFloatingWindowGeometry(lua_State *L) {
         }
     }
 
-    log_message(L, "Error: Wrong parameters passed to float_wnd_set_geometry");
+    log_message(xlua_log_level::error, L, "Error: Wrong parameters passed to float_wnd_set_geometry");
 //    flywithlua::LuaIsRunning = false;
     return 0;
 }
@@ -546,7 +546,7 @@ void LuaSetImguiBuilder(sol::light<FloatingWindow> fwnd, CallbackProvider const&
     });
 
     wnd->setErrorHandler([L=builder_provider().lua_state()] (const std::string &errorMsg) {
-        log_message(L, "Lua imgui error: %s", errorMsg.c_str());
+        log_message(xlua_log_level::error, L, "Lua imgui error: %s", errorMsg.c_str());
         lua_pushstring(L, errorMsg.c_str());
 //        flywithlua::LuaIsRunning = false;
     });

@@ -33,6 +33,7 @@
 #include "xpcommands.h"
 #include "xptimers.h"
 #include "xpfuncs.h"
+#include "log.h"
 
 #if !MOBILE
 #include "ImGUIIntegration.h"
@@ -559,7 +560,11 @@ PLUGIN_API int XPluginStart(
 
 	if (!sPluginVersion.init_from_string(XLUA_VERSION))
 	{
+#if MOBILE
+		log_message(xlua_log_level::error, nullptr, "XLua was unable to parse its own version string!");
+#else
 		XPLMDebugString("XLua was unable to parse its own version string!");
+#endif
 		return 0;
 	}
 

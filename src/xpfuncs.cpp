@@ -27,6 +27,9 @@
 #include <XPLMDataAccess.h>
 
 #include "log.h"
+#if MOBILE
+#include "UTL_Debug_Log.h"
+#endif
 
 /*
 	TODO: figure out when we have to resync our datarefs
@@ -58,6 +61,7 @@ std::string const kDatarefCallbackSig("DatarefCallback");
 std::string const kFilterCallbackSig("FilterCallback");
 std::string const kCommandCallbackSig("CmdCallback");
 
+static int print_impl(lua_State* L, xlua_log_level level);
 static int l_my_print(lua_State* L);
 
 // Given an interp and a stack arg that is a lua function/closure,
@@ -139,7 +143,7 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 
 	if (callbackKey.empty())
 	{
-		log_message(cb->L, "ERROR: Anonymous closure specified.\n");
+		log_message(xlua_log_level::error, cb->L, "ERROR: Anonymous closure specified.\n");
 		return nullptr;
 	}
 
@@ -158,12 +162,12 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, std::string const callbackK
 			return cb->L;
 		}
 
-		log_message(cb->L, "ERROR: we did not persist a closure?!?\n");
+		log_message(xlua_log_level::error, cb->L, "ERROR: we did not persist a closure?!?\n");
 		lua_pop(cb->L, 1);
 	}
 	else
 	{
-		log_message(cb->L, "ERROR: Callback %s is not recognised!\n", callbackKey.c_str());
+		log_message(xlua_log_level::error, cb->L, "ERROR: Callback %s is not recognised!\n", callbackKey.c_str());
 	}
 
 	return nullptr;
@@ -187,7 +191,7 @@ namespace XLua1
 		if (result)
 		{
 			const char* err_msg = luaL_checkstring(L, 2);
-			log_message(L, "%s: %s\n", name, err_msg);
+			log_message(xlua_log_level::error, L, "%s: %s\n", name, err_msg);
 
 			return 0;
 		}
@@ -435,7 +439,7 @@ namespace XLua1
 			int e = lua_pcall(L, 0, 1, module::debug_proc_from_interp(L));
 			if (e != 0)
 			{
-				l_my_print(L);
+				print_impl(L, xlua_log_level::error);
 			}
 			else
 			{
@@ -701,7 +705,7 @@ static int XLuaReloadOnFlightChange(lua_State* L)
 
 	// Log the fact that the plugin's been put into reinit-on-flight-change mode.
 	lua_pushstring(L, log);
-	l_my_print(L);
+	print_impl(L, xlua_log_level::info);
 	lua_pop(L, 1);
 
 	xlua_cmd_mark_reload_on_change();
@@ -815,16 +819,44 @@ std::string get_log_prefix(char l)
 	return std::string(prefix);
 }
 
+#if MOBILE
+static xplane_log_priority to_sim_log_priority(xlua_log_level level)
+{
+	switch (level)
+	{
+		case xlua_log_level::debug:	return xplane_log_debug;
+		case xlua_log_level::info:	return xplane_log_info;
+		case xlua_log_level::warn:	return xplane_log_warn;
+		case xlua_log_level::error:	return xplane_log_error;
+	}
+	return xplane_log_error;
+}
+
+static void write_sim_log(xlua_log_level level, std::string text)
+{
+	while (!text.empty() && text.back() == '\n')
+		text.pop_back();
+	xplane_log_write(to_sim_log_priority(level), "LUA", "%s", text.c_str());
+}
+#endif
+
 static int l_my_print(lua_State *L)
+{
+	return print_impl(L, xlua_log_level::debug);
+}
+
+static int print_impl(lua_State *L, [[maybe_unused]] xlua_log_level level)
 {
 	int nargs = lua_gettop(L);
 	module *me = module::module_from_interp(L);
 
+#if !MOBILE
 	std::string prefix = get_log_prefix();
 
 	// Unwieldy... but on the other hand, lua debug statements could in theory come from anywhere, from
 	// several different instances of xlua at the same time so the full path probably is needed.
 	XPLMDebugString((prefix + me->get_log_path() + "\n").c_str());
+#endif
 
 	std::string output;
 	char num_buf[128];
@@ -862,33 +894,43 @@ static int l_my_print(lua_State *L)
 		output += " ";
 	}
 
+#if MOBILE
+	write_sim_log(level, me->get_log_path() + "\n" + output);
+#else
 	// Keep the console output too.
 	puts(output.c_str());
 
 	output += "\n";
 	XPLMDebugString((prefix + output).c_str());
+#endif
 
 	return 0;
 }
 
-int log_message(lua_State *L, char const* const format, ...)
+int log_message([[maybe_unused]] xlua_log_level level, lua_State *L, char const* const format, ...)
 {
 	char buffer[2048];
+#if MOBILE
+	std::string entry;
+#else
 	char lp = 'I';
 	std::string prefix(get_log_prefix());
+#endif
 
 	if (L != nullptr)
 	{
 		lua_Debug ar = {};
 		char const* line_prefix = "";
 
-		for (int level = 0; lua_getstack(L, level, &ar); ++level)
+		for (int stack_level = 0; lua_getstack(L, stack_level, &ar); ++stack_level)
 		{
+#if !MOBILE
 			if (lp == 'I')
 			{
 				lp = 'E';
 				prefix = get_log_prefix(lp);
 			}
+#endif
 
 			lua_getinfo(L, "nSl", &ar);
 
@@ -907,8 +949,12 @@ int log_message(lua_State *L, char const* const format, ...)
 				snprintf(buffer, sizeof(buffer), "%sIn %s on line %d of '%s':\n", line_prefix, ar.name, ar.currentline, source_name);
 			}
 
+#if MOBILE
+			entry += buffer;
+#else
 			XPLMDebugString(prefix.c_str()); XPLMDebugString(buffer);
 			printf("%s", prefix.c_str()); printf("%s", buffer);
+#endif
 			buffer[0] = 0;
 
 			line_prefix = " -> ";
@@ -921,11 +967,15 @@ int log_message(lua_State *L, char const* const format, ...)
 	int result = vsnprintf(buffer, sizeof(buffer), format, args);
 	va_end(args);
 
+#if MOBILE
+	write_sim_log(level, entry + buffer);
+#else
 	std::string output(prefix);
 	output += buffer;
 
 	XPLMDebugString(output.c_str());
 	printf("%s", output.c_str());
+#endif
 
 	return result;
 }

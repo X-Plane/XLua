@@ -79,7 +79,7 @@ xlua_timer* xlua_create_timer(lua_State *L, xlua_timer_f func, std::shared_ptr<n
 {
 	if (xlua_find_timer(L, func, ref) != nullptr)
 	{
-		log_message(L, "ERROR: timer already exists.");
+		log_message(xlua_log_level::error, L, "ERROR: timer already exists.");
 		return nullptr;
 	}
 
@@ -103,7 +103,7 @@ void xlua_run_timer(lua_State* L, xlua_timer * t, double delay, double repeat)
 {
 	if (std::find_if(s_timers.cbegin(), s_timers.cend(), [t](xlua_timer const& st) {return t == &st; }) == s_timers.cend())
 	{
-		log_message(L, "ERROR: unknown timer was requested to run.");
+		log_message(xlua_log_level::error, L, "ERROR: unknown timer was requested to run.");
 		return;
 	}
 
@@ -121,7 +121,7 @@ int xlua_is_timer_scheduled(lua_State* L, xlua_timer* t)
 
 	if (std::find_if(s_timers.cbegin(), s_timers.cend(), [t](xlua_timer const& st) {return t == &st; }) == s_timers.cend())
 	{
-		log_message(L, "ERROR: unknown timer schedule was queried.");
+		log_message(xlua_log_level::error, L, "ERROR: unknown timer schedule was queried.");
 		return 0;
 	}
 
@@ -140,7 +140,7 @@ double xlua_get_timer_remaining(lua_State* L, xlua_timer* t)
 
 	if (std::find_if(s_timers.cbegin(), s_timers.cend(), [t](xlua_timer const& st) {return t == &st; }) == s_timers.cend())
 	{
-		log_message(L, "ERROR: unknown timer remaining was queried.");
+		log_message(xlua_log_level::error, L, "ERROR: unknown timer remaining was queried.");
 		return -1.0;
 	}
 

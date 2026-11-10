@@ -157,14 +157,23 @@ static void destroy_alloc_block(module_alloc_block * head)
 	}
 }
 
+static void log_ctor_failure(const char* what, const std::string& log_path)
+{
+#if MOBILE
+	log_message(xlua_log_level::error, nullptr, "Error during %s '%s'\n", what, log_path.c_str());
+#else
+	XPLMDebugString((get_log_prefix('E') + "Error during " + what + " '" + log_path + "'\n").c_str());
+#endif
+}
+
 #define CTOR_FAIL(errcode,msg) \
 if(errcode != 0) { \
-	XPLMDebugString((get_log_prefix('E') + "Error during " + msg + " '" + m_log_path + "'\n").c_str()); \
+	log_ctor_failure(msg, m_log_path); \
 	if (m_interp) \
 	{ \
 		const char *errmsg = nullptr; \
 		lua_tostring(m_interp, -1); \
-		log_message(m_interp,"%s\n%s failed: %d\n",errmsg,msg,errcode); \
+		log_message(xlua_log_level::error, m_interp,"%s\n%s failed: %d\n",errmsg,msg,errcode); \
 		lua_close(m_interp); \
 		m_interp = nullptr; \
 	} \
@@ -200,25 +209,25 @@ void profile_callback(void* data, lua_State* L, int samples, int vmstate)
 
 void module::start_profile(void)
 {
-	log_message(m_interp, "Lua profiler started in %s\n", get_log_path().c_str());
+	log_message(xlua_log_level::info, m_interp, "Lua profiler started in %s\n", get_log_path().c_str());
 	luaJIT_profile_start(m_interp, "li1", profile_callback, this);
 }
 
 void module::stop_profile(void)
 {
-	log_message(m_interp, "Lua profiler stopped in %s\n", get_log_path().c_str());
+	log_message(xlua_log_level::info, m_interp, "Lua profiler stopped in %s\n", get_log_path().c_str());
 	luaJIT_profile_stop(m_interp);
 }
 
 void module::dump_profile(void) const
 {
-	log_message(m_interp, "========================\n");
-	log_message(m_interp, "Profile for %s\n", m_log_path.c_str());
+	log_message(xlua_log_level::info, m_interp, "========================\n");
+	log_message(xlua_log_level::info, m_interp, "Profile for %s\n", m_log_path.c_str());
 	for (auto it = m_profile.begin(); it != m_profile.end(); ++it)
 	{
-		log_message(m_interp, "%s : %zu\n", it->first.c_str(), it->second);
+		log_message(xlua_log_level::info, m_interp, "%s : %zu\n", it->first.c_str(), it->second);
 	}
-	log_message(m_interp, "========================\n");
+	log_message(xlua_log_level::info, m_interp, "========================\n");
 }
 
 void module::set_jit_mode(bool enable)
@@ -268,14 +277,14 @@ module::module(
 	{
 		if (!m_xlua_compat.init_from_string(hb_match[1].str()))
 		{
-			log_message(nullptr, "Unable to parse version '%s' in '%s'\n", hb_match[1].str().c_str(), m_log_path.c_str());
+			log_message(xlua_log_level::warn, nullptr, "Unable to parse version '%s' in '%s'\n", hb_match[1].str().c_str(), m_log_path.c_str());
 			CTOR_FAIL(-1, "load module");
 		}
 	}
 
 	if (m_xlua_compat > sPluginVersion)
 	{
-		log_message(nullptr, "Script '%s' requires XLua %d.%d.%d or higher.\n", m_log_path.c_str(),
+		log_message(xlua_log_level::warn, nullptr, "Script '%s' requires XLua %d.%d.%d or higher.\n", m_log_path.c_str(),
 					m_xlua_compat[0], m_xlua_compat[1], m_xlua_compat[2]);
 		CTOR_FAIL(-1, "Version too low");
 	}
@@ -283,7 +292,11 @@ module::module(
 	m_interp = luaL_newstate();
 	if(m_interp == nullptr)
 	{
+#if MOBILE
+		log_message(xlua_log_level::error, nullptr, "Unable to set up Lua.");
+#else
 		XPLMDebugString("Unable to set up Lua.");
+#endif
 		return;
 	}
 	luaL_openlibs(m_interp);
@@ -316,7 +329,7 @@ module::module(
 	lua_setfield(m_interp, -2, "path");
 	lua_pop(m_interp, 1); // Remove the package table from the stack
 
-	log_message(m_interp, "Running %s\n", m_log_path.c_str());
+	log_message(xlua_log_level::info, m_interp, "Running %s\n", m_log_path.c_str());
 
 #if !MOBILE
 	flwnd::initFloatingWindowSupport(m_interp);
@@ -614,7 +627,7 @@ bool module::_XPluginStart(void)
 			}
 			else
 			{
-				log_message(m_interp, "XPluginStart did not return a boolean. Disabling this script.");
+				log_message(xlua_log_level::error, m_interp, "XPluginStart did not return a boolean. Disabling this script.");
 			}
 		}
 	}
@@ -657,7 +670,7 @@ bool module::_XPluginEnable(void)
 			}
 			else
 			{
-				log_message(m_interp, "XPluginEnable did not return a boolean. Disabling this script.");
+				log_message(xlua_log_level::error, m_interp, "XPluginEnable did not return a boolean. Disabling this script.");
 			}
 		}
 	}
