@@ -4,6 +4,10 @@ This file lists the changes in each XLua release, newest first.
 
 **Which version do I have?** In X-Plane, open **Plugins > Plugin Admin**. XLua is listed there as `XLua` followed by its version number, for example `XLua 2.0.0-r1`.
 
+## 2.0.0-r2 - 2026-11-10
+
+* Synced to the latest X-Plane SDK.
+
 ## 2.0.0-r1 - 2026-10-29
 
 * First release of XLua 2.0. For everything new since 1.5.0r1, see the 2.0.0-b1 to 2.0.0-b5 entries below.

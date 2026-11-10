@@ -1,3 +1,5 @@
+.DS_STORE
+
 /.idea/*
 /.claude/*
 /.vs/*
