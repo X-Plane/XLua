@@ -171,9 +171,8 @@ if(errcode != 0) { \
 	log_ctor_failure(msg, m_log_path); \
 	if (m_interp) \
 	{ \
-		const char *errmsg = nullptr; \
-		lua_tostring(m_interp, -1); \
-		log_message(xlua_log_level::error, m_interp,"%s\n%s failed: %d\n",errmsg,msg,errcode); \
+		const char *errmsg = lua_tostring(m_interp, -1); \
+		log_message(xlua_log_level::error, m_interp,"%s\n%s failed: %d\n",errmsg ? errmsg : "",msg,errcode); \
 		lua_close(m_interp); \
 		m_interp = nullptr; \
 	} \
