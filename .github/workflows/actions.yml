@@ -47,6 +47,7 @@ jobs:
           submodules: recursive
 
       - name: Setup Credentials
+        if: github.repository == 'X-Plane/xlua'
         uses: apple-actions/import-codesign-certs@v6
         with:
           p12-file-base64: ${{ secrets.APPLE_DEV_CERTIFICATE }}
@@ -59,6 +60,7 @@ jobs:
         run: cmake --build build
 
       - name: Sign
+        if: github.repository == 'X-Plane/xlua'
         run: |
           codesign --sign "Developer ID Application: Laminar Research (LPH4NFE92D)" \
                    --timestamp \
@@ -66,6 +68,7 @@ jobs:
                    build/mac_x64/mac.xpl
 
       - name: Notarize
+        if: github.repository == 'X-Plane/xlua'
         run: |
           zip -r xlua2_mac.zip build/mac_x64/mac.xpl
           printf '%s' "${APPLE_NOTARY_KEY}" > "${RUNNER_TEMP}/notary_key.p8"
