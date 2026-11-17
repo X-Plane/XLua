@@ -123,7 +123,7 @@ static float cb_XPLMFlightLoop_f(float inElapsedSinceLastCall, float inElapsedTi
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "ddir", inElapsedSinceLastCall, inElapsedTimeSinceLastFlightLoop, inCounter, inRefcon_cb->get_capture()))
 		{
 			{
-				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMFlightLoop_f returned %s; expected number\n", luaL_typename(L, -1));
+				if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback XPLMFlightLoop_f returned %s; expected number\n", luaL_typename(L, -1));
 				res = lua_tonumber(L, -1);
 			}
 			lua_pop(L, 1);

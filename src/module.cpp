@@ -197,25 +197,25 @@ void profile_callback(void* data, lua_State* L, int samples, int vmstate)
 
 void module::start_profile(void)
 {
-	log_message(m_interp, "Lua profiler started in %s\n", get_log_path().c_str());
+	log_message(xlua_log_level::info, m_interp, "Lua profiler started in %s\n", get_log_path().c_str());
 	luaJIT_profile_start(m_interp, "li1", profile_callback, this);
 }
 
 void module::stop_profile(void)
 {
-	log_message(m_interp, "Lua profiler stopped in %s\n", get_log_path().c_str());
+	log_message(xlua_log_level::info, m_interp, "Lua profiler stopped in %s\n", get_log_path().c_str());
 	luaJIT_profile_stop(m_interp);
 }
 
 void module::dump_profile(void) const
 {
-	log_message(m_interp, "========================\n");
-	log_message(m_interp, "Profile for %s\n", m_log_path.c_str());
+	log_message(xlua_log_level::info, m_interp, "========================\n");
+	log_message(xlua_log_level::info, m_interp, "Profile for %s\n", m_log_path.c_str());
 	for (auto it = m_profile.begin(); it != m_profile.end(); ++it)
 	{
-		log_message(m_interp, "%s : %zu\n", it->first.c_str(), it->second);
+		log_message(xlua_log_level::info, m_interp, "%s : %zu\n", it->first.c_str(), it->second);
 	}
-	log_message(m_interp, "========================\n");
+	log_message(xlua_log_level::info, m_interp, "========================\n");
 }
 
 void module::set_jit_mode(bool enable)
@@ -297,7 +297,7 @@ bool module::fail_ctor(int errcode, char const* what)
 	if (errcode == 0)
 		return false;
 
-	std::string message = get_log_prefix('E') + "Error during " + what
+	std::string message = std::string("Error during ") + what
 						+ " '" + m_log_path + "' (error " + std::to_string(errcode) + ")";
 
 	if (m_interp != nullptr)
@@ -309,9 +309,13 @@ bool module::fail_ctor(int errcode, char const* what)
 		}
 	}
 
-	message += "\n";
+#if MOBILE
+	log_message(xlua_log_level::error, nullptr, "%s\n", message.c_str());
+#else
+	message = get_log_prefix('E') + message + "\n";
 	XPLMDebugString(message.c_str());
 	printf("%s", message.c_str());
+#endif
 
 	if (m_interp != nullptr)
 		mute();
@@ -324,7 +328,7 @@ void module::mute(void)
 	// callbacks before it failed, and XPLM holds refcons that point into this interpreter. They must
 	// stay valid until the plugin stops. A dead interpreter runs no more Lua code.
 	xlua_vm_set_dead(m_interp);
-	log_message(nullptr, "'%s' did not start. Its datarefs and commands stay registered, but do nothing until the scripts unload.\n",
+	log_message(xlua_log_level::error, nullptr, "'%s' did not start. Its datarefs and commands stay registered, but do nothing until the scripts unload.\n",
 				m_log_path.c_str());
 }
 
@@ -360,7 +364,7 @@ module::module(
 	{
 		if (!m_xlua_compat.init_from_string(hb_match[1].str()))
 		{
-			log_message(nullptr, "Unable to parse version '%s' in '%s'\n", hb_match[1].str().c_str(), m_log_path.c_str());
+			log_message(xlua_log_level::warn, nullptr, "Unable to parse version '%s' in '%s'\n", hb_match[1].str().c_str(), m_log_path.c_str());
 			fail_ctor(-1, "load module");
 			return;
 		}
@@ -368,7 +372,7 @@ module::module(
 
 	if (m_xlua_compat > sPluginVersion)
 	{
-		log_message(nullptr, "Script '%s' requires XLua %d.%d.%d or higher.\n", m_log_path.c_str(),
+		log_message(xlua_log_level::warn, nullptr, "Script '%s' requires XLua %d.%d.%d or higher.\n", m_log_path.c_str(),
 					m_xlua_compat[0], m_xlua_compat[1], m_xlua_compat[2]);
 		fail_ctor(-1, "Version too low");
 		return;
@@ -377,7 +381,11 @@ module::module(
 	m_interp = luaL_newstate();
 	if(m_interp == nullptr)
 	{
+#if MOBILE
+		log_message(xlua_log_level::error, nullptr, "Unable to set up Lua.");
+#else
 		XPLMDebugString("Unable to set up Lua.");
+#endif
 		return;
 	}
 	xlua_install_panic_handler(m_interp);
@@ -456,7 +464,7 @@ module::module(
 	lua_setfield(m_interp, -2, "path");
 	lua_pop(m_interp, 1); // Remove the package table from the stack
 
-	log_message(m_interp, "Running %s\n", m_log_path.c_str());
+	log_message(xlua_log_level::info, m_interp, "Running %s\n", m_log_path.c_str());
 
 	// Mobile devices like Android don't use a regular file system...they have a bundle of resources in-memory so
 	// we need to load the Lua script from an already allocated memory buffer.
@@ -498,7 +506,7 @@ module::module(
 	{
 		// Not fatal - the script still runs, just without our tuning.
 		char const* jit_error = lua_tostring(m_interp, -1);
-		log_message(m_interp, "Unable to apply LuaJIT tuning: %s\n", jit_error ? jit_error : "unknown error");
+		log_message(xlua_log_level::warn, m_interp, "Unable to apply LuaJIT tuning: %s\n", jit_error ? jit_error : "unknown error");
 		lua_pop(m_interp, 1);
 	}
 
@@ -759,7 +767,7 @@ bool module::_XPluginStart(void)
 			}
 			else
 			{
-				log_message(m_interp, "XPluginStart did not return a boolean. Disabling this script.");
+				log_message(xlua_log_level::error, m_interp, "XPluginStart did not return a boolean. Disabling this script.");
 			}
 		}
 	}
@@ -802,7 +810,7 @@ bool module::_XPluginEnable(void)
 			}
 			else
 			{
-				log_message(m_interp, "XPluginEnable did not return a boolean. Disabling this script.");
+				log_message(xlua_log_level::error, m_interp, "XPluginEnable did not return a boolean. Disabling this script.");
 			}
 		}
 	}

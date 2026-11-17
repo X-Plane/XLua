@@ -208,7 +208,7 @@ static XPLMCursorStatus cb_XPLMAvionicsCursor_f(int x, int y, void* inRefcon)
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iir", x, y, inRefcon_cb->get_capture()))
 		{
 			{
-				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMAvionicsCursor_f returned %s; expected integer\n", luaL_typename(L, -1));
+				if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback XPLMAvionicsCursor_f returned %s; expected integer\n", luaL_typename(L, -1));
 				res = lua_tointeger(L, -1);
 			}
 			lua_pop(L, 1);
@@ -458,7 +458,7 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iir", x, y, inRefcon_cb->get_capture()))
 				{
 					{
-						if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback bezelCursorCallback returned %s; expected integer\n", luaL_typename(L, -1));
+						if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback bezelCursorCallback returned %s; expected integer\n", luaL_typename(L, -1));
 						res = lua_tointeger(L, -1);
 					}
 					lua_pop(L, 1);
@@ -561,7 +561,7 @@ XPLMCustomizeAvionics_t XPLMCustomizeAvionics_t_from_table(lua_State* L, int sta
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iir", x, y, inRefcon_cb->get_capture()))
 				{
 					{
-						if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback screenCursorCallback returned %s; expected integer\n", luaL_typename(L, -1));
+						if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback screenCursorCallback returned %s; expected integer\n", luaL_typename(L, -1));
 						res = lua_tointeger(L, -1);
 					}
 					lua_pop(L, 1);
@@ -717,7 +717,7 @@ static float cb_XPLMAvionicsBrightness_f(float inRheoValue, float inAmbiantBrigh
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "dddr", inRheoValue, inAmbiantBrightness, inBusVoltsRatio, inRefcon_cb->get_capture()))
 		{
 			{
-				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMAvionicsBrightness_f returned %s; expected number\n", luaL_typename(L, -1));
+				if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback XPLMAvionicsBrightness_f returned %s; expected number\n", luaL_typename(L, -1));
 				res = lua_tonumber(L, -1);
 			}
 			lua_pop(L, 1);
@@ -944,7 +944,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iir", x, y, inRefcon_cb->get_capture()))
 				{
 					{
-						if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback bezelCursorCallback returned %s; expected integer\n", luaL_typename(L, -1));
+						if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback bezelCursorCallback returned %s; expected integer\n", luaL_typename(L, -1));
 						res = lua_tointeger(L, -1);
 					}
 					lua_pop(L, 1);
@@ -1047,7 +1047,7 @@ XPLMCreateAvionics_t XPLMCreateAvionics_t_from_table(lua_State* L, int stackpos)
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "iir", x, y, inRefcon_cb->get_capture()))
 				{
 					{
-						if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback screenCursorCallback returned %s; expected integer\n", luaL_typename(L, -1));
+						if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback screenCursorCallback returned %s; expected integer\n", luaL_typename(L, -1));
 						res = lua_tointeger(L, -1);
 					}
 					lua_pop(L, 1);
@@ -1289,7 +1289,7 @@ static const char * cb_XPLMAvionicsBrowserCallback_f(XPLMAvionicsID inAvionicsID
 		{
 			{
 				const char * s = lua_tostring(L, -1);
-				if (s == nullptr) log_message(L, "warn: lua callback XPLMAvionicsBrowserCallback_f returned %s; expected string\n", luaL_typename(L, -1));
+				if (s == nullptr) log_message(xlua_log_level::warn, L, "warn: lua callback XPLMAvionicsBrowserCallback_f returned %s; expected string\n", luaL_typename(L, -1));
 				res = XPLMReturnString(s ? s : "");
 			}
 			lua_pop(L, 1);
@@ -1778,7 +1778,7 @@ static int cb_XPLMHandleMouseClick_f(XPLMWindowID inWindowID, int x, int y, XPLM
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "riiir", inWindowID_typed_ref, x, y, inMouse, inRefcon_cb->get_capture()))
 		{
 			{
-				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMHandleMouseClick_f returned %s; expected integer\n", luaL_typename(L, -1));
+				if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback XPLMHandleMouseClick_f returned %s; expected integer\n", luaL_typename(L, -1));
 				res = lua_tointeger(L, -1);
 			}
 			lua_pop(L, 1);
@@ -1807,7 +1807,7 @@ static XPLMCursorStatus cb_XPLMHandleCursor_f(XPLMWindowID inWindowID, int x, in
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "riir", inWindowID_typed_ref, x, y, inRefcon_cb->get_capture()))
 		{
 			{
-				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMHandleCursor_f returned %s; expected integer\n", luaL_typename(L, -1));
+				if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback XPLMHandleCursor_f returned %s; expected integer\n", luaL_typename(L, -1));
 				res = lua_tointeger(L, -1);
 			}
 			lua_pop(L, 1);
@@ -1995,7 +1995,7 @@ XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos)
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "riiir", inWindowID_typed_ref, x, y, inMouse, inRefcon_cb->get_capture()))
 				{
 					{
-						if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback handleMouseClickFunc returned %s; expected integer\n", luaL_typename(L, -1));
+						if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback handleMouseClickFunc returned %s; expected integer\n", luaL_typename(L, -1));
 						res = lua_tointeger(L, -1);
 					}
 					lua_pop(L, 1);
@@ -2061,7 +2061,7 @@ XPLMCreateWindow_t XPLMCreateWindow_t_from_table(lua_State* L, int stackpos)
 				if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "riiir", inWindowID_typed_ref, x, y, inMouse, inRefcon_cb->get_capture()))
 				{
 					{
-						if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback handleRightClickFunc returned %s; expected integer\n", luaL_typename(L, -1));
+						if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback handleRightClickFunc returned %s; expected integer\n", luaL_typename(L, -1));
 						res = lua_tointeger(L, -1);
 					}
 					lua_pop(L, 1);
@@ -2257,7 +2257,7 @@ static const char * cb_XPLMBrowserCallback_f(XPLMWindowID inWindowID, const char
 		{
 			{
 				const char * s = lua_tostring(L, -1);
-				if (s == nullptr) log_message(L, "warn: lua callback XPLMBrowserCallback_f returned %s; expected string\n", luaL_typename(L, -1));
+				if (s == nullptr) log_message(xlua_log_level::warn, L, "warn: lua callback XPLMBrowserCallback_f returned %s; expected string\n", luaL_typename(L, -1));
 				res = XPLMReturnString(s ? s : "");
 			}
 			lua_pop(L, 1);

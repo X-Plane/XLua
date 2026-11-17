@@ -184,7 +184,7 @@ extern "C" int XLuaUnregisterCommandHandler(lua_State* L)
 	// Deliberately no XPLM call on a miss. Passing a refcon XPLM never saw is what
 	// broke this in the first place, and staying quiet about it is what made the
 	// breakage so hard to spot from a script.
-	log_message(L, "ERROR: XPLMUnregisterCommandHandler found no handler registered with this exact function and refcon. Pass the same values you registered with.\n");
+	log_message(xlua_log_level::error, L, "ERROR: XPLMUnregisterCommandHandler found no handler registered with this exact function and refcon. Pass the same values you registered with.\n");
 	return 0;
 }
 

@@ -287,7 +287,7 @@ void			xlua_validate_drefs()
 		if (f.m_dref == nullptr)
 		{
 			dref_missing = true;
-			log_message(nullptr, "WARNING: dataref %s is used but not defined.\n", f.m_name.c_str());
+			log_message(xlua_log_level::warn, nullptr, "WARNING: dataref %s is used but not defined.\n", f.m_name.c_str());
 		}
 	}
 	
@@ -297,7 +297,7 @@ void			xlua_validate_drefs()
 	{
 		if (f.m_dref == nullptr)
 		{
-			log_message(nullptr, "WARNING: dataref %s is used but not defined.\n", f.m_name.c_str());
+			log_message(xlua_log_level::warn, nullptr, "WARNING: dataref %s is used but not defined.\n", f.m_name.c_str());
 		}
 	}
 #endif
@@ -356,7 +356,7 @@ xlua_dref* xlua_create_dref(lua_State* L, const char * name, xlua_dref_type type
 		{
 			if (f.m_ours || f.m_dref)
 			{
-				log_message(L, "ERROR: %s is already a dataref.\n", name);
+				log_message(xlua_log_level::error, L, "ERROR: %s is already a dataref.\n", name);
 				return NULL;
 			}
 
@@ -368,14 +368,14 @@ xlua_dref* xlua_create_dref(lua_State* L, const char * name, xlua_dref_type type
 
 	if (n.find('[') != n.npos)
 	{
-		log_message(L, "ERROR: %s contains brackets in its name.\n", name);
+		log_message(xlua_log_level::error, L, "ERROR: %s contains brackets in its name.\n", name);
 		return NULL;
 	}
 	
 	XPLMDataRef other = XPLMFindDataRef(name);
 	if (other && XPLMIsDataRefGood(other))
 	{
-		log_message(L, "ERROR: %s is used by another plugin.\n", name);
+		log_message(xlua_log_level::error, L, "ERROR: %s is used by another plugin.\n", name);
 		return NULL;
 	}
 	
@@ -656,7 +656,7 @@ void			xlua_relink_all_drefs()
 	XPLMPluginID dre = XPLMFindPluginBySignature(STAT_PLUGIN_SIG);
 	if(dre != XPLM_NO_PLUGIN_ID && !XPLMIsPluginEnabled(dre))
 	{
-		log_message(nullptr, "WARNING: can't register drefs - DRE is not enabled.\n");
+		log_message(xlua_log_level::warn, nullptr, "WARNING: can't register drefs - DRE is not enabled.\n");
 		dre = XPLM_NO_PLUGIN_ID;
 	}
 #endif

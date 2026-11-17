@@ -50,8 +50,17 @@ private:
 
 std::string get_log_prefix(char l='I');
 std::filesystem::path get_current_script_path(lua_State* L);
+// The XLua major version that the script in L asks for.
+int get_xlua_compat_major(lua_State* L);
 
-int log_message(lua_State *L, char const* format, ...);
+enum class xlua_log_level { debug, info, warn, error };
+
+// Desktop ignores the level: the E/I letter there comes from whether L has a live stack. On mobile the level is what
+// reaches the sim log, and each call becomes exactly one sim log entry.
+int log_message(xlua_log_level level, lua_State *L, char const* format, ...);
+#if MOBILE
+void write_sim_log(xlua_log_level level, std::string text);
+#endif
 
 std::shared_ptr<notify_cb_t> wrap_lua_func_no_userref(lua_State* L, int idx, std::string const& cb_typename);
 lua_State* setup_lua_callback(notify_cb_t const* cb, int slot);

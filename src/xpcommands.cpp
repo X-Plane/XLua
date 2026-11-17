@@ -165,7 +165,7 @@ xlua_cmd* xlua_create_cmd(lua_State* L, const char * name, const char * desc)
 		{
 			if (i.m_ours)
 			{
-				log_message(L, "ERROR: command already exists: %s\n", name);
+				log_message(xlua_log_level::error, L, "ERROR: command already exists: %s\n", name);
 				return nullptr;
 			}
 
@@ -181,7 +181,7 @@ xlua_cmd* xlua_create_cmd(lua_State* L, const char * name, const char * desc)
 
 //	if(XPLMFindCommand(name) != NULL)
 //	{
-//		log_message(L, "ERROR: command already in use by other plugin or X-Plane: %s\n", name);
+//		log_message(xlua_log_level::error, L, "ERROR: command already in use by other plugin or X-Plane: %s\n", name);
 //		return NULL;
 //	}
 
@@ -195,7 +195,7 @@ void xlua_cmd_install_handler(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler_f h
 {
 	if(cmd->m_main_handler != NULL)
 	{
-		log_message(L, "ERROR: there is already a main handler installed: %s.\n", cmd->m_name.c_str());
+		log_message(xlua_log_level::error, L, "ERROR: there is already a main handler installed: %s.\n", cmd->m_name.c_str());
 		return;
 	}
 	cmd->m_main_handler = handler;
@@ -225,7 +225,7 @@ void xlua_cmd_install_filter(lua_State* L, xlua_cmd* cmd, xlua_cmd_handler_f han
 {
 	if (cmd->m_filter_handler != nullptr)
 	{
-		log_message(L, "ERROR: there is already a filter handler installed: %s.\n", cmd->m_name.c_str());
+		log_message(xlua_log_level::error, L, "ERROR: there is already a filter handler installed: %s.\n", cmd->m_name.c_str());
 		return;
 	}
 
@@ -239,7 +239,7 @@ void xlua_cmd_install_pre_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handler
 {
 	if(cmd->m_pre_handler != NULL)
 	{
-		log_message(L, "ERROR: there is already a pre handler installed: %s.\n", cmd->m_name.c_str());
+		log_message(xlua_log_level::error, L, "ERROR: there is already a pre handler installed: %s.\n", cmd->m_name.c_str());
 		return;
 	}
 	cmd->m_pre_handler = handler;
@@ -252,7 +252,7 @@ void xlua_cmd_install_post_wrapper(lua_State* L, xlua_cmd * cmd, xlua_cmd_handle
 {
 	if(cmd->m_post_handler != NULL)
 	{
-		log_message(L, "ERROR: there is already a post handler installed: %s.\n", cmd->m_name.c_str());
+		log_message(xlua_log_level::error, L, "ERROR: there is already a post handler installed: %s.\n", cmd->m_name.c_str());
 		return;	
 	}
 	cmd->m_post_handler = handler;

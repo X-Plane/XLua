@@ -4,6 +4,9 @@
 #include "xlua_command_bindings.h"
 
 #include "XPLMUtilities.h"
+#if MOBILE
+	#include "UTL_Debug_Log.h"
+#endif
 
 #include <memory>
 #include <cassert>
@@ -73,24 +76,51 @@ std::shared_ptr<notify_cb_t> capture_lua_value(lua_State* L, int idx)
 	return std::make_shared<notify_cb_t>(L, luaL_ref(L, LUA_REGISTRYINDEX));
 }
 
-int log_message(lua_State *L, char const* const format, ...)
+#if MOBILE
+static xplane_log_priority to_sim_log_priority(xlua_log_level level)
+{
+	switch (level)
+	{
+		case xlua_log_level::debug:	return xplane_log_debug;
+		case xlua_log_level::info:	return xplane_log_info;
+		case xlua_log_level::warn:	return xplane_log_warn;
+		case xlua_log_level::error:	return xplane_log_error;
+	}
+	return xplane_log_error;
+}
+
+void write_sim_log(xlua_log_level level, std::string text)
+{
+	while (!text.empty() && text.back() == '\n')
+		text.pop_back();
+	xplane_log_write(to_sim_log_priority(level), "LUA", "%s", text.c_str());
+}
+#endif
+
+int log_message([[maybe_unused]] xlua_log_level level, lua_State *L, char const* const format, ...)
 {
 	char buffer[2048];
+#if MOBILE
+	std::string entry;
+#else
 	char lp = 'I';
 	std::string prefix(get_log_prefix());
+#endif
 
 	if (L != nullptr)
 	{
 		lua_Debug ar = {};
 		char const* line_prefix = "";
 
-		for (int level = 0; lua_getstack(L, level, &ar); ++level)
+		for (int stack_level = 0; lua_getstack(L, stack_level, &ar); ++stack_level)
 		{
+#if !MOBILE
 			if (lp == 'I')
 			{
 				lp = 'E';
 				prefix = get_log_prefix(lp);
 			}
+#endif
 
 			lua_getinfo(L, "nSl", &ar);
 
@@ -109,8 +139,12 @@ int log_message(lua_State *L, char const* const format, ...)
 				snprintf(buffer, sizeof(buffer), "%sIn %s on line %d of '%s':\n", line_prefix, ar.name, ar.currentline, source_name);
 			}
 
+#if MOBILE
+			entry += buffer;
+#else
 			XPLMDebugString(prefix.c_str()); XPLMDebugString(buffer);
 			printf("%s", prefix.c_str()); printf("%s", buffer);
+#endif
 			buffer[0] = 0;
 
 			line_prefix = " -> ";
@@ -123,11 +157,15 @@ int log_message(lua_State *L, char const* const format, ...)
 	int result = vsnprintf(buffer, sizeof(buffer), format, args);
 	va_end(args);
 
+#if MOBILE
+	write_sim_log(level, entry + buffer);
+#else
 	std::string output(prefix);
 	output += buffer;
 
 	XPLMDebugString(output.c_str());
 	printf("%s", output.c_str());
+#endif
 
 	return result;
 }
@@ -171,7 +209,7 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, int slot)
 	// Do not read *cb before it.
 	if (!xlua_is_callback_valid(cb))
 	{
-		log_message(nullptr, "ERROR: A closure in slot %d was called which was invalid. This is a plugin bug, not a script bug. Please report it.\n",
+		log_message(xlua_log_level::error, nullptr, "ERROR: A closure in slot %d was called which was invalid. This is a plugin bug, not a script bug. Please report it.\n",
 					slot);
 		return nullptr;
 	}
@@ -194,7 +232,7 @@ lua_State* setup_lua_callback(notify_cb_t const* cb, int slot)
 		return cb->L;
 	}
 
-	log_message(cb->L, "ERROR: we did not persist a closure?!?\n");
+	log_message(xlua_log_level::error, cb->L, "ERROR: we did not persist a closure?!?\n");
 	lua_pop(cb->L, 1);
 
 	return nullptr;
@@ -426,7 +464,7 @@ void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb)
 	{
 		vm->high_water = count;
 		if (count % 1000 == 0)
-			log_message(nullptr, "%zu callbacks are now persisted by %s.\n",
+			log_message(xlua_log_level::info, nullptr, "%zu callbacks are now persisted by %s.\n",
 						count, get_current_script_path(L).generic_string().c_str());
 	}
 }
@@ -497,10 +535,10 @@ std::optional<int> xlua_checkoptint(lua_State* L, int narg)
 static int xlua_panic_handler(lua_State* L)
 {
 	const char * msg = lua_tostring(L, -1);
-	log_message(L, "FATAL: unprotected Lua error escaped to panic handler.\n");
-	log_message(L, "FATAL:   message: %s\n", msg ? msg : "(no message on stack)");
-	log_message(L, "FATAL: this is a host bug -- Lua errors should never reach panic.\n");
-	log_message(L, "FATAL: please report with the lua script path above and the X-Plane version.\n");
+	log_message(xlua_log_level::error, L, "FATAL: unprotected Lua error escaped to panic handler.\n");
+	log_message(xlua_log_level::error, L, "FATAL:   message: %s\n", msg ? msg : "(no message on stack)");
+	log_message(xlua_log_level::error, L, "FATAL: this is a host bug -- Lua errors should never reach panic.\n");
+	log_message(xlua_log_level::error, L, "FATAL: please report with the lua script path above and the X-Plane version.\n");
 	// Returning continues to LuaJIT's default abort(); the log lines above
 	// turn that abort from a mystery into actionable diagnostics.
 	return 0;

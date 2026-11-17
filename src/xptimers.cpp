@@ -40,14 +40,21 @@ std::string const kTimerCallbackSig("TimerCallback");
 // Timer subsystem (the live-timer list + pump). Formerly xptimers.{h,cpp}.
 // ───────────────────────────────────────────────────────────────────────────
 
+enum class timer_retention
+{
+	release_when_idle,
+	keep_until_cleanup
+};
+
 class xlua_timer
 {
 public:
 	xlua_timer() = delete;
-	xlua_timer(xlua_timer_f fn, std::shared_ptr<notify_cb_t> cb) : m_func(fn), m_ref(cb) {}
+	xlua_timer(xlua_timer_f fn, std::shared_ptr<notify_cb_t> cb, timer_retention retention) : m_func(fn), m_ref(cb), m_retention(retention) {}
 
 	xlua_timer_f 	m_func = nullptr;
 	std::shared_ptr<notify_cb_t>	m_ref = nullptr;
+	timer_retention	m_retention = timer_retention::release_when_idle;
 
 	double			m_next_fire_time = -1;
 	double			m_repeat_interval = -1;	// -1 to stop after 1 timeout
@@ -71,6 +78,7 @@ xlua_timer* xlua_find_timer(lua_State* L, xlua_timer_f func, std::shared_ptr<not
 	for (auto& t : s_timers)
 	{
 		if (t.m_func == func &&
+			t.m_ref->L == L &&
 			    ref->slots[kSlotOnly] != LUA_REFNIL &&
 			t.m_ref->slots[kSlotOnly] != LUA_REFNIL
 			)
@@ -94,15 +102,21 @@ xlua_timer* xlua_create_timer(lua_State *L, xlua_timer_f func, std::shared_ptr<n
 {
 	if (xlua_find_timer(L, func, ref) != nullptr)
 	{
-		log_message(L, "ERROR: timer already exists.");
+		log_message(xlua_log_level::error, L, "ERROR: timer already exists.");
 		return nullptr;
 	}
 
+	// XLua 1.x init.lua caches the handle from XLuaCreateTimer forever (all_timers[func]) and never looks it up again,
+	// so its timers must outlive being idle. Like before 12.4, they are also exempt from the timer cap.
+	timer_retention const retention = get_xlua_compat_major(L) < 2
+		? timer_retention::keep_until_cleanup
+		: timer_retention::release_when_idle;
+
 	// lua_close removes the timers of L through its XLua state.
 	xlua_vm_state_attach(L);
-	xlua_timer& nt = s_timers.emplace_back(func, ref);
+	xlua_timer& nt = s_timers.emplace_back(func, ref, retention);
 
-	if (s_timers.size() > 1000)
+	if (retention == timer_retention::release_when_idle && s_timers.size() > 1000)
 	{
 		luaL_error(L, "%s has created more than 1000 timers. Something appears to be wrong.",
 				   get_current_script_path(L).generic_string().c_str());
@@ -114,7 +128,7 @@ void xlua_run_timer(lua_State* L, xlua_timer * t, double delay, double repeat)
 {
 	if (std::find_if(s_timers.cbegin(), s_timers.cend(), [t](xlua_timer const& st) {return t == &st; }) == s_timers.cend())
 	{
-		log_message(L, "ERROR: unknown timer was requested to run.");
+		log_message(xlua_log_level::error, L, "ERROR: unknown timer was requested to run.");
 		return;
 	}
 
@@ -132,7 +146,7 @@ int xlua_is_timer_scheduled(lua_State* L, xlua_timer* t)
 
 	if (std::find_if(s_timers.cbegin(), s_timers.cend(), [t](xlua_timer const& st) {return t == &st; }) == s_timers.cend())
 	{
-		log_message(L, "ERROR: unknown timer schedule was queried.");
+		log_message(xlua_log_level::error, L, "ERROR: unknown timer schedule was queried.");
 		return 0;
 	}
 
@@ -151,7 +165,7 @@ double xlua_get_timer_remaining(lua_State* L, xlua_timer* t)
 
 	if (std::find_if(s_timers.cbegin(), s_timers.cend(), [t](xlua_timer const& st) {return t == &st; }) == s_timers.cend())
 	{
-		log_message(L, "ERROR: unknown timer remaining was queried.");
+		log_message(xlua_log_level::error, L, "ERROR: unknown timer remaining was queried.");
 		return -1.0;
 	}
 
@@ -189,7 +203,7 @@ static void do_timers_for_time(double now, lua_State* only_state)
 			t.m_func(t.m_ref);
 		}
 
-		if (t.m_next_fire_time < 0)
+		if (t.m_next_fire_time < 0 && t.m_retention == timer_retention::release_when_idle)
 		{
 			// We're not being run again so unwrap the function, allowing lua to garbage collect.
 			ti = s_timers.erase(ti);
@@ -347,7 +361,7 @@ extern "C" int XLuaReloadOnFlightChange(lua_State* L)
 {
 	// Informational, not an error — pass nullptr so log_message uses the "LUA I:"
 	// prefix (a non-null L makes it walk the stack and switch to "LUA E:").
-	log_message(nullptr, "Aircraft scripts will be fully reloaded when flight details change.");
+	log_message(xlua_log_level::info, nullptr, "Aircraft scripts will be fully reloaded when flight details change.");
 	xlua_cmd_mark_reload_on_change();
 	return 0;
 }

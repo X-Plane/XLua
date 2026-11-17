@@ -28,6 +28,7 @@
 
 #if MOBILE
 	#include "xmap.h"
+	#include "UTL_Debug_Log.h"
 #endif
 
 /*
@@ -44,11 +45,17 @@ std::string const kDatarefCallbackSig("DatarefCallback");
 std::string const kFilterCallbackSig("FilterCallback");
 std::string const kCommandCallbackSig("CmdCallback");
 
+static int print_impl(lua_State* L, xlua_log_level level);
 static int l_my_print(lua_State* L);
 
 std::filesystem::path get_current_script_path(lua_State* L)
 {
 	return module::module_from_interp(L)->get_script_path();
+}
+
+int get_xlua_compat_major(lua_State* L)
+{
+	return module::module_from_interp(L)->get_required_version()[0];
 }
 
 namespace XLua1
@@ -69,7 +76,7 @@ namespace XLua1
 		if (result)
 		{
 			const char* err_msg = luaL_checkstring(L, 2);
-			log_message(L, "%s: %s\n", name, err_msg);
+			log_message(xlua_log_level::error, L, "%s: %s\n", name, err_msg);
 
 			return 0;
 		}
@@ -317,7 +324,7 @@ namespace XLua1
 			int e = lua_pcall(L, 0, 1, module::debug_proc_from_interp(L));
 			if (e != 0)
 			{
-				l_my_print(L);
+				print_impl(L, xlua_log_level::error);
 			}
 			else
 			{
@@ -590,14 +597,21 @@ std::string get_log_prefix(char l)
 
 static int l_my_print(lua_State *L)
 {
+	return print_impl(L, xlua_log_level::debug);
+}
+
+static int print_impl(lua_State *L, [[maybe_unused]] xlua_log_level level)
+{
 	int nargs = lua_gettop(L);
 	module *me = module::module_from_interp(L);
 
+#if !MOBILE
 	std::string prefix = get_log_prefix();
 
 	// Unwieldy... but on the other hand, lua debug statements could in theory come from anywhere, from
 	// several different instances of xlua at the same time so the full path probably is needed.
 	XPLMDebugString((prefix + me->get_log_path() + "\n").c_str());
+#endif
 
 	std::string output;
 	char num_buf[128];
@@ -635,11 +649,15 @@ static int l_my_print(lua_State *L)
 		output += " ";
 	}
 
+#if MOBILE
+	write_sim_log(level, me->get_log_path() + "\n" + output);
+#else
 	// Keep the console output too.
 	puts(output.c_str());
 
 	output += "\n";
 	XPLMDebugString((prefix + output).c_str());
+#endif
 
 	return 0;
 }

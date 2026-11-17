@@ -645,7 +645,7 @@ static int cb_XPLMGetDatai_f(void* inRefcon)
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r", inRefcon_cb->get_capture()))
 		{
 			{
-				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMGetDatai_f returned %s; expected integer\n", luaL_typename(L, -1));
+				if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback XPLMGetDatai_f returned %s; expected integer\n", luaL_typename(L, -1));
 				res = lua_tointeger(L, -1);
 			}
 			lua_pop(L, 1);
@@ -689,7 +689,7 @@ static float cb_XPLMGetDataf_f(void* inRefcon)
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r", inRefcon_cb->get_capture()))
 		{
 			{
-				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMGetDataf_f returned %s; expected number\n", luaL_typename(L, -1));
+				if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback XPLMGetDataf_f returned %s; expected number\n", luaL_typename(L, -1));
 				res = lua_tonumber(L, -1);
 			}
 			lua_pop(L, 1);
@@ -733,7 +733,7 @@ static double cb_XPLMGetDatad_f(void* inRefcon)
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "r", inRefcon_cb->get_capture()))
 		{
 			{
-				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMGetDatad_f returned %s; expected number\n", luaL_typename(L, -1));
+				if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback XPLMGetDatad_f returned %s; expected number\n", luaL_typename(L, -1));
 				res = lua_tonumber(L, -1);
 			}
 			lua_pop(L, 1);
@@ -792,7 +792,7 @@ static int cb_XPLMGetDatavi_f(void* inRefcon, int outValues[], int inOffset, int
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "rrii", inRefcon_cb->get_capture(), outValues_ref, inOffset, inMax))
 		{
 			{
-				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMGetDatavi_f returned %s; expected integer\n", luaL_typename(L, -1));
+				if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback XPLMGetDatavi_f returned %s; expected integer\n", luaL_typename(L, -1));
 				res = lua_tointeger(L, -1);
 			}
 			lua_pop(L, 1);
@@ -810,7 +810,7 @@ static int cb_XPLMGetDatavi_f(void* inRefcon, int outValues[], int inOffset, int
 			lua_pop(L, 1);
 			if (res < 0 || res > inMax)
 			{
-				log_message(L, "warn: lua callback XPLMGetDatavi_f reported %d values of a maximum %d; clamping\n", res, inMax);
+				log_message(xlua_log_level::warn, L, "warn: lua callback XPLMGetDatavi_f reported %d values of a maximum %d; clamping\n", res, inMax);
 				res = (res < 0 ? 0 : inMax);
 			}
 		}
@@ -892,7 +892,7 @@ static int cb_XPLMGetDatavf_f(void* inRefcon, float outValues[], int inOffset, i
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "rrii", inRefcon_cb->get_capture(), outValues_ref, inOffset, inMax))
 		{
 			{
-				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMGetDatavf_f returned %s; expected integer\n", luaL_typename(L, -1));
+				if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback XPLMGetDatavf_f returned %s; expected integer\n", luaL_typename(L, -1));
 				res = lua_tointeger(L, -1);
 			}
 			lua_pop(L, 1);
@@ -910,7 +910,7 @@ static int cb_XPLMGetDatavf_f(void* inRefcon, float outValues[], int inOffset, i
 			lua_pop(L, 1);
 			if (res < 0 || res > inMax)
 			{
-				log_message(L, "warn: lua callback XPLMGetDatavf_f reported %d values of a maximum %d; clamping\n", res, inMax);
+				log_message(xlua_log_level::warn, L, "warn: lua callback XPLMGetDatavf_f reported %d values of a maximum %d; clamping\n", res, inMax);
 				res = (res < 0 ? 0 : inMax);
 			}
 		}
@@ -992,7 +992,7 @@ static int cb_XPLMGetDatab_f(void* inRefcon, void* outValue, int inOffset, int i
 		if (0 == fmt_pcall_stdvars(L, module::debug_proc_from_interp(L), true, "rrii", inRefcon_cb->get_capture(), outValue_ref, inOffset, inMaxLength))
 		{
 			{
-				if (!lua_isnumber(L, -1)) log_message(L, "warn: lua callback XPLMGetDatab_f returned %s; expected integer\n", luaL_typename(L, -1));
+				if (!lua_isnumber(L, -1)) log_message(xlua_log_level::warn, L, "warn: lua callback XPLMGetDatab_f returned %s; expected integer\n", luaL_typename(L, -1));
 				res = lua_tointeger(L, -1);
 			}
 			lua_pop(L, 1);
@@ -1010,7 +1010,7 @@ static int cb_XPLMGetDatab_f(void* inRefcon, void* outValue, int inOffset, int i
 			lua_pop(L, 1);
 			if (res < 0 || res > inMaxLength)
 			{
-				log_message(L, "warn: lua callback XPLMGetDatab_f reported %d values of a maximum %d; clamping\n", res, inMaxLength);
+				log_message(xlua_log_level::warn, L, "warn: lua callback XPLMGetDatab_f reported %d values of a maximum %d; clamping\n", res, inMaxLength);
 				res = (res < 0 ? 0 : inMaxLength);
 			}
 		}

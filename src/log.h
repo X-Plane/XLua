@@ -1,3 +1,3 @@
 #pragma once
 
-int log_message(lua_State *L, char const* format, ...);
+#include "shared_xpfuncs.h"
