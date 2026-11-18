@@ -156,6 +156,7 @@ The XLua deployment tree contains four things a script author may care about:
 - **`example_scripts/`** — runnable reference scripts. Which version each example targets is noted inside the example itself.
 - **`include/`** — per-module documentation stubs auto-generated from the SDK headers. **New in XLua 2 and not relevant to XLua 1** — these describe the X-Plane Plugin Manager (XPLM) API that XLua 2 scripts call directly. See [`xlua2-syntax.md`](xlua2-syntax.md) for how they are used.
 - **`docs/`** — Quick-reference documentation about the plugin in general, XLua 1 vs. XLua 2 syntax, and migration from XLua 1 to XLua 2.
+- **`CHANGELOG.md`** — what changed in each XLua release, and how to see which version you have.
 
 ## Gotchas
 
@@ -175,6 +176,7 @@ If you do choose to update an older script to a newer syntax version, see the mi
 
 ## Further reading
 
+- [`../CHANGELOG.md`](../CHANGELOG.md) — what changed in each XLua release, and how to see which version you have.
 - [`xlua1-syntax.md`](xlua1-syntax.md) — reference for the XLua 1.x surface.
 - [`xlua2-syntax.md`](xlua2-syntax.md) — reference for the XLua 2.0 surface.
 - [`migrating-v1-to-v2.md`](migrating-v1-to-v2.md) — rules for translating XLua 1 scripts to XLua 2.
