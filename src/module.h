@@ -11,7 +11,7 @@
 #ifndef module_h
 #define module_h
 
-#define XLUA_VERSION "2.0.0-r2"
+#define XLUA_VERSION "2.0.1-r2"
 
 #ifndef NOMINMAX
 	#define NOMINMAX
@@ -64,8 +64,8 @@ public:
 	version_triplet const& get_required_version(void) const { return m_xlua_compat; }
 
 			void *		module_alloc_tracked(size_t amount);
-			
-			// Pushes error string or chunk onto interp stack, returns error code or 0.  
+
+			// Pushes error string or chunk onto interp stack, returns error code or 0.
 			int			load_module_relative_path(const string& path);
 	std::string const&	get_log_path(void) const { return m_log_path; }
 	std::filesystem::path const&	get_script_path(void) const { return m_path; }
