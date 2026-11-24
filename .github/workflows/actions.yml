@@ -85,7 +85,7 @@ jobs:
           if-no-files-found: error
 
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v5
@@ -110,7 +110,7 @@ jobs:
           if-no-files-found: error
 
   package:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [build-windows, build-mac, build-linux]
 
     steps:

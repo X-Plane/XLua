@@ -4,6 +4,10 @@ This file lists the changes in each XLua release, newest first.
 
 **Which version do I have?** In X-Plane, open **Plugins > Plugin Admin**. XLua is listed there as `XLua` followed by its version number, for example `XLua 2.0.0-r1`.
 
+## 2.0.1-r1 - 2026-11-19
+
+* Recompiled on Ubuntu 22.04 to lower minimum GLIBC version to 2.34
+
 ## 2.0.0-r2 - 2026-11-10
 
 * Synced to the latest X-Plane SDK.
