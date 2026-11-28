@@ -231,3 +231,12 @@ elseif(UNIX)
 else()
     message(FATAL_ERROR "Unsupported platform")
 endif()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Tests (Linux and macOS). See tests/CMakeLists.txt.
+# ─────────────────────────────────────────────────────────────────────────────
+option(XLUA_BUILD_TESTS "Build the xlua_tests program" OFF)
+if(XLUA_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
