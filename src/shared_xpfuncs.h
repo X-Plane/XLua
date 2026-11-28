@@ -36,7 +36,12 @@ public:
 	int get_capture(void) const { return origRefconRegIndex; }
 	// True if the record has no refcon value and no closure.
 	bool is_empty(void) const;
+	// The main state of the interpreter. Callbacks run on it, never on a coroutine thread: a coroutine can be
+	// suspended when the callback comes, or it can end and be collected.
 	lua_State* L = nullptr;
+	// The thread that made the registration call, which can be a coroutine. Use it only during that call, to read
+	// the arguments from its stack. After the call it can point to a collected thread.
+	lua_State* caller_L = nullptr;
 	// The registry index of the closure in each slot, or LUA_REFNIL. The generator gives each callback a slot: its
 	// position among the callbacks that share its refcon. The thunk for a callback knows its slot.
 	std::array<int, kMaxCallbackSlots> slots;
@@ -117,6 +122,10 @@ void xlua_persist_userref(lua_State* L, std::shared_ptr<notify_cb_t> cb);
 // keep any other per-interpreter data that the state must clean up.
 void xlua_vm_state_attach(lua_State* L);
 
+// The main state of the interpreter of L. L can be a coroutine thread of that interpreter. Keep this state, not L,
+// for anything that runs after the current call returns.
+lua_State* xlua_main_state(lua_State* L);
+
 // Mark L as dead. Its callbacks stay registered, so the refcons that XPLM holds stay valid, but no
 // callback runs Lua code in L after this. Its timers are removed. Use this for a module that failed to
 // start: it cannot run, but its interpreter must stay open until the plugin stops.
@@ -131,6 +140,8 @@ void xlua_callback_shutdown(void);
 // Install a panic handler that logs the unprotected-Lua-error context (the
 // error message, the script path) before LuaJIT's default abort fires. Call
 // this once on every fresh lua_State produced by luaL_newstate().
+// It also makes the XLua state of the interpreter (xlua_vm_state_attach), so that XLua knows its main state before
+// a script runs. xlua_main_state needs this.
 //
 // Without this, an unprotected Lua throw (a luaL_check* called outside any
 // pcall, a lua_error from a bad host binding, etc.) hits LuaJIT's default

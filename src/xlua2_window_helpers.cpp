@@ -193,7 +193,7 @@ extern "C" int XLuaCreateImguiWindow(lua_State* L) {
     apply_geometry(L, 1, p);
     p.contentType = xplm_WindowContentTypePanelGraphics;
 
-    auto* ctx = new window_ctx(L);
+    auto* ctx = new window_ctx(xlua_main_state(L));
     ctx->draw_cb = capture_field_func(L, 1, "drawWindowFunc");
     p.refcon = ctx;
     p.drawWindowFunc = ctx->draw_cb ? cb_draw : nullptr;
