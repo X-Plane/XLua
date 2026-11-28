@@ -407,7 +407,8 @@ module::module(
 		lua_pop(m_interp, 1);
 	}
 
-	load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), in_init_script.generic_string().c_str());
+	// Use the file name only. Lua keeps the first 45 characters of a long chunk name, so a full path hides "init.lua".
+	load_result = luaL_loadbuffer(m_interp, (const char*)linit.begin(), linit.size(), in_init_script.filename().generic_string().c_str());
 	if (fail_ctor(load_result, "load init script"))
 		return;
 
