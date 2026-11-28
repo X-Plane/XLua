@@ -1,0 +1,58 @@
+name: XLua2 Tests
+
+# This workflow uses no secrets, so it can run for pull requests from forks.
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  # The test program with the LuaJIT library that the plugin ships with.
+  test-linux:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install OpenGL development headers
+        run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DXLUA_BUILD_TESTS=ON
+
+      - name: Build
+        run: cmake --build build --target xlua_tests -j4
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure -j4
+
+  # The same tests with AddressSanitizer and UndefinedBehaviorSanitizer, and with a LuaJIT that uses
+  # the system allocator and checks its C API. See tests/build_test_luajit.sh.
+  test-linux-sanitized:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install OpenGL development headers
+        run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev
+
+      - name: Build the test LuaJIT
+        run: tests/build_test_luajit.sh build/luajit
+
+      - name: Configure
+        run: >
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug -DXLUA_BUILD_TESTS=ON
+          -DXLUA_TEST_LUAJIT=${{ github.workspace }}/build/luajit/src/libluajit.a
+          "-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer"
+          "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined"
+
+      - name: Build
+        run: cmake --build build --target xlua_tests -j4
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure -j4
