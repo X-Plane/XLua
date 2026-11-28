@@ -47,6 +47,7 @@ add_executable(xlua_tests
     test_commands.cpp
     test_lifetime.cpp
     test_start.cpp
+    test_windows.cpp
 )
 
 target_compile_definitions(xlua_tests PRIVATE
