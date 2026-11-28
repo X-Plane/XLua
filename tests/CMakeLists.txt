@@ -46,6 +46,7 @@ add_executable(xlua_tests
     host.cpp
     test_arrays.cpp
     test_commands.cpp
+    test_coroutines.cpp
     test_lifetime.cpp
     test_start.cpp
     test_windows.cpp
