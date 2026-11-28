@@ -141,7 +141,21 @@ int vfmt_pcall(lua_State* L, int dbg, bool expects_returnval, const char* fmt, v
 		++f;
 		++arg_count;
 	}
-	int e = lua_pcall(L, arg_count, expects_returnval ? 1 : 0, dbg);
+	// dbg != 0 asks for the traceback handler. Do not pass dbg to lua_pcall: it is the absolute index where the host
+	// pushed the handler, and an index is relative to the current C frame of L. A callback that runs inside a Lua call
+	// to XPLM, or on a coroutine thread, finds something else at that index. Push the handler under the function.
+	int handler = 0;
+	if (dbg != 0)
+	{
+		handler = lua_gettop(L) - arg_count;
+		lua_pushcfunction(L, traceback);
+		lua_insert(L, handler);
+	}
+	int e = lua_pcall(L, arg_count, expects_returnval ? 1 : 0, handler);
+	if (handler != 0)
+	{
+		lua_remove(L, handler);
+	}
 	if(e != 0)
 	{
 		const char* msg = lua_tostring(L, -1);

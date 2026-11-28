@@ -18,7 +18,7 @@ int notify_cb_t::nilRefCount = -100;
 // can be destroyed after the static destructors run.
 static std::unordered_set<notify_cb_t const*>& s_live_callbacks = *new std::unordered_set<notify_cb_t const*>;
 
-notify_cb_t::notify_cb_t(lua_State* inL, int s) : L(inL), origRefconRegIndex(s)
+notify_cb_t::notify_cb_t(lua_State* inL, int s) : L(xlua_main_state(inL)), caller_L(inL), origRefconRegIndex(s)
 {
 	s_live_callbacks.insert(this);
 	slots.fill(LUA_REFNIL);
@@ -138,24 +138,24 @@ bool wrap_next_lua_func(std::shared_ptr<notify_cb_t> cb_record, int func_stack_i
 {
 	assert(slot >= 0 && slot < kMaxCallbackSlots);
 
-	if (!lua_isfunction(cb_record->L, func_stack_idx) && !lua_isnil(cb_record->L, func_stack_idx))
+	if (!lua_isfunction(cb_record->caller_L, func_stack_idx) && !lua_isnil(cb_record->caller_L, func_stack_idx))
 	{
 		std::string extra_msg = cb_typename + " callback must be a function or nil";
-		luaL_argerror(cb_record->L, func_stack_idx, extra_msg.c_str());
+		luaL_argerror(cb_record->caller_L, func_stack_idx, extra_msg.c_str());
 		return false;
 	}
 
-	if (!optional && lua_isnil(cb_record->L, func_stack_idx))
+	if (!optional && lua_isnil(cb_record->caller_L, func_stack_idx))
 	{
 		std::string extra_msg = cb_typename + " callback must be a function";
-		luaL_argerror(cb_record->L, func_stack_idx, extra_msg.c_str());
+		luaL_argerror(cb_record->caller_L, func_stack_idx, extra_msg.c_str());
 		return false;
 	}
 
 	// Now store the registry reference index into the callback array, in the given position.
 	assert(cb_record->slots[slot] == LUA_REFNIL);
-	lua_pushvalue(cb_record->L, func_stack_idx);
-	cb_record->slots[slot] = luaL_ref(cb_record->L, LUA_REGISTRYINDEX);
+	lua_pushvalue(cb_record->caller_L, func_stack_idx);
+	cb_record->slots[slot] = luaL_ref(cb_record->caller_L, LUA_REGISTRYINDEX);
 
 	return (cb_record->slots[slot] != LUA_REFNIL);
 }
@@ -337,6 +337,13 @@ static xlua_vm_state* vm_state(lua_State* L, bool create)
 	if (ud != nullptr || !create)
 		return ud ? *ud : nullptr;
 
+	// The state keeps L as the main state of the interpreter. xlua_install_panic_handler makes it on the new
+	// interpreter, before a script runs. If a coroutine makes it, callbacks keep a thread that can be collected.
+	bool const is_main = lua_pushthread(L) == 1;
+	lua_pop(L, 1);
+	if (!is_main)
+		log_message(nullptr, "ERROR: XLua made its interpreter state on a coroutine thread. This is a plugin bug, not a script bug. Please report it.\n");
+
 	lua_pushlightuserdata(L, &s_vm_state_key);
 	ud = static_cast<xlua_vm_state**>(lua_newuserdata(L, sizeof(xlua_vm_state*)));
 	*ud = nullptr;
@@ -352,6 +359,12 @@ static xlua_vm_state* vm_state(lua_State* L, bool create)
 void xlua_vm_state_attach(lua_State* L)
 {
 	vm_state(L, true);
+}
+
+lua_State* xlua_main_state(lua_State* L)
+{
+	xlua_vm_state const* vm = vm_state(L, false);
+	return vm != nullptr ? vm->L : L;
 }
 
 void xlua_vm_set_dead(lua_State* L)
@@ -513,4 +526,5 @@ static int xlua_panic_handler(lua_State* L)
 void xlua_install_panic_handler(lua_State* L)
 {
 	lua_atpanic(L, xlua_panic_handler);
+	xlua_vm_state_attach(L);
 }

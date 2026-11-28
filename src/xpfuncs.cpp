@@ -308,18 +308,10 @@ namespace XLua1
 		int res = 1;
 
 		lua_State* L = setup_lua_callback(ref.get(), kSlotOnly);
-		if (L)
+		// On an error, fmt_pcall logs the message and its traceback and removes it from the stack.
+		if (L && fmt_pcall(L, module::debug_proc_from_interp(L), true, "") == 0)
 		{
-			int e = lua_pcall(L, 0, 1, module::debug_proc_from_interp(L));
-			if (e != 0)
-			{
-				l_my_print(L);
-			}
-			else
-			{
-				res = lua_toboolean(L, -1);
-			}
-
+			res = lua_toboolean(L, -1);
 			lua_pop(L, 1);
 		}
 

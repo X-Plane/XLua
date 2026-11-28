@@ -42,7 +42,7 @@ char const* const kCommandCallbackSig = "XPLMCommandCallback_f";
 // unregister possible. Holding the shared_ptr also keeps the Lua closure pinned for
 // as long as XPLM can still call us, independent of s_RegisteredCallbacks.
 struct cmd_binding {
-	lua_State*                   L;
+	lua_State*                   L;		// The main state of the interpreter (xlua_main_state).
 	XPLMCommandRef               cmd;
 	bool                         before;
 	std::shared_ptr<notify_cb_t> cb;
@@ -150,7 +150,7 @@ extern "C" int XLuaRegisterCommandHandler(lua_State* L)
 
 	// Record before registering: XPLM can dispatch the moment the handler is in, and
 	// a handler that runs before its association exists would be un-unregisterable.
-	s_bindings.push_back({ L, inComand, inBefore, cb_capture_0 });
+	s_bindings.push_back({ xlua_main_state(L), inComand, inBefore, cb_capture_0 });
 
 	XPLMRegisterCommandHandler(inComand, xlua_command_handler, inBefore, cb_capture_0.get());
 
@@ -170,7 +170,7 @@ extern "C" int XLuaUnregisterCommandHandler(lua_State* L)
 
 	for (auto it = s_bindings.begin(); it != s_bindings.end(); ++it)
 	{
-		if (it->L != L || it->cmd != inComand || it->before != inBefore)
+		if (it->L != xlua_main_state(L) || it->cmd != inComand || it->before != inBefore)
 			continue;
 		if (!binding_matches_args(L, *it, 2, 4))
 			continue;
