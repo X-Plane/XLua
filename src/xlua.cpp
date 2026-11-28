@@ -51,6 +51,7 @@ XPLMCommandRef			reset_cmd = nullptr;
 #if !MOBILE
 XPLMMenuID				PluginMenu = 0;					// Our sub-menu
 int						PluginMenuItem = 0;				// Our sub-menu's item number on the Plugins menu
+static bool				g_jit_menu_enabled = false;
 #endif
 bool					g_bIsAircraftPlugin = true;
 int						JITMenuItem = 0;
@@ -182,11 +183,6 @@ static float xlua_post_timer_master_cb(
 	{
 		profilerWnd.reset();          // XPLMDestroyWindow — no further callbacks
 		profilerImguiCtx.reset();
-	}
-	if (!g_modules.empty())
-	{
-		bool is_enabled = g_modules.front()->get_jit_mode();
-		XPLMCheckMenuItem(PluginMenu, JITMenuItem, is_enabled ? xplm_Menu_Checked : xplm_Menu_Unchecked);
 	}
 #endif
 	return -1;
@@ -541,6 +537,21 @@ void ShowProfiler()
 	XPLMSetWindowTitle(profilerWnd.get(), "XLua Profiler");
 }
 
+static void UpdateJITMenuItem(bool enabled)
+{
+	g_jit_menu_enabled = enabled;
+	if (PluginMenu != nullptr)
+	{
+		XPLMSetMenuItemName(PluginMenu, JITMenuItem, enabled ? "JIT: On" : "JIT: Off", 0);
+		XPLMCheckMenuItem(PluginMenu, JITMenuItem, enabled ? xplm_Menu_Checked : xplm_Menu_Unchecked);
+	}
+}
+
+static void RefreshJITMenuItem()
+{
+	UpdateJITMenuItem(!g_modules.empty() && g_modules.front()->get_jit_mode());
+}
+
 static void MenuHandler(void* menuRef, void* itemRef)
 {
 	switch ((eMenuItems)(size_t)itemRef)
@@ -554,16 +565,12 @@ static void MenuHandler(void* menuRef, void* itemRef)
 
 		case MI_ToggleJIT:
 		{
-			if (!g_modules.empty())
+			const bool enable = !g_jit_menu_enabled;
+			for (auto const& m : g_modules)
 			{
-				XPLMMenuCheck curState;
-				XPLMCheckMenuItemState(PluginMenu, JITMenuItem, &curState);
-
-				for (auto const& m : g_modules)
-				{
-					m->set_jit_mode(curState != xplm_Menu_Checked);
-				}
+				m->set_jit_mode(enable);
 			}
+			UpdateJITMenuItem(enable);
 			break;
 		}
 	}
@@ -634,6 +641,8 @@ PLUGIN_API void XPluginDisable(void)
 		XPLMRemoveMenuItem(XPLMFindPluginsMenu(), PluginMenuItem);
 		XPLMDestroyMenu(PluginMenu);
 		PluginMenu = nullptr;
+		JITMenuItem = 0;
+		g_jit_menu_enabled = false;
 	}
 #endif
 	CleanupScripts();
@@ -733,11 +742,14 @@ PLUGIN_API int XPluginEnable(void)
 		PluginMenu = XPLMCreateMenu(menuName, XPLMFindPluginsMenu(), PluginMenuItem, MenuHandler, nullptr);
 		XPLMAppendMenuItem(PluginMenu, "Reload Scripts", (void*)MI_ResetState, 0);
 		XPLMAppendMenuItem(PluginMenu, "Show Profiler", (void*)MI_ShowProfiler, 1);
-		JITMenuItem = XPLMAppendMenuItem(PluginMenu, "Toggle JIT", (void*)MI_ToggleJIT, 2);
+		JITMenuItem = XPLMAppendMenuItem(PluginMenu, "JIT: Off", (void*)MI_ToggleJIT, 2);
 	}
 #endif
 
 	InitScripts();
+#if !MOBILE
+	RefreshJITMenuItem();
+#endif
 
 	if (XPLMGetCycleNumber() > 0)
 	{
