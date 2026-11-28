@@ -44,6 +44,7 @@ add_executable(xlua_tests
     catch2/catch_amalgamated.cpp
     fake_xplm.cpp
     host.cpp
+    test_lifetime.cpp
     test_start.cpp
 )
 
